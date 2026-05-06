@@ -1,0 +1,194 @@
+spec_version: "0.2"
+
+system:
+  id: sketch
+  name: Sketch
+  tagline: "Linear + Hand-Drawn"
+  grammar_family: contemporary_clean
+  version: "1.2.0"   # bumped: project-wide no-emoji policy — single-letter monogram avatars
+  source_jsx: ../design-system-integrated.jsx
+
+  # tkr-kit project policy: no emoji glyphs anywhere (mechanically enforced
+  # by the sketch-no-emoji-imagery rulebook entry). Identity in Sketch uses
+  # single-letter monograms in 34×34 rounded squares (8px radius) with the
+  # IBM Plex Sans typeface — preserves the rounded-square avatar shape with
+  # typography. Caveat is reserved for editorial annotations, never identity.
+  requires_emoji: false
+  avatar_strategy:
+    mode: monogram
+    placeholder_size_px: 34
+    placeholder_radius_px: 8
+    placeholder_surface_ref: tokens.colors.surface_elevated
+    placeholder_letter_typeface_ref: typography.families.structural
+    placeholder_letter_weight: 600
+    rendering_notes: "Single-letter monogram (first letter of thread title), IBM Plex Sans weight 600, centered in a 34×34 rounded-square (8px radius) on warm-surface fill #F0EDE8 with 1px #E5E3DE border."
+
+tokens:
+  colors:
+    page_bg: "#FAFAF8"
+    surface: "#FAFAF8"
+    surface_elevated: "#F0EDE8"
+    text_primary: "#2C2C2C"
+    text_secondary: "#555555"
+    text_muted: "#8A8680"
+    accent: "#B8A9C8"
+
+    palette:
+      - { name: paper_warm, value: "#FAFAF8", role: page background }
+      - { name: surface_warm, value: "#F0EDE8", role: selected/elevated surface }
+      - { name: ink_soft, value: "#2C2C2C", role: body and headlines }
+      - { name: ink_secondary, value: "#555555", role: secondary text }
+      - { name: muted_warm, value: "#8A8680", role: preview text }
+      - { name: muted_warmer, value: "#B0ADA8", role: timestamps }
+      - { name: rule_warm, value: "#E5E3DE", role: 1px borders }
+      - { name: purple_lavender, value: "#B8A9C8", role: Caveat annotations + unread badges; the system's hero accent }
+      - { name: purple_light, value: "#C4B8D4", role: subtler annotation variant }
+
+  typography:
+    families:
+      - id: structural
+        stack: "'IBM Plex Sans', system-ui, sans-serif"
+        role: titles, body, navigation, all structural type
+        mixing_rule: "always for content; never for annotations"
+      - id: decorative
+        stack: "Caveat, cursive"
+        role: editorial annotations, send labels, asides
+        mixing_rule: "annotations only; never for body or navigation"
+
+    scale:
+      - { size: 9,  role: tiny }
+      - { size: 10, role: timestamp }
+      - { size: 11, role: preview }
+      - { size: 12, role: body }
+      - { size: 13, role: emphasized_body }
+      - { size: 14, role: annotation }
+      - { size: 15, role: brand }
+      - { size: 17, role: send_label }
+      - { size: 22, role: title }
+
+    case:
+      metadata: mixed
+      body: mixed
+      headers: mixed
+
+    tracking:
+      metadata: 0
+      body: -0.02   # em — IBM Plex tightening
+      headers: -0.02
+
+  spacing:
+    grid_unit: 2
+    allowed_steps: [2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32]
+    enforcement: relaxed
+
+  borders:
+    radius_default: 10
+    radius_inputs: 8
+    radius_chrome: 14
+
+  elevation:
+    strategy: borders_only
+    config:
+      border_light: { width: 1, color: "#E5E3DE", style: solid }
+      border_strong: { width: 1, color: "#D5CFC8", style: solid }
+      no_shadow: true
+
+components:
+  list_item:
+    # Structured anatomy (Schema v0.2 Change 11) — formalizes the
+    # preview-yields-to-badge constraint that was previously only in prose.
+    anatomy:
+      - { id: avatar,       position: left,         fixed_width: 34 }
+      - { id: title,        position: top_main,     yields_to: [timestamp] }
+      - { id: timestamp,    position: top_right,    fixed_width: 40 }
+      - { id: preview,      position: bottom_main,  yields_to: [unread_badge], min_gap: 8 }
+      - { id: unread_badge, position: middle_right, fixed_width: 18, optional: true }
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Avatar 34px square emoji on warm surface with 1px border, 8px radius. Title in IBM Plex 12.5px weight 600. Timestamp top-right 10px in #B0ADA8. Preview in 11px #8A8680. Unread badge: 18px purple square (#B8A9C8) with white digit, 6px radius. Preview text MUST end at least 8px before the unread_badge x-position when badge is present; truncate with ellipsis (…) at a natural word break. Without truncation, the preview will overflow into the badge."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        # Selection signal (Schema v0.2 Change 10) — paper-tier shift, no bar.
+        selection_signal: surface_fill
+        selection_signal_detail:
+          fill_ref: tokens.colors.surface_elevated
+          additional_treatment: "1px border in border_light"
+        rendering_notes: "Same as default plus background fills with #F0EDE8 (surface_warm) and 1px border #E5E3DE. NO accent bar, NO shadow. Same preview-yields-to-badge rule as default variant."
+        states: [selected]
+    constraints:
+      - "Selection signaled by warm-surface background + border, NEVER by accent bar"
+      - "Unread is a small purple rounded square with white digit, not a circle"
+      - "Avatars are 34px squares with 8px radius, not circles"
+      - "Preview text yields horizontal space to unread_badge: minimum 8px gap before the badge's left edge. Truncate the preview content (do not let SVG text overflow). See SCHEMA v0.2 finding 11.5 for the formal yields_to constraint this rule encodes."
+
+rulebook:
+  # NEW IN v0.2: every rule annotates check_method (Change 9) and
+  # check_scope (Change 12) so consumers know how and where to verify.
+
+  - id: sketch-purple-on-annotations-only
+    rule: "Purple (#B8A9C8) is used on Caveat annotation elements and unread badges. NEVER on button backgrounds or fill regions."
+    rationale: "Purple is the editorial layer's signature; using it for navigation or surfaces breaks the layer separation."
+    severity: required
+    check_method: both
+    check_scope: artifact
+    check_implementation: |
+      Mechanical: count <text> elements with effective fill #B8A9C8 by font-family.
+      Caveat-family text and small unread-badge rects are permitted; flag any
+      large rect/path with purple fill. Semantic: verify each purple element
+      serves an annotation or unread role.
+
+  - id: sketch-no-shadows
+    rule: "box-shadow is never used. Elevation comes from 1px borders and warm-surface fills."
+    rationale: "Shadows are a digital depth metaphor; Sketch uses borders and surfaces."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Verify no <filter> elements with feDropShadow and no filter= references."
+
+  - id: sketch-typeface-roles
+    rule: "IBM Plex Sans for all structural text. Caveat ONLY for annotations, send labels, and editorial asides."
+    rationale: "The two faces signal different layers — structural vs. editorial. Mixing breaks the signal."
+    severity: required
+    check_method: both
+    check_scope: both
+    check_implementation: |
+      Mechanical: each <text> uses a single declared family (IBM Plex or Caveat),
+      no third families. Semantic: verify Caveat appears only on annotation
+      elements (rotated, asides) and not on body or navigation text.
+
+  - id: sketch-rounded-not-pilled
+    rule: "Rounded corners use 8–14px radius. Avatars and badges are rounded squares (6–8px radius), not circles."
+    rationale: "The rounded-square treatment is the system's geometric signature."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "For each <rect> with rx/ry, verify the value is in 6..14. Reject pure circles for avatars/badges (cx==cy with no rect equivalent)."
+
+  - id: sketch-warm-paper-bg
+    rule: "Page background is #FAFAF8 (warm beige), not pure white."
+    rationale: "Warm beige softens digital glare and supports the hand-drawn editorial feel."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact
+    check_implementation: "Verify the root <rect> covering viewBox uses fill #FAFAF8."
+
+  - id: sketch-no-emoji-imagery
+    rule: "No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations, category labels). Identity uses single-letter monograms in 34×34 rounded squares; categories use prose labels."
+    rationale: "Project policy forbids emoji as an identifier strategy. Sketch's hand-drawn feel comes from Caveat annotations and the warm palette, not from emoji."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Scan SVG text for codepoints in the Unicode emoji blocks (U+1F300-U+1F5FF, U+1F600-U+1F64F, U+1F680-U+1F6FF, U+1F900-U+1F9FF, U+2600-U+26FF, U+2700-U+27BF, U+1FA70-U+1FAFF). Any match is a violation."
+
+grammar_extensions:
+  family: contemporary_clean
+  per_system_signature:
+    annotations:
+      enabled: true
+      typeface_ref: typography.families.decorative   # Caveat
+      rotation_range_deg: [-3, -1]
+      color_ref: tokens.colors.accent                # purple
+      size_px: 13                                   # default annotation size
+      usage: "asides above AI messages, send labels, section headers like '↓ your chats'"

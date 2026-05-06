@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 48" width="320" height="48">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== BUTTON-GROUP-DEFAULT ==================== -->
+
+  <rect x="0" y="0" width="320" height="48" fill="#FAFAF8" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="40" y="32" text-anchor="middle" class="text-primary" font-size="14" font-weight="600" letter-spacing="-0.02em">All</text>
+  <line x1="80" y1="8" x2="80" y2="40" stroke="#E5E3DE" stroke-width="1"/>
+  <text x="120" y="32" text-anchor="middle" class="text-secondary" font-size="14" letter-spacing="-0.02em">Active</text>
+  <line x1="160" y1="8" x2="160" y2="40" stroke="#E5E3DE" stroke-width="1"/>
+  <text x="200" y="32" text-anchor="middle" class="text-secondary" font-size="14" letter-spacing="-0.02em">Archived</text>
+  <line x1="240" y1="8" x2="240" y2="40" stroke="#E5E3DE" stroke-width="1"/>
+  <text x="280" y="32" text-anchor="middle" class="text-secondary" font-size="14" letter-spacing="-0.02em">Draft</text>
+
+</svg>

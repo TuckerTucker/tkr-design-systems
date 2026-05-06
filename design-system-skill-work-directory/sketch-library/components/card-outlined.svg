@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" width="320" height="120">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== CARD-OUTLINED ==================== -->
+
+  <rect x="0" y="0" width="320" height="120" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="14" ry="14"/>
+  <text x="16" y="28" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Outlined</text>
+  <text x="16" y="58" class="text-primary" font-size="14" letter-spacing="-0.02em">Subtle border defines the boundary.</text>
+  <text x="16" y="78" class="text-primary" font-size="14" letter-spacing="-0.02em">No fill color.</text>
+
+</svg>

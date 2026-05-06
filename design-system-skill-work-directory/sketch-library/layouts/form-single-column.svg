@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="640" height="640">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== FORM-SINGLE-COLUMN ==================== -->
+
+  <rect x="0" y="0" width="640" height="640" fill="#FAFAF8"/>
+
+  <!-- Page title -->
+  <text x="32" y="40" class="text-primary" font-size="22" font-weight="700" letter-spacing="-0.02em">Create Account</text>
+  <text x="32" y="60" class="text-muted" font-size="13" letter-spacing="-0.02em">Join our community today.</text>
+
+  <line x1="32" y1="80" x2="608" y2="80" stroke="#E5E3DE" stroke-width="1"/>
+
+  <!-- Field 1: Full Name -->
+  <text x="32" y="120" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Full Name</text>
+  <rect x="32" y="132" width="576" height="40" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="44" y="158" class="text-muted" font-size="14" letter-spacing="-0.02em">Alex Rivera</text>
+
+  <!-- Field 2: Email -->
+  <text x="32" y="200" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Email Address</text>
+  <rect x="32" y="212" width="576" height="40" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="44" y="238" class="text-muted" font-size="14" letter-spacing="-0.02em">alex@example.com</text>
+
+  <!-- Field 3: Password -->
+  <text x="32" y="280" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Password</text>
+  <rect x="32" y="292" width="576" height="40" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="44" y="318" class="text-primary" font-size="14" letter-spacing="2">••••••••</text>
+
+  <!-- Field 4: Bio (textarea) -->
+  <text x="32" y="360" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Bio</text>
+  <rect x="32" y="372" width="576" height="100" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="44" y="400" class="text-muted" font-size="14" letter-spacing="-0.02em">Tell us about yourself...</text>
+
+  <line x1="32" y1="520" x2="608" y2="520" stroke="#E5E3DE" stroke-width="1"/>
+
+  <!-- Actions -->
+  <text x="32" y="560" class="text-secondary" font-size="13" letter-spacing="-0.02em" font-weight="600">Cancel</text>
+  <rect x="520" y="540" width="88" height="40" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="564" y="565" text-anchor="middle" class="text-primary" font-size="14" font-weight="600" letter-spacing="-0.02em">Sign up</text>
+
+</svg>

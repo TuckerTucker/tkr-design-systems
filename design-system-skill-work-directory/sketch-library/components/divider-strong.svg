@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 1" width="320" height="1">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== DIVIDER-STRONG ==================== -->
+
+  <line x1="0" y1="0.5" x2="320" y2="0.5" stroke="#D5CFC8" stroke-width="1"/>
+
+</svg>

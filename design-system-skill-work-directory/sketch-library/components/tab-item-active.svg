@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width="120" height="40">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== TAB-ITEM-ACTIVE ==================== -->
+
+  <text x="60" y="26" text-anchor="middle" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="700">Active Tab</text>
+  <g transform="rotate(-1.5, 60, 36)">
+    <line x1="20" y1="36" x2="100" y2="36" stroke="#B8A9C8" stroke-width="1.5"/>
+  </g>
+
+</svg>

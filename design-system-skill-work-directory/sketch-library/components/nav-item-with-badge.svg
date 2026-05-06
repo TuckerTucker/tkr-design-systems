@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 32" width="240" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== NAV-ITEM-WITH-BADGE ==================== -->
+
+  <text x="0" y="22" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Inbox</text>
+  <rect x="224" y="12" width="18" height="18" fill="#B8A9C8" rx="6" ry="6"/>
+  <text x="233" y="26" text-anchor="middle" font-family="'IBM Plex Sans', system-ui, sans-serif" font-size="9" font-weight="700" fill="#FFFFFF">3</text>
+
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== TEXTAREA-AUTOGROW ==================== -->
+
+  <rect x="0" y="0" width="320" height="80" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="12" y="28" class="text-primary" font-size="14" letter-spacing="-0.02em">This field grows as you type.</text>
+  <text x="12" y="54" class="text-primary" font-size="14" letter-spacing="-0.02em">Useful for long-form input.</text>
+
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" width="280" height="64">
+  <!-- Sketch list item — default state.
+       Avatar 34x34 emoji rounded square, title + preview right of avatar,
+       timestamp top-right, optional purple unread badge.
+  -->
+  <rect x="0" y="0" width="280" height="64" fill="#FAFAF8"/>
+
+  <!-- Avatar: 34px warm-surface square with 1px border -->
+  <rect x="14" y="15" width="34" height="34" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="8" ry="8"/>
+  <text x="31" y="38" font-family="'IBM Plex Sans', system-ui, sans-serif" font-size="14" font-weight="600" fill="#2C2C2C" text-anchor="middle">T</text>
+
+  <!-- Title row -->
+  <text x="58" y="29" font-family="'IBM Plex Sans', system-ui, sans-serif" font-size="12.5" font-weight="600" fill="#2C2C2C">Tokyo Trip</text>
+  <text x="266" y="29" font-family="'IBM Plex Sans', system-ui, sans-serif" font-size="10" font-weight="400" fill="#B0ADA8" text-anchor="end">2m</text>
+
+  <!-- Preview -->
+  <text x="58" y="46" font-family="'IBM Plex Sans', system-ui, sans-serif" font-size="11" font-weight="400" fill="#8A8680">Want me to build a day-by-day…</text>
+
+  <!-- Unread badge: 18px purple rounded square (rx=6 per spec) -->
+  <rect x="244" y="38" width="18" height="18" fill="#B8A9C8" rx="6" ry="6"/>
+  <text x="253" y="51" font-family="'IBM Plex Sans', system-ui, sans-serif" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+</svg>

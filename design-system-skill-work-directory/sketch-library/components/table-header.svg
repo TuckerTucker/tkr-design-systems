@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 32" width="640" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== TABLE-HEADER ==================== -->
+
+  <line x1="0" y1="31.5" x2="640" y2="31.5" stroke="#D5CFC8" stroke-width="1"/>
+  <text x="16" y="22" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">#</text>
+  <text x="48" y="22" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">NAME</text>
+  <text x="280" y="22" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">EMAIL</text>
+  <text x="480" y="22" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">ROLE</text>
+
+</svg>

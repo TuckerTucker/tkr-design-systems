@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 24" width="200" height="24">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== CHECKBOX-INDETERMINATE ==================== -->
+
+  <rect x="0" y="0" width="20" height="20" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="6" ry="6"/>
+  <line x1="5" y1="10" x2="15" y2="10" stroke="#2C2C2C" stroke-width="2" stroke-linecap="round"/>
+  <text x="32" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Indeterminate</text>
+
+</svg>

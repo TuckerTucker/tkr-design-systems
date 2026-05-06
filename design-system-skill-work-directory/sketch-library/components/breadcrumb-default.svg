@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 24" width="480" height="24">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== BREADCRUMB-DEFAULT ==================== -->
+
+  <text x="0" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Home</text>
+  <g transform="rotate(-1, 48, 16)">
+    <text x="48" y="16" font-family="Caveat, cursive" font-size="13" font-weight="700" fill="#B8A9C8">›</text>
+  </g>
+  <text x="64" y="16" class="text-secondary" font-size="13" letter-spacing="-0.02em">Settings</text>
+  <g transform="rotate(-1, 120, 16)">
+    <text x="120" y="16" font-family="Caveat, cursive" font-size="13" font-weight="700" fill="#B8A9C8">›</text>
+  </g>
+  <text x="136" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Profile</text>
+
+</svg>

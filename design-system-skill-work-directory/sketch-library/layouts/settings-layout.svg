@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== SETTINGS-LAYOUT ==================== -->
+
+  <rect x="0" y="0" width="1280" height="800" fill="#FAFAF8"/>
+
+  <!-- ════════════ SIDEBAR ════════════ -->
+  <line x1="280" y1="0" x2="280" y2="800" stroke="#E5E3DE" stroke-width="1"/>
+
+  <!-- Brand -->
+  <text x="16" y="32" class="text-primary" font-size="15" font-weight="600" letter-spacing="-0.02em">Sketch</text>
+  <line x1="0" y1="48" x2="280" y2="48" stroke="#E5E3DE" stroke-width="1"/>
+
+  <!-- Settings nav -->
+  <text x="16" y="80" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">ACCOUNT</text>
+
+  <!-- 01 Profile (selected) -->
+  <rect x="6" y="96" width="268" height="48" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="20" y="124" class="text-primary" font-size="13" font-weight="700" letter-spacing="-0.02em">Profile</text>
+
+  <!-- 02 Preferences -->
+  <text x="16" y="172" class="text-secondary" font-size="13" letter-spacing="-0.02em" font-weight="600">Preferences</text>
+
+  <!-- 03 Privacy -->
+  <text x="16" y="220" class="text-secondary" font-size="13" letter-spacing="-0.02em" font-weight="600">Privacy</text>
+
+  <!-- 04 Notifications -->
+  <text x="16" y="268" class="text-secondary" font-size="13" letter-spacing="-0.02em" font-weight="600">Notifications</text>
+
+  <!-- 05 Security -->
+  <text x="16" y="316" class="text-secondary" font-size="13" letter-spacing="-0.02em" font-weight="600">Security</text>
+
+  <!-- ════════════ CONTENT PANEL ════════════ -->
+
+  <!-- Section header -->
+  <text x="320" y="40" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">SETTINGS</text>
+  <text x="320" y="76" class="text-primary" font-size="22" font-weight="700" letter-spacing="-0.02em">Profile</text>
+  <text x="320" y="100" class="text-muted" font-size="13" letter-spacing="-0.02em">Manage your account information.</text>
+  <line x1="320" y1="120" x2="1248" y2="120" stroke="#E5E3DE" stroke-width="1"/>
+
+  <!-- Field 1: Display Name -->
+  <text x="320" y="160" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Display Name</text>
+  <rect x="320" y="172" width="576" height="40" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="332" y="198" class="text-primary" font-size="14" letter-spacing="-0.02em">Alex Rivera</text>
+
+  <line x1="320" y1="240" x2="1248" y2="240" stroke="#E5E3DE" stroke-width="1"/>
+
+  <!-- Field 2: Email -->
+  <text x="320" y="280" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Email Address</text>
+  <text x="320" y="300" class="text-muted" font-size="11" letter-spacing="-0.02em">Used for account access and recovery.</text>
+  <rect x="320" y="312" width="576" height="40" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="332" y="338" class="text-primary" font-size="14" letter-spacing="-0.02em">alex@example.com</text>
+
+  <line x1="320" y1="380" x2="1248" y2="380" stroke="#E5E3DE" stroke-width="1"/>
+
+  <!-- Field 3: Time zone -->
+  <text x="320" y="420" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Time Zone</text>
+  <rect x="320" y="432" width="576" height="40" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="332" y="458" class="text-primary" font-size="14" letter-spacing="-0.02em">America/Los_Angeles</text>
+  <g transform="rotate(-2, 888, 452)">
+    <text x="888" y="458" text-anchor="end" font-family="Caveat, cursive" font-size="14" font-weight="700" fill="#8A8680">↓</text>
+  </g>
+
+  <line x1="320" y1="500" x2="1248" y2="500" stroke="#E5E3DE" stroke-width="1"/>
+
+  <!-- Save button -->
+  <rect x="1160" y="530" width="88" height="40" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="1204" y="555" text-anchor="middle" class="text-primary" font-size="14" font-weight="600" letter-spacing="-0.02em">Save</text>
+
+</svg>

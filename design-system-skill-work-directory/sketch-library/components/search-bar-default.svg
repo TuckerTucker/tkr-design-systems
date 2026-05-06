@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 56" width="480" height="56">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== SEARCH-BAR-DEFAULT ==================== -->
+
+  <rect x="0" y="0" width="480" height="56" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="12" y="35" class="text-muted" font-size="14" letter-spacing="-0.02em">Search conversations...</text>
+  <g transform="rotate(-1.5, 460, 28)">
+    <text x="460" y="35" text-anchor="end" font-family="Caveat, cursive" font-size="14" font-weight="700" fill="#C4B8D4">↓ your chats</text>
+  </g>
+
+</svg>

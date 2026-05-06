@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 24" width="200" height="24">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+    </style>
+  </defs>
+  <!-- ==================== TOGGLE-ON ==================== -->
+
+  <rect x="0" y="0" width="44" height="24" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="12" ry="12"/>
+  <rect x="24" y="4" width="16" height="16" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="4" ry="4"/>
+  <text x="56" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">On</text>
+
+</svg>
