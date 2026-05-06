@@ -1,0 +1,306 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600" width="1200" height="1600">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .label { fill: #757575; font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 11px; }
+      .section-label { fill: #424242; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+      .token-label { fill: #9E9E9E; font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 10px; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="1600" fill="#FAFAFA"/>
+
+  <!-- Title -->
+  <text x="48" y="48" class="text-primary" font-size="28" font-weight="700">Wireframe Style Guide — Generic Template</text>
+  <text x="48" y="76" class="text-secondary" font-size="14">Lo-fi greyscale design system for SVG wireframing — Reusable across any project</text>
+
+  <!-- Divider -->
+  <line x1="48" y1="100" x2="1152" y2="100" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== COLOR PALETTE ==================== -->
+  <text x="48" y="144" class="text-primary" font-size="20" font-weight="600">Color Palette</text>
+  <text x="48" y="168" class="text-secondary" font-size="13">Seven greyscale tokens for structural hierarchy. Semantic colors layer on top for status.</text>
+
+  <!-- Greyscale Swatches -->
+  <g transform="translate(48, 192)">
+    <!-- Background -->
+    <rect width="100" height="100" rx="8" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="50" y="56" text-anchor="middle" class="text-secondary" font-size="11">Aa</text>
+    <text x="0" y="120" class="label">Background</text>
+    <text x="0" y="134" class="token-label">#F5F5F5</text>
+    <text x="0" y="148" class="token-label">Page fill</text>
+
+    <!-- Surface -->
+    <g transform="translate(140, 0)">
+      <rect width="100" height="100" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="50" y="56" text-anchor="middle" class="text-secondary" font-size="11">Aa</text>
+      <text x="0" y="120" class="label">Surface</text>
+      <text x="0" y="134" class="token-label">#FFFFFF</text>
+      <text x="0" y="148" class="token-label">Cards, headers</text>
+    </g>
+
+    <!-- Border -->
+    <g transform="translate(280, 0)">
+      <rect width="100" height="100" rx="8" fill="#E0E0E0"/>
+      <text x="50" y="56" text-anchor="middle" class="text-secondary" font-size="11">Aa</text>
+      <text x="0" y="120" class="label">Border</text>
+      <text x="0" y="134" class="token-label">#E0E0E0</text>
+      <text x="0" y="148" class="token-label">Outlines, dividers</text>
+    </g>
+
+    <!-- Disabled -->
+    <g transform="translate(420, 0)">
+      <rect width="100" height="100" rx="8" fill="#BDBDBD"/>
+      <text x="50" y="56" text-anchor="middle" fill="#FFFFFF" font-family="-apple-system, sans-serif" font-size="11">Aa</text>
+      <text x="0" y="120" class="label">Disabled</text>
+      <text x="0" y="134" class="token-label">#BDBDBD</text>
+      <text x="0" y="148" class="token-label">Placeholders</text>
+    </g>
+
+    <!-- Secondary -->
+    <g transform="translate(560, 0)">
+      <rect width="100" height="100" rx="8" fill="#757575"/>
+      <text x="50" y="56" text-anchor="middle" class="text-inverse" font-size="11">Aa</text>
+      <text x="0" y="120" class="label">Secondary</text>
+      <text x="0" y="134" class="token-label">#757575</text>
+      <text x="0" y="148" class="token-label">Subtitles, labels</text>
+    </g>
+
+    <!-- Interactive -->
+    <g transform="translate(700, 0)">
+      <rect width="100" height="100" rx="8" fill="#424242"/>
+      <text x="50" y="56" text-anchor="middle" class="text-inverse" font-size="11">Aa</text>
+      <text x="0" y="120" class="label">Interactive</text>
+      <text x="0" y="134" class="token-label">#424242</text>
+      <text x="0" y="148" class="token-label">Buttons, active</text>
+    </g>
+
+    <!-- Primary Text -->
+    <g transform="translate(840, 0)">
+      <rect width="100" height="100" rx="8" fill="#212121"/>
+      <text x="50" y="56" text-anchor="middle" class="text-inverse" font-size="11">Aa</text>
+      <text x="0" y="120" class="label">Primary Text</text>
+      <text x="0" y="134" class="token-label">#212121</text>
+      <text x="0" y="148" class="token-label">Headings, body</text>
+    </g>
+  </g>
+
+  <!-- Semantic Colors -->
+  <g transform="translate(48, 360)">
+    <text x="0" y="0" class="section-label">SEMANTIC COLORS (OPTIONAL LAYER)</text>
+
+    <g transform="translate(0, 16)">
+      <rect width="80" height="48" rx="6" fill="#2E7D32"/>
+      <text x="40" y="30" text-anchor="middle" class="text-inverse" font-size="11">Success</text>
+      <text x="0" y="68" class="token-label">#2E7D32</text>
+    </g>
+
+    <g transform="translate(120, 16)">
+      <rect width="80" height="48" rx="6" fill="#E65100"/>
+      <text x="40" y="30" text-anchor="middle" class="text-inverse" font-size="11">Warning</text>
+      <text x="0" y="68" class="token-label">#E65100</text>
+    </g>
+
+    <g transform="translate(240, 16)">
+      <rect width="80" height="48" rx="6" fill="#B71C1C"/>
+      <text x="40" y="30" text-anchor="middle" class="text-inverse" font-size="11">Danger</text>
+      <text x="0" y="68" class="token-label">#B71C1C</text>
+    </g>
+
+    <g transform="translate(360, 16)">
+      <rect width="80" height="48" rx="6" fill="#1565C0"/>
+      <text x="40" y="30" text-anchor="middle" class="text-inverse" font-size="11">Info</text>
+      <text x="0" y="68" class="token-label">#1565C0</text>
+    </g>
+  </g>
+
+  <!-- Divider -->
+  <line x1="48" y1="460" x2="1152" y2="460" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== TYPOGRAPHY ==================== -->
+  <text x="48" y="500" class="text-primary" font-size="20" font-weight="600">Typography Scale</text>
+  <text x="48" y="524" class="text-secondary" font-size="13">System font stack. Six sizes covering all wireframe needs.</text>
+
+  <g transform="translate(48, 548)">
+    <!-- Title -->
+    <text x="0" y="28" class="text-primary" font-size="24" font-weight="700">Page Title — 24px Bold</text>
+    <text x="580" y="28" class="token-label">title • Page headings, hero text</text>
+
+    <!-- Heading -->
+    <text x="0" y="72" class="text-primary" font-size="20" font-weight="600">Section Heading — 20px Semibold</text>
+    <text x="580" y="72" class="token-label">heading • Section titles, card headers</text>
+
+    <!-- Subheading -->
+    <text x="0" y="110" class="text-primary" font-size="17" font-weight="600">Subheading — 17px Semibold</text>
+    <text x="580" y="110" class="token-label">subheading • Nav headers, sub-sections</text>
+
+    <!-- Body -->
+    <text x="0" y="146" class="text-primary" font-size="15">Body Text — 15px Regular</text>
+    <text x="580" y="146" class="token-label">body • Primary content, button labels</text>
+
+    <!-- Secondary -->
+    <text x="0" y="178" class="text-secondary" font-size="14">Secondary — 14px Regular</text>
+    <text x="580" y="178" class="token-label">secondary • Help text, timestamps, links</text>
+
+    <!-- Label -->
+    <text x="0" y="208" class="text-secondary" font-size="12" font-weight="500">LABEL — 12px Medium Caps</text>
+    <text x="580" y="208" class="token-label">label • Metadata, badges, overlines</text>
+
+    <!-- Caption -->
+    <text x="0" y="234" class="text-secondary" font-size="11">Caption — 11px Regular</text>
+    <text x="580" y="234" class="token-label">caption • Fine print, footnotes</text>
+  </g>
+
+  <!-- Divider -->
+  <line x1="48" y1="808" x2="1152" y2="808" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== SPACING ==================== -->
+  <text x="48" y="848" class="text-primary" font-size="20" font-weight="600">Spacing System</text>
+  <text x="48" y="872" class="text-secondary" font-size="13">8px base unit. All spacing derives from this grid.</text>
+
+  <g transform="translate(48, 896)">
+    <!-- 4px -->
+    <rect width="4" height="32" rx="1" fill="#424242"/>
+    <text x="16" y="22" class="label">4px</text>
+    <text x="60" y="22" class="token-label">xs — Icon gaps, inline spacing</text>
+
+    <!-- 8px -->
+    <g transform="translate(0, 48)">
+      <rect width="8" height="32" rx="1" fill="#424242"/>
+      <text x="16" y="22" class="label">8px</text>
+      <text x="60" y="22" class="token-label">sm — Tight padding, small gaps</text>
+    </g>
+
+    <!-- 12px -->
+    <g transform="translate(0, 96)">
+      <rect width="12" height="32" rx="1" fill="#424242"/>
+      <text x="24" y="22" class="label">12px</text>
+      <text x="60" y="22" class="token-label">md — Component gap, card padding</text>
+    </g>
+
+    <!-- 16px -->
+    <g transform="translate(0, 144)">
+      <rect width="16" height="32" rx="1" fill="#424242"/>
+      <text x="28" y="22" class="label">16px</text>
+      <text x="72" y="22" class="token-label">lg — Mobile page margins</text>
+    </g>
+
+    <!-- 24px -->
+    <g transform="translate(0, 192)">
+      <rect width="24" height="32" rx="1" fill="#424242"/>
+      <text x="36" y="22" class="label">24px</text>
+      <text x="72" y="22" class="token-label">xl — Section gap, desktop margins</text>
+    </g>
+
+    <!-- 32px -->
+    <g transform="translate(0, 240)">
+      <rect width="32" height="32" rx="1" fill="#424242"/>
+      <text x="44" y="22" class="label">32px</text>
+      <text x="84" y="22" class="token-label">2xl — Large section breaks</text>
+    </g>
+
+    <!-- 48px -->
+    <g transform="translate(0, 288)">
+      <rect width="48" height="32" rx="1" fill="#424242"/>
+      <text x="60" y="22" class="label">48px</text>
+      <text x="100" y="22" class="token-label">3xl — Page-level spacing</text>
+    </g>
+  </g>
+
+  <!-- Border Radius -->
+  <g transform="translate(560, 896)">
+    <text x="0" y="0" class="section-label">BORDER RADIUS</text>
+
+    <g transform="translate(0, 20)">
+      <rect width="64" height="48" rx="0" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="32" y="30" text-anchor="middle" class="text-secondary" font-size="10">0px</text>
+      <text x="0" y="68" class="token-label">none</text>
+    </g>
+
+    <g transform="translate(88, 20)">
+      <rect width="64" height="48" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="32" y="30" text-anchor="middle" class="text-secondary" font-size="10">4px</text>
+      <text x="0" y="68" class="token-label">sm</text>
+    </g>
+
+    <g transform="translate(176, 20)">
+      <rect width="64" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="32" y="30" text-anchor="middle" class="text-secondary" font-size="10">6px</text>
+      <text x="0" y="68" class="token-label">md (default)</text>
+    </g>
+
+    <g transform="translate(264, 20)">
+      <rect width="64" height="48" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="32" y="30" text-anchor="middle" class="text-secondary" font-size="10">8px</text>
+      <text x="0" y="68" class="token-label">lg</text>
+    </g>
+
+    <g transform="translate(352, 20)">
+      <rect width="64" height="48" rx="12" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="32" y="30" text-anchor="middle" class="text-secondary" font-size="10">12px</text>
+      <text x="0" y="68" class="token-label">xl</text>
+    </g>
+
+    <g transform="translate(440, 20)">
+      <rect width="64" height="48" rx="24" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="32" y="30" text-anchor="middle" class="text-secondary" font-size="10">full</text>
+      <text x="0" y="68" class="token-label">pill</text>
+    </g>
+  </g>
+
+  <!-- Stroke Weights -->
+  <g transform="translate(560, 1020)">
+    <text x="0" y="0" class="section-label">STROKE WEIGHTS</text>
+
+    <g transform="translate(0, 20)">
+      <line x1="0" y1="16" x2="120" y2="16" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="136" y="20" class="token-label">1px — Borders, dividers</text>
+    </g>
+
+    <g transform="translate(0, 48)">
+      <line x1="0" y1="16" x2="120" y2="16" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="136" y="20" class="token-label">1.5px — Card outlines, inputs</text>
+    </g>
+
+    <g transform="translate(0, 76)">
+      <line x1="0" y1="16" x2="120" y2="16" stroke="#424242" stroke-width="2"/>
+      <text x="136" y="20" class="token-label">2px — Active/selected borders</text>
+    </g>
+
+    <g transform="translate(0, 104)">
+      <line x1="0" y1="16" x2="120" y2="16" stroke="#424242" stroke-width="3"/>
+      <text x="136" y="20" class="token-label">3px — Heavy emphasis</text>
+    </g>
+  </g>
+
+  <!-- Divider -->
+  <line x1="48" y1="1220" x2="1152" y2="1220" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== CSS CLASSES ==================== -->
+  <text x="48" y="1260" class="text-primary" font-size="20" font-weight="600">CSS Classes (SVG Defs)</text>
+  <text x="48" y="1284" class="text-secondary" font-size="13">Standard class names for all wireframe SVGs. Copy this block into every file's defs section.</text>
+
+  <g transform="translate(48, 1308)">
+    <rect width="1104" height="240" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+
+    <text x="24" y="28" fill="#757575" font-family="'SF Mono', Monaco, monospace" font-size="12">&lt;defs&gt;</text>
+    <text x="24" y="48" fill="#757575" font-family="'SF Mono', Monaco, monospace" font-size="12">  &lt;style&gt;</text>
+    <text x="24" y="68" fill="#212121" font-family="'SF Mono', Monaco, monospace" font-size="12">    .text-primary   { fill: #212121; font-family: -apple-system, sans-serif; }</text>
+    <text x="24" y="88" fill="#212121" font-family="'SF Mono', Monaco, monospace" font-size="12">    .text-secondary  { fill: #757575; font-family: -apple-system, sans-serif; }</text>
+    <text x="24" y="108" fill="#212121" font-family="'SF Mono', Monaco, monospace" font-size="12">    .text-disabled  { fill: #BDBDBD; font-family: -apple-system, sans-serif; }</text>
+    <text x="24" y="128" fill="#212121" font-family="'SF Mono', Monaco, monospace" font-size="12">    .text-inverse   { fill: #FFFFFF; font-family: -apple-system, sans-serif; }</text>
+    <text x="24" y="148" fill="#212121" font-family="'SF Mono', Monaco, monospace" font-size="12">    .label          { fill: #757575; font-family: 'SF Mono', monospace; font-size: 11px; }</text>
+    <text x="24" y="168" fill="#212121" font-family="'SF Mono', Monaco, monospace" font-size="12">    .section-label  { fill: #424242; font-family: -apple-system, sans-serif;</text>
+    <text x="24" y="188" fill="#212121" font-family="'SF Mono', Monaco, monospace" font-size="12">                      font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }</text>
+    <text x="24" y="208" fill="#757575" font-family="'SF Mono', Monaco, monospace" font-size="12">  &lt;/style&gt;</text>
+    <text x="24" y="228" fill="#757575" font-family="'SF Mono', Monaco, monospace" font-size="12">&lt;/defs&gt;</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="48" y="1580" class="text-secondary" font-size="12">Wireframe Style Guide — Generic Template v1.0 — Greyscale, system fonts, 8px grid</text>
+
+</svg>

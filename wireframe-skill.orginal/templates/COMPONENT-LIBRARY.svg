@@ -1,0 +1,641 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 2400" width="1200" height="2400">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .label { fill: #757575; font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 11px; }
+      .section-label { fill: #424242; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+      .token-label { fill: #9E9E9E; font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 10px; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="2400" fill="#FAFAFA"/>
+
+  <!-- Title -->
+  <text x="48" y="48" class="text-primary" font-size="28" font-weight="700">Wireframe Component Library — Generic Template</text>
+  <text x="48" y="76" class="text-secondary" font-size="14">Reusable UI components for lo-fi greyscale wireframes. Copy into any project.</text>
+
+  <line x1="48" y1="100" x2="1152" y2="100" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== BUTTONS ==================== -->
+  <text x="48" y="140" class="text-primary" font-size="20" font-weight="600">Buttons</text>
+
+  <g transform="translate(48, 164)">
+    <!-- Primary Button -->
+    <g transform="translate(0, 0)">
+      <rect width="160" height="48" rx="6" fill="#424242"/>
+      <text x="80" y="30" text-anchor="middle" class="text-inverse" font-size="15" font-weight="500">Primary</text>
+      <text x="0" y="68" class="token-label">Primary action — filled #424242</text>
+    </g>
+
+    <!-- Secondary Button -->
+    <g transform="translate(200, 0)">
+      <rect width="160" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="80" y="30" text-anchor="middle" class="text-secondary" font-size="15" font-weight="500">Secondary</text>
+      <text x="0" y="68" class="token-label">Secondary action — outlined</text>
+    </g>
+
+    <!-- Ghost Button -->
+    <g transform="translate(400, 0)">
+      <rect width="160" height="48" rx="6" fill="transparent"/>
+      <text x="80" y="30" text-anchor="middle" class="text-secondary" font-size="15" font-weight="500">Ghost</text>
+      <text x="0" y="68" class="token-label">Tertiary — no border</text>
+    </g>
+
+    <!-- Disabled Button -->
+    <g transform="translate(600, 0)">
+      <rect width="160" height="48" rx="6" fill="#E0E0E0"/>
+      <text x="80" y="30" text-anchor="middle" class="text-disabled" font-size="15" font-weight="500">Disabled</text>
+      <text x="0" y="68" class="token-label">Inactive state</text>
+    </g>
+
+    <!-- Danger Button -->
+    <g transform="translate(800, 0)">
+      <rect width="160" height="48" rx="6" fill="#B71C1C"/>
+      <text x="80" y="30" text-anchor="middle" class="text-inverse" font-size="15" font-weight="500">Danger</text>
+      <text x="0" y="68" class="token-label">Destructive action</text>
+    </g>
+  </g>
+
+  <!-- Button Sizes -->
+  <g transform="translate(48, 260)">
+    <text x="0" y="0" class="section-label">BUTTON SIZES</text>
+
+    <!-- Small -->
+    <g transform="translate(0, 16)">
+      <rect width="100" height="32" rx="4" fill="#424242"/>
+      <text x="50" y="21" text-anchor="middle" class="text-inverse" font-size="12" font-weight="500">Small</text>
+      <text x="120" y="22" class="token-label">32px height</text>
+    </g>
+
+    <!-- Default -->
+    <g transform="translate(260, 16)">
+      <rect width="120" height="40" rx="6" fill="#424242"/>
+      <text x="60" y="26" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Default</text>
+      <text x="140" y="26" class="token-label">40px height</text>
+    </g>
+
+    <!-- Large -->
+    <g transform="translate(520, 16)">
+      <rect width="160" height="48" rx="6" fill="#424242"/>
+      <text x="80" y="30" text-anchor="middle" class="text-inverse" font-size="15" font-weight="500">Large</text>
+      <text x="180" y="30" class="token-label">48px height</text>
+    </g>
+
+    <!-- Full Width -->
+    <g transform="translate(0, 68)">
+      <rect width="400" height="48" rx="6" fill="#424242"/>
+      <text x="200" y="30" text-anchor="middle" class="text-inverse" font-size="15" font-weight="500">Full Width</text>
+      <text x="420" y="30" class="token-label">100% container width</text>
+    </g>
+
+    <!-- Text Link -->
+    <g transform="translate(520, 68)">
+      <text x="0" y="30" class="text-secondary" font-size="14" text-decoration="underline">Text Link</text>
+      <text x="100" y="30" class="token-label">Inline action</text>
+    </g>
+  </g>
+
+  <line x1="48" y1="380" x2="1152" y2="380" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== FORM INPUTS ==================== -->
+  <text x="48" y="420" class="text-primary" font-size="20" font-weight="600">Form Inputs</text>
+
+  <g transform="translate(48, 444)">
+    <!-- Text Input - Empty -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">TEXT INPUT</text>
+      <text x="0" y="20" class="text-secondary" font-size="12">Label</text>
+      <rect y="28" width="280" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="16" y="58" class="text-disabled" font-size="15">Placeholder text...</text>
+      <text x="0" y="96" class="token-label">Empty / default state</text>
+    </g>
+
+    <!-- Text Input - Filled -->
+    <g transform="translate(320, 0)">
+      <text x="0" y="0" class="section-label">TEXT INPUT — FILLED</text>
+      <text x="0" y="20" class="text-secondary" font-size="12">Label</text>
+      <rect y="28" width="280" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="16" y="58" class="text-primary" font-size="15">User input value</text>
+      <text x="0" y="96" class="token-label">Populated state</text>
+    </g>
+
+    <!-- Text Input - Focus -->
+    <g transform="translate(640, 0)">
+      <text x="0" y="0" class="section-label">TEXT INPUT — FOCUS</text>
+      <text x="0" y="20" class="text-primary" font-size="12" font-weight="500">Label</text>
+      <rect y="28" width="280" height="48" rx="6" fill="#FFFFFF" stroke="#424242" stroke-width="2"/>
+      <text x="16" y="58" class="text-primary" font-size="15">|</text>
+      <text x="0" y="96" class="token-label">Focused — 2px #424242 border</text>
+    </g>
+  </g>
+
+  <!-- Error + Disabled inputs -->
+  <g transform="translate(48, 564)">
+    <!-- Text Input - Error -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">TEXT INPUT — ERROR</text>
+      <text x="0" y="20" fill="#B71C1C" font-family="-apple-system, sans-serif" font-size="12" font-weight="500">Label</text>
+      <rect y="28" width="280" height="48" rx="6" fill="#FFFFFF" stroke="#B71C1C" stroke-width="2"/>
+      <text x="16" y="58" class="text-primary" font-size="15">Invalid value</text>
+      <text x="0" y="96" fill="#B71C1C" font-family="-apple-system, sans-serif" font-size="12">Error message goes here</text>
+    </g>
+
+    <!-- Text Input - Disabled -->
+    <g transform="translate(320, 0)">
+      <text x="0" y="0" class="section-label">TEXT INPUT — DISABLED</text>
+      <text x="0" y="20" class="text-disabled" font-size="12">Label</text>
+      <rect y="28" width="280" height="48" rx="6" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="16" y="58" class="text-disabled" font-size="15">Cannot edit</text>
+      <text x="0" y="96" class="token-label">Disabled — bg #F5F5F5</text>
+    </g>
+
+    <!-- Textarea -->
+    <g transform="translate(640, 0)">
+      <text x="0" y="0" class="section-label">TEXTAREA</text>
+      <text x="0" y="20" class="text-secondary" font-size="12">Label</text>
+      <rect y="28" width="280" height="96" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="16" y="52" class="text-disabled" font-size="14">Enter longer text...</text>
+      <text x="250" y="112" class="text-disabled" font-size="11">0/500</text>
+      <text x="0" y="144" class="token-label">Multi-line input</text>
+    </g>
+  </g>
+
+  <!-- Select, Checkbox, Radio, Toggle -->
+  <g transform="translate(48, 720)">
+    <!-- Select / Dropdown -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">SELECT / DROPDOWN</text>
+      <text x="0" y="20" class="text-secondary" font-size="12">Label</text>
+      <rect y="28" width="280" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="16" y="58" class="text-primary" font-size="15">Selected option</text>
+      <path d="M250 48 L258 56 L266 48" fill="none" stroke="#757575" stroke-width="1.5" stroke-linecap="round"/>
+      <text x="0" y="96" class="token-label">Closed state with chevron</text>
+    </g>
+
+    <!-- Checkboxes -->
+    <g transform="translate(320, 0)">
+      <text x="0" y="0" class="section-label">CHECKBOX</text>
+
+      <!-- Unchecked -->
+      <g transform="translate(0, 20)">
+        <rect width="20" height="20" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+        <text x="28" y="16" class="text-primary" font-size="14">Unchecked option</text>
+      </g>
+
+      <!-- Checked -->
+      <g transform="translate(0, 52)">
+        <rect width="20" height="20" rx="4" fill="#424242"/>
+        <path d="M4 10 L8 14 L16 6" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="28" y="16" class="text-primary" font-size="14">Checked option</text>
+      </g>
+
+      <!-- Disabled -->
+      <g transform="translate(0, 84)">
+        <rect width="20" height="20" rx="4" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+        <text x="28" y="16" class="text-disabled" font-size="14">Disabled option</text>
+      </g>
+    </g>
+
+    <!-- Radio Buttons -->
+    <g transform="translate(640, 0)">
+      <text x="0" y="0" class="section-label">RADIO BUTTON</text>
+
+      <!-- Unselected -->
+      <g transform="translate(0, 20)">
+        <circle cx="10" cy="10" r="10" fill="none" stroke="#BDBDBD" stroke-width="1.5"/>
+        <text x="28" y="16" class="text-primary" font-size="14">Unselected</text>
+      </g>
+
+      <!-- Selected -->
+      <g transform="translate(0, 52)">
+        <circle cx="10" cy="10" r="10" fill="#424242"/>
+        <circle cx="10" cy="10" r="4" fill="#FFFFFF"/>
+        <text x="28" y="16" class="text-primary" font-size="14">Selected</text>
+      </g>
+
+      <!-- Disabled -->
+      <g transform="translate(0, 84)">
+        <circle cx="10" cy="10" r="10" fill="none" stroke="#E0E0E0" stroke-width="1"/>
+        <text x="28" y="16" class="text-disabled" font-size="14">Disabled</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Toggles -->
+  <g transform="translate(48, 856)">
+    <text x="0" y="0" class="section-label">TOGGLE SWITCH</text>
+
+    <!-- Off -->
+    <g transform="translate(0, 20)">
+      <rect width="44" height="24" rx="12" fill="#E0E0E0"/>
+      <circle cx="12" cy="12" r="10" fill="#FFFFFF"/>
+      <text x="56" y="18" class="text-primary" font-size="14">Off state</text>
+    </g>
+
+    <!-- On -->
+    <g transform="translate(200, 20)">
+      <rect width="44" height="24" rx="12" fill="#424242"/>
+      <circle cx="32" cy="12" r="10" fill="#FFFFFF"/>
+      <text x="56" y="18" class="text-primary" font-size="14">On state</text>
+    </g>
+
+    <!-- Disabled -->
+    <g transform="translate(400, 20)">
+      <rect width="44" height="24" rx="12" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+      <circle cx="12" cy="12" r="10" fill="#E0E0E0"/>
+      <text x="56" y="18" class="text-disabled" font-size="14">Disabled</text>
+    </g>
+  </g>
+
+  <line x1="48" y1="920" x2="1152" y2="920" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== CARDS ==================== -->
+  <text x="48" y="960" class="text-primary" font-size="20" font-weight="600">Cards</text>
+
+  <g transform="translate(48, 984)">
+    <!-- Basic Card -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">BASIC CARD</text>
+      <rect y="16" width="280" height="120" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="16" y="48" class="text-primary" font-size="15" font-weight="500">Card Title</text>
+      <text x="16" y="68" class="text-secondary" font-size="13">Supporting description text goes here.</text>
+      <text x="16" y="88" class="text-secondary" font-size="13">Additional context or metadata.</text>
+      <text x="16" y="120" class="token-label">Surface fill, 1.5px border, 6px radius</text>
+    </g>
+
+    <!-- Card with Header -->
+    <g transform="translate(320, 0)">
+      <text x="0" y="0" class="section-label">CARD WITH HEADER</text>
+      <rect y="16" width="280" height="140" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <rect y="16" width="280" height="40" rx="6" fill="#F5F5F5"/>
+      <rect y="50" width="280" height="6" fill="#FFFFFF"/>
+      <text x="16" y="42" class="text-primary" font-size="14" font-weight="600">Section Header</text>
+      <text x="16" y="80" class="text-secondary" font-size="13">Content body goes here</text>
+      <text x="16" y="100" class="text-secondary" font-size="13">with supporting details.</text>
+      <text x="16" y="172" class="token-label">Header area uses #F5F5F5</text>
+    </g>
+
+    <!-- Card with Action -->
+    <g transform="translate(640, 0)">
+      <text x="0" y="0" class="section-label">INTERACTIVE CARD</text>
+      <rect y="16" width="280" height="120" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <rect x="16" y="32" width="32" height="32" rx="6" fill="#E0E0E0"/>
+      <text x="60" y="48" class="text-primary" font-size="15" font-weight="500">Item Name</text>
+      <text x="60" y="66" class="text-secondary" font-size="12">Meta info • Status</text>
+      <rect x="16" y="100" width="80" height="24" rx="4" fill="#424242"/>
+      <text x="56" y="116" text-anchor="middle" class="text-inverse" font-size="11" font-weight="500">Action</text>
+      <text x="200" y="116" class="text-secondary" font-size="11">View Details →</text>
+    </g>
+  </g>
+
+  <!-- Card States -->
+  <g transform="translate(48, 1160)">
+    <!-- Selected Card -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">SELECTED CARD</text>
+      <rect y="16" width="200" height="60" rx="6" fill="#F5F5F5" stroke="#424242" stroke-width="2"/>
+      <text x="100" y="52" text-anchor="middle" class="text-primary" font-size="14" font-weight="500">Selected Option</text>
+    </g>
+
+    <!-- Unselected Card -->
+    <g transform="translate(240, 0)">
+      <text x="0" y="0" class="section-label">UNSELECTED CARD</text>
+      <rect y="16" width="200" height="60" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="100" y="52" text-anchor="middle" class="text-primary" font-size="14">Option Label</text>
+    </g>
+
+    <!-- Disabled Card -->
+    <g transform="translate(480, 0)">
+      <text x="0" y="0" class="section-label">DISABLED CARD</text>
+      <rect y="16" width="200" height="60" rx="6" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="100" y="52" text-anchor="middle" class="text-disabled" font-size="14">Unavailable</text>
+    </g>
+
+    <!-- Empty/Add Card -->
+    <g transform="translate(720, 0)">
+      <text x="0" y="0" class="section-label">ADD / EMPTY CARD</text>
+      <rect y="16" width="200" height="60" rx="6" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <line x1="92" y1="36" x2="108" y2="36" stroke="#757575" stroke-width="2"/>
+      <line x1="100" y1="28" x2="100" y2="44" stroke="#757575" stroke-width="2"/>
+      <text x="100" y="66" text-anchor="middle" class="text-secondary" font-size="11">Add New</text>
+    </g>
+  </g>
+
+  <line x1="48" y1="1260" x2="1152" y2="1260" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== NAVIGATION COMPONENTS ==================== -->
+  <text x="48" y="1300" class="text-primary" font-size="20" font-weight="600">Navigation</text>
+
+  <g transform="translate(48, 1324)">
+    <!-- Standard Header -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">STANDARD HEADER</text>
+      <rect y="16" width="375" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <!-- Logo -->
+      <circle cx="40" cy="44" r="14" fill="none" stroke="#424242" stroke-width="1.5"/>
+      <circle cx="40" cy="44" r="4" fill="#424242"/>
+      <!-- App name -->
+      <text x="64" y="48" class="text-primary" font-size="16" font-weight="600">App Name</text>
+      <!-- Avatar -->
+      <circle cx="347" cy="44" r="14" fill="#E0E0E0"/>
+      <text x="347" y="48" text-anchor="middle" class="text-secondary" font-size="10" font-weight="600">AB</text>
+    </g>
+
+    <!-- Drilldown Header -->
+    <g transform="translate(420, 0)">
+      <text x="0" y="0" class="section-label">DRILLDOWN HEADER</text>
+      <rect y="16" width="375" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <!-- Back -->
+      <circle cx="32" cy="44" r="14" fill="#F5F5F5"/>
+      <path d="M36 38 L28 44 L36 50" fill="none" stroke="#424242" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Context title -->
+      <text x="60" y="48" class="text-primary" font-size="16" font-weight="600">Page Title</text>
+      <!-- More menu -->
+      <circle cx="347" cy="44" r="14" fill="#F5F5F5"/>
+      <circle cx="339" cy="44" r="2" fill="#424242"/>
+      <circle cx="347" cy="44" r="2" fill="#424242"/>
+      <circle cx="355" cy="44" r="2" fill="#424242"/>
+    </g>
+  </g>
+
+  <!-- Tab Bars -->
+  <g transform="translate(48, 1424)">
+    <!-- Bottom Tab Bar -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">BOTTOM TAB BAR</text>
+      <rect y="16" width="375" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+
+      <!-- Tab 1 (Active) -->
+      <g transform="translate(50, 28)">
+        <rect x="-4" y="-4" width="6" height="6" rx="1" fill="#424242"/>
+        <rect x="4" y="-4" width="6" height="6" rx="1" fill="#424242"/>
+        <rect x="-4" y="4" width="6" height="6" rx="1" fill="#424242"/>
+        <rect x="4" y="4" width="6" height="6" rx="1" fill="#424242"/>
+        <text x="3" y="24" text-anchor="middle" class="text-primary" font-size="10" font-weight="600">Home</text>
+      </g>
+
+      <!-- Tab 2 (Inactive) -->
+      <g transform="translate(140, 28)">
+        <rect x="-6" y="-2" width="12" height="14" rx="2" fill="none" stroke="#757575" stroke-width="1.5"/>
+        <line x1="-3" y1="4" x2="3" y2="4" stroke="#757575" stroke-width="1"/>
+        <line x1="-3" y1="7" x2="3" y2="7" stroke="#757575" stroke-width="1"/>
+        <text x="0" y="24" text-anchor="middle" class="text-secondary" font-size="10">Reports</text>
+      </g>
+
+      <!-- Tab 3 (Inactive) -->
+      <g transform="translate(230, 28)">
+        <circle cx="0" cy="3" r="6" fill="none" stroke="#757575" stroke-width="1.5"/>
+        <circle cx="0" cy="3" r="2" fill="#757575"/>
+        <text x="0" y="24" text-anchor="middle" class="text-secondary" font-size="10">Settings</text>
+      </g>
+
+      <!-- Tab 4 (Inactive) -->
+      <g transform="translate(320, 28)">
+        <circle cx="0" cy="1" r="5" fill="none" stroke="#757575" stroke-width="1.5"/>
+        <path d="M-8 12 Q0 8 8 12" fill="none" stroke="#757575" stroke-width="1.5"/>
+        <text x="0" y="24" text-anchor="middle" class="text-secondary" font-size="10">Profile</text>
+      </g>
+    </g>
+
+    <!-- Pill Navigation -->
+    <g transform="translate(420, 0)">
+      <text x="0" y="0" class="section-label">PILL NAVIGATION</text>
+      <rect y="16" width="375" height="40" rx="6" fill="#F5F5F5"/>
+
+      <!-- Active pill -->
+      <rect x="12" y="22" width="80" height="28" rx="14" fill="#424242"/>
+      <text x="52" y="40" text-anchor="middle" class="text-inverse" font-size="12" font-weight="500">Active</text>
+
+      <!-- Inactive pills -->
+      <text x="120" y="40" class="text-secondary" font-size="12">Inactive</text>
+      <text x="190" y="40" class="text-secondary" font-size="12">Another</text>
+      <text x="260" y="40" class="text-secondary" font-size="12">More</text>
+    </g>
+  </g>
+
+  <!-- Underline Tabs & Breadcrumbs -->
+  <g transform="translate(48, 1520)">
+    <!-- Underline Tabs -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">UNDERLINE TABS</text>
+      <g transform="translate(0, 20)">
+        <text x="0" y="16" class="text-primary" font-size="14" font-weight="600">Active</text>
+        <rect x="0" y="22" width="48" height="2" fill="#424242"/>
+
+        <text x="72" y="16" class="text-secondary" font-size="14">Inactive</text>
+        <text x="140" y="16" class="text-secondary" font-size="14">Another</text>
+
+        <line x1="0" y1="24" x2="200" y2="24" stroke="#E0E0E0" stroke-width="1"/>
+      </g>
+    </g>
+
+    <!-- Breadcrumbs -->
+    <g transform="translate(420, 0)">
+      <text x="0" y="0" class="section-label">BREADCRUMBS</text>
+      <g transform="translate(0, 20)">
+        <text x="0" y="16" class="text-secondary" font-size="13">Home</text>
+        <text x="44" y="16" class="text-disabled" font-size="13">/</text>
+        <text x="56" y="16" class="text-secondary" font-size="13">Section</text>
+        <text x="112" y="16" class="text-disabled" font-size="13">/</text>
+        <text x="124" y="16" class="text-primary" font-size="13" font-weight="500">Current Page</text>
+      </g>
+    </g>
+  </g>
+
+  <line x1="48" y1="1590" x2="1152" y2="1590" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== FEEDBACK & STATUS ==================== -->
+  <text x="48" y="1630" class="text-primary" font-size="20" font-weight="600">Feedback &amp; Status</text>
+
+  <g transform="translate(48, 1654)">
+    <!-- Badges -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">BADGES</text>
+
+      <g transform="translate(0, 16)">
+        <rect width="64" height="24" rx="12" fill="#E0E0E0"/>
+        <text x="32" y="16" text-anchor="middle" class="text-secondary" font-size="11" font-weight="500">Default</text>
+      </g>
+
+      <g transform="translate(80, 16)">
+        <rect width="64" height="24" rx="12" fill="#424242"/>
+        <text x="32" y="16" text-anchor="middle" class="text-inverse" font-size="11" font-weight="500">Active</text>
+      </g>
+
+      <g transform="translate(160, 16)">
+        <rect width="72" height="24" rx="12" fill="#2E7D32" opacity="0.15"/>
+        <text x="36" y="16" text-anchor="middle" fill="#2E7D32" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">Success</text>
+      </g>
+
+      <g transform="translate(248, 16)">
+        <rect width="72" height="24" rx="12" fill="#E65100" opacity="0.15"/>
+        <text x="36" y="16" text-anchor="middle" fill="#E65100" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">Warning</text>
+      </g>
+
+      <g transform="translate(336, 16)">
+        <rect width="64" height="24" rx="12" fill="#B71C1C" opacity="0.15"/>
+        <text x="32" y="16" text-anchor="middle" fill="#B71C1C" font-family="-apple-system, sans-serif" font-size="11" font-weight="500">Error</text>
+      </g>
+    </g>
+
+    <!-- Progress Bar -->
+    <g transform="translate(0, 68)">
+      <text x="0" y="0" class="section-label">PROGRESS BAR</text>
+
+      <g transform="translate(0, 16)">
+        <rect width="300" height="8" rx="4" fill="#E0E0E0"/>
+        <rect width="180" height="8" rx="4" fill="#424242"/>
+        <text x="320" y="10" class="text-secondary" font-size="12">60%</text>
+      </g>
+
+      <g transform="translate(0, 40)">
+        <rect width="300" height="4" rx="2" fill="#E0E0E0"/>
+        <rect width="90" height="4" rx="2" fill="#424242"/>
+        <text x="320" y="6" class="text-secondary" font-size="12">30% (slim)</text>
+      </g>
+    </g>
+
+    <!-- Progress Squares -->
+    <g transform="translate(0, 140)">
+      <text x="0" y="0" class="section-label">PROGRESS SQUARES</text>
+      <g transform="translate(0, 16)">
+        <rect width="10" height="10" rx="2" fill="#424242"/>
+        <rect x="14" y="0" width="10" height="10" rx="2" fill="#424242"/>
+        <rect x="28" y="0" width="10" height="10" rx="2" fill="#424242"/>
+        <rect x="42" y="0" width="10" height="10" rx="2" fill="none" stroke="#E0E0E0" stroke-width="1.5"/>
+        <rect x="56" y="0" width="10" height="10" rx="2" fill="none" stroke="#E0E0E0" stroke-width="1.5"/>
+        <rect x="70" y="0" width="10" height="10" rx="2" fill="none" stroke="#E0E0E0" stroke-width="1.5"/>
+        <text x="100" y="10" class="token-label">3 of 6 complete</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Alert / Toast -->
+  <g transform="translate(48, 1838)">
+    <text x="0" y="0" class="section-label">ALERT / TOAST</text>
+
+    <!-- Info Alert -->
+    <g transform="translate(0, 16)">
+      <rect width="400" height="56" rx="6" fill="#FFFFFF" stroke="#1565C0" stroke-width="2"/>
+      <rect x="2" y="2" width="4" height="52" rx="2" fill="#1565C0"/>
+      <text x="24" y="24" class="text-primary" font-size="14" font-weight="500">Info Alert Title</text>
+      <text x="24" y="44" class="text-secondary" font-size="13">Supplementary description text.</text>
+    </g>
+
+    <!-- Error Alert -->
+    <g transform="translate(440, 16)">
+      <rect width="400" height="56" rx="6" fill="#FFFFFF" stroke="#B71C1C" stroke-width="2"/>
+      <rect x="2" y="2" width="4" height="52" rx="2" fill="#B71C1C"/>
+      <text x="24" y="24" class="text-primary" font-size="14" font-weight="500">Error Alert Title</text>
+      <text x="24" y="44" class="text-secondary" font-size="13">Describe what went wrong and how to fix it.</text>
+    </g>
+  </g>
+
+  <line x1="48" y1="1940" x2="1152" y2="1940" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== DATA DISPLAY ==================== -->
+  <text x="48" y="1980" class="text-primary" font-size="20" font-weight="600">Data Display</text>
+
+  <g transform="translate(48, 2004)">
+    <!-- Metric Card -->
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" class="section-label">METRIC CARD</text>
+      <rect y="16" width="160" height="80" rx="6" fill="#F5F5F5"/>
+      <text x="16" y="42" class="text-secondary" font-size="11" font-weight="500" letter-spacing="0.5">RESPONSES</text>
+      <text x="16" y="72" class="text-primary" font-size="28" font-weight="700">1,247</text>
+    </g>
+
+    <!-- Stat Row -->
+    <g transform="translate(200, 0)">
+      <text x="0" y="0" class="section-label">STAT ROW (INLINE)</text>
+      <g transform="translate(0, 20)">
+        <rect width="120" height="64" rx="6" fill="#F5F5F5"/>
+        <text x="60" y="24" text-anchor="middle" class="text-secondary" font-size="10">Users</text>
+        <text x="60" y="48" text-anchor="middle" class="text-primary" font-size="20" font-weight="600">340</text>
+
+        <rect x="132" y="0" width="120" height="64" rx="6" fill="#F5F5F5"/>
+        <text x="192" y="24" text-anchor="middle" class="text-secondary" font-size="10">Rate</text>
+        <text x="192" y="48" text-anchor="middle" class="text-primary" font-size="20" font-weight="600">94%</text>
+
+        <rect x="264" y="0" width="120" height="64" rx="6" fill="#F5F5F5"/>
+        <text x="324" y="24" text-anchor="middle" class="text-secondary" font-size="10">Days</text>
+        <text x="324" y="48" text-anchor="middle" class="text-primary" font-size="20" font-weight="600">12</text>
+      </g>
+    </g>
+
+    <!-- Simple Table -->
+    <g transform="translate(600, 0)">
+      <text x="0" y="0" class="section-label">TABLE ROW</text>
+      <g transform="translate(0, 16)">
+        <!-- Header row -->
+        <rect width="500" height="32" rx="4" fill="#F5F5F5"/>
+        <text x="16" y="22" class="text-secondary" font-size="12" font-weight="500">Name</text>
+        <text x="200" y="22" class="text-secondary" font-size="12" font-weight="500">Status</text>
+        <text x="340" y="22" class="text-secondary" font-size="12" font-weight="500">Updated</text>
+
+        <!-- Data row 1 -->
+        <line x1="0" y1="32" x2="500" y2="32" stroke="#E0E0E0" stroke-width="1"/>
+        <text x="16" y="54" class="text-primary" font-size="13">Item Alpha</text>
+        <rect x="200" y="40" width="48" height="20" rx="10" fill="#2E7D32" opacity="0.15"/>
+        <text x="224" y="54" text-anchor="middle" fill="#2E7D32" font-family="-apple-system, sans-serif" font-size="10" font-weight="500">Active</text>
+        <text x="340" y="54" class="text-secondary" font-size="12">Feb 10, 2026</text>
+
+        <!-- Data row 2 -->
+        <line x1="0" y1="64" x2="500" y2="64" stroke="#E0E0E0" stroke-width="1"/>
+        <text x="16" y="86" class="text-primary" font-size="13">Item Beta</text>
+        <rect x="200" y="72" width="40" height="20" rx="10" fill="#E0E0E0"/>
+        <text x="220" y="86" text-anchor="middle" class="text-secondary" font-size="10" font-weight="500">Draft</text>
+        <text x="340" y="86" class="text-secondary" font-size="12">Feb 8, 2026</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== EMPTY STATES ==================== -->
+  <g transform="translate(48, 2140)">
+    <text x="0" y="0" class="section-label">EMPTY STATE</text>
+    <rect y="16" width="400" height="160" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+
+    <!-- Icon placeholder -->
+    <circle cx="200" cy="72" r="28" fill="#F5F5F5"/>
+    <rect x="186" y="58" width="28" height="28" rx="4" fill="none" stroke="#BDBDBD" stroke-width="1.5"/>
+
+    <!-- Text -->
+    <text x="200" y="120" text-anchor="middle" class="text-primary" font-size="15" font-weight="500">No items yet</text>
+    <text x="200" y="140" text-anchor="middle" class="text-secondary" font-size="13">Create your first item to get started.</text>
+
+    <!-- CTA -->
+    <rect x="140" y="148" width="120" height="32" rx="6" fill="#424242"/>
+    <text x="200" y="168" text-anchor="middle" class="text-inverse" font-size="12" font-weight="500">Create Item</text>
+  </g>
+
+  <!-- Divider -->
+  <g transform="translate(480, 2140)">
+    <text x="0" y="0" class="section-label">DIVIDER VARIANTS</text>
+
+    <!-- Full width -->
+    <line x1="0" y1="28" x2="400" y2="28" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="420" y="32" class="token-label">Full width</text>
+
+    <!-- Inset -->
+    <line x1="48" y1="52" x2="400" y2="52" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="420" y="56" class="token-label">Inset (48px left)</text>
+
+    <!-- With label -->
+    <line x1="0" y1="80" x2="140" y2="80" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="152" y="84" class="text-secondary" font-size="12">or</text>
+    <line x1="172" y1="80" x2="400" y2="80" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="420" y="84" class="token-label">With label</text>
+
+    <!-- Dashed -->
+    <line x1="0" y1="108" x2="400" y2="108" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="6,4"/>
+    <text x="420" y="112" class="token-label">Dashed (optional)</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="48" y="2380" class="text-secondary" font-size="12">Wireframe Component Library — Generic Template v1.0 — Buttons, Inputs, Cards, Nav, Status, Data</text>
+
+</svg>

@@ -1,0 +1,377 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 2000" width="1400" height="2000">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .label { fill: #757575; font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 11px; }
+      .section-label { fill: #424242; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+      .token-label { fill: #9E9E9E; font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 10px; }
+      .grid-col { fill: #424242; opacity: 0.06; }
+      .grid-label { fill: #424242; font-family: 'SF Mono', monospace; font-size: 9px; opacity: 0.5; }
+      .dim-line { stroke: #B71C1C; stroke-width: 1; opacity: 0.6; }
+      .dim-text { fill: #B71C1C; font-family: 'SF Mono', monospace; font-size: 10px; opacity: 0.7; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="2000" fill="#FAFAFA"/>
+
+  <!-- Title -->
+  <text x="48" y="48" class="text-primary" font-size="28" font-weight="700">Grid &amp; Layout System — Generic Template</text>
+  <text x="48" y="76" class="text-secondary" font-size="14">Responsive breakpoints, column grids, and layout patterns for SVG wireframes.</text>
+
+  <line x1="48" y1="100" x2="1352" y2="100" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== BREAKPOINTS ==================== -->
+  <text x="48" y="140" class="text-primary" font-size="20" font-weight="600">Responsive Breakpoints</text>
+
+  <g transform="translate(48, 168)">
+    <!-- Mobile -->
+    <g transform="translate(0, 0)">
+      <rect width="187" height="100" rx="8" fill="#FFFFFF" stroke="#424242" stroke-width="2"/>
+      <text x="94" y="28" text-anchor="middle" class="text-primary" font-size="14" font-weight="600">Mobile</text>
+      <text x="94" y="48" text-anchor="middle" class="text-secondary" font-size="12">375px wide</text>
+      <text x="94" y="68" text-anchor="middle" class="token-label">&lt; 768px</text>
+      <text x="94" y="84" text-anchor="middle" class="token-label">Single column</text>
+    </g>
+
+    <!-- Tablet -->
+    <g transform="translate(220, 0)">
+      <rect width="280" height="100" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="140" y="28" text-anchor="middle" class="text-primary" font-size="14" font-weight="600">Tablet</text>
+      <text x="140" y="48" text-anchor="middle" class="text-secondary" font-size="12">768px wide</text>
+      <text x="140" y="68" text-anchor="middle" class="token-label">768–1023px</text>
+      <text x="140" y="84" text-anchor="middle" class="token-label">2 columns</text>
+    </g>
+
+    <!-- Desktop -->
+    <g transform="translate(536, 0)">
+      <rect width="480" height="100" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="240" y="28" text-anchor="middle" class="text-primary" font-size="14" font-weight="600">Desktop</text>
+      <text x="240" y="48" text-anchor="middle" class="text-secondary" font-size="12">1280px wide</text>
+      <text x="240" y="68" text-anchor="middle" class="token-label">1024px+</text>
+      <text x="240" y="84" text-anchor="middle" class="token-label">Multi-column grid</text>
+    </g>
+
+    <!-- SVG Widths Note -->
+    <g transform="translate(1060, 0)">
+      <rect width="280" height="100" rx="8" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="16" y="28" class="text-primary" font-size="13" font-weight="500">SVG viewBox Widths</text>
+      <text x="16" y="52" class="text-secondary" font-size="12">Mobile: 375 × [height]</text>
+      <text x="16" y="72" class="text-secondary" font-size="12">Desktop: 1280 × [height]</text>
+      <text x="16" y="92" class="token-label">Height varies by content</text>
+    </g>
+  </g>
+
+  <line x1="48" y1="300" x2="1352" y2="300" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== MOBILE GRID (375px) ==================== -->
+  <text x="48" y="340" class="text-primary" font-size="20" font-weight="600">Mobile Grid — 375px</text>
+  <text x="48" y="364" class="text-secondary" font-size="13">16px margins, 12px gutter, single column layout. 4-column grid for sub-layouts.</text>
+
+  <g transform="translate(48, 388)">
+    <!-- Phone frame -->
+    <rect width="375" height="400" rx="12" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+
+    <!-- Margin indicators -->
+    <rect x="0" y="0" width="16" height="400" rx="0" fill="#B71C1C" opacity="0.08"/>
+    <rect x="359" y="0" width="16" height="400" rx="0" fill="#B71C1C" opacity="0.08"/>
+
+    <!-- 4-column grid inside margins -->
+    <rect x="16" y="0" width="79" height="400" class="grid-col"/>
+    <rect x="107" y="0" width="79" height="400" class="grid-col"/>
+    <rect x="198" y="0" width="79" height="400" class="grid-col"/>
+    <rect x="289" y="0" width="70" height="400" class="grid-col"/>
+
+    <!-- Grid labels -->
+    <text x="56" y="20" text-anchor="middle" class="grid-label">1</text>
+    <text x="147" y="20" text-anchor="middle" class="grid-label">2</text>
+    <text x="238" y="20" text-anchor="middle" class="grid-label">3</text>
+    <text x="324" y="20" text-anchor="middle" class="grid-label">4</text>
+
+    <!-- Dimension: left margin -->
+    <line x1="0" y1="380" x2="16" y2="380" class="dim-line"/>
+    <text x="8" y="394" text-anchor="middle" class="dim-text">16</text>
+
+    <!-- Dimension: content width -->
+    <line x1="16" y1="360" x2="359" y2="360" class="dim-line"/>
+    <text x="188" y="374" text-anchor="middle" class="dim-text">343px content</text>
+
+    <!-- Example: Full-width card -->
+    <g transform="translate(16, 40)">
+      <rect width="343" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="16" y="22" class="text-primary" font-size="14" font-weight="500">Header</text>
+      <text x="16" y="42" class="text-secondary" font-size="12">Full width across all 4 columns</text>
+    </g>
+
+    <!-- Example: Content cards stacked -->
+    <g transform="translate(16, 112)">
+      <rect width="343" height="80" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="16" y="24" class="text-primary" font-size="13" font-weight="500">Card A</text>
+      <text x="16" y="44" class="text-secondary" font-size="12">Stacked vertically on mobile</text>
+      <text x="16" y="64" class="text-secondary" font-size="12">12px gap below</text>
+    </g>
+
+    <g transform="translate(16, 204)">
+      <rect width="343" height="80" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+      <text x="16" y="24" class="text-primary" font-size="13" font-weight="500">Card B</text>
+      <text x="16" y="44" class="text-secondary" font-size="12">Same width, same styling</text>
+    </g>
+
+    <!-- Example: 2-col inside mobile (50/50) -->
+    <g transform="translate(16, 300)">
+      <rect width="166" height="64" rx="6" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="83" y="24" text-anchor="middle" class="text-secondary" font-size="11">Metric A</text>
+      <text x="83" y="48" text-anchor="middle" class="text-primary" font-size="18" font-weight="600">42</text>
+
+      <rect x="178" y="0" width="165" height="64" rx="6" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="261" y="24" text-anchor="middle" class="text-secondary" font-size="11">Metric B</text>
+      <text x="261" y="48" text-anchor="middle" class="text-primary" font-size="18" font-weight="600">87%</text>
+    </g>
+  </g>
+
+  <!-- Spacing annotations -->
+  <g transform="translate(460, 388)">
+    <rect width="280" height="400" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="16" y="28" class="text-primary" font-size="14" font-weight="600">Mobile Layout Rules</text>
+
+    <text x="16" y="56" class="text-secondary" font-size="13">Page margins: 16px left/right</text>
+    <text x="16" y="76" class="text-secondary" font-size="13">Content width: 343px</text>
+    <text x="16" y="96" class="text-secondary" font-size="13">Card gap: 12px vertical</text>
+    <text x="16" y="116" class="text-secondary" font-size="13">Section gap: 24px vertical</text>
+    <text x="16" y="136" class="text-secondary" font-size="13">Card padding: 16px internal</text>
+
+    <line x1="16" y1="152" x2="264" y2="152" stroke="#E0E0E0" stroke-width="1"/>
+
+    <text x="16" y="176" class="text-primary" font-size="14" font-weight="600">Vertical Stacking</text>
+    <text x="16" y="200" class="text-secondary" font-size="13">y=0 → Header (56px fixed)</text>
+    <text x="16" y="220" class="text-secondary" font-size="13">y=68 → Action bar (optional)</text>
+    <text x="16" y="240" class="text-secondary" font-size="13">y=varies → Content cards</text>
+    <text x="16" y="260" class="text-secondary" font-size="13">y=bottom → Footer (56px fixed)</text>
+
+    <line x1="16" y1="276" x2="264" y2="276" stroke="#E0E0E0" stroke-width="1"/>
+
+    <text x="16" y="300" class="text-primary" font-size="14" font-weight="600">Common Heights</text>
+    <text x="16" y="324" class="text-secondary" font-size="13">Header: 56px</text>
+    <text x="16" y="344" class="text-secondary" font-size="13">Tab bar: 56px</text>
+    <text x="16" y="364" class="text-secondary" font-size="13">Action bar: 44px</text>
+    <text x="16" y="384" class="text-secondary" font-size="13">Buttons: 40–48px</text>
+  </g>
+
+  <line x1="48" y1="820" x2="1352" y2="820" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== DESKTOP GRID (1280px) ==================== -->
+  <text x="48" y="860" class="text-primary" font-size="20" font-weight="600">Desktop Grid — 1280px</text>
+  <text x="48" y="884" class="text-secondary" font-size="13">32px margins, 24px gutter, 12-column grid. Content max-width varies by layout pattern.</text>
+
+  <g transform="translate(48, 908)">
+    <!-- Desktop frame -->
+    <rect width="1280" height="100" rx="8" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+
+    <!-- Margin indicators -->
+    <rect x="0" y="0" width="32" height="100" rx="0" fill="#B71C1C" opacity="0.08"/>
+    <rect x="1248" y="0" width="32" height="100" rx="0" fill="#B71C1C" opacity="0.08"/>
+
+    <!-- 12-column grid (1216px / 12 cols with gutters) -->
+    <!-- Each col = (1216 - 11*24) / 12 = (1216 - 264) / 12 = 79.3px -->
+    <rect x="32" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="135" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="238" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="341" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="444" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="547" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="650" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="753" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="856" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="959" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="1062" y="0" width="79" height="100" class="grid-col"/>
+    <rect x="1165" y="0" width="79" height="100" class="grid-col"/>
+
+    <!-- Column labels -->
+    <text x="72" y="20" text-anchor="middle" class="grid-label">1</text>
+    <text x="175" y="20" text-anchor="middle" class="grid-label">2</text>
+    <text x="278" y="20" text-anchor="middle" class="grid-label">3</text>
+    <text x="381" y="20" text-anchor="middle" class="grid-label">4</text>
+    <text x="484" y="20" text-anchor="middle" class="grid-label">5</text>
+    <text x="587" y="20" text-anchor="middle" class="grid-label">6</text>
+    <text x="690" y="20" text-anchor="middle" class="grid-label">7</text>
+    <text x="793" y="20" text-anchor="middle" class="grid-label">8</text>
+    <text x="896" y="20" text-anchor="middle" class="grid-label">9</text>
+    <text x="999" y="20" text-anchor="middle" class="grid-label">10</text>
+    <text x="1102" y="20" text-anchor="middle" class="grid-label">11</text>
+    <text x="1205" y="20" text-anchor="middle" class="grid-label">12</text>
+
+    <!-- Dimension annotations -->
+    <line x1="0" y1="84" x2="32" y2="84" class="dim-line"/>
+    <text x="16" y="96" text-anchor="middle" class="dim-text">32</text>
+
+    <line x1="32" y1="60" x2="1248" y2="60" class="dim-line"/>
+    <text x="640" y="74" text-anchor="middle" class="dim-text">1216px content (12 cols × ~79px + 11 × 24px gutters)</text>
+  </g>
+
+  <line x1="48" y1="1040" x2="1352" y2="1040" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== DESKTOP LAYOUT PATTERNS ==================== -->
+  <text x="48" y="1080" class="text-primary" font-size="20" font-weight="600">Desktop Layout Patterns</text>
+  <text x="48" y="1104" class="text-secondary" font-size="13">Four common patterns for adapting mobile content to desktop width.</text>
+
+  <!-- Pattern 1: Two-Column Split -->
+  <g transform="translate(48, 1128)">
+    <text x="0" y="0" class="section-label">PATTERN A: TWO-COLUMN SPLIT (MAIN + PANEL)</text>
+
+    <rect y="16" width="640" height="200" rx="8" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+
+    <!-- Header -->
+    <rect x="8" y="24" width="624" height="40" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="24" y="48" class="text-primary" font-size="12" font-weight="600">Header</text>
+
+    <!-- Main content (60%) -->
+    <rect x="8" y="72" width="380" height="136" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="198" y="146" text-anchor="middle" class="text-secondary" font-size="12">Main Content (60–65%)</text>
+
+    <!-- Side panel (40%) -->
+    <rect x="396" y="72" width="236" height="136" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="514" y="146" text-anchor="middle" class="text-secondary" font-size="12">Panel (35–40%)</text>
+
+    <text x="0" y="236" class="token-label">Detail views, results screens, main + contextual sidebar</text>
+  </g>
+
+  <!-- Pattern 2: Card Grid -->
+  <g transform="translate(728, 1128)">
+    <text x="0" y="0" class="section-label">PATTERN B: MULTI-COLUMN CARD GRID</text>
+
+    <rect y="16" width="640" height="200" rx="8" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+
+    <!-- Header -->
+    <rect x="8" y="24" width="624" height="40" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="24" y="48" class="text-primary" font-size="12" font-weight="600">Header</text>
+
+    <!-- Card grid (3 cols) -->
+    <rect x="8" y="72" width="200" height="60" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="108" y="106" text-anchor="middle" class="text-secondary" font-size="11">Card 1</text>
+
+    <rect x="216" y="72" width="200" height="60" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="316" y="106" text-anchor="middle" class="text-secondary" font-size="11">Card 2</text>
+
+    <rect x="424" y="72" width="208" height="60" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="528" y="106" text-anchor="middle" class="text-secondary" font-size="11">Card 3</text>
+
+    <rect x="8" y="140" width="200" height="60" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="108" y="174" text-anchor="middle" class="text-secondary" font-size="11">Card 4</text>
+
+    <rect x="216" y="140" width="200" height="60" rx="4" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <line x1="308" y1="163" x2="324" y2="163" stroke="#757575" stroke-width="2"/>
+    <line x1="316" y1="155" x2="316" y2="171" stroke="#757575" stroke-width="2"/>
+
+    <text x="0" y="236" class="token-label">List views, dashboards, item browsers. Cards go from 1-col (mobile) to 2-3 cols</text>
+  </g>
+
+  <!-- Pattern 3: Centered Constrained -->
+  <g transform="translate(48, 1400)">
+    <text x="0" y="0" class="section-label">PATTERN C: CENTERED CONSTRAINED</text>
+
+    <rect y="16" width="640" height="200" rx="8" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+
+    <!-- Header -->
+    <rect x="8" y="24" width="624" height="40" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="320" y="48" text-anchor="middle" class="text-primary" font-size="12" font-weight="600">Header (centered branding)</text>
+
+    <!-- Centered content -->
+    <rect x="140" y="72" width="360" height="136" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="320" y="128" text-anchor="middle" class="text-secondary" font-size="12">Content Area</text>
+    <text x="320" y="148" text-anchor="middle" class="text-secondary" font-size="11">max-width: 600px</text>
+
+    <!-- Whitespace indicators -->
+    <rect x="8" y="72" width="124" height="136" rx="4" fill="#F5F5F5" opacity="0.5"/>
+    <text x="70" y="146" text-anchor="middle" class="text-disabled" font-size="10">Whitespace</text>
+
+    <rect x="508" y="72" width="124" height="136" rx="4" fill="#F5F5F5" opacity="0.5"/>
+    <text x="570" y="146" text-anchor="middle" class="text-disabled" font-size="10">Whitespace</text>
+
+    <text x="0" y="236" class="token-label">Focused flows — forms, wizards, surveys. Keep attention narrow.</text>
+  </g>
+
+  <!-- Pattern 4: Left Sidebar + Content -->
+  <g transform="translate(728, 1400)">
+    <text x="0" y="0" class="section-label">PATTERN D: LEFT SIDEBAR + CONTENT</text>
+
+    <rect y="16" width="640" height="200" rx="8" fill="#FAFAFA" stroke="#E0E0E0" stroke-width="2"/>
+
+    <!-- Header -->
+    <rect x="8" y="24" width="624" height="40" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="24" y="48" class="text-primary" font-size="12" font-weight="600">Header</text>
+
+    <!-- Sidebar -->
+    <rect x="8" y="72" width="180" height="136" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="16" y="92" class="text-primary" font-size="11" font-weight="500">All Items</text>
+    <rect x="16" y="100" width="156" height="24" rx="4" fill="#F5F5F5"/>
+    <text x="24" y="116" class="text-primary" font-size="10" font-weight="500">Category A</text>
+    <text x="16" y="140" class="text-secondary" font-size="10">Category B</text>
+    <text x="16" y="160" class="text-secondary" font-size="10">Category C</text>
+    <text x="16" y="180" class="text-secondary" font-size="10">Category D</text>
+
+    <!-- Main content -->
+    <rect x="196" y="72" width="436" height="136" rx="4" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="414" y="146" text-anchor="middle" class="text-secondary" font-size="12">Filtered Content</text>
+
+    <text x="0" y="236" class="token-label">Filtered views, settings. Converts mobile's horizontal pills to persistent vertical nav.</text>
+  </g>
+
+  <line x1="48" y1="1668" x2="1352" y2="1668" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ==================== ADAPTATION RULES ==================== -->
+  <text x="48" y="1708" class="text-primary" font-size="20" font-weight="600">Mobile → Desktop Adaptation Rules</text>
+
+  <g transform="translate(48, 1732)">
+    <rect width="1304" height="220" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+
+    <!-- Column 1: Mobile Pattern -->
+    <text x="24" y="28" class="text-primary" font-size="14" font-weight="600">Mobile Pattern</text>
+    <text x="24" y="52" class="text-secondary" font-size="13">Stacked cards</text>
+    <text x="24" y="72" class="text-secondary" font-size="13">Bottom sheet / modal</text>
+    <text x="24" y="92" class="text-secondary" font-size="13">Horizontal scroll pills</text>
+    <text x="24" y="112" class="text-secondary" font-size="13">Accordion / collapsed</text>
+    <text x="24" y="132" class="text-secondary" font-size="13">Hidden supplementary info</text>
+    <text x="24" y="152" class="text-secondary" font-size="13">Full-width action bar</text>
+    <text x="24" y="172" class="text-secondary" font-size="13">Single-column metrics</text>
+
+    <!-- Arrow column -->
+    <text x="380" y="52" class="text-disabled" font-size="13">→</text>
+    <text x="380" y="72" class="text-disabled" font-size="13">→</text>
+    <text x="380" y="92" class="text-disabled" font-size="13">→</text>
+    <text x="380" y="112" class="text-disabled" font-size="13">→</text>
+    <text x="380" y="132" class="text-disabled" font-size="13">→</text>
+    <text x="380" y="152" class="text-disabled" font-size="13">→</text>
+    <text x="380" y="172" class="text-disabled" font-size="13">→</text>
+
+    <!-- Column 2: Desktop Adaptation -->
+    <text x="420" y="28" class="text-primary" font-size="14" font-weight="600">Desktop Adaptation</text>
+    <text x="420" y="52" class="text-primary" font-size="13">Card grid (2–3 columns)</text>
+    <text x="420" y="72" class="text-primary" font-size="13">Side sheet (~420px) or centered modal</text>
+    <text x="420" y="92" class="text-primary" font-size="13">Left sidebar with vertical list</text>
+    <text x="420" y="112" class="text-primary" font-size="13">Expanded sections, visible by default</text>
+    <text x="420" y="132" class="text-primary" font-size="13">Right column panel</text>
+    <text x="420" y="152" class="text-primary" font-size="13">Inline with header row</text>
+    <text x="420" y="172" class="text-primary" font-size="13">Horizontal metric strip</text>
+
+    <!-- Column 3: Pattern -->
+    <text x="860" y="28" class="text-primary" font-size="14" font-weight="600">Layout Pattern</text>
+    <text x="860" y="52" class="token-label">B: Card Grid</text>
+    <text x="860" y="72" class="token-label">A: Two-Column Split</text>
+    <text x="860" y="92" class="token-label">D: Sidebar + Content</text>
+    <text x="860" y="112" class="token-label">A: Two-Column Split</text>
+    <text x="860" y="132" class="token-label">A: Two-Column Split</text>
+    <text x="860" y="152" class="token-label">(Header inline)</text>
+    <text x="860" y="172" class="token-label">(Horizontal flex)</text>
+
+    <!-- Key principle -->
+    <line x1="24" y1="188" x2="1280" y2="188" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="24" y="210" class="text-primary" font-size="13" font-weight="500">Core principle: Desktop expands the mobile layout. It never rearranges the information hierarchy.</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="48" y="1980" class="text-secondary" font-size="12">Grid &amp; Layout System — Generic Template v1.0 — Breakpoints, grids, and four layout patterns</text>
+
+</svg>
