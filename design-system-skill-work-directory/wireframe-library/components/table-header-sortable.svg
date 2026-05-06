@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 40" width="640" height="40">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== TABLE-HEADER-SORTABLE ==================== -->
+
+  <rect width="640" height="40" fill="#FFFFFF"/>
+  <text x="16" y="26" class="text-primary" font-size="11" font-weight="600" letter-spacing="0.5">NAME</text>
+  <path d="M 60 22 L 64 18 L 68 22" fill="none" stroke="#424242" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="200" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">EMAIL</text>
+  <text x="440" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">ROLE</text>
+  <text x="600" y="26" text-anchor="end" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">STATUS</text>
+  <line x1="0" y1="38.5" x2="640" y2="38.5" stroke="#757575" stroke-width="1.5"/>
+
+</svg>

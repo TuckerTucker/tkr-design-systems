@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 800" width="64" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== SIDEBAR-COLLAPSED ==================== -->
+
+  <rect width="64" height="800" fill="#FFFFFF"/>
+  <line x1="63.5" y1="0" x2="63.5" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Brand mark -->
+  <rect x="20" y="20" width="24" height="24" rx="4" fill="#424242"/>
+  <line x1="0" y1="64" x2="64" y2="64" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Icon-only nav items -->
+  <rect x="12" y="80" width="40" height="40" rx="4" fill="#F5F5F5"/>
+  <rect x="24" y="92" width="16" height="16" rx="2" fill="none" stroke="#424242" stroke-width="1.5"/>
+
+  <rect x="24" y="140" width="16" height="16" rx="2" fill="none" stroke="#757575" stroke-width="1.5"/>
+  <rect x="24" y="188" width="16" height="16" rx="2" fill="none" stroke="#757575" stroke-width="1.5"/>
+  <rect x="24" y="236" width="16" height="16" rx="2" fill="none" stroke="#757575" stroke-width="1.5"/>
+  <rect x="24" y="284" width="16" height="16" rx="2" fill="none" stroke="#757575" stroke-width="1.5"/>
+
+  <!-- Footer -->
+  <line x1="0" y1="744" x2="64" y2="744" stroke="#E0E0E0" stroke-width="1"/>
+  <circle cx="32" cy="772" r="14" fill="#E0E0E0"/>
+  <text x="32" y="776" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">AR</text>
+
+</svg>

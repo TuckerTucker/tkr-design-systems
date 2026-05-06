@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DROPDOWN-MENU-WITH-SEARCH ==================== -->
+
+  <rect width="240" height="40" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="16" y="26" class="text-primary" font-size="13">Select user</text>
+  <path d="M 214 18 L 218 22 L 222 18" fill="none" stroke="#757575" stroke-width="1.5" stroke-linecap="round"/>
+  <rect x="0" y="48" width="240" height="184" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <rect x="8" y="56" width="224" height="32" rx="4" fill="#F5F5F5"/>
+  <text x="20" y="76" class="text-disabled" font-size="13">Search users...</text>
+  <text x="16" y="116" class="text-primary" font-size="14">Alex Rivera</text>
+  <text x="16" y="148" class="text-primary" font-size="14">Jordan Chen</text>
+  <text x="16" y="180" class="text-primary" font-size="14">Sam Okafor</text>
+  <text x="16" y="212" class="text-primary" font-size="14">Taylor Kim</text>
+
+</svg>

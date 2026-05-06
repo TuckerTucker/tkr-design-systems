@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== EMPTY-STATE-NO-DATA ==================== -->
+
+  <rect width="640" height="400" fill="#FFFFFF"/>
+
+  <!-- Illustration placeholder -->
+  <rect x="288" y="80" width="64" height="64" rx="8" fill="none" stroke="#BDBDBD" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="296" y1="100" x2="344" y2="100" stroke="#BDBDBD" stroke-width="1.5"/>
+  <line x1="296" y1="116" x2="344" y2="116" stroke="#BDBDBD" stroke-width="1.5"/>
+  <line x1="296" y1="132" x2="320" y2="132" stroke="#BDBDBD" stroke-width="1.5"/>
+
+  <text x="320" y="200" text-anchor="middle" class="text-primary" font-size="16" font-weight="700">No projects yet</text>
+  <text x="320" y="232" text-anchor="middle" class="text-secondary" font-size="13">Get started by creating your first project.</text>
+  <text x="320" y="252" text-anchor="middle" class="text-secondary" font-size="13">It only takes a minute.</text>
+
+  <rect x="252" y="288" width="136" height="48" rx="6" fill="#424242"/>
+  <text x="320" y="318" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">+ Create project</text>
+
+</svg>

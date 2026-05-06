@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 800" width="280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== SIDEBAR-WITH-SECTIONS ==================== -->
+
+  <rect width="280" height="800" fill="#FFFFFF"/>
+  <line x1="279.5" y1="0" x2="279.5" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="16" y="36" class="text-primary" font-size="16" font-weight="700">Brand</text>
+  <line x1="0" y1="64" x2="280" y2="64" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Workspace section -->
+  <text x="16" y="98" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">WORKSPACE</text>
+  <rect x="8" y="112" width="264" height="32" rx="4" fill="#F5F5F5"/>
+  <text x="20" y="132" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
+  <text x="20" y="164" class="text-secondary" font-size="14">Projects</text>
+  <text x="20" y="196" class="text-secondary" font-size="14">Reports</text>
+
+  <!-- Account section -->
+  <text x="16" y="248" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">ACCOUNT</text>
+  <text x="20" y="282" class="text-secondary" font-size="14">Profile</text>
+  <text x="20" y="314" class="text-secondary" font-size="14">Settings</text>
+  <text x="20" y="346" class="text-secondary" font-size="14">Billing</text>
+
+  <!-- Admin section -->
+  <text x="16" y="398" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">ADMIN</text>
+  <text x="20" y="432" class="text-secondary" font-size="14">Team</text>
+  <text x="20" y="464" class="text-secondary" font-size="14">Permissions</text>
+  <text x="20" y="496" class="text-secondary" font-size="14">Audit log</text>
+
+  <!-- Footer -->
+  <line x1="0" y1="744" x2="280" y2="744" stroke="#E0E0E0" stroke-width="1"/>
+  <circle cx="32" cy="772" r="14" fill="#E0E0E0"/>
+  <text x="32" y="776" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">AR</text>
+  <text x="56" y="770" class="text-primary" font-size="13" font-weight="500">Alex Rivera</text>
+  <text x="56" y="784" class="text-secondary" font-size="11">alex@example.com</text>
+
+</svg>

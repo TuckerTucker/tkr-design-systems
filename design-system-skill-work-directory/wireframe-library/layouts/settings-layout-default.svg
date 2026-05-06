@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== SETTINGS-LAYOUT-DEFAULT ==================== -->
+
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+
+  <!-- Settings sidebar -->
+  <rect width="240" height="800" fill="#FFFFFF"/>
+  <line x1="240" y1="0" x2="240" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Settings</text>
+  <line x1="0" y1="64" x2="240" y2="64" stroke="#E0E0E0" stroke-width="1"/>
+
+  <rect x="8" y="80" width="224" height="36" rx="4" fill="#F5F5F5"/>
+  <text x="24" y="103" class="text-primary" font-size="14" font-weight="500">Profile</text>
+
+  <text x="24" y="143" class="text-secondary" font-size="14">Account</text>
+  <text x="24" y="183" class="text-secondary" font-size="14">Notifications</text>
+  <text x="24" y="223" class="text-secondary" font-size="14">Security</text>
+  <text x="24" y="263" class="text-secondary" font-size="14">Integrations</text>
+  <text x="24" y="303" class="text-secondary" font-size="14">Billing</text>
+
+  <!-- Content panel -->
+  <text x="280" y="48" class="text-primary" font-size="18" font-weight="700">Profile settings</text>
+  <text x="280" y="76" class="text-secondary" font-size="13">Update your personal information.</text>
+  <line x1="280" y1="104" x2="1248" y2="104" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="280" y="148" class="text-primary" font-size="14" font-weight="600">Display name</text>
+  <text x="280" y="170" class="text-secondary" font-size="13">Shown on your profile and in messages.</text>
+  <rect x="280" y="190" width="480" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="296" y="220" class="text-primary" font-size="14">Alex Rivera</text>
+
+  <line x1="280" y1="278" x2="1248" y2="278" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="280" y="322" class="text-primary" font-size="14" font-weight="600">Email address</text>
+  <text x="280" y="344" class="text-secondary" font-size="13">Used for account access and notifications.</text>
+  <rect x="280" y="364" width="480" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="296" y="394" class="text-primary" font-size="14">alex@example.com</text>
+
+  <line x1="280" y1="452" x2="1248" y2="452" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="280" y="496" class="text-primary" font-size="14" font-weight="600">Avatar</text>
+  <text x="280" y="518" class="text-secondary" font-size="13">A square image works best.</text>
+  <circle cx="304" cy="556" r="24" fill="#E0E0E0"/>
+  <text x="304" y="562" text-anchor="middle" class="text-secondary" font-size="14" font-weight="600">AR</text>
+  <rect x="344" y="540" width="100" height="32" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="394" y="560" text-anchor="middle" class="text-secondary" font-size="13" font-weight="500">Upload</text>
+
+  <line x1="280" y1="608" x2="1248" y2="608" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Save action -->
+  <rect x="280" y="640" width="100" height="40" rx="6" fill="#424242"/>
+  <text x="330" y="666" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save changes</text>
+
+</svg>

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DASHBOARD-METRICS-HEAVY ==================== -->
+
+  <rect width="1280" height="800" fill="#F5F5F5"/>
+
+  <!-- Sidebar -->
+  <rect width="240" height="800" fill="#FFFFFF"/>
+  <line x1="240" y1="0" x2="240" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Brand</text>
+  <line x1="0" y1="64" x2="240" y2="64" stroke="#E0E0E0" stroke-width="1"/>
+  <rect x="8" y="80" width="224" height="36" rx="4" fill="#F5F5F5"/>
+  <text x="24" y="103" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
+  <text x="24" y="143" class="text-secondary" font-size="14">Reports</text>
+  <text x="24" y="183" class="text-secondary" font-size="14">Settings</text>
+
+  <!-- Header -->
+  <rect x="240" y="0" width="1040" height="64" fill="#FFFFFF"/>
+  <line x1="240" y1="63.5" x2="1280" y2="63.5" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="272" y="40" class="text-primary" font-size="18" font-weight="700">Overview</text>
+
+  <!-- Stats row -->
+  <rect x="272" y="96" width="232" height="120" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="288" y="124" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">REVENUE</text>
+  <text x="288" y="160" class="text-primary" font-size="24" font-weight="700">$24,580</text>
+  <text x="288" y="184" class="text-success" font-size="12" font-weight="600">▲ +12%</text>
+  <text x="320" y="184" class="text-secondary" font-size="12">vs. last month</text>
+
+  <rect x="520" y="96" width="232" height="120" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="536" y="124" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">SIGNUPS</text>
+  <text x="536" y="160" class="text-primary" font-size="24" font-weight="700">1,247</text>
+  <text x="536" y="184" class="text-success" font-size="12" font-weight="600">▲ +8%</text>
+  <text x="566" y="184" class="text-secondary" font-size="12">vs. last month</text>
+
+  <rect x="768" y="96" width="232" height="120" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="784" y="124" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">ACTIVE USERS</text>
+  <text x="784" y="160" class="text-primary" font-size="24" font-weight="700">8,934</text>
+  <text x="784" y="184" class="text-danger" font-size="12" font-weight="600">▼ -3%</text>
+  <text x="814" y="184" class="text-secondary" font-size="12">vs. last month</text>
+
+  <rect x="1016" y="96" width="232" height="120" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="1032" y="124" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">CONVERSION</text>
+  <text x="1032" y="160" class="text-primary" font-size="24" font-weight="700">3.4%</text>
+  <text x="1032" y="184" class="text-success" font-size="12" font-weight="600">▲ +0.4%</text>
+  <text x="1078" y="184" class="text-secondary" font-size="12">vs. last month</text>
+
+  <!-- Chart placeholder -->
+  <rect x="272" y="240" width="640" height="320" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="288" y="268" class="text-primary" font-size="14" font-weight="600">Revenue over time</text>
+  <text x="288" y="284" class="text-secondary" font-size="12">Last 30 days</text>
+  <line x1="288" y1="296" x2="896" y2="296" stroke="#E0E0E0" stroke-width="1"/>
+  <polyline points="288,520 348,500 408,510 468,470 528,480 588,440 648,450 708,400 768,420 828,380 888,360"
+            fill="none" stroke="#424242" stroke-width="2"/>
+
+  <!-- Side table -->
+  <rect x="928" y="240" width="320" height="320" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="944" y="268" class="text-primary" font-size="14" font-weight="600">Top sources</text>
+  <line x1="944" y1="284" x2="1232" y2="284" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="944" y="312" class="text-primary" font-size="13">Direct</text>
+  <text x="1232" y="312" text-anchor="end" class="text-secondary" font-size="13">42%</text>
+  <text x="944" y="344" class="text-primary" font-size="13">Search</text>
+  <text x="1232" y="344" text-anchor="end" class="text-secondary" font-size="13">28%</text>
+  <text x="944" y="376" class="text-primary" font-size="13">Referral</text>
+  <text x="1232" y="376" text-anchor="end" class="text-secondary" font-size="13">18%</text>
+  <text x="944" y="408" class="text-primary" font-size="13">Social</text>
+  <text x="1232" y="408" text-anchor="end" class="text-secondary" font-size="13">8%</text>
+  <text x="944" y="440" class="text-primary" font-size="13">Email</text>
+  <text x="1232" y="440" text-anchor="end" class="text-secondary" font-size="13">4%</text>
+
+</svg>

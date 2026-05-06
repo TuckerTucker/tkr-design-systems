@@ -1,0 +1,1114 @@
+spec_version: "0.2"
+
+system:
+  id: wireframe
+  name: Wireframe
+  tagline: "Neutral Greyscale Reference Library"
+  grammar_family: wireframe
+  version: "1.1.0"   # bumped: v0.2 migration adds check_scope on all rules
+  source_jsx: null  # The wireframe library has no React source; the existing
+                    # template SVGs and UNIVERSAL-WIREFRAMING-PROCESS.md are
+                    # the canonical reference materials.
+
+# ────────────────────────────────────────────────────────────────────
+# TOKENS — adopted from the existing wireframe-skill (validated across 46+ wireframes)
+# ────────────────────────────────────────────────────────────────────
+
+tokens:
+  colors:
+    page_bg: "#F5F5F5"
+    surface: "#FFFFFF"
+    surface_elevated: "#FFFFFF"
+    text_primary: "#212121"
+    text_secondary: "#757575"
+    text_muted: "#BDBDBD"
+    accent: "#424242"
+
+    palette:
+      - name: background
+        value: "#F5F5F5"
+        role: page fill
+        usage_constraint: "the only page background; use surface (#FFFFFF) for elevated content"
+
+      - name: surface
+        value: "#FFFFFF"
+        role: cards, panels, headers, modals
+        usage_constraint: "any container above the page background"
+
+      - name: border
+        value: "#E0E0E0"
+        role: outlines, dividers, subtle separation
+        usage_constraint: "1px stroke for component boundaries"
+
+      - name: disabled
+        value: "#BDBDBD"
+        role: placeholder text, inactive elements, disabled states
+        usage_constraint: "text and shapes that should read as 'not currently usable'"
+
+      - name: secondary
+        value: "#757575"
+        role: subtitles, labels, help text, metadata
+        usage_constraint: "secondary text hierarchy below body copy"
+
+      - name: interactive
+        value: "#424242"
+        role: button fills, active states, links
+        usage_constraint: "the primary 'do something' color in the system"
+
+      - name: primary_text
+        value: "#212121"
+        role: headings, body copy
+        usage_constraint: "primary content text; the strongest text value"
+
+      - name: inverse
+        value: "#FFFFFF"
+        role: text on dark fills (e.g. on interactive #424242)
+        usage_constraint: "only on dark surfaces; equivalent to surface in fills"
+
+      - name: success
+        value: "#2E7D32"
+        role: positive status, success states
+        usage_constraint: "semantic color — use only for success communication"
+
+      - name: warning
+        value: "#E65100"
+        role: caution status, warning states
+        usage_constraint: "semantic color — use only for warning communication"
+
+      - name: danger
+        value: "#B71C1C"
+        role: error status, destructive actions
+        usage_constraint: "semantic color — use only for negative/critical communication"
+
+      - name: info
+        value: "#1565C0"
+        role: informational status, info banners
+        usage_constraint: "semantic color — use only for neutral informational signals"
+
+  typography:
+    families:
+      - id: structural
+        stack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        role: every text element in the system
+        mixing_rule: "system font stack — wireframes deliberately do not commit to a typeface"
+      - id: mono
+        stack: "'SF Mono', 'Monaco', 'Consolas', monospace"
+        role: tokens, technical labels, code excerpts
+        mixing_rule: "use sparingly — only for content that's genuinely tabular or code-like"
+
+    scale:
+      - { size: 11, role: caption }       # fine print
+      - { size: 12, role: label }         # metadata, badges, captions
+      - { size: 13, role: secondary }     # supporting text
+      - { size: 14, role: body }          # primary content
+      - { size: 16, role: heading }       # section headings
+      - { size: 18, role: title }         # page headings (larger size; 16-18 range)
+      - { size: 24, role: display }       # dashboard metrics, hero numbers
+
+    case:
+      metadata: uppercase
+      body: mixed
+      headers: mixed
+
+    tracking:
+      metadata: 0.05  # em — light tracking on uppercase metadata for legibility
+      body: 0
+      headers: 0
+
+  spacing:
+    grid_unit: 4
+    allowed_steps: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64]
+    enforcement: relaxed
+    page_margin:
+      mobile: 12   # px from edge
+      desktop: 32
+    component_gap: 12
+    section_gap: 32
+
+  borders:
+    radius_default: 6
+    radius_inputs: 6
+    radius_chrome: 8
+
+  elevation:
+    strategy: borders_only
+    config:
+      border_light: { width: 1, color: "#E0E0E0", style: solid }
+      border_strong: { width: 1.5, color: "#E0E0E0", style: solid }
+      no_shadow: true
+      no_radius_bias: false   # wireframes use modest radius (4-8px); not aggressive
+
+# ────────────────────────────────────────────────────────────────────
+# COMPONENTS — 42 total (12 Primitives + 18 Composites + 12 Patterns)
+# Each component declares: tier, anatomy, variants (with svg path),
+# composed_of (composites and patterns only), and constraints.
+# ────────────────────────────────────────────────────────────────────
+
+components:
+
+  # ═══════════════════════ PRIMITIVES (12) ═══════════════════════
+
+  button:
+    tier: primitive
+    anatomy: [label, icon]
+    variants:
+      - id: primary
+        svg: components/button-primary.svg
+        rendering_notes: "48px tall, 6px radius, fill #424242 (interactive), text in #FFFFFF (inverse) at 14-15px weight 500. Used for the screen's primary action."
+        states: [default, hover, active, disabled]
+      - id: secondary
+        svg: components/button-secondary.svg
+        rendering_notes: "48px tall, 6px radius, fill #FFFFFF (surface), 1.5px stroke #E0E0E0, text in #757575 (secondary) at 14-15px weight 500. Used for secondary actions."
+        states: [default, hover, active, disabled]
+      - id: ghost
+        svg: components/button-ghost.svg
+        rendering_notes: "48px tall, 6px radius, transparent fill, no border, text in #757575 (secondary) at 14-15px weight 500. Used for tertiary actions."
+        states: [default, hover, active]
+      - id: disabled
+        svg: components/button-disabled.svg
+        rendering_notes: "48px tall, 6px radius, fill #E0E0E0 (border color used as disabled bg), text in #BDBDBD (disabled). Visually unactionable."
+        states: [disabled]
+      - id: danger
+        svg: components/button-danger.svg
+        rendering_notes: "48px tall, 6px radius, fill #B71C1C (danger), text in #FFFFFF. Reserved for destructive actions."
+        states: [default, hover, active]
+      - id: small
+        svg: components/button-small.svg
+        rendering_notes: "32px tall, 6px radius. Variant of primary at smaller size."
+        states: [default, hover, active, disabled]
+      - id: large
+        svg: components/button-large.svg
+        rendering_notes: "56px tall, 8px radius. Variant of primary at larger size for hero CTAs."
+        states: [default, hover, active, disabled]
+      - id: full_width
+        svg: components/button-full-width.svg
+        rendering_notes: "48px tall, 6px radius, full width minus page margins. Variant of primary for mobile primary actions."
+        states: [default, hover, active, disabled]
+    constraints:
+      - "Primary button is the screen's PRIMARY action — only one per screen"
+      - "Danger button is for irreversible destructive actions only (delete, discard)"
+      - "Disabled button is visually distinct from ghost button (filled #E0E0E0 vs transparent)"
+
+  input:
+    tier: primitive
+    anatomy: [placeholder, value, focus_indicator, clear_action]
+    variants:
+      - id: text
+        svg: components/input-text.svg
+        rendering_notes: "48px tall, 6px radius, fill #FFFFFF, 1.5px stroke #E0E0E0, placeholder in #BDBDBD, value in #212121."
+        states: [default, focus, filled, error, disabled]
+      - id: password
+        svg: components/input-password.svg
+        rendering_notes: "Same as text but value rendered as bullets (••••••••)."
+        states: [default, focus, filled, error]
+      - id: search
+        svg: components/input-search.svg
+        rendering_notes: "Same as text with search icon prefix and optional clear button suffix."
+        states: [default, focus, filled]
+      - id: numeric
+        svg: components/input-numeric.svg
+        rendering_notes: "Same as text but value right-aligned for numeric content."
+        states: [default, focus, filled]
+    constraints:
+      - "Inputs always have a label associated (use form_field composite for labeled inputs)"
+      - "Placeholder text uses #BDBDBD (disabled), value uses #212121 (primary text) — strong contrast"
+
+  textarea:
+    tier: primitive
+    anatomy: [placeholder, value, resize_handle]
+    variants:
+      - id: default
+        svg: components/textarea-default.svg
+        rendering_notes: "Variable height starting at 96px (3 lines), 6px radius, fill #FFFFFF, 1.5px stroke #E0E0E0. Resize handle at bottom-right."
+        states: [default, focus, filled, error, disabled]
+      - id: auto_grow
+        svg: components/textarea-auto-grow.svg
+        rendering_notes: "Same as default but no resize handle; meant to grow with content."
+        states: [default, focus, filled]
+
+  select:
+    tier: primitive
+    anatomy: [label, current_value, indicator]
+    variants:
+      - id: dropdown
+        svg: components/select-dropdown.svg
+        rendering_notes: "48px tall, 6px radius, fill #FFFFFF, 1.5px stroke #E0E0E0, current value in #212121, chevron indicator in #757575 on right."
+        states: [default, open, focus, disabled]
+      - id: native
+        svg: components/select-native.svg
+        rendering_notes: "Same visual treatment as dropdown; differs in being a native HTML <select> in implementation."
+        states: [default, open, disabled]
+
+  checkbox:
+    tier: primitive
+    anatomy: [box, check_mark, label]
+    variants:
+      - id: default
+        svg: components/checkbox-default.svg
+        rendering_notes: "20x20 box with 4px radius, 1.5px stroke #E0E0E0 when unchecked. When checked: fill #424242, white check mark inside."
+        states: [unchecked, checked, disabled]
+      - id: indeterminate
+        svg: components/checkbox-indeterminate.svg
+        rendering_notes: "Same as checked but with horizontal line instead of check mark. Used for parent of partially-selected children."
+        states: [indeterminate]
+
+  radio:
+    tier: primitive
+    anatomy: [circle, dot, label]
+    variants:
+      - id: default
+        svg: components/radio-default.svg
+        rendering_notes: "20x20 circle, 1.5px stroke #E0E0E0 when unselected. When selected: stroke #424242, inner 8px dot in #424242."
+        states: [unselected, selected, disabled]
+
+  toggle:
+    tier: primitive
+    anatomy: [track, thumb, label]
+    variants:
+      - id: default
+        svg: components/toggle-default.svg
+        rendering_notes: "44x24 track with 12px radius. When off: fill #E0E0E0, thumb on left. When on: fill #424242, thumb on right. Thumb is 20x20 white circle."
+        states: [off, on, disabled]
+
+  label:
+    tier: primitive
+    anatomy: [text, marker]
+    variants:
+      - id: default
+        svg: components/label-default.svg
+        rendering_notes: "Inline text label. 12-14px depending on context, color #757575 (secondary) typically."
+        states: [default]
+      - id: required
+        svg: components/label-required.svg
+        rendering_notes: "Same as default with red asterisk (*) in #B71C1C suffixed."
+        states: [default]
+      - id: optional
+        svg: components/label-optional.svg
+        rendering_notes: "Same as default with '(optional)' in #BDBDBD suffixed."
+        states: [default]
+
+  icon:
+    tier: primitive
+    anatomy: [glyph]
+    variants:
+      - id: outlined
+        svg: components/icon-outlined.svg
+        rendering_notes: "16x16 viewBox standard. Outlined icons drawn as 1.5px strokes in current color, no fills. Typical icons: chevron, search, close, plus, more (⋯), back arrow."
+        states: [default, disabled]
+      - id: filled
+        svg: components/icon-filled.svg
+        rendering_notes: "16x16 viewBox standard. Filled icons in solid current color. Used when emphasis or active state needs distinction."
+        states: [default, disabled]
+    constraints:
+      - "Icons in wireframes are functional placeholders, not branded glyphs — keep them generic"
+      - "Use 16x16 standard size; smaller (12x12) and larger (24x24) variants permitted with the same proportions"
+
+  avatar:
+    tier: primitive
+    anatomy: [identifier, status_dot]
+    variants:
+      - id: monogram
+        svg: components/avatar-monogram.svg
+        rendering_notes: "32x32 circle, fill #E0E0E0 (border color), 2-letter initials in #757575 weight 600. Default avatar variant for unknown identity."
+        states: [default, with_status]
+      - id: photo_placeholder
+        svg: components/avatar-photo-placeholder.svg
+        rendering_notes: "32x32 circle with diagonal stripe pattern indicating photo placeholder. Fill #E0E0E0."
+        states: [default, with_status]
+      - id: index
+        svg: components/avatar-index.svg
+        rendering_notes: "No avatar, just a numerical identifier (e.g. 01, 02). Used in numbered lists instead of pictographic identity."
+        states: [default]
+      - id: none
+        svg: components/avatar-none.svg
+        rendering_notes: "Empty placeholder — no visual representation. For systems where identity is established by position or label only."
+        states: [default]
+
+  badge:
+    tier: primitive
+    anatomy: [text, shape]
+    variants:
+      - id: count
+        svg: components/badge-count.svg
+        rendering_notes: "Small pill (16-20px tall, 10px radius), fill #424242 (interactive), white digit in 11px weight 600. Used for unread counts, notification counts."
+        states: [default]
+      - id: status
+        svg: components/badge-status.svg
+        rendering_notes: "Pill (20px tall, 10px radius), fill is one of semantic colors (success/warning/danger/info), white text label in 10px weight 600 uppercase."
+        states: [default]
+      - id: tag
+        svg: components/badge-tag.svg
+        rendering_notes: "Pill (20px tall, 10px radius), fill #FFFFFF, 1px stroke #E0E0E0, text label in #757575 12px. Used for category tags."
+        states: [default]
+      - id: dot
+        svg: components/badge-dot.svg
+        rendering_notes: "Small circle (8px diameter), filled with semantic color. Status indicator without text."
+        states: [default]
+
+  divider:
+    tier: primitive
+    anatomy: [line]
+    variants:
+      - id: hairline
+        svg: components/divider-hairline.svg
+        rendering_notes: "1px line in #E0E0E0. Subtle separator between content within a single section."
+        states: [default]
+      - id: default
+        svg: components/divider-default.svg
+        rendering_notes: "1px line in #E0E0E0. Standard separator between distinct content."
+        states: [default]
+      - id: strong
+        svg: components/divider-strong.svg
+        rendering_notes: "1.5px line in #757575 (secondary). Used to separate major regions."
+        states: [default]
+      - id: dashed
+        svg: components/divider-dashed.svg
+        rendering_notes: "1px dashed line in #E0E0E0 (stroke-dasharray='4,4'). Used for placeholder regions or 'add new' affordances."
+        states: [default]
+      - id: section
+        svg: components/divider-section.svg
+        rendering_notes: "1px line in #E0E0E0 with 32px vertical margin above/below. Separates major page sections."
+        states: [default]
+
+
+  # ═══════════════════════ COMPOSITES (18) ═══════════════════════
+
+  card:
+    tier: composite
+    composed_of: [divider]   # cards may use dividers internally
+    anatomy: [container, content_area, border]
+    variants:
+      - id: default
+        svg: components/card-default.svg
+        rendering_notes: "Container 6px radius, fill #FFFFFF, 1px stroke #E0E0E0. Internal padding 16px. Variable height based on content."
+        states: [default, hover, selected]
+      - id: with_header
+        svg: components/card-with-header.svg
+        rendering_notes: "Same as default but with title bar at top (40px tall), title in 14px #212121 weight 600, separated from content by 1px hairline divider."
+        states: [default, hover]
+      - id: interactive
+        svg: components/card-interactive.svg
+        rendering_notes: "Same as default but with subtle hover affordance (1.5px stroke instead of 1px). Used when whole card is a click target."
+        states: [default, hover, active]
+      - id: selected
+        svg: components/card-selected.svg
+        rendering_notes: "Same as default but stroke is 2px #424242 (interactive). Indicates the card is currently selected."
+        states: [selected]
+      - id: empty
+        svg: components/card-empty.svg
+        rendering_notes: "Same dimensions as default, dashed border (#E0E0E0 stroke-dasharray='4,4'), centered '+ Add new' label in #757575."
+        states: [default, hover]
+      - id: disabled
+        svg: components/card-disabled.svg
+        rendering_notes: "Same as default with content faded — text in #BDBDBD, indicating non-interactive."
+        states: [disabled]
+    constraints:
+      - "Cards are the universal container — use them for any distinct content with a boundary"
+      - "Card padding is consistent at 16px in all directions; component_gap (12px) for sub-elements"
+
+  list_item:
+    tier: composite
+    composed_of: [avatar, label, badge, divider]
+    anatomy: [avatar, title, preview, timestamp, action_indicator, badge]
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "64-96px tall, full width minus page margins. Avatar (32px) on left, title (14px #212121 weight 500) and preview (12px #757575) stacked. Timestamp top-right (11px #757575). Optional badge on right. Hairline divider below."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        rendering_notes: "Same as default with #F5F5F5 background fill and title weight bumps to 600. NO accent bar (wireframes don't have a hero accent color); selection signaled by surface fill alone."
+        states: [selected]
+      - id: compact
+        svg: components/list-item-compact.svg
+        rendering_notes: "Same anatomy as default but 48px tall — single line of content (title + timestamp), no preview line."
+        states: [default, hover, selected]
+      - id: with_action
+        svg: components/list-item-with-action.svg
+        rendering_notes: "Same as default with secondary action button (e.g. ⋯ menu) on far right after the badge area."
+        states: [default, hover]
+      - id: with_metadata
+        svg: components/list-item-with-metadata.svg
+        rendering_notes: "Same as default with additional metadata row (12px #757575) below the preview — e.g. category tags, status indicators."
+        states: [default, hover, selected]
+    constraints:
+      - "Preview text yields horizontal space to badge: minimum 12px gap before badge's left edge. Truncate with ellipsis."
+      - "Selection signaled by background surface fill (#F5F5F5), never by colored accent bar (wireframes have no accent color)"
+
+  form_field:
+    tier: composite
+    composed_of: [label, input, textarea, select, checkbox, radio, toggle]
+    anatomy: [label, input_element, help_text, error_message]
+    variants:
+      - id: default
+        svg: components/form-field-default.svg
+        rendering_notes: "Label above input (12px #757575, 4px gap), input element below (varies by type), optional 11px #757575 help text below input."
+        states: [default, focus, filled, error, disabled]
+      - id: inline
+        svg: components/form-field-inline.svg
+        rendering_notes: "Label and input on same line. Used for compact forms — checkboxes, toggles, short text inputs."
+        states: [default, focus, error]
+      - id: with_help
+        svg: components/form-field-with-help.svg
+        rendering_notes: "Default plus visible 11px help text in #757575 below input."
+        states: [default, focus, filled]
+      - id: with_error
+        svg: components/form-field-with-error.svg
+        rendering_notes: "Default with input border in #B71C1C (danger) and 11px error message in #B71C1C below."
+        states: [error]
+
+  table_row:
+    tier: composite
+    composed_of: [label, checkbox]
+    anatomy: [cells, selection_checkbox]
+    variants:
+      - id: default
+        svg: components/table-row-default.svg
+        rendering_notes: "48px tall, full width. Cells separated by vertical implied alignment, no visible vertical dividers. Bottom 1px #E0E0E0 divider. Cell content in 13px #212121."
+        states: [default, hover, selected]
+      - id: header
+        svg: components/table-row-header.svg
+        rendering_notes: "Same as default but cell content in 12px #757575 weight 600 uppercase. Bottom 1.5px #757575 divider (stronger than data rows)."
+        states: [default, with_sort]
+      - id: selected
+        svg: components/table-row-selected.svg
+        rendering_notes: "Same as default with #F5F5F5 background fill."
+        states: [selected]
+      - id: expanded
+        svg: components/table-row-expanded.svg
+        rendering_notes: "Same as default but with expanded detail area below (variable height). Indicator chevron rotated 90° in first cell."
+        states: [expanded]
+
+  table_header:
+    tier: composite
+    composed_of: [label, icon, button]
+    anatomy: [column_labels, sort_indicators, filter_buttons]
+    variants:
+      - id: default
+        svg: components/table-header-default.svg
+        rendering_notes: "Single row of column headers (12px #757575 weight 600 uppercase), 1.5px #757575 divider below."
+        states: [default]
+      - id: sortable
+        svg: components/table-header-sortable.svg
+        rendering_notes: "Same as default with sort chevrons (▲▼) in #BDBDBD beside sortable columns. Active sort column has chevron in #424242."
+        states: [default, sorted_asc, sorted_desc]
+      - id: with_filter
+        svg: components/table-header-with-filter.svg
+        rendering_notes: "Same as default with filter buttons (small ▾) beside filterable columns."
+        states: [default, with_active_filter]
+
+  nav_item:
+    tier: composite
+    composed_of: [icon, label, badge]
+    anatomy: [icon, label, badge, active_indicator]
+    variants:
+      - id: top_level
+        svg: components/nav-item-top-level.svg
+        rendering_notes: "Horizontal pill (32px tall) with optional 16px icon left, label in 14px #212121 (active) or #757575 (inactive). Active state: background #F5F5F5."
+        states: [default, hover, active]
+      - id: sub_item
+        svg: components/nav-item-sub-item.svg
+        rendering_notes: "Same as top_level but indented 16px and label in 13px (one step down in scale)."
+        states: [default, hover, active]
+      - id: breadcrumb_segment
+        svg: components/nav-item-breadcrumb.svg
+        rendering_notes: "Inline label in 13px #757575 (or #212121 for current segment). Used as a single segment of a breadcrumb trail."
+        states: [default, current]
+
+  tab_item:
+    tier: composite
+    composed_of: [label, icon, badge]
+    anatomy: [label, icon, badge, active_underline]
+    variants:
+      - id: default
+        svg: components/tab-item-default.svg
+        rendering_notes: "Inline label in 13px #757575 weight 500. Optional 14px icon to left of label."
+        states: [default, hover, active, disabled]
+      - id: active
+        svg: components/tab-item-active.svg
+        rendering_notes: "Same as default but label in #212121 weight 600 and 2px #424242 underline below."
+        states: [active]
+      - id: disabled
+        svg: components/tab-item-disabled.svg
+        rendering_notes: "Same as default but text and icon in #BDBDBD; non-interactive."
+        states: [disabled]
+
+  breadcrumb_trail:
+    tier: composite
+    composed_of: [nav_item, divider]
+    anatomy: [segments, separators]
+    variants:
+      - id: default
+        svg: components/breadcrumb-trail-default.svg
+        rendering_notes: "Sequence of nav_item.breadcrumb_segment separated by ' / ' or chevron (›) in #BDBDBD. Final segment in #212121 (current page)."
+        states: [default]
+      - id: truncated
+        svg: components/breadcrumb-trail-truncated.svg
+        rendering_notes: "First segment + ellipsis (…) + last 2 segments. Used when full trail is too long."
+        states: [default]
+
+  pagination:
+    tier: composite
+    composed_of: [button, label]
+    anatomy: [previous_button, page_indicators, next_button]
+    variants:
+      - id: numbered
+        svg: components/pagination-numbered.svg
+        rendering_notes: "Sequence: ‹ Prev  1 2 3 ... 10  Next › . Active page in #212121 weight 600 with #F5F5F5 surface; inactive pages in #757575."
+        states: [default]
+      - id: simple
+        svg: components/pagination-simple.svg
+        rendering_notes: "Just ‹ Prev | Page 3 of 10 | Next › "
+        states: [default]
+      - id: infinite_scroll_indicator
+        svg: components/pagination-infinite.svg
+        rendering_notes: "'Loading more...' or '247 of 1,247 items' centered text in #757575."
+        states: [loading, complete]
+
+  toast:
+    tier: composite
+    composed_of: [icon, label, button]
+    anatomy: [icon, message, dismiss_action]
+    variants:
+      - id: info
+        svg: components/toast-info.svg
+        rendering_notes: "Pill (40px tall, 8px radius) fill #FFFFFF, 1px stroke #E0E0E0. Info icon in #1565C0 left, message in 13px #212121 center, dismiss × in #757575 right."
+        states: [default]
+      - id: success
+        svg: components/toast-success.svg
+        rendering_notes: "Same as info but icon in #2E7D32 (success)."
+        states: [default]
+      - id: warning
+        svg: components/toast-warning.svg
+        rendering_notes: "Same as info but icon in #E65100 (warning)."
+        states: [default]
+      - id: error
+        svg: components/toast-error.svg
+        rendering_notes: "Same as info but icon in #B71C1C (danger). Border may also be #B71C1C for stronger emphasis."
+        states: [default]
+
+  stat:
+    tier: composite
+    composed_of: [label]
+    anatomy: [value, label, trend, sparkline]
+    variants:
+      - id: default
+        svg: components/stat-default.svg
+        rendering_notes: "Value in 24px #212121 weight 700 (display type). Label in 12px #757575 weight 600 uppercase tracked above value. Optional trend indicator (▲ or ▼ with %) below."
+        states: [default]
+      - id: with_trend
+        svg: components/stat-with-trend.svg
+        rendering_notes: "Same as default with trend value (e.g. '+12%') in #2E7D32 (success) or #B71C1C (danger) below."
+        states: [default]
+      - id: with_sparkline
+        svg: components/stat-with-sparkline.svg
+        rendering_notes: "Same as default with small inline sparkline (40x16, 1.5px stroke #757575) showing trend over time."
+        states: [default]
+
+  key_value:
+    tier: composite
+    composed_of: [label]
+    anatomy: [key, value]
+    variants:
+      - id: default
+        svg: components/key-value-default.svg
+        rendering_notes: "Stacked: key in 12px #757575 above value in 14px #212121. 4px gap between."
+        states: [default]
+      - id: inline
+        svg: components/key-value-inline.svg
+        rendering_notes: "Same line: key in 12px #757575 followed by colon and value in 14px #212121. Used for compact metadata."
+        states: [default]
+      - id: tabular
+        svg: components/key-value-tabular.svg
+        rendering_notes: "Two-column tabular: keys left-aligned in 12px #757575, values right-aligned in 14px #212121. Used for definition lists."
+        states: [default]
+
+  button_group:
+    tier: composite
+    composed_of: [button]
+    anatomy: [buttons]
+    variants:
+      - id: segmented
+        svg: components/button-group-segmented.svg
+        rendering_notes: "Multiple buttons sharing borders (no gap, single 1px #E0E0E0 stroke around the group, internal dividers between buttons). Active segment has #F5F5F5 fill."
+        states: [default]
+      - id: attached
+        svg: components/button-group-attached.svg
+        rendering_notes: "Multiple buttons with shared borders but each button independently styled (e.g. one primary + one secondary)."
+        states: [default]
+      - id: spaced
+        svg: components/button-group-spaced.svg
+        rendering_notes: "Multiple buttons with 8-12px gap between them. Used for action button groups (e.g. Save | Cancel)."
+        states: [default]
+
+  search_bar:
+    tier: composite
+    composed_of: [input, icon, button]
+    anatomy: [search_input, search_icon, clear_button, filter_button]
+    variants:
+      - id: default
+        svg: components/search-bar-default.svg
+        rendering_notes: "input.search variant filling available width."
+        states: [default, focus, filled]
+      - id: with_filters
+        svg: components/search-bar-with-filters.svg
+        rendering_notes: "Default plus row of filter chips below."
+        states: [default]
+      - id: with_results_count
+        svg: components/search-bar-with-results-count.svg
+        rendering_notes: "Default plus '247 results' text below in 12px #757575."
+        states: [default]
+
+  banner:
+    tier: composite
+    composed_of: [icon, label, button]
+    anatomy: [icon, message, action_button, dismiss_button]
+    variants:
+      - id: info
+        svg: components/banner-info.svg
+        rendering_notes: "Full-width strip (48px tall), fill #FFFFFF, 1px stroke #E0E0E0, info icon in #1565C0, message in 13px #212121, optional action button on right."
+        states: [default]
+      - id: success
+        svg: components/banner-success.svg
+        rendering_notes: "Same as info but icon in #2E7D32."
+        states: [default]
+      - id: warning
+        svg: components/banner-warning.svg
+        rendering_notes: "Same as info but icon in #E65100."
+        states: [default]
+      - id: error
+        svg: components/banner-error.svg
+        rendering_notes: "Same as info but icon in #B71C1C, border may also be #B71C1C."
+        states: [default]
+      - id: promotional
+        svg: components/banner-promotional.svg
+        rendering_notes: "Larger banner (80-120px tall), more emphasis on action. Used for upgrade prompts, feature announcements."
+        states: [default]
+
+  accordion_item:
+    tier: composite
+    composed_of: [label, icon, divider]
+    anatomy: [trigger, chevron, content_area]
+    variants:
+      - id: collapsed
+        svg: components/accordion-item-collapsed.svg
+        rendering_notes: "Single-row trigger (48px tall): label in 14px #212121 weight 500 left, chevron (▶) in #757575 right. Hairline divider below."
+        states: [default, hover]
+      - id: expanded
+        svg: components/accordion-item-expanded.svg
+        rendering_notes: "Trigger same as collapsed but chevron rotated 90° down (▼). Content area below at variable height."
+        states: [expanded]
+
+  stepper:
+    tier: composite
+    composed_of: [label, divider]
+    anatomy: [steps, connectors, current_indicator]
+    variants:
+      - id: linear
+        svg: components/stepper-linear.svg
+        rendering_notes: "Horizontal sequence of step circles (24px) connected by lines. Active step in #424242, completed steps in #424242 with check, future steps in #BDBDBD."
+        states: [default]
+      - id: numbered
+        svg: components/stepper-numbered.svg
+        rendering_notes: "Same as linear but circles contain step numbers instead of just being shapes."
+        states: [default]
+      - id: dotted
+        svg: components/stepper-dotted.svg
+        rendering_notes: "Sequence of small dots (8px) representing progress. Active dot is larger (12px) and #424242."
+        states: [default]
+
+  dropdown_menu:
+    tier: composite
+    composed_of: [button, list_item, divider]
+    anatomy: [trigger_button, menu_panel, menu_items]
+    variants:
+      - id: default
+        svg: components/dropdown-menu-default.svg
+        rendering_notes: "Trigger button + popup panel below (or above on small screens). Panel: 200px wide, 6px radius, fill #FFFFFF, 1px stroke #E0E0E0. Items in 14px #212121 with 32px-tall hover/active rows."
+        states: [closed, open]
+      - id: with_groups
+        svg: components/dropdown-menu-with-groups.svg
+        rendering_notes: "Same as default with dividers between item groups and 11px #757575 group labels."
+        states: [open]
+      - id: with_search
+        svg: components/dropdown-menu-with-search.svg
+        rendering_notes: "Same as default with search input at top of panel above items."
+        states: [open]
+
+
+  # ═══════════════════════ PATTERNS (12) ═══════════════════════
+
+  sidebar:
+    tier: pattern
+    composed_of: [card, search_bar, nav_item, divider]
+    anatomy: [brand_area, search, nav_list, footer_area]
+    variants:
+      - id: default
+        svg: layouts/sidebar-default.svg
+        rendering_notes: "Fixed width 240-280px, full viewport height, fill #FFFFFF, 1px stroke #E0E0E0 right border. Brand area at top (64-80px tall), search input below, nav items list in middle, account/footer at bottom."
+        states: [default]
+      - id: collapsed
+        svg: layouts/sidebar-collapsed.svg
+        rendering_notes: "Same as default but width 64px, only icons visible, labels hidden."
+        states: [collapsed]
+      - id: with_sections
+        svg: layouts/sidebar-with-sections.svg
+        rendering_notes: "Same as default with 11px #757575 uppercase tracked section labels above nav_item groups."
+        states: [default]
+
+  header:
+    tier: pattern
+    composed_of: [card, nav_item, search_bar, button_group, avatar]
+    anatomy: [brand, primary_nav, search, user_actions]
+    variants:
+      - id: default
+        svg: layouts/header-default.svg
+        rendering_notes: "Full width, 56px (mobile) or 64px (desktop) tall, fill #FFFFFF, 1px stroke #E0E0E0 bottom border. Brand left, optional nav center, user actions right."
+        states: [default]
+      - id: with_search
+        svg: layouts/header-with-search.svg
+        rendering_notes: "Same as default with search input filling center area."
+        states: [default]
+      - id: with_actions
+        svg: layouts/header-with-actions.svg
+        rendering_notes: "Same as default with prominent action buttons in right area (e.g. + New, Notifications)."
+        states: [default]
+
+  form:
+    tier: pattern
+    composed_of: [form_field, button, button_group, divider]
+    anatomy: [fields, submit_action, secondary_actions]
+    variants:
+      - id: single_column
+        svg: layouts/form-single-column.svg
+        rendering_notes: "Vertically stacked form_fields with 16-24px gap. Submit button at bottom, optional cancel/secondary button beside."
+        states: [default]
+      - id: two_column
+        svg: layouts/form-two-column.svg
+        rendering_notes: "Two columns of form_fields, useful for desktop. Submit row at bottom spans both columns."
+        states: [default]
+      - id: inline
+        svg: layouts/form-inline.svg
+        rendering_notes: "Form fields on a single horizontal line. Used for filter rows, quick-entry forms."
+        states: [default]
+      - id: wizard
+        svg: layouts/form-wizard.svg
+        rendering_notes: "Stepper at top, form fields for current step in middle, Back/Next buttons at bottom."
+        states: [default]
+
+  data_table:
+    tier: pattern
+    composed_of: [table_header, table_row, pagination, search_bar]
+    anatomy: [optional_search, header_row, data_rows, pagination]
+    variants:
+      - id: default
+        svg: layouts/data-table-default.svg
+        rendering_notes: "table_header on top, table_rows below, pagination at bottom. Full width with consistent column widths."
+        states: [default]
+      - id: with_actions
+        svg: layouts/data-table-with-actions.svg
+        rendering_notes: "Default plus row-level action menus (⋯) in last column."
+        states: [default]
+      - id: with_pagination
+        svg: layouts/data-table-with-pagination.svg
+        rendering_notes: "Default with prominent pagination controls below table."
+        states: [default]
+      - id: with_filters
+        svg: layouts/data-table-with-filters.svg
+        rendering_notes: "Default plus filter row above table (button_group of filter chips)."
+        states: [default]
+
+  modal:
+    tier: pattern
+    composed_of: [card, label, button_group]
+    anatomy: [overlay, container, title, body, action_buttons, close_button]
+    variants:
+      - id: default
+        svg: layouts/modal-default.svg
+        rendering_notes: "Centered card (480px wide on desktop, full-width minus margins on mobile), 8px radius, with overlay #00000040 (semi-transparent black). Title at top (16px #212121 weight 600), body content middle, button row at bottom-right."
+        states: [default]
+      - id: confirmation
+        svg: layouts/modal-confirmation.svg
+        rendering_notes: "Smaller (360px wide), focused on a single action confirmation. Title + 1-2 line message + Confirm/Cancel buttons."
+        states: [default]
+      - id: form_modal
+        svg: layouts/modal-form.svg
+        rendering_notes: "Larger (560-640px wide), contains a form pattern. Submit/Cancel in footer."
+        states: [default]
+      - id: wide
+        svg: layouts/modal-wide.svg
+        rendering_notes: "Up to 90% of viewport width. Used for content that needs space (table edits, image previews)."
+        states: [default]
+
+  drawer:
+    tier: pattern
+    composed_of: [card, label, button, form]
+    anatomy: [overlay, panel, title, body, close_button]
+    variants:
+      - id: right
+        svg: layouts/drawer-right.svg
+        rendering_notes: "Slide-in panel from right edge, 360-420px wide, full height. Overlay #00000040 covers rest of screen. Title at top with close × button."
+        states: [open]
+      - id: left
+        svg: layouts/drawer-left.svg
+        rendering_notes: "Same as right but from left edge. Often used for navigation on mobile."
+        states: [open]
+      - id: bottom
+        svg: layouts/drawer-bottom.svg
+        rendering_notes: "Slide-up panel from bottom edge. Used on mobile for action sheets and contextual menus."
+        states: [open]
+
+  empty_state:
+    tier: pattern
+    composed_of: [icon, label, button]
+    anatomy: [illustration, title, description, action_button]
+    variants:
+      - id: no_data
+        svg: layouts/empty-state-no-data.svg
+        rendering_notes: "Centered: large placeholder icon (64x64) in #BDBDBD, title in 16px #212121 weight 600, description in 13px #757575 (max 2 lines), optional primary button below."
+        states: [default]
+      - id: no_results
+        svg: layouts/empty-state-no-results.svg
+        rendering_notes: "Same as no_data but messaging focused on filter/search adjustment."
+        states: [default]
+      - id: first_use
+        svg: layouts/empty-state-first-use.svg
+        rendering_notes: "Same as no_data with stronger primary action button (Get Started, Create First Item)."
+        states: [default]
+      - id: error
+        svg: layouts/empty-state-error.svg
+        rendering_notes: "Same as no_data with error icon, retry button. Used for failed loads."
+        states: [default]
+
+  command_palette:
+    tier: pattern
+    composed_of: [search_bar, list_item, divider, label]
+    anatomy: [search_input, results_list, kbd_shortcuts]
+    variants:
+      - id: default
+        svg: layouts/command-palette-default.svg
+        rendering_notes: "Centered modal-like overlay (520px wide), search input at top, scrollable list_items below. Each item shows command name and optional kbd shortcut."
+        states: [open]
+      - id: with_groups
+        svg: layouts/command-palette-with-groups.svg
+        rendering_notes: "Same as default with 11px #757575 group labels (Recent, Suggested, All Commands)."
+        states: [open]
+      - id: with_recent
+        svg: layouts/command-palette-with-recent.svg
+        rendering_notes: "Same as default with 'Recent Commands' section pinned above results when search is empty."
+        states: [open_empty_search]
+
+  settings_layout:
+    tier: pattern
+    composed_of: [sidebar, card, form]
+    anatomy: [settings_nav, content_panel, settings_groups]
+    variants:
+      - id: default
+        svg: layouts/settings-layout-default.svg
+        rendering_notes: "Sidebar (240px) of settings categories on left, content panel on right with current category's settings as a form pattern."
+        states: [default]
+      - id: with_subsections
+        svg: layouts/settings-layout-with-subsections.svg
+        rendering_notes: "Same as default but sidebar has expandable sections with sub-items."
+        states: [default]
+
+  article:
+    tier: pattern
+    composed_of: [label, divider]
+    anatomy: [title, byline, body, table_of_contents]
+    variants:
+      - id: default
+        svg: layouts/article-default.svg
+        rendering_notes: "Centered column (max 720px wide). Title (24px #212121 weight 700), byline (12px #757575), divider, body text (14px #212121, line-height 1.6)."
+        states: [default]
+      - id: with_toc
+        svg: layouts/article-with-toc.svg
+        rendering_notes: "Same as default with sticky table of contents in left sidebar (200px) on desktop."
+        states: [default]
+      - id: with_sidebar_meta
+        svg: layouts/article-with-sidebar-meta.svg
+        rendering_notes: "Same as default with right sidebar (240px) showing related metadata (author info, related articles, tags)."
+        states: [default]
+
+  dashboard:
+    tier: pattern
+    composed_of: [sidebar, header, card, stat, list_item]
+    anatomy: [sidebar, header, content_area, stat_strips, content_cards]
+    variants:
+      - id: metrics_heavy
+        svg: layouts/dashboard-metrics-heavy.svg
+        rendering_notes: "Sidebar + header + grid of stat composites at top, content cards below. Most space dedicated to display-type numerical content."
+        states: [default]
+      - id: conversation
+        svg: layouts/dashboard-conversation.svg
+        rendering_notes: "Sidebar with list_items (chat sessions) + main content area as message thread + composer at bottom. Like the per-system dashboard examples."
+        states: [default]
+      - id: list_focus
+        svg: layouts/dashboard-list-focus.svg
+        rendering_notes: "Sidebar + header + main content as a scrollable list (cards or list_items). Filter/sort row above list."
+        states: [default]
+      - id: mixed
+        svg: layouts/dashboard-mixed.svg
+        rendering_notes: "Combination: sidebar + header + top stats + middle list + right activity feed. The 'overview' template."
+        states: [default]
+
+  auth:
+    tier: pattern
+    composed_of: [card, form, button, label]
+    anatomy: [container, title, form, primary_action, alternate_action]
+    variants:
+      - id: sign_in
+        svg: layouts/auth-sign-in.svg
+        rendering_notes: "Centered card (400px wide), title (Sign In), email + password form_fields, primary button (full width), 'Forgot password?' link, divider, alternate 'Create account' link."
+        states: [default]
+      - id: sign_up
+        svg: layouts/auth-sign-up.svg
+        rendering_notes: "Same as sign_in but with name field, terms acceptance checkbox, 'Create account' primary button."
+        states: [default]
+      - id: reset_password
+        svg: layouts/auth-reset-password.svg
+        rendering_notes: "Same structure as sign_in but with email-only form and 'Send reset link' button."
+        states: [default]
+      - id: verify_code
+        svg: layouts/auth-verify-code.svg
+        rendering_notes: "Same structure as sign_in but with 6-digit code input field and 'Verify' button."
+        states: [default]
+
+
+# ────────────────────────────────────────────────────────────────────
+# RULEBOOK — the 7 design principles from UNIVERSAL-WIREFRAMING-PROCESS.md
+# encoded as enforceable rules. These apply to all wireframes regardless
+# of design system; per-system rulebooks layer additional rules on top.
+# ────────────────────────────────────────────────────────────────────
+
+rulebook:
+  # NEW IN v0.2 (Change 12): every rule annotates check_scope so consumers
+  # know whether the rule applies to a component fragment, a composed
+  # artifact, or both.
+
+  - id: wireframe-mobile-first
+    rule: "Every wireframe is authored at mobile (375px) first, then desktop (1280px) is created as an EXPANSION of mobile. Information hierarchy on desktop matches mobile — desktop adds space and supplementary content but never rearranges the primary content order."
+    rationale: "Mobile is the most constrained context; what works on mobile works on desktop with breathing room. The reverse is not true."
+    severity: required
+    check_method: semantic
+    check_scope: artifact
+
+  - id: wireframe-cards-universal-container
+    rule: "Distinct content (anything with a boundary, title, and related data) is presented in a card. Cards are the primary container pattern; other container types (panels, sections, blocks) require a specific reason to deviate."
+    rationale: "Single container pattern creates visual consistency without effort. Most wireframe content fits the card pattern."
+    severity: recommended
+    check_method: semantic
+    check_scope: artifact
+
+  - id: wireframe-one-channel-per-message
+    rule: "Status is communicated through ONE visual channel, not multiple simultaneously. If card border color signals status (success/warning/danger), background color and icon color do NOT also encode that status."
+    rationale: "Multiple channels for the same signal create visual noise and make the design harder to scan."
+    severity: required
+    check_method: semantic
+    check_scope: both
+
+  - id: wireframe-comments-for-intent
+    rule: "SVG comments explain INTENT (why this element, what role does it play), not appearance (what color, what dimensions). Bad: '<!-- Green rectangle 4px wide -->'. Good: '<!-- Active client — green border indicates active survey -->'."
+    rationale: "Future readers need to understand the system, not re-derive the visuals from prose."
+    severity: required
+    check_method: semantic
+    check_scope: both
+
+  - id: wireframe-consistency-over-creativity
+    rule: "Every card looks like every other card. Every button uses the same dimensions. Every header follows the same pattern. Wireframes are NOT artistic statements — they are uniform structural communication."
+    rationale: "Uniformity makes the wireframes feel like one product. Creativity belongs in the production design phase, not the wireframing phase."
+    severity: required
+    check_method: semantic
+    check_scope: artifact          # consistency is an across-elements judgment
+
+  - id: wireframe-edge-cases-first-class
+    rule: "Empty state, error state, loading state, and permission-denied state are required deliverables alongside the populated state. A screen specification that only describes the happy path is incomplete."
+    rationale: "Production code has to handle all these states; the design must too."
+    severity: required
+    check_method: semantic
+    check_scope: artifact          # screen-set deliverable check
+
+  - id: wireframe-verify-dont-assume
+    rule: "After creating wireframes, verify them: file exists with non-trivial content, viewBox matches dimensions, all colors come from the palette, all sizes from the type scale, all spacing from the grid. Verification catches errors before they compound."
+    rationale: "Errors in early wireframes propagate to all subsequent wireframes that copy them."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  # Mechanical rules — automatically checkable by rulebook_check.py
+
+  - id: wireframe-palette-discipline
+    rule: "Every fill and stroke value is one of the 12 palette colors (7 greyscale + 4 semantic + inverse white). Off-palette values are violations."
+    rationale: "Off-palette colors break the calibrated value hierarchy."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: wireframe-type-scale-discipline
+    rule: "Every font-size is one of the 7 scale values (11, 12, 13, 14, 16, 18, 24). Off-scale sizes are violations."
+    rationale: "Off-scale sizes break the typographic rhythm."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: wireframe-no-double-hyphens-in-comments
+    rule: "SVG comments NEVER contain '--' (double hyphens). XML forbids '--' inside comment bodies — only '<!--' to open and '-->' to close. Decorative dividers like '<!-- ---- Section ---- -->' cause parse errors."
+    rationale: "XML parser requirement; non-compliant comments break the SVG."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: wireframe-css-classes-not-inline-fills
+    rule: "Text element fills MUST use CSS classes (text-primary, text-secondary, text-disabled, text-inverse) defined in <defs><style>, not inline fill attributes. Color changes must be find-and-replace at the class definition, not at every text element."
+    rationale: "Inline fills make global color changes a search-and-replace nightmare."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: wireframe-mobile-desktop-pair
+    rule: "Every wireframe screen is delivered as a (mobile.svg, desktop.svg) pair. Mobile viewBox width = 375. Desktop viewBox width = 1280."
+    rationale: "Mobile-first methodology requires both deliverables; one without the other is incomplete."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact          # screen-pair deliverable check, not a component-fragment check
+
+
+# ────────────────────────────────────────────────────────────────────
+# GRAMMAR EXTENSIONS — wireframe family
+# ────────────────────────────────────────────────────────────────────
+
+grammar_extensions:
+  family: wireframe
+
+  per_system_signature:
+    placeholder_content:
+      enabled: true
+      copy_conventions:
+        names: ["Alex Rivera", "Jordan Chen", "Sam Okafor", "Taylor Kim", "Robin Patel"]
+        organizations: ["Northwind Trading", "Blue Harbor Consulting", "Ridge Valley Health"]
+        emails_format: "user@example.com"
+        dates_format: "MM/DD/YYYY"
+        body_text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+      role: "Realistic but obviously fictitious sample data — makes wireframes feel alive without confusing them with production data"
+
+    section_structure:
+      enabled: true
+      banner_format: "<!-- ==================== SECTION ==================== -->"
+      inline_format: "<!-- Intent description -->"
+      role: "SVG comments structure the file scannably; banner comments separate major sections"
+
+    layout_grid:
+      enabled: true
+      page_margin_mobile: 12
+      page_margin_desktop: 32
+      component_gap: 12
+      section_gap: 32
+      role: "Consistent spacing rhythm across all wireframes"
+
+    desktop_expansion_patterns:
+      patterns:
+        - { name: "two_column_split", main_pct: 60, panel_pct: 40, gap_px: 24 }
+        - { name: "card_grid", columns: [2, 3], gap_px: 16 }
+        - { name: "centered_constrained", max_width_px: 640 }
+        - { name: "left_sidebar", sidebar_width_px: [200, 280] }
+      role: "When adapting a mobile wireframe to desktop, choose one of these patterns"

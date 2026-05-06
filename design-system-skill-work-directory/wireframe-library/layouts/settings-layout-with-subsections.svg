@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== SETTINGS-LAYOUT-WITH-SUBSECTIONS ==================== -->
+
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+
+  <rect width="240" height="800" fill="#FFFFFF"/>
+  <line x1="240" y1="0" x2="240" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Settings</text>
+  <line x1="0" y1="64" x2="240" y2="64" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Section: Personal -->
+  <text x="24" y="98" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">PERSONAL</text>
+  <rect x="8" y="112" width="224" height="32" rx="4" fill="#F5F5F5"/>
+  <text x="24" y="132" class="text-primary" font-size="14" font-weight="500">Profile</text>
+  <text x="24" y="164" class="text-secondary" font-size="14">Account</text>
+  <text x="24" y="196" class="text-secondary" font-size="14">Preferences</text>
+
+  <!-- Section: Workspace -->
+  <text x="24" y="248" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">WORKSPACE</text>
+  <text x="24" y="282" class="text-secondary" font-size="14">Members</text>
+  <text x="24" y="314" class="text-secondary" font-size="14">Roles</text>
+  <text x="24" y="346" class="text-secondary" font-size="14">Permissions</text>
+
+  <!-- Section: Billing -->
+  <text x="24" y="398" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">BILLING</text>
+  <text x="24" y="432" class="text-secondary" font-size="14">Plan</text>
+  <text x="24" y="464" class="text-secondary" font-size="14">Invoices</text>
+  <text x="24" y="496" class="text-secondary" font-size="14">Payment methods</text>
+
+  <!-- Content panel -->
+  <text x="280" y="48" class="text-primary" font-size="18" font-weight="700">Profile</text>
+  <text x="280" y="76" class="text-secondary" font-size="13">Manage how you appear across the workspace.</text>
+  <line x1="280" y1="104" x2="1248" y2="104" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="280" y="148" class="text-primary" font-size="14" font-weight="600">Display name</text>
+  <rect x="280" y="170" width="480" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="296" y="200" class="text-primary" font-size="14">Alex Rivera</text>
+
+  <text x="280" y="262" class="text-primary" font-size="14" font-weight="600">Pronouns</text>
+  <rect x="280" y="284" width="480" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="296" y="314" class="text-disabled" font-size="14">they/them</text>
+
+  <text x="280" y="376" class="text-primary" font-size="14" font-weight="600">Time zone</text>
+  <rect x="280" y="398" width="480" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="296" y="428" class="text-primary" font-size="14">America/Los_Angeles</text>
+  <path d="M 730 420 L 738 428 L 746 420" fill="none" stroke="#757575" stroke-width="1.5" stroke-linecap="round"/>
+
+  <rect x="280" y="488" width="100" height="40" rx="6" fill="#424242"/>
+  <text x="330" y="514" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save changes</text>
+
+</svg>

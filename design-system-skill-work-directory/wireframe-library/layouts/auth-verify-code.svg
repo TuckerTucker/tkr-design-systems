@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== AUTH-VERIFY-CODE ==================== -->
+
+  <rect width="1280" height="800" fill="#F5F5F5"/>
+
+  <rect x="440" y="200" width="400" height="400" rx="8" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="640" y="248" text-anchor="middle" class="text-primary" font-size="18" font-weight="700">Check your email</text>
+  <text x="640" y="284" text-anchor="middle" class="text-secondary" font-size="13">We sent a 6-digit code to</text>
+  <text x="640" y="302" text-anchor="middle" class="text-primary" font-size="13" font-weight="500">user@example.com</text>
+
+  <!-- 6 digit boxes -->
+  <rect x="472" y="356" width="48" height="56" rx="6" fill="#FFFFFF" stroke="#424242" stroke-width="2"/>
+  <text x="496" y="392" text-anchor="middle" class="text-primary" font-size="18" font-weight="600">4</text>
+
+  <rect x="528" y="356" width="48" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="552" y="392" text-anchor="middle" class="text-primary" font-size="18" font-weight="600">2</text>
+
+  <rect x="584" y="356" width="48" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="608" y="392" text-anchor="middle" class="text-primary" font-size="18" font-weight="600">9</text>
+
+  <rect x="648" y="356" width="48" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="672" y="392" text-anchor="middle" class="text-disabled" font-size="18" font-weight="600">_</text>
+
+  <rect x="704" y="356" width="48" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="728" y="392" text-anchor="middle" class="text-disabled" font-size="18" font-weight="600">_</text>
+
+  <rect x="760" y="356" width="48" height="56" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="784" y="392" text-anchor="middle" class="text-disabled" font-size="18" font-weight="600">_</text>
+
+  <rect x="472" y="448" width="336" height="48" rx="6" fill="#424242"/>
+  <text x="640" y="478" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Verify</text>
+
+  <text x="640" y="540" text-anchor="middle" class="text-secondary" font-size="13">Didn't receive it? <tspan class="text-primary" font-weight="500">Resend</tspan></text>
+
+</svg>

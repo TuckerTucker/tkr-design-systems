@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 144" width="320" height="144">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== ACCORDION-ITEM-EXPANDED ==================== -->
+
+  <rect width="320" height="144" fill="#FFFFFF"/>
+  <text x="16" y="30" class="text-primary" font-size="14" font-weight="500">Section title</text>
+  <path d="M 296 24 L 300 30 L 304 24" fill="none" stroke="#757575" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="0" y1="48" x2="320" y2="48" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="16" y="76" class="text-secondary" font-size="13">Expanded content goes here.</text>
+  <text x="16" y="96" class="text-secondary" font-size="13">Lorem ipsum dolor sit amet, consectetur</text>
+  <text x="16" y="116" class="text-secondary" font-size="13">adipiscing elit.</text>
+  <line x1="0" y1="143.5" x2="320" y2="143.5" stroke="#E0E0E0" stroke-width="1"/>
+
+</svg>

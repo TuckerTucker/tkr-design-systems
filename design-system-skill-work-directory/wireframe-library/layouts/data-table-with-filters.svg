@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DATA-TABLE-WITH-FILTERS ==================== -->
+
+  <rect width="960" height="400" fill="#FFFFFF"/>
+
+  <!-- Filter row above table -->
+  <text x="0" y="14" class="text-secondary" font-size="12" font-weight="600" letter-spacing="0.5">FILTERS</text>
+  <rect x="0" y="22" width="80" height="28" rx="14" fill="#424242"/>
+  <text x="40" y="40" text-anchor="middle" class="text-inverse" font-size="11" font-weight="500">All</text>
+  <rect x="88" y="22" width="80" height="28" rx="14" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="128" y="40" text-anchor="middle" class="text-secondary" font-size="11">Active</text>
+  <rect x="176" y="22" width="100" height="28" rx="14" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="226" y="40" text-anchor="middle" class="text-secondary" font-size="11">Pending</text>
+  <rect x="284" y="22" width="80" height="28" rx="14" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="324" y="40" text-anchor="middle" class="text-secondary" font-size="11">Inactive</text>
+
+  <text x="960" y="40" text-anchor="end" class="text-secondary" font-size="12">247 results</text>
+
+  <!-- Table -->
+  <text x="16" y="86" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">NAME</text>
+  <text x="280" y="86" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">EMAIL</text>
+  <text x="600" y="86" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">ROLE</text>
+  <text x="800" y="86" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">STATUS</text>
+  <line x1="0" y1="100" x2="960" y2="100" stroke="#757575" stroke-width="1.5"/>
+
+  <text x="16" y="128" class="text-primary" font-size="13">Alex Rivera</text>
+  <text x="280" y="128" class="text-primary" font-size="13">alex@northwind.com</text>
+  <text x="600" y="128" class="text-secondary" font-size="13">Administrator</text>
+  <text x="800" y="128" class="text-success" font-size="13" font-weight="500">Active</text>
+  <line x1="0" y1="140" x2="960" y2="140" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="16" y="168" class="text-primary" font-size="13">Jordan Chen</text>
+  <text x="280" y="168" class="text-primary" font-size="13">jordan@northwind.com</text>
+  <text x="600" y="168" class="text-secondary" font-size="13">Editor</text>
+  <text x="800" y="168" class="text-success" font-size="13" font-weight="500">Active</text>
+  <line x1="0" y1="180" x2="960" y2="180" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="16" y="208" class="text-primary" font-size="13">Sam Okafor</text>
+  <text x="280" y="208" class="text-primary" font-size="13">sam@northwind.com</text>
+  <text x="600" y="208" class="text-secondary" font-size="13">Editor</text>
+  <text x="800" y="208" class="text-success" font-size="13" font-weight="500">Active</text>
+  <line x1="0" y1="220" x2="960" y2="220" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="16" y="248" class="text-primary" font-size="13">Taylor Kim</text>
+  <text x="280" y="248" class="text-primary" font-size="13">taylor@northwind.com</text>
+  <text x="600" y="248" class="text-secondary" font-size="13">Viewer</text>
+  <text x="800" y="248" class="text-success" font-size="13" font-weight="500">Active</text>
+  <line x1="0" y1="260" x2="960" y2="260" stroke="#E0E0E0" stroke-width="1"/>
+
+</svg>

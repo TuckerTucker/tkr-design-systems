@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 720" width="375" height="720">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== COMMAND-PALETTE-MOBILE ==================== -->
+
+  <rect width="375" height="720" fill="#FFFFFF"/>
+
+  <!-- Search input strip -->
+  <rect x="0" y="0" width="375" height="64" fill="#FFFFFF"/>
+  <text x="16" y="40" class="text-secondary" font-size="14">Cancel</text>
+  <rect x="80" y="16" width="279" height="32" rx="6" fill="#F5F5F5"/>
+  <text x="96" y="36" class="text-primary" font-size="13">archive</text>
+  <text x="343" y="36" text-anchor="end" class="text-secondary" font-size="13">×</text>
+  <line x1="0" y1="63.5" x2="375" y2="63.5" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Section: matching commands -->
+  <text x="16" y="92" class="text-secondary" font-size="11" font-weight="600">COMMANDS</text>
+  <text x="16" y="124" class="text-primary" font-size="14" font-weight="500">Archive thread</text>
+  <text x="16" y="142" class="text-secondary" font-size="12">Move current thread to archive</text>
+  <line x1="16" y1="167.5" x2="359" y2="167.5" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="16" y="192" class="text-primary" font-size="14" font-weight="500">Archive all completed</text>
+  <text x="16" y="210" class="text-secondary" font-size="12">Bulk archive of resolved threads</text>
+  <line x1="16" y1="235.5" x2="359" y2="235.5" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="16" y="260" class="text-primary" font-size="14" font-weight="500">Restore from archive</text>
+  <text x="16" y="278" class="text-secondary" font-size="12">Open the archive view</text>
+  <line x1="16" y1="303.5" x2="359" y2="303.5" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Section: recent matches -->
+  <text x="16" y="340" class="text-secondary" font-size="11" font-weight="600">RECENT</text>
+  <text x="16" y="372" class="text-primary" font-size="14">Tokyo Trip</text>
+  <text x="343" y="372" text-anchor="end" class="text-secondary" font-size="12">Thread</text>
+  <line x1="16" y1="395.5" x2="359" y2="395.5" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="16" y="420" class="text-primary" font-size="14">Recipe ideas</text>
+  <text x="343" y="420" text-anchor="end" class="text-secondary" font-size="12">Thread</text>
+
+</svg>

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" width="960" height="320">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== FORM-TWO-COLUMN ==================== -->
+
+  <rect width="960" height="320" fill="#FFFFFF"/>
+
+  <!-- Row 1: First name | Last name -->
+  <text x="0" y="14" class="text-secondary" font-size="12">First name</text>
+  <rect y="22" width="464" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="16" y="52" class="text-primary" font-size="14">Alex</text>
+
+  <text x="496" y="14" class="text-secondary" font-size="12">Last name</text>
+  <rect x="496" y="22" width="464" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="512" y="52" class="text-primary" font-size="14">Rivera</text>
+
+  <!-- Row 2: Email | Phone -->
+  <text x="0" y="100" class="text-secondary" font-size="12">Email</text>
+  <rect y="108" width="464" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="16" y="138" class="text-primary" font-size="14">alex@example.com</text>
+
+  <text x="496" y="100" class="text-secondary" font-size="12">Phone</text>
+  <rect x="496" y="108" width="464" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="512" y="138" class="text-disabled" font-size="14">+1 (555) 000-0000</text>
+
+  <!-- Row 3: Role | Department -->
+  <text x="0" y="186" class="text-secondary" font-size="12">Role</text>
+  <rect y="194" width="464" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="16" y="224" class="text-primary" font-size="14">Administrator</text>
+
+  <text x="496" y="186" class="text-secondary" font-size="12">Department</text>
+  <rect x="496" y="194" width="464" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="512" y="224" class="text-primary" font-size="14">Engineering</text>
+
+  <!-- Action row -->
+  <rect x="776" y="272" width="84" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="818" y="302" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
+  <rect x="876" y="272" width="84" height="48" rx="6" fill="#424242"/>
+  <text x="918" y="302" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Save</text>
+
+</svg>

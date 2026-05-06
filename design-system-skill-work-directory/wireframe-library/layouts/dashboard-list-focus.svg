@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DASHBOARD-LIST-FOCUS ==================== -->
+
+  <rect width="1280" height="800" fill="#F5F5F5"/>
+
+  <!-- Sidebar -->
+  <rect width="240" height="800" fill="#FFFFFF"/>
+  <line x1="240" y1="0" x2="240" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Brand</text>
+  <line x1="0" y1="64" x2="240" y2="64" stroke="#E0E0E0" stroke-width="1"/>
+  <rect x="8" y="80" width="224" height="36" rx="4" fill="#F5F5F5"/>
+  <text x="24" y="103" class="text-primary" font-size="14" font-weight="500">Projects</text>
+  <text x="24" y="143" class="text-secondary" font-size="14">Tasks</text>
+  <text x="24" y="183" class="text-secondary" font-size="14">Team</text>
+
+  <!-- Header -->
+  <rect x="240" y="0" width="1040" height="64" fill="#FFFFFF"/>
+  <line x1="240" y1="63.5" x2="1280" y2="63.5" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="272" y="40" class="text-primary" font-size="18" font-weight="700">Projects</text>
+  <rect x="1184" y="14" width="80" height="36" rx="6" fill="#424242"/>
+  <text x="1224" y="36" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">+ New</text>
+
+  <!-- Filter row -->
+  <rect x="272" y="96" width="320" height="36" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="288" y="119" class="text-disabled" font-size="13">Search projects</text>
+  <rect x="608" y="96" width="100" height="36" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="624" y="119" class="text-primary" font-size="13">Status</text>
+  <rect x="724" y="96" width="100" height="36" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="740" y="119" class="text-primary" font-size="13">Owner</text>
+
+  <!-- List of cards -->
+  <rect x="272" y="156" width="976" height="80" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="296" y="184" class="text-primary" font-size="14" font-weight="600">Q1 Marketing Campaign</text>
+  <text x="296" y="204" class="text-secondary" font-size="12">8 tasks · 4 members · Updated 2h ago</text>
+  <text x="1224" y="184" text-anchor="end" class="text-success" font-size="12" font-weight="500">On track</text>
+
+  <rect x="272" y="252" width="976" height="80" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="296" y="280" class="text-primary" font-size="14" font-weight="600">Brand refresh</text>
+  <text x="296" y="300" class="text-secondary" font-size="12">12 tasks · 6 members · Updated 1d ago</text>
+  <text x="1224" y="280" text-anchor="end" class="text-warning" font-size="12" font-weight="500">At risk</text>
+
+  <rect x="272" y="348" width="976" height="80" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="296" y="376" class="text-primary" font-size="14" font-weight="600">Customer research</text>
+  <text x="296" y="396" class="text-secondary" font-size="12">5 tasks · 3 members · Updated 3d ago</text>
+  <text x="1224" y="376" text-anchor="end" class="text-success" font-size="12" font-weight="500">On track</text>
+
+  <rect x="272" y="444" width="976" height="80" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="296" y="472" class="text-primary" font-size="14" font-weight="600">Product launch — Q2</text>
+  <text x="296" y="492" class="text-secondary" font-size="12">24 tasks · 8 members · Updated 2d ago</text>
+  <text x="1224" y="472" text-anchor="end" class="text-success" font-size="12" font-weight="500">On track</text>
+
+  <rect x="272" y="540" width="976" height="80" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="296" y="568" class="text-primary" font-size="14" font-weight="600">Documentation overhaul</text>
+  <text x="296" y="588" class="text-secondary" font-size="12">17 tasks · 2 members · Updated 5d ago</text>
+  <text x="1224" y="568" text-anchor="end" class="text-secondary" font-size="12" font-weight="500">Paused</text>
+
+</svg>

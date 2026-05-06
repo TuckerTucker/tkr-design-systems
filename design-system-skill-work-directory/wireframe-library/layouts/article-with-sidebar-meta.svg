@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 800" width="1040" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== ARTICLE-WITH-SIDEBAR-META ==================== -->
+
+  <rect width="1040" height="800" fill="#FFFFFF"/>
+
+  <!-- Article body (left) -->
+  <text x="0" y="40" class="text-primary" font-size="24" font-weight="700">Article title goes here</text>
+  <text x="0" y="64" class="text-secondary" font-size="13">By Alex Rivera · 4 min read</text>
+  <line x1="0" y1="84" x2="720" y2="84" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="0" y="124" class="text-primary" font-size="14">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod</text>
+  <text x="0" y="146" class="text-primary" font-size="14">tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim</text>
+  <text x="0" y="168" class="text-primary" font-size="14">veniam, quis nostrud exercitation.</text>
+
+  <text x="0" y="220" class="text-primary" font-size="18" font-weight="600">A subheading</text>
+
+  <text x="0" y="260" class="text-primary" font-size="14">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore</text>
+  <text x="0" y="282" class="text-primary" font-size="14">eu fugiat nulla pariatur.</text>
+
+  <!-- Sidebar meta (right) -->
+  <line x1="760" y1="0" x2="760" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Author block -->
+  <text x="800" y="40" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">AUTHOR</text>
+  <circle cx="816" cy="76" r="20" fill="#E0E0E0"/>
+  <text x="816" y="80" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">AR</text>
+  <text x="844" y="72" class="text-primary" font-size="14" font-weight="500">Alex Rivera</text>
+  <text x="844" y="88" class="text-secondary" font-size="12">Senior Editor</text>
+
+  <line x1="800" y1="124" x2="1020" y2="124" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Tags -->
+  <text x="800" y="160" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">TAGS</text>
+  <rect x="800" y="172" width="60" height="22" rx="11" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="830" y="187" text-anchor="middle" class="text-secondary" font-size="11">design</text>
+  <rect x="868" y="172" width="80" height="22" rx="11" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="908" y="187" text-anchor="middle" class="text-secondary" font-size="11">wireframes</text>
+  <rect x="800" y="204" width="60" height="22" rx="11" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="830" y="219" text-anchor="middle" class="text-secondary" font-size="11">tools</text>
+
+  <line x1="800" y1="252" x2="1020" y2="252" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Related -->
+  <text x="800" y="288" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">RELATED ARTICLES</text>
+  <text x="800" y="320" class="text-primary" font-size="13" font-weight="500">A guide to design tokens</text>
+  <text x="800" y="338" class="text-secondary" font-size="12">3 min read</text>
+
+  <text x="800" y="376" class="text-primary" font-size="13" font-weight="500">Building a component library</text>
+  <text x="800" y="394" class="text-secondary" font-size="12">7 min read</text>
+
+  <text x="800" y="432" class="text-primary" font-size="13" font-weight="500">When to use system fonts</text>
+  <text x="800" y="450" class="text-secondary" font-size="12">5 min read</text>
+
+</svg>

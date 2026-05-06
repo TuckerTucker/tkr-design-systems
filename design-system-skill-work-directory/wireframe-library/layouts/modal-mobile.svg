@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 720" width="375" height="720">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== MODAL-MOBILE ==================== -->
+
+  <rect width="375" height="720" fill="#F5F5F5"/>
+
+  <!-- Sheet -->
+  <rect x="0" y="320" width="375" height="400" rx="16" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Drag handle -->
+  <rect x="171.5" y="336" width="32" height="4" rx="2" fill="#BDBDBD"/>
+
+  <text x="16" y="384" class="text-primary" font-size="18" font-weight="700">Delete this thread?</text>
+  <text x="16" y="412" class="text-secondary" font-size="13">Tokyo Trip will be moved to your archive.</text>
+  <text x="16" y="430" class="text-secondary" font-size="13">You can restore it within 30 days.</text>
+
+  <!-- Stacked actions -->
+  <rect x="16" y="608" width="343" height="48" rx="6" fill="#B71C1C"/>
+  <text x="187.5" y="638" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Delete</text>
+
+  <rect x="16" y="664" width="343" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="187.5" y="694" text-anchor="middle" class="text-primary" font-size="14" font-weight="500">Cancel</text>
+
+</svg>

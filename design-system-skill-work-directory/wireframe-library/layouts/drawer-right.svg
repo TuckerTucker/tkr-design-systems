@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DRAWER-RIGHT ==================== -->
+
+  <rect width="1280" height="800" fill="#212121" opacity="0.4"/>
+
+  <rect x="880" y="0" width="400" height="800" fill="#FFFFFF"/>
+  <line x1="879.5" y1="0" x2="879.5" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="904" y="40" class="text-primary" font-size="16" font-weight="700">Drawer panel</text>
+  <text x="1256" y="44" text-anchor="end" class="text-secondary" font-size="18">×</text>
+  <line x1="880" y1="60" x2="1280" y2="60" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="904" y="100" class="text-secondary" font-size="13">Slides in from the right edge.</text>
+  <text x="904" y="120" class="text-secondary" font-size="13">Useful for contextual editing,</text>
+  <text x="904" y="140" class="text-secondary" font-size="13">filters, or detail panels.</text>
+
+  <!-- Form fields demonstrating content -->
+  <text x="904" y="200" class="text-secondary" font-size="12">Status</text>
+  <rect x="904" y="208" width="352" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="920" y="238" class="text-primary" font-size="14">Active</text>
+  <path d="M 1226 230 L 1234 238 L 1242 230" fill="none" stroke="#757575" stroke-width="1.5" stroke-linecap="round"/>
+
+  <text x="904" y="288" class="text-secondary" font-size="12">Assignee</text>
+  <rect x="904" y="296" width="352" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <circle cx="924" cy="320" r="10" fill="#E0E0E0"/>
+  <text x="924" y="324" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">AR</text>
+  <text x="944" y="326" class="text-primary" font-size="14">Alex Rivera</text>
+
+  <!-- Footer actions -->
+  <line x1="880" y1="744" x2="1280" y2="744" stroke="#E0E0E0" stroke-width="1"/>
+  <rect x="1072" y="760" width="84" height="32" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="1114" y="780" text-anchor="middle" class="text-secondary" font-size="13" font-weight="500">Cancel</text>
+  <rect x="1172" y="760" width="84" height="32" rx="6" fill="#424242"/>
+  <text x="1214" y="780" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save</text>
+
+</svg>

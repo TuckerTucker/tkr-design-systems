@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DASHBOARD-CONVERSATION ==================== -->
+
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+
+  <!-- Sidebar with thread list -->
+  <rect width="320" height="800" fill="#FFFFFF"/>
+  <line x1="320" y1="0" x2="320" y2="800" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Messages</text>
+  <line x1="0" y1="64" x2="320" y2="64" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Search -->
+  <rect x="16" y="80" width="288" height="36" rx="6" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="32" y="103" class="text-disabled" font-size="13">Search conversations</text>
+
+  <!-- Thread list -->
+  <rect x="0" y="132" width="320" height="80" fill="#F5F5F5"/>
+  <circle cx="32" cy="172" r="16" fill="#E0E0E0"/>
+  <text x="32" y="176" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">AR</text>
+  <text x="60" y="164" class="text-primary" font-size="14" font-weight="600">Alex Rivera</text>
+  <text x="60" y="184" class="text-secondary" font-size="12">Latest message preview…</text>
+  <text x="304" y="164" text-anchor="end" class="text-secondary" font-size="11">2m</text>
+  <line x1="0" y1="211.5" x2="320" y2="211.5" stroke="#E0E0E0" stroke-width="1"/>
+
+  <circle cx="32" cy="252" r="16" fill="#E0E0E0"/>
+  <text x="32" y="256" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">JC</text>
+  <text x="60" y="244" class="text-primary" font-size="14" font-weight="500">Jordan Chen</text>
+  <text x="60" y="264" class="text-secondary" font-size="12">Sounds good, let's plan it…</text>
+  <text x="304" y="244" text-anchor="end" class="text-secondary" font-size="11">1h</text>
+  <line x1="0" y1="291.5" x2="320" y2="291.5" stroke="#E0E0E0" stroke-width="1"/>
+
+  <circle cx="32" cy="332" r="16" fill="#E0E0E0"/>
+  <text x="32" y="336" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">SO</text>
+  <text x="60" y="324" class="text-primary" font-size="14" font-weight="500">Sam Okafor</text>
+  <text x="60" y="344" class="text-secondary" font-size="12">Thanks for the update.</text>
+  <text x="304" y="324" text-anchor="end" class="text-secondary" font-size="11">3h</text>
+  <line x1="0" y1="371.5" x2="320" y2="371.5" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Conversation header -->
+  <rect x="320" y="0" width="960" height="64" fill="#FFFFFF"/>
+  <line x1="320" y1="63.5" x2="1280" y2="63.5" stroke="#E0E0E0" stroke-width="1"/>
+  <circle cx="356" cy="32" r="14" fill="#E0E0E0"/>
+  <text x="356" y="36" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">AR</text>
+  <text x="380" y="28" class="text-primary" font-size="14" font-weight="600">Alex Rivera</text>
+  <text x="380" y="46" class="text-secondary" font-size="12">Active now</text>
+
+  <!-- Messages -->
+  <rect x="368" y="100" width="320" height="48" rx="6" fill="#F5F5F5"/>
+  <text x="384" y="128" class="text-primary" font-size="14">Hey, can we sync on the project today?</text>
+
+  <rect x="900" y="172" width="320" height="48" rx="6" fill="#424242"/>
+  <text x="916" y="200" class="text-inverse" font-size="14">Sure! 3pm works great.</text>
+
+  <rect x="368" y="244" width="380" height="80" rx="6" fill="#F5F5F5"/>
+  <text x="384" y="272" class="text-primary" font-size="14">Perfect. I'll send the agenda over so we</text>
+  <text x="384" y="294" class="text-primary" font-size="14">can hit the ground running.</text>
+  <text x="384" y="316" class="text-secondary" font-size="11">2:14 PM</text>
+
+  <rect x="900" y="348" width="320" height="48" rx="6" fill="#424242"/>
+  <text x="916" y="376" class="text-inverse" font-size="14">Thanks!</text>
+
+  <!-- Composer -->
+  <line x1="320" y1="704" x2="1280" y2="704" stroke="#E0E0E0" stroke-width="1"/>
+  <rect x="368" y="724" width="864" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="384" y="754" class="text-disabled" font-size="14">Type a message…</text>
+  <rect x="1184" y="730" width="44" height="36" rx="6" fill="#424242"/>
+  <text x="1206" y="754" text-anchor="middle" class="text-inverse" font-size="14">→</text>
+
+</svg>

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 720" width="375" height="720">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== SETTINGS-LAYOUT-MOBILE ==================== -->
+
+  <rect width="375" height="720" fill="#FFFFFF"/>
+
+  <!-- Header bar -->
+  <rect width="375" height="56" fill="#FFFFFF"/>
+  <text x="16" y="34" class="text-secondary" font-size="13">‹ Back</text>
+  <text x="187.5" y="34" text-anchor="middle" class="text-primary" font-size="16" font-weight="600">Settings</text>
+  <line x1="0" y1="55.5" x2="375" y2="55.5" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Section tab strip -->
+  <text x="32" y="92" class="text-primary" font-size="13" font-weight="600">Profile</text>
+  <line x1="16" y1="103" x2="80" y2="103" stroke="#212121" stroke-width="2"/>
+  <text x="120" y="92" class="text-secondary" font-size="13">Account</text>
+  <text x="200" y="92" class="text-secondary" font-size="13">Notifications</text>
+  <text x="320" y="92" class="text-secondary" font-size="13">More</text>
+  <line x1="0" y1="111.5" x2="375" y2="111.5" stroke="#E0E0E0" stroke-width="1"/>
+
+  <text x="16" y="148" class="text-primary" font-size="18" font-weight="700">Profile</text>
+  <text x="16" y="170" class="text-secondary" font-size="13">Update your personal information.</text>
+
+  <!-- Field 1 -->
+  <text x="16" y="216" class="text-secondary" font-size="12">Display name</text>
+  <rect x="16" y="224" width="343" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="32" y="254" class="text-primary" font-size="14">Alex Rivera</text>
+
+  <!-- Field 2 -->
+  <text x="16" y="296" class="text-secondary" font-size="12">Email address</text>
+  <rect x="16" y="304" width="343" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="32" y="334" class="text-primary" font-size="14">alex@example.com</text>
+
+  <!-- Field 3 -->
+  <text x="16" y="376" class="text-secondary" font-size="12">Time zone</text>
+  <rect x="16" y="384" width="343" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="32" y="414" class="text-primary" font-size="14">America/Los_Angeles</text>
+  <text x="343" y="414" text-anchor="end" class="text-secondary" font-size="13">▾</text>
+
+  <!-- Sticky CTA -->
+  <line x1="0" y1="655.5" x2="375" y2="655.5" stroke="#E0E0E0" stroke-width="1"/>
+  <rect x="16" y="672" width="343" height="40" rx="6" fill="#424242"/>
+  <text x="187.5" y="698" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save changes</text>
+
+</svg>

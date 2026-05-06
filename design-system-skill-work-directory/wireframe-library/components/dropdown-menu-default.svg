@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DROPDOWN-MENU-DEFAULT ==================== -->
+
+  <rect width="200" height="40" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="16" y="26" class="text-primary" font-size="13">Actions</text>
+  <path d="M 174 18 L 178 22 L 182 18" fill="none" stroke="#757575" stroke-width="1.5" stroke-linecap="round"/>
+  <rect x="0" y="48" width="200" height="148" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="16" y="76" class="text-primary" font-size="14">Edit</text>
+  <text x="16" y="108" class="text-primary" font-size="14">Duplicate</text>
+  <text x="16" y="140" class="text-primary" font-size="14">Share</text>
+  <line x1="8" y1="156" x2="192" y2="156" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="16" y="180" class="text-danger" font-size="14">Delete</text>
+
+</svg>

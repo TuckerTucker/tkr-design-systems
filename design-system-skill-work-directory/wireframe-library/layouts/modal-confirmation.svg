@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== MODAL-CONFIRMATION ==================== -->
+
+  <rect width="1280" height="800" fill="#212121" opacity="0.4"/>
+
+  <rect x="460" y="304" width="360" height="200" rx="8" fill="#FFFFFF"/>
+
+  <!-- No title bar; just title + body + actions -->
+  <text x="484" y="344" class="text-primary" font-size="16" font-weight="700">Delete this item?</text>
+
+  <text x="484" y="384" class="text-secondary" font-size="13">This action cannot be undone. The item</text>
+  <text x="484" y="402" class="text-secondary" font-size="13">will be permanently removed.</text>
+
+  <rect x="612" y="448" width="84" height="40" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
+  <text x="654" y="474" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
+  <rect x="712" y="448" width="84" height="40" rx="6" fill="#B71C1C"/>
+  <text x="754" y="474" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Delete</text>
+
+</svg>

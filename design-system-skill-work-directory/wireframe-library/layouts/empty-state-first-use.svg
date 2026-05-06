@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== EMPTY-STATE-FIRST-USE ==================== -->
+
+  <rect width="640" height="400" fill="#FFFFFF"/>
+
+  <!-- Welcome-illustration placeholder -->
+  <rect x="288" y="64" width="64" height="64" rx="32" fill="none" stroke="#BDBDBD" stroke-width="2"/>
+  <text x="320" y="106" text-anchor="middle" class="text-secondary" font-size="24">+</text>
+
+  <text x="320" y="180" text-anchor="middle" class="text-primary" font-size="18" font-weight="700">Welcome aboard</text>
+  <text x="320" y="216" text-anchor="middle" class="text-secondary" font-size="13">Your workspace is ready. Let's set things up</text>
+  <text x="320" y="236" text-anchor="middle" class="text-secondary" font-size="13">so the team can get to work.</text>
+
+  <rect x="244" y="280" width="152" height="48" rx="6" fill="#424242"/>
+  <text x="320" y="310" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Get started</text>
+
+  <text x="320" y="356" text-anchor="middle" class="text-secondary" font-size="12">Or take a tour first</text>
+
+</svg>
