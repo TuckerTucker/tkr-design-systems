@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 70" width="140" height="70">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== STAT-DEFAULT ==================== -->
+
+  <text x="0" y="12" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">METRIC</text>
+  <text x="0" y="48" class="text-primary" font-size="28" font-weight="700">1,247</text>
+  <text x="0" y="64" class="text-secondary" font-size="8">vs 1,100 last period</text>
+
+</svg>

@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <!-- Revolt dashboard — desktop 1280×800
+       grammar_family: contemporary_clean, elevation.strategy: hard_offset
+       3px borders on major dividers, 2px on components, 4px hard shadows.
+  -->
+
+  <rect x="0" y="0" width="1280" height="800" fill="#FFFEF5"/>
+
+  <!-- ════════════ SIDEBAR ════════════ -->
+
+  <!-- Lime brand bar with 3px black bottom border -->
+  <rect x="0" y="0" width="280" height="48" fill="#C8FF00"/>
+  <text x="14" y="30"
+        font-family="'Space Mono', ui-monospace, monospace"
+        font-size="14"
+        font-weight="700"
+        fill="#111111"
+        letter-spacing="1.12">REVOLT.chat</text>
+  <line x1="0" y1="46.5" x2="280" y2="46.5" stroke="#111111" stroke-width="3"/>
+
+  <!-- Search: 2px border integrated input -->
+  <rect x="10" y="60" width="260" height="32" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="20" y="81"
+        font-family="'Space Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="700"
+        fill="#666666"
+        letter-spacing="0.5">FIND...</text>
+
+  <!-- ─── List items ──────────────────── -->
+
+  <!-- Tokyo Trip SELECTED: lime fill, 2px border, 4px hard shadow, pink avatar swap -->
+  <rect x="12" y="108" width="252" height="50" fill="#111111"/>
+  <rect x="8" y="104" width="252" height="50" fill="#C8FF00" stroke="#111111" stroke-width="2"/>
+  <rect x="22" y="113" width="30" height="30" fill="#FF3366" stroke="#111111" stroke-width="2"/>
+  <text x="37" y="134" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">TT</text>
+  <text x="62" y="125" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" letter-spacing="0.44">TOKYO TRIP</text>
+  <text x="252" y="125" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#111111" text-anchor="end">2M</text>
+  <text x="62" y="142" font-family="'Space Mono', ui-monospace, monospace" font-size="10" fill="#111111">build itinerary?</text>
+  <!-- Pink unread badge with 2px border -->
+  <rect x="220" y="135" width="24" height="14" fill="#FF3366" stroke="#111111" stroke-width="2"/>
+  <text x="232" y="146" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+
+  <!-- Recipe Ideas (default) -->
+  <rect x="22" y="188" width="30" height="30" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="37" y="209" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" text-anchor="middle">RI</text>
+  <text x="62" y="200" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" letter-spacing="0.44">RECIPE IDEAS</text>
+  <text x="266" y="200" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#999999" text-anchor="end">1H</text>
+  <text x="62" y="217" font-family="'Space Mono', ui-monospace, monospace" font-size="10" fill="#666666">here are 5 ramen variations you'll love...</text>
+
+  <!-- Book Club -->
+  <rect x="22" y="252" width="30" height="30" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="37" y="273" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" text-anchor="middle">BC</text>
+  <text x="62" y="264" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" letter-spacing="0.44">BOOK CLUB</text>
+  <text x="266" y="264" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#999999" text-anchor="end">3H</text>
+  <text x="62" y="281" font-family="'Space Mono', ui-monospace, monospace" font-size="10" fill="#666666">start with murakami…</text>
+  <rect x="220" y="259" width="24" height="14" fill="#FF3366" stroke="#111111" stroke-width="2"/>
+  <text x="232" y="270" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+
+  <!-- Fitness Plan -->
+  <rect x="22" y="316" width="30" height="30" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="37" y="337" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" text-anchor="middle">MT</text>
+  <text x="62" y="328" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" letter-spacing="0.44">FITNESS PLAN</text>
+  <text x="266" y="328" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#999999" text-anchor="end">1D</text>
+  <text x="62" y="345" font-family="'Space Mono', ui-monospace, monospace" font-size="10" fill="#666666">your 4-week progressive routine is ready.</text>
+
+  <!-- Code Review -->
+  <rect x="22" y="380" width="30" height="30" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="37" y="401" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" text-anchor="middle">CR</text>
+  <text x="62" y="392" font-family="'Space Mono', ui-monospace, monospace" font-size="11" font-weight="700" fill="#111111" letter-spacing="0.44">CODE REVIEW</text>
+  <text x="266" y="392" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#999999" text-anchor="end">2D</text>
+  <text x="62" y="409" font-family="'Space Mono', ui-monospace, monospace" font-size="10" fill="#666666">the auth middleware looks solid, but...</text>
+
+  <!-- Account footer with 3px black top border -->
+  <line x1="0" y1="744" x2="280" y2="744" stroke="#111111" stroke-width="3"/>
+  <rect x="14" y="754" width="26" height="26" fill="#C8FF00" stroke="#111111" stroke-width="2"/>
+  <text x="27" y="772" font-family="'Space Mono', ui-monospace, monospace" font-size="10" font-weight="900" fill="#111111" text-anchor="middle">U</text>
+  <text x="50" y="773" font-family="'Space Mono', ui-monospace, monospace" font-size="10" font-weight="700" fill="#111111" letter-spacing="0.5">USER_01</text>
+
+  <!-- ════════════ MAIN AREA ════════════ -->
+
+  <!-- Pink header bar with 3px black bottom border -->
+  <rect x="280" y="0" width="1000" height="48" fill="#FF3366"/>
+  <text x="314" y="30" font-family="'Space Mono', ui-monospace, monospace" font-size="14" font-weight="700">TT</text>
+  <text x="344" y="30"
+        font-family="'Space Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="700"
+        fill="#FFFFFF"
+        letter-spacing="0.72">TOKYO TRIP</text>
+  <!-- LIVE pill — bordered white rectangle in pink header -->
+  <rect x="1224" y="14" width="44" height="20" fill="#FF3366" stroke="#FFFFFF" stroke-width="2"/>
+  <text x="1246" y="28" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="end">LIVE</text>
+  <line x1="280" y1="46.5" x2="1280" y2="46.5" stroke="#111111" stroke-width="3"/>
+
+  <!-- ─── Messages: rectangles with 2px border + 4px hard shadow ─── -->
+
+  <!-- Message 01 — USER (pink fill, right-aligned) -->
+  <rect x="824" y="100" width="436" height="44" fill="#111111"/>
+  <rect x="820" y="96" width="436" height="44" fill="#FF3366" stroke="#111111" stroke-width="2"/>
+  <text x="836" y="123" font-family="'Space Mono', ui-monospace, monospace" font-size="11.5" fill="#FFFFFF">Hey, can you help me plan a trip to Tokyo?</text>
+  <text x="1256" y="156" font-family="'Space Mono', ui-monospace, monospace" font-size="8" font-weight="700" fill="#999999" letter-spacing="0.8" text-anchor="end">YOU // 00:1</text>
+
+  <!-- Message 02 — AI (white fill, left-aligned) -->
+  <rect x="324" y="184" width="640" height="64" fill="#111111"/>
+  <rect x="320" y="180" width="640" height="64" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="336" y="207" font-family="'Space Mono', ui-monospace, monospace" font-size="11.5" fill="#111111">Absolutely! Tokyo is incredible. Are you looking for a culture-focused trip,</text>
+  <text x="336" y="231" font-family="'Space Mono', ui-monospace, monospace" font-size="11.5" fill="#111111">food adventure, or a mix of everything?</text>
+  <text x="320" y="260" font-family="'Space Mono', ui-monospace, monospace" font-size="8" font-weight="700" fill="#999999" letter-spacing="0.8">BOT // 00:2</text>
+
+  <!-- Message 03 — USER -->
+  <rect x="864" y="284" width="396" height="44" fill="#111111"/>
+  <rect x="860" y="280" width="396" height="44" fill="#FF3366" stroke="#111111" stroke-width="2"/>
+  <text x="876" y="307" font-family="'Space Mono', ui-monospace, monospace" font-size="11.5" fill="#FFFFFF">Definitely a mix — temples in the morning, ramen at night.</text>
+  <text x="1256" y="340" font-family="'Space Mono', ui-monospace, monospace" font-size="8" font-weight="700" fill="#999999" letter-spacing="0.8" text-anchor="end">YOU // 00:3</text>
+
+  <!-- Message 04 — AI -->
+  <rect x="324" y="368" width="700" height="84" fill="#111111"/>
+  <rect x="320" y="364" width="700" height="84" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="336" y="391" font-family="'Space Mono', ui-monospace, monospace" font-size="11.5" fill="#111111">Perfect combo. I'd suggest starting in Asakusa for Senso-ji, then heading to</text>
+  <text x="336" y="415" font-family="'Space Mono', ui-monospace, monospace" font-size="11.5" fill="#111111">Shibuya for the evening food scene. Want me to build a day-by-day</text>
+  <text x="336" y="439" font-family="'Space Mono', ui-monospace, monospace" font-size="11.5" fill="#111111">itinerary?</text>
+  <text x="320" y="464" font-family="'Space Mono', ui-monospace, monospace" font-size="8" font-weight="700" fill="#999999" letter-spacing="0.8">BOT // 00:4</text>
+
+  <!-- Composer: integrated input with lime send button on right, 3px top border -->
+  <line x1="280" y1="704" x2="1280" y2="704" stroke="#111111" stroke-width="3"/>
+  <rect x="320" y="724" width="900" height="44" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="334" y="752"
+        font-family="'Space Mono', ui-monospace, monospace"
+        font-size="11"
+        font-weight="700"
+        fill="#666666"
+        letter-spacing="0.44">SAY SOMETHING...</text>
+  <!-- Lime send button integrated on right, separated by 2px black -->
+  <rect x="1218" y="724" width="44" height="44" fill="#C8FF00"/>
+  <line x1="1219" y1="724" x2="1219" y2="768" stroke="#111111" stroke-width="2"/>
+  <text x="1240" y="754" font-family="'Space Mono', ui-monospace, monospace" font-size="20" font-weight="900" fill="#111111" text-anchor="middle">→</text>
+
+  <!-- Sidebar/main divider 3px solid black -->
+  <line x1="280" y1="0" x2="280" y2="800" stroke="#111111" stroke-width="3"/>
+</svg>

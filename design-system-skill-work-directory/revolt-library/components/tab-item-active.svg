@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 32" width="100" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== TAB-ITEM-ACTIVE ==================== -->
+
+  <text x="50" y="20" text-anchor="middle" class="text-primary" font-size="9" font-weight="700">ACTIVE</text>
+  <line x1="0" y1="29" x2="100" y2="29" stroke="#111111" stroke-width="3"/>
+
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" width="200" height="80">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== TEXTAREA-DEFAULT ==================== -->
+
+  <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">MESSAGE</text>
+  <rect x="0" y="18" width="200" height="64" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="8" y="38" class="text-muted" font-size="10">write here…</text>
+
+</svg>

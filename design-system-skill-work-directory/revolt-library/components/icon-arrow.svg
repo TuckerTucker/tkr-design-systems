@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== ICON-ARROW ==================== -->
+
+  <text x="12" y="18" text-anchor="middle" class="text-primary" font-size="16" font-weight="700">></text>
+
+</svg>

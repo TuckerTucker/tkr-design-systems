@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 18" width="240" height="18">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== BREADCRUMB-DEFAULT ==================== -->
+
+  <text x="0" y="14" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">HOME</text>
+  <text x="48" y="14" class="text-secondary" font-size="8" font-weight="700">//</text>
+  <text x="72" y="14" class="text-primary" font-size="8" font-weight="700">SETTINGS</text>
+
+</svg>

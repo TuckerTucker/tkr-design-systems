@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== AUTH-SIGN-IN ==================== -->
+
+  <rect x="0" y="0" width="1280" height="800" fill="#FFFEF5"/>
+
+  <!-- Centered form card: 360px wide, white with 2px border and 4px hard shadow -->
+  <rect x="464" y="82" width="352" height="556" fill="#111111"/>
+  <rect x="460" y="78" width="352" height="556" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+
+  <!-- Pink brand section at top of form -->
+  <rect x="460" y="78" width="352" height="60" fill="#FF3366"/>
+  <text x="636" y="117" text-anchor="middle" class="text-inverse" font-size="14" font-weight="700" letter-spacing="1.12">REVOLT.chat</text>
+
+  <!-- Divider below brand -->
+  <line x1="460" y1="138" x2="812" y2="138" stroke="#111111" stroke-width="2"/>
+
+  <!-- Email field -->
+  <text x="480" y="170" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">EMAIL ADDRESS</text>
+  <rect x="480" y="176" width="312" height="32" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="490" y="198" class="text-muted" font-size="10">your@email.com</text>
+
+  <!-- Divider -->
+  <line x1="480" y1="226" x2="792" y2="226" stroke="#999999" stroke-width="1"/>
+
+  <!-- Password field -->
+  <text x="480" y="254" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">PASSWORD</text>
+  <rect x="480" y="260" width="312" height="32" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="490" y="282" class="text-primary" font-size="10" letter-spacing="1.5">••••••••</text>
+
+  <!-- Divider -->
+  <line x1="480" y1="310" x2="792" y2="310" stroke="#999999" stroke-width="1"/>
+
+  <!-- Sign in button — lime with 4px hard shadow -->
+  <rect x="484" y="342" width="304" height="48" fill="#111111"/>
+  <rect x="480" y="338" width="304" height="48" fill="#C8FF00" stroke="#111111" stroke-width="2"/>
+  <text x="632" y="368" text-anchor="middle" class="text-primary" font-size="11" font-weight="700" letter-spacing="0.44">SIGN IN</text>
+
+  <!-- Footer link: "Create account" -->
+  <text x="636" y="520" text-anchor="middle" class="text-secondary" font-size="9">No account? <tspan fill="#111111" font-weight="700">Create one</tspan></text>
+
+</svg>

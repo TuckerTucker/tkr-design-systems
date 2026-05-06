@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 32" width="320" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== TABLE-ROW-HEADER ==================== -->
+
+  <rect x="0" y="0" width="320" height="32" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="0" y="20" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">#</text>
+  <text x="32" y="20" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">NAME</text>
+  <text x="160" y="20" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">EMAIL</text>
+  <text x="296" y="20" text-anchor="end" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">STATUS</text>
+
+</svg>

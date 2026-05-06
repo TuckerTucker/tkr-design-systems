@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 32" width="160" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== KEY-VALUE-DEFAULT ==================== -->
+
+  <text x="0" y="12" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">JOINED</text>
+  <text x="0" y="28" class="text-primary" font-size="9">January 2024</text>
+
+</svg>

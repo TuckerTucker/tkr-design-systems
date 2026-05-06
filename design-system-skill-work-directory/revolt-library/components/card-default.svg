@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== CARD-DEFAULT ==================== -->
+
+  <rect x="2" y="2" width="196" height="96" fill="#111111"/>
+  <rect x="0" y="0" width="196" height="96" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="8" y="20" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">CARD</text>
+  <text x="8" y="44" class="text-primary" font-size="10">Card content here</text>
+  <text x="8" y="62" class="text-secondary" font-size="9">With secondary text below.</text>
+
+</svg>

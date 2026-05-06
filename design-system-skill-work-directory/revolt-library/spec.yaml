@@ -1,0 +1,209 @@
+spec_version: "0.2"
+
+system:
+  id: revolt
+  name: Revolt
+  tagline: "Neobrutalist + Y2K"
+  grammar_family: contemporary_clean
+  version: "1.2.0"   # bumped: project-wide no-emoji policy — two-letter abbreviation avatars
+  source_jsx: ../design-system-integrated.jsx
+
+  # tkr-kit project policy: no emoji glyphs anywhere (mechanically enforced
+  # by the revolt-no-emoji-imagery rulebook entry). Identity in Revolt uses
+  # two-letter abbreviations in 30×30 white squares with 2px black borders,
+  # uppercase Space Mono weight 700 — matches the neobrutalist code-comment
+  # affect. The pink-swap on selection still applies (background swaps to
+  # #FF3366; the abbreviation flips to white).
+  requires_emoji: false
+  avatar_strategy:
+    mode: abbreviation
+    abbreviation_length: 2
+    placeholder_size_px: 30
+    placeholder_surface: "#FFFFFF"
+    placeholder_border: "2px solid #111111"
+    placeholder_letter_typeface_ref: typography.families.structural
+    placeholder_letter_weight: 700
+    placeholder_letter_color: "#111111"
+    selected_swap:
+      surface: "#FF3366"
+      letter_color: "#FFFFFF"
+    rendering_notes: "Two-letter uppercase abbreviation (e.g. TT, RI, BC), Space Mono weight 700, centered in a 30×30 white square with 2px black border. On selection, background swaps to pink (#FF3366) and the abbreviation flips white."
+
+tokens:
+  colors:
+    page_bg: "#FFFEF5"
+    surface: "#FFFFFF"
+    surface_elevated: "#FFFFFF"
+    text_primary: "#111111"
+    text_secondary: "#666666"
+    text_muted: "#999999"
+    accent: "#FF3366"
+
+    palette:
+      - { name: paper_offwhite, value: "#FFFEF5", role: page background }
+      - { name: paper_white, value: "#FFFFFF", role: surface fills }
+      - { name: ink_hard, value: "#111111", role: borders, body, headlines }
+      - { name: pink_revolt, value: "#FF3366", role: header bar, user message fill, selection bar fill, unread badges }
+      - { name: lime_revolt, value: "#C8FF00", role: brand bar, selected state, send button }
+      - { name: text_secondary_grey, value: "#666666", role: preview text }
+      - { name: text_muted_grey, value: "#999999", role: timestamps and footnotes }
+
+  typography:
+    families:
+      - id: structural
+        stack: "'Space Mono', ui-monospace, monospace"
+        role: every piece of text
+        mixing_rule: "single typeface — monospace only"
+    scale:
+      - { size: 8,  role: tiny_metadata }
+      - { size: 9,  role: pill_label }
+      - { size: 10, role: timestamp_label }
+      - { size: 11, role: secondary_body }
+      - { size: 11.5, role: body }
+      - { size: 12, role: header }
+      - { size: 14, role: brand }
+    case:
+      metadata: uppercase
+      body: mixed
+      headers: uppercase
+    tracking:
+      metadata: 0.10  # em — generous tracking for uppercase
+      body: 0.04
+      headers: 0.08
+
+  spacing:
+    grid_unit: 2
+    allowed_steps: [2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32]
+    enforcement: relaxed
+
+  borders:
+    radius_default: 0
+    radius_inputs: 0
+    radius_chrome: 0
+    no_radius_anywhere: true
+
+  elevation:
+    strategy: hard_offset
+    config:
+      shadow_offset: { x: 4, y: 4 }
+      shadow_color: "#111111"
+      shadow_blur: 0   # always 0 for Revolt — hard offset only
+      border_width: 2  # default; brand and section dividers use 3
+
+components:
+  list_item:
+    # Structured anatomy (Schema v0.2 Change 11) — formalizes preview yielding
+    # space to unread_badge. Space Mono's wider glyphs make the truncation
+    # point come earlier than for proportional-font systems.
+    anatomy:
+      - { id: avatar,       position: left,         fixed_width: 30 }
+      - { id: title,        position: top_main,     yields_to: [timestamp] }
+      - { id: timestamp,    position: top_right,    fixed_width: 48 }
+      - { id: preview,      position: bottom_main,  yields_to: [unread_badge], min_gap: 6 }
+      - { id: unread_badge, position: middle_right, fixed_width: 22, optional: true }
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Avatar 30x30 white square with 2px black border. Title in Space Mono uppercase 11px weight 700. Timestamp top-right in 9px grey weight 700. Preview in 10px grey. Unread badge: bordered pink rectangle with white digit. Preview text MUST end at least 6px before the unread_badge x-position when badge is present; truncate with ellipsis (…). Space Mono is wider per character than proportional fonts, so the truncation point comes earlier than it would in Sketch or Prism — about 22 characters max for a 280px sidebar item with badge present."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        # Selection signal (Schema v0.2 Change 10) — Revolt's hard-offset
+        # signature: lime fill + black border + 4px hard shadow + pink avatar.
+        selection_signal: hard_offset
+        selection_signal_detail:
+          fill: "#C8FF00"
+          border: "2px solid #111"
+          shadow: { offset_x: 4, offset_y: 4, color: "#111", blur: 0 }
+          additional_treatment: "avatar bg swap to #FF3366"
+        rendering_notes: "Lime fill (#C8FF00), 2px black border, 4px hard offset shadow. Avatar background swaps to pink (#FF3366) with white emoji. Same preview-yields-to-badge rule as default variant."
+        states: [selected]
+    constraints:
+      - "Selection: lime fill + 2px black border + 4px hard shadow + pink avatar swap. NEVER use a soft shadow or rounded selection."
+      - "All shadows are 4px 4px 0 #111 — zero blur. Never use blur."
+      - "All borders are 2px solid #111 (or 3px for major dividers). Never thin or colored borders."
+      - "Preview text yields horizontal space to unread_badge: minimum 6px gap before the badge's left edge. Truncate the preview content (do not let SVG text overflow). See SCHEMA v0.2 finding 11.5 for the formal yields_to constraint this rule encodes."
+
+rulebook:
+  # NEW IN v0.2: every rule annotates check_method (Change 9) and
+  # check_scope (Change 12).
+
+  - id: revolt-no-radius
+    rule: "border-radius is 0 on every element. Rectangles and right angles only."
+    rationale: "The hard-edged geometry IS the system; rounding breaks the neobrutalist grammar."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Verify no rx/ry attributes exist (or all are 0)."
+
+  - id: revolt-hard-shadows-only
+    rule: "All box-shadows are 4px 4px 0 #111 — zero blur, exact offset. Never soft or blurred shadows."
+    rationale: "Hard offset is the system's depth signature; soft shadows belong to a different vocabulary entirely."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "If <filter> with feDropShadow is present, verify stdDeviation=0 and offset matches the canonical (4,4) hard-offset signature."
+
+  - id: revolt-2px-borders
+    rule: "Default borders are 2px solid #111. Major dividers (sidebar/main split, brand bar, header bar) are 3px."
+    rationale: "Heavy borders are structural — they're the system's frames, not decorative."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "For each <rect>/<line> with stroke=#111, verify stroke-width is 2 (default) or 3 (major dividers)."
+
+  - id: revolt-monospace-uppercase
+    rule: "All metadata, names, and labels are uppercase Space Mono with letter-spacing 0.04–0.08em."
+    rationale: "Uppercase mono is the Y2K interface aesthetic; mixed case feels modern in the wrong way."
+    severity: required
+    check_method: both
+    check_scope: both
+    check_implementation: |
+      Mechanical: every <text> uses Space Mono family. Letter-spacing within
+      0.04-0.08em range. Semantic: text content for metadata/labels (not body)
+      should be uppercase.
+
+  - id: revolt-color-pairing
+    rule: "Pink (#FF3366) and lime (#C8FF00) are paired accent colors. Pink for: header bar, user messages, unread badges, selected avatar swap. Lime for: brand bar, selected list bg, send button."
+    rationale: "The pink/lime pairing IS the Revolt palette; substitution breaks the visual identity."
+    severity: required
+    check_method: both
+    check_scope: artifact
+    check_implementation: "Mechanical: count pink and lime usages; flag any other saturated color outside the palette. Semantic: each pink/lime element should match one of the listed contexts."
+
+  - id: revolt-code-style-timestamps
+    rule: "Message timestamps follow the format `{SENDER} // 00:N` (e.g. YOU // 00:1, BOT // 00:2). Always uppercase, always with the // separator."
+    rationale: "Code-comment timestamp format reinforces the neobrutalist 'this is a machine' affect."
+    severity: required
+    check_method: semantic
+    check_scope: artifact
+    check_implementation: "Read text content of timestamp elements; verify the `SENDER // 00:N` format (uppercase, // separator, zero-padded counter)."
+
+  - id: revolt-no-emoji-imagery
+    rule: "No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations). Identity uses two-letter uppercase abbreviations in 30×30 white squares with 2px black borders."
+    rationale: "Project policy forbids emoji as an identifier strategy. Revolt's neobrutalist code-comment affect is more authentic with mono-typeface abbreviations than colored emoji."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Scan SVG text for codepoints in the Unicode emoji blocks (U+1F300-U+1F5FF, U+1F600-U+1F64F, U+1F680-U+1F6FF, U+1F900-U+1F9FF, U+2600-U+26FF, U+2700-U+27BF, U+1FA70-U+1FAFF). Any match is a violation."
+
+grammar_extensions:
+  family: contemporary_clean
+  per_system_signature:
+    hard_offset_shadow:
+      enabled: true
+      offset_x_px: 4
+      offset_y_px: 4
+      color_ref: tokens.colors.text_primary
+      blur: 0
+      usage: "applied to all elevated elements: cards, message bubbles, selected items, send buttons"
+    rotation_interaction:
+      enabled: true
+      hover_rotation_deg: -0.5
+      transition_ms: 120
+      usage: "sidebar items rotate -0.5deg on hover; static SVG renders without rotation"
+    pink_lime_pairing:
+      pink: "#FF3366"
+      lime: "#C8FF00"
+      pink_uses: [header_bar, user_message_fill, unread_badge, selected_avatar_bg]
+      lime_uses: [brand_bar, selected_list_item_bg, send_button_fill]

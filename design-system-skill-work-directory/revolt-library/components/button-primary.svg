@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 48" width="140" height="48">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== BUTTON-PRIMARY ==================== -->
+
+  <rect x="2" y="2" width="136" height="44" fill="#111111"/>
+  <rect x="0" y="0" width="136" height="44" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="68" y="30" text-anchor="middle" class="text-primary" font-size="11" font-weight="700" letter-spacing="0.44">SEND</text>
+
+</svg>

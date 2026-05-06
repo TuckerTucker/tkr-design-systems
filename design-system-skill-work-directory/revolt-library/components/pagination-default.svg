@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 20" width="200" height="20">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== PAGINATION-DEFAULT ==================== -->
+
+  <text x="0" y="14" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">01 OF 10</text>
+  <text x="200" y="14" text-anchor="end" class="text-primary" font-size="8" font-weight="700">NEXT ></text>
+
+</svg>

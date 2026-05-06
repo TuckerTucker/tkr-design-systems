@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== LIST-ITEM-DEFAULT ==================== -->
+
+  <rect x="0" y="0" width="200" height="60" fill="#FFFEF5"/>
+  <rect x="6" y="8" width="22" height="22" fill="#FFFFFF" stroke="#111111" stroke-width="2"/>
+  <text x="17" y="25" text-anchor="middle" font-family="'Space Mono', ui-monospace, monospace" font-size="9" font-weight="700" fill="#111111">AB</text>
+  <text x="36" y="20" class="text-primary" font-size="9" font-weight="700" letter-spacing="0.36">ITEM</text>
+  <text x="186" y="20" text-anchor="end" class="text-muted" font-size="8" font-weight="700">2M</text>
+  <text x="36" y="38" class="text-secondary" font-size="8">preview text here…</text>
+
+</svg>

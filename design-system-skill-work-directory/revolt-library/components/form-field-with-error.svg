@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" width="200" height="80">
+  <defs>
+    <style>
+      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== FORM-FIELD-WITH-ERROR ==================== -->
+
+  <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">EMAIL</text>
+  <rect x="0" y="16" width="200" height="28" fill="#FFFFFF" stroke="#FF3366" stroke-width="2"/>
+  <text x="6" y="36" class="text-primary" font-size="9">invalid-email</text>
+  <text x="0" y="60" class="text-secondary" font-size="8" font-weight="700">ERROR // INVALID</text>
+
+</svg>
