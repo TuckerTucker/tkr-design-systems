@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 20" width="200" height="20">
+  <defs>
+    <style>
+      .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-muted { fill: #3D7044; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-error { fill: #FF6B6B; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== KEY-VALUE-DEFAULT ==================== -->
+
+  <text x="0" y="15" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">PLAN</text>
+  <text x="50" y="15" class="text-muted" font-size="11" font-weight="400" letter-spacing="1">. . . .</text>
+  <text x="140" y="15" class="text-primary" font-size="12" font-weight="400">Professional</text>
+
+</svg>

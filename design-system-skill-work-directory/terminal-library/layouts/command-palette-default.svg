@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-muted { fill: #3D7044; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== COMMAND-PALETTE-DEFAULT ==================== -->
+
+  <!-- Background dim — Terminal uses a dark wash -->
+  <rect x="0" y="0" width="1280" height="800" fill="#000000" opacity="0.4"/>
+
+  <!-- Centered panel: 600px wide × 500px tall -->
+  <rect x="340" y="150" width="600" height="500" fill="#0A0F0A"/>
+  <line x1="340" y1="150" x2="940" y2="150" stroke="#1F2F1F" stroke-width="1"/>
+
+  <!-- Search input at top with prompt-style prefix -->
+  <text x="356" y="178" class="text-secondary" font-size="12" font-weight="400">> </text>
+  <text x="372" y="178" class="text-muted" font-size="12" font-weight="400">search commands, files, actions...</text>
+  <text x="928" y="178" class="text-accent" font-size="12" font-weight="700">█</text>
+  <line x1="340" y1="195" x2="940" y2="195" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- COMMANDS section header -->
+  <text x="356" y="221" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">// COMMANDS</text>
+
+  <!-- Command list items -->
+  <text x="356" y="245" class="text-secondary" font-size="11" font-weight="400"> </text>
+  <text x="372" y="245" class="text-primary" font-size="11" font-weight="400">design-system-skill check</text>
+
+  <text x="356" y="265" class="text-secondary" font-size="11" font-weight="400"> </text>
+  <text x="372" y="265" class="text-primary" font-size="11" font-weight="400">wireframe-skill render</text>
+
+  <text x="356" y="285" class="text-secondary" font-size="11" font-weight="400"> </text>
+  <text x="372" y="285" class="text-primary" font-size="11" font-weight="400">validate-spec all systems</text>
+
+  <!-- RECENT section header -->
+  <text x="356" y="321" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">// RECENT</text>
+
+  <!-- Recent items with selection indicator -->
+  <text x="356" y="345" class="text-accent" font-size="11" font-weight="700">> </text>
+  <text x="372" y="345" class="text-accent" font-size="11" font-weight="400">auth_signup_pattern</text>
+
+  <text x="356" y="365" class="text-secondary" font-size="11" font-weight="400"> </text>
+  <text x="372" y="365" class="text-primary" font-size="11" font-weight="400">settings_layout</text>
+
+  <!-- FILES section header -->
+  <text x="356" y="401" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">// FILES</text>
+
+  <!-- File items -->
+  <text x="356" y="425" class="text-secondary" font-size="11" font-weight="400"> </text>
+  <text x="372" y="425" class="text-primary" font-size="11" font-weight="400">terminal-spec.yaml</text>
+
+  <text x="356" y="445" class="text-secondary" font-size="11" font-weight="400"> </text>
+  <text x="372" y="445" class="text-primary" font-size="11" font-weight="400">LIBRARY-SPEC.md</text>
+
+  <!-- Footer hint -->
+  <line x1="340" y1="625" x2="940" y2="625" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="356" y="645" class="text-muted" font-size="9" font-weight="400" letter-spacing="0.54">↑ ↓ navigate • ⏎ select • esc close</text>
+
+  <!-- Outer frame -->
+  <line x1="940" y1="150" x2="940" y2="650" stroke="#1F2F1F" stroke-width="1"/>
+  <line x1="340" y1="650" x2="940" y2="650" stroke="#1F2F1F" stroke-width="1"/>
+  <line x1="340" y1="150" x2="340" y2="650" stroke="#1F2F1F" stroke-width="1"/>
+
+</svg>

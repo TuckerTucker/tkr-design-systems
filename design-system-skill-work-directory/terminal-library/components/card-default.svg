@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="240" height="80">
+  <defs>
+    <style>
+      .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-muted { fill: #3D7044; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-error { fill: #FF6B6B; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== CARD-DEFAULT ==================== -->
+
+  <text x="4" y="14" class="text-secondary" font-size="11" font-weight="500">┌─ CARD ─┐</text>
+  <text x="4" y="30" class="text-secondary" font-size="10" font-weight="400">│</text>
+  <text x="16" y="30" class="text-primary" font-size="11" font-weight="400">card content here</text>
+  <text x="4" y="46" class="text-secondary" font-size="10" font-weight="400">│</text>
+  <text x="16" y="46" class="text-muted" font-size="10" font-weight="400">with metadata support</text>
+  <text x="4" y="62" class="text-secondary" font-size="10" font-weight="400">│</text>
+  <text x="4" y="78" class="text-secondary" font-size="11" font-weight="500">└─────────┘</text>
+
+</svg>

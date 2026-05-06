@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" width="280" height="64">
+  <!-- Terminal list item — selected state
+       Per terminal-selection-via-character: NO background fill.
+       Selection is signaled by:
+         - > prompt indicator at left edge in phosphor green
+         - name color shifts from #5EAA66 to #C8F7C5
+         - name weight bumps to 700
+  -->
+
+  <!-- Page background (unchanged from default) -->
+  <rect x="0" y="0" width="280" height="64" fill="#0A0F0A"/>
+
+  <!-- Prompt indicator > in phosphor green, weight 700 -->
+  <text x="2" y="22"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="700"
+        fill="#00FF66">&gt;</text>
+
+  <!-- Name in bright text, weight 700 -->
+  <text x="14" y="22"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="700"
+        fill="#C8F7C5">tokyo_trip</text>
+
+  <!-- Unread count [N] in amber, inline -->
+  <text x="92" y="22"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="11"
+        font-weight="700"
+        fill="#FFB000">[2]</text>
+
+  <!-- Timestamp top-right -->
+  <text x="266" y="22"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#3D7044"
+        text-anchor="end">2m</text>
+
+  <!-- Preview line — prefixed with `// ` -->
+  <text x="14" y="40"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="400"
+        fill="#5EAA66">// build day-by-day itinerary?</text>
+
+  <!-- Dashed rule below -->
+  <line x1="0" y1="63" x2="280" y2="63"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+</svg>

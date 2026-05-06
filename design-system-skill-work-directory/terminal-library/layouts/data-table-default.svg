@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-muted { fill: #3D7044; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== DATA-TABLE-DEFAULT ==================== -->
+
+  <!-- Page background -->
+  <rect x="0" y="0" width="1280" height="800" fill="#0A0F0A"/>
+
+  <!-- Table header with box-drawing top border -->
+  <text x="14" y="24" class="text-secondary" font-size="10" font-weight="500">$ ls -la users</text>
+  <line x1="0" y1="40" x2="1280" y2="40" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Column headers -->
+  <text x="14" y="60" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">#</text>
+  <text x="48" y="60" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">NAME</text>
+  <text x="240" y="60" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">EMAIL</text>
+  <text x="640" y="60" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">ROLE</text>
+  <text x="900" y="60" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">JOINED</text>
+  <text x="1248" y="60" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">STATUS</text>
+
+  <!-- Header rule -->
+  <line x1="0" y1="72" x2="1280" y2="72" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Row 01 (selected) -->
+  <text x="0" y="96" class="text-accent" font-size="12" font-weight="700">> </text>
+  <text x="14" y="96" class="text-accent" font-size="12" font-weight="700">[01]</text>
+  <text x="48" y="96" class="text-accent" font-size="12" font-weight="700">alex_rivera</text>
+  <text x="240" y="96" class="text-primary" font-size="12" font-weight="400">alex@northwind.com</text>
+  <text x="640" y="96" class="text-secondary" font-size="12" font-weight="400">administrator</text>
+  <text x="900" y="96" class="text-muted" font-size="11" font-weight="400">jan_2024</text>
+  <text x="1248" y="96" class="text-secondary" font-size="9" font-weight="700" letter-spacing="0.54" text-anchor="end">[ACTIVE]</text>
+
+  <!-- Row separator -->
+  <line x1="0" y1="112" x2="1280" y2="112" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Row 02 -->
+  <text x="0" y="136" class="text-secondary" font-size="12" font-weight="400"> </text>
+  <text x="14" y="136" class="text-secondary" font-size="12" font-weight="500">[02]</text>
+  <text x="48" y="136" class="text-primary" font-size="12" font-weight="400">jordan_chen</text>
+  <text x="240" y="136" class="text-primary" font-size="12" font-weight="400">jordan@northwind.com</text>
+  <text x="640" y="136" class="text-secondary" font-size="12" font-weight="400">editor</text>
+  <text x="900" y="136" class="text-muted" font-size="11" font-weight="400">mar_2024</text>
+  <text x="1248" y="136" class="text-secondary" font-size="9" font-weight="700" letter-spacing="0.54" text-anchor="end">[ACTIVE]</text>
+
+  <!-- Row separator -->
+  <line x1="0" y1="152" x2="1280" y2="152" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Row 03 -->
+  <text x="0" y="176" class="text-secondary" font-size="12" font-weight="400"> </text>
+  <text x="14" y="176" class="text-secondary" font-size="12" font-weight="500">[03]</text>
+  <text x="48" y="176" class="text-primary" font-size="12" font-weight="400">sam_okafor</text>
+  <text x="240" y="176" class="text-primary" font-size="12" font-weight="400">sam@northwind.com</text>
+  <text x="640" y="176" class="text-secondary" font-size="12" font-weight="400">editor</text>
+  <text x="900" y="176" class="text-muted" font-size="11" font-weight="400">apr_2024</text>
+  <text x="1248" y="176" class="text-secondary" font-size="9" font-weight="700" letter-spacing="0.54" text-anchor="end">[PENDING]</text>
+
+  <!-- Row separator -->
+  <line x1="0" y1="192" x2="1280" y2="192" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Row 04 -->
+  <text x="0" y="216" class="text-secondary" font-size="12" font-weight="400"> </text>
+  <text x="14" y="216" class="text-secondary" font-size="12" font-weight="500">[04]</text>
+  <text x="48" y="216" class="text-primary" font-size="12" font-weight="400">taylor_kim</text>
+  <text x="240" y="216" class="text-primary" font-size="12" font-weight="400">taylor@northwind.com</text>
+  <text x="640" y="216" class="text-secondary" font-size="12" font-weight="400">viewer</text>
+  <text x="900" y="216" class="text-muted" font-size="11" font-weight="400">may_2024</text>
+  <text x="1248" y="216" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54" text-anchor="end">[INACTIVE]</text>
+
+  <!-- Row separator -->
+  <line x1="0" y1="232" x2="1280" y2="232" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Row 05 -->
+  <text x="0" y="256" class="text-secondary" font-size="12" font-weight="400"> </text>
+  <text x="14" y="256" class="text-secondary" font-size="12" font-weight="500">[05]</text>
+  <text x="48" y="256" class="text-primary" font-size="12" font-weight="400">robin_patel</text>
+  <text x="240" y="256" class="text-primary" font-size="12" font-weight="400">robin@northwind.com</text>
+  <text x="640" y="256" class="text-secondary" font-size="12" font-weight="400">administrator</text>
+  <text x="900" y="256" class="text-muted" font-size="11" font-weight="400">jun_2024</text>
+  <text x="1248" y="256" class="text-secondary" font-size="9" font-weight="700" letter-spacing="0.54" text-anchor="end">[ACTIVE]</text>
+
+  <!-- Bottom rule -->
+  <line x1="0" y1="272" x2="1280" y2="272" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Pagination -->
+  <text x="14" y="320" class="text-secondary" font-size="11" font-weight="500">[ &lt; prev ]</text>
+  <text x="140" y="320" class="text-muted" font-size="11" font-weight="400">page [05 / 247]</text>
+  <text x="1200" y="320" class="text-secondary" font-size="11" font-weight="500">[ next &gt; ]</text>
+
+  <!-- Footer hint -->
+  <text x="14" y="744" class="text-muted" font-size="9" font-weight="400" letter-spacing="0.54">// use arrow keys to navigate, q to quit</text>
+
+</svg>

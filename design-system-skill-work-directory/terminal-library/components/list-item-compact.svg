@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 28" width="240" height="28">
+  <defs>
+    <style>
+      .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-muted { fill: #3D7044; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-error { fill: #FF6B6B; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== LIST-ITEM-COMPACT ==================== -->
+
+  <text x="0" y="22" class="text-secondary" font-size="12" font-weight="500">thread_name</text>
+  <text x="200" y="22" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54" text-anchor="end">2M</text>
+
+</svg>

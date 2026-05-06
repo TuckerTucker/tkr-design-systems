@@ -1,0 +1,337 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <!-- Terminal dashboard — desktop 1280×800
+       grammar_family: character_grid
+       Sidebar 280px + main 1000px, separated by 1px solid #1F2F1F (strong border).
+       Box-drawing characters frame the session header per terminal-box-drawing-borders.
+  -->
+
+  <!-- Page background -->
+  <rect x="0" y="0" width="1280" height="800" fill="#0A0F0A"/>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SIDEBAR
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Brand: prompt-style header -->
+  <text x="14" y="24"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="11"
+        font-weight="700"
+        fill="#00FF66">terminal@chat:~$</text>
+  <text x="14" y="40"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#5EAA66">// 5 sessions · 3 active</text>
+
+  <!-- Dashed rule -->
+  <line x1="0" y1="56" x2="280" y2="56"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Search: prompt-style with $ grep prefix -->
+  <text x="14" y="80"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#5EAA66">$ grep</text>
+  <text x="62" y="80"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="11"
+        font-weight="400"
+        fill="#3D7044">...</text>
+
+  <!-- Dashed rule -->
+  <line x1="0" y1="96" x2="280" y2="96"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Sessions section header -->
+  <text x="14" y="120"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="9"
+        font-weight="500"
+        fill="#3D7044"
+        letter-spacing="0.54">// SESSIONS</text>
+
+  <!-- ─── List Item 01: SELECTED (tokyo_trip) ──────────────────── -->
+  <text x="2" y="148"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="700"
+        fill="#00FF66">&gt;</text>
+  <text x="14" y="148"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="700"
+        fill="#C8F7C5">tokyo_trip</text>
+  <text x="92" y="148"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="11"
+        font-weight="700"
+        fill="#FFB000">[2]</text>
+  <text x="266" y="148"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#3D7044"
+        text-anchor="end">2m</text>
+  <text x="14" y="166"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="400"
+        fill="#5EAA66">// build day-by-day itinerary?</text>
+  <line x1="0" y1="183" x2="280" y2="183"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- ─── List Item 02: recipe_ideas ─────────────────────────────── -->
+  <text x="14" y="207"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="500"
+        fill="#5EAA66">recipe_ideas</text>
+  <text x="266" y="207"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#3D7044"
+        text-anchor="end">1h</text>
+  <text x="14" y="225"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="400"
+        fill="#3D7044">// 5 ramen variations you'll love</text>
+  <line x1="0" y1="242" x2="280" y2="242"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- ─── List Item 03: book_club ───────────────────────────────── -->
+  <text x="14" y="266"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="500"
+        fill="#5EAA66">book_club</text>
+  <text x="92" y="266"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="11"
+        font-weight="700"
+        fill="#FFB000">[1]</text>
+  <text x="266" y="266"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#3D7044"
+        text-anchor="end">3h</text>
+  <text x="14" y="284"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="400"
+        fill="#3D7044">// recommend starting with murakami</text>
+  <line x1="0" y1="301" x2="280" y2="301"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- ─── List Item 04: fitness_plan ────────────────────────────── -->
+  <text x="14" y="325"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="500"
+        fill="#5EAA66">fitness_plan</text>
+  <text x="266" y="325"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#3D7044"
+        text-anchor="end">1d</text>
+  <text x="14" y="343"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="400"
+        fill="#3D7044">// 4-week progressive routine ready</text>
+  <line x1="0" y1="360" x2="280" y2="360"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- ─── List Item 05: code_review ─────────────────────────────── -->
+  <text x="14" y="384"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="500"
+        fill="#5EAA66">code_review</text>
+  <text x="266" y="384"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#3D7044"
+        text-anchor="end">2d</text>
+  <text x="14" y="402"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="400"
+        fill="#3D7044">// auth middleware looks solid, but...</text>
+  <line x1="0" y1="419" x2="280" y2="419"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- whoami footer -->
+  <line x1="0" y1="744" x2="280" y2="744"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="14" y="768"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#5EAA66">$ whoami</text>
+  <text x="14" y="784"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#C8F7C5">tucker<tspan fill="#3D7044">@local</tspan></text>
+
+  <!-- ════════════════════════════════════════════════════════════
+       MAIN AREA
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Box-drawing session header per terminal-box-drawing-borders.
+       Uses unicode_light style: ┌─┐ │ └─┘
+       This is the system's signature moment.
+  -->
+  <text x="313" y="32"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#5EAA66">┌─ SESSION · tokyo_trip · active ─────────────────────────────────────┐</text>
+  <text x="313" y="56"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="700"
+        fill="#00FF66">│</text>
+  <text x="328" y="56"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="500"
+        fill="#C8F7C5">Tokyo Trip</text>
+  <text x="412" y="56"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#3D7044">// 4 exchanges · connected</text>
+  <text x="1192" y="56"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="9"
+        font-weight="700"
+        fill="#FFB000"
+        letter-spacing="0.72"
+        text-anchor="end">● LIVE</text>
+  <text x="313" y="72"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="500"
+        fill="#5EAA66">└──────────────────────────────────────────────────────────────────────┘</text>
+
+  <!-- ─── Messages ─────────────────────────────────────────────── -->
+  <!-- Message 01 — user -->
+  <text x="313" y="120"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="700"
+        fill="#A9FF47">user@local&gt;</text>
+  <text x="416" y="120"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="9"
+        font-weight="500"
+        fill="#3D7044">[00:01:17]</text>
+  <text x="328" y="142"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="400"
+        fill="#C8F7C5">Hey, can you help me plan a trip to Tokyo?</text>
+
+  <!-- Message 02 — ai -->
+  <text x="313" y="186"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="700"
+        fill="#00FF66">ai@system&gt;</text>
+  <text x="408" y="186"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="9"
+        font-weight="500"
+        fill="#3D7044">[00:02:31]</text>
+  <text x="328" y="208"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="400"
+        fill="#DDFFDA">Absolutely. Tokyo is incredible. Are you looking for a culture-focused trip,</text>
+  <text x="328" y="226"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="400"
+        fill="#DDFFDA">food adventure, or a mix of everything?</text>
+
+  <!-- Message 03 — user -->
+  <text x="313" y="270"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="700"
+        fill="#A9FF47">user@local&gt;</text>
+  <text x="416" y="270"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="9"
+        font-weight="500"
+        fill="#3D7044">[00:03:08]</text>
+  <text x="328" y="292"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="400"
+        fill="#C8F7C5">Definitely a mix — temples in the morning, ramen at night.</text>
+
+  <!-- Message 04 — ai -->
+  <text x="313" y="336"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="10"
+        font-weight="700"
+        fill="#00FF66">ai@system&gt;</text>
+  <text x="408" y="336"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="9"
+        font-weight="500"
+        fill="#3D7044">[00:04:22]</text>
+  <text x="328" y="358"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="400"
+        fill="#DDFFDA">Perfect combo. I'd suggest starting in Asakusa for Senso-ji, then heading</text>
+  <text x="328" y="376"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="400"
+        fill="#DDFFDA">to Shibuya for the evening food scene. Want me to build a day-by-day</text>
+  <text x="328" y="394"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="400"
+        fill="#DDFFDA">itinerary?</text>
+
+  <!-- Composer: $ prompt + input + cursor block -->
+  <line x1="313" y1="704" x2="1192" y2="704"
+        stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="313" y="744"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="11"
+        font-weight="700"
+        fill="#00FF66">$</text>
+  <text x="328" y="744"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="400"
+        fill="#3D7044">type command or message...</text>
+  <!-- Cursor block per cursor extension -->
+  <text x="544" y="744"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="700"
+        fill="#00FF66">█</text>
+  <text x="313" y="764"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
+        font-size="9"
+        font-weight="500"
+        fill="#3D7044">// /help · /clear · ⏎ send</text>
+
+  <!-- Strong border between sidebar and main, drawn last per the pattern
+       we discovered with Swiss -->
+  <line x1="280" y1="0" x2="280" y2="800" stroke="#1F2F1F" stroke-width="1"/>
+</svg>

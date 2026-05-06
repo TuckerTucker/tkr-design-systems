@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 32" width="240" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-muted { fill: #3D7044; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-error { fill: #FF6B6B; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+    </style>
+  </defs>
+  <!-- ==================== SELECT-DEFAULT ==================== -->
+
+  <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">TIME_ZONE</text>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="0" y="31" class="text-secondary" font-size="12" font-weight="400">> </text>
+  <text x="16" y="31" class="text-primary" font-size="12" font-weight="400">america/los_angeles</text>
+  <text x="232" y="31" class="text-secondary" font-size="12" font-weight="500" text-anchor="end">↓</text>
+
+</svg>
