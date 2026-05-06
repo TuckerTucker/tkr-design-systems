@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 96" width="280" height="96">
+  <!-- Riso list item — selected state
+       grammar_family: print_texture
+       Active paper: cream (#F4EDD9)
+       Active ink: classic (ink_1=#1B3A8A blue, ink_2=#E5347A pink)
+
+       Selection signal (per riso-spec selection_signal):
+         A heavier ink_1 outline rectangle wraps the row. The interior
+         picks up a slightly deeper paper tone to read as "pressed
+         into the page" rather than a digital highlight. The ghost ink
+         offset and grain overlay are preserved so the selected row
+         remains unmistakably Riso.
+  -->
+
+  <defs>
+    <!-- Grain filter: feTurbulence overlay with multiply blend -->
+    <filter id="grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="42"/>
+      <feColorMatrix values="0 0 0 0 0
+                             0 0 0 0 0
+                             0 0 0 0 0
+                             0 0 0 0.12 0"/>
+      <feComposite in="SourceGraphic" in2="" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Paper background (slightly deeper for selected) -->
+  <rect x="0" y="0" width="280" height="96" fill="#ECE0BE"/>
+
+  <!-- Selection outline: thick ink_1 stroke, inset 2px -->
+  <rect x="2" y="2" width="276" height="92" fill="none"
+        stroke="#1B3A8A" stroke-width="2"/>
+
+  <!-- ─── GHOST INK LAYER (ink_2 pink, offset) ─── -->
+  <g opacity="0.65">
+    <text x="16.4" y="28.4"
+          font-family="'Space Mono', ui-monospace, monospace"
+          font-size="14"
+          font-weight="500"
+          fill="#E5347A"
+          letter-spacing="1.4">01</text>
+    <text x="46.4" y="28.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="14"
+          font-weight="500"
+          fill="#E5347A">Tokyo Trip</text>
+    <text x="46.4" y="48.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="12"
+          font-weight="400"
+          fill="#E5347A">Build day-by-day itinerary?</text>
+    <text x="46.4" y="84.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="30"
+          font-weight="700"
+          fill="#E5347A">02</text>
+  </g>
+
+  <!-- ─── PRIMARY INK LAYER (ink_1 blue, on top) ─── -->
+  <text x="16" y="28"
+        font-family="'Space Mono', ui-monospace, monospace"
+        font-size="14"
+        font-weight="500"
+        fill="#1B3A8A"
+        letter-spacing="1.4">01</text>
+
+  <text x="46" y="28"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="14"
+        font-weight="500"
+        fill="#1B3A8A">Tokyo Trip</text>
+
+  <text x="264" y="28"
+        font-family="'Space Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="500"
+        fill="#1B3A8A"
+        opacity="0.6"
+        text-anchor="end">2M</text>
+
+  <text x="46" y="48"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="12"
+        font-weight="400"
+        fill="#1B3A8A"
+        opacity="0.7">Build day-by-day itinerary?</text>
+
+  <text x="46" y="84"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="30"
+        font-weight="700"
+        fill="#1B3A8A">02</text>
+
+  <!-- ─── GRAIN OVERLAY ─── -->
+  <rect x="0" y="0" width="280" height="96" fill="#1B3A8A" opacity="0.06"
+        filter="url(#grain)"/>
+</svg>

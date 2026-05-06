@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 96" width="280" height="96">
+  <!-- Riso list item — default state
+       grammar_family: print_texture
+       Active paper: cream (#F4EDD9)
+       Active ink: classic (ink_1=#1B3A8A blue, ink_2=#E5347A pink)
+
+       Layered rendering:
+         1. Paper background (cream)
+         2. Ghost ink_2 layer (text duplicated, offset, in pink)
+         3. Primary ink_1 layer (text in blue, on top)
+         4. Grain overlay (feTurbulence multiply, applied last)
+
+       Schema observation: per-component grain overlay is awkward at the
+       component level — the grain should really apply to the WHOLE artifact,
+       not per-component. Standalone component preview includes its own grain
+       so the preview reads as Riso, but in real composition the grain is at
+       the artifact level. Schema v0.2 should clarify this.
+  -->
+
+  <defs>
+    <!-- Grain filter: feTurbulence overlay with multiply blend -->
+    <filter id="grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="42"/>
+      <feColorMatrix values="0 0 0 0 0
+                             0 0 0 0 0
+                             0 0 0 0 0
+                             0 0 0 0.12 0"/>
+      <feComposite in="SourceGraphic" in2="" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Paper background -->
+  <rect x="0" y="0" width="280" height="96" fill="#F4EDD9"/>
+
+  <!-- ─── GHOST INK LAYER (ink_2 pink, offset) ───
+       Text duplicated, shifted +0.4px x and +0.4px y, in ink_2.
+       This is what creates the duotone "registration" feel.
+  -->
+  <g opacity="0.65">
+    <!-- Index ghost -->
+    <text x="16.4" y="28.4"
+          font-family="'Space Mono', ui-monospace, monospace"
+          font-size="14"
+          font-weight="500"
+          fill="#E5347A"
+          letter-spacing="1.4">01</text>
+    <!-- Title ghost -->
+    <text x="46.4" y="28.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="14"
+          font-weight="500"
+          fill="#E5347A">Tokyo Trip</text>
+    <!-- Preview ghost -->
+    <text x="46.4" y="48.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="12"
+          font-weight="400"
+          fill="#E5347A">Build day-by-day itinerary?</text>
+    <!-- Unread count ghost -->
+    <text x="46.4" y="84.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="30"
+          font-weight="700"
+          fill="#E5347A">02</text>
+  </g>
+
+  <!-- ─── PRIMARY INK LAYER (ink_1 blue, on top) ───
+       Same text in primary ink color, no offset.
+  -->
+  <!-- Index — Space Mono per riso-monospace-metadata rulebook entry -->
+  <text x="16" y="28"
+        font-family="'Space Mono', ui-monospace, monospace"
+        font-size="14"
+        font-weight="500"
+        fill="#1B3A8A"
+        letter-spacing="1.4">01</text>
+
+  <!-- Title — Space Grotesk -->
+  <text x="46" y="28"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="14"
+        font-weight="500"
+        fill="#1B3A8A">Tokyo Trip</text>
+
+  <!-- Timestamp top-right — Space Mono uppercase, 60% density -->
+  <text x="264" y="28"
+        font-family="'Space Mono', ui-monospace, monospace"
+        font-size="12"
+        font-weight="500"
+        fill="#1B3A8A"
+        opacity="0.6"
+        text-anchor="end">2M</text>
+
+  <!-- Preview — Space Grotesk, lighter weight -->
+  <text x="46" y="48"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="12"
+        font-weight="400"
+        fill="#1B3A8A"
+        opacity="0.7">Build day-by-day itinerary?</text>
+
+  <!-- Unread count — large duotone numeral -->
+  <text x="46" y="84"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="30"
+        font-weight="700"
+        fill="#1B3A8A">02</text>
+
+  <!-- ─── GRAIN OVERLAY ───
+       feTurbulence noise applied as a multiply layer over everything.
+       Without this, the artifact reads as flat vector — with it, it
+       reads as printed.
+  -->
+  <rect x="0" y="0" width="280" height="96" fill="#1B3A8A" opacity="0.06"
+        filter="url(#grain)"/>
+</svg>

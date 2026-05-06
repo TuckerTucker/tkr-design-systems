@@ -1,0 +1,407 @@
+spec_version: "0.2"
+
+system:
+  id: riso
+  name: Riso
+  tagline: "Duotone Halftone + Print Texture"
+  grammar_family: print_texture
+  version: "2.0.0"   # bumped: significant migration from v0.1
+  source_jsx: ../design-system-riso.jsx
+
+  format_fitness:
+    svg:
+      level: approximation
+      caveat: "feColorMatrix and feTurbulence render per spec, but the duotone+halftone+grain pipeline produces softer results than Chrome's filter rendering. Acceptable for wireframing; not for final design review."
+      acceptable_for: [wireframing, layout_review]
+      not_acceptable_for: [final_design_review, production_handoff]
+    html_css:
+      level: native
+      acceptable_for: [all]
+    pdf:
+      level: degraded
+      caveat: "feTurbulence may not render in PDF readers; grain layer may be missing"
+      acceptable_for: [layout_review]
+
+  requires_emoji: false   # Riso uses index numbers, not emoji avatars
+
+# ────────────────────────────────────────────────────────────────────
+# TOKENS
+# ────────────────────────────────────────────────────────────────────
+
+tokens:
+  colors:
+    page_bg: "#F4EDD9"
+    surface: "#F4EDD9"
+    surface_elevated: "#FFFFFF"
+    text_primary: "#1B3A8A"
+    text_secondary: "#1B3A8A"
+    text_muted: "#7E8AAE"
+    accent: "#E5347A"
+
+    palette:
+      - { name: paper_cream, value: "#F4EDD9", role: default paper preset }
+      - { name: paper_kraft, value: "#C9B895", role: alternative paper, warmer }
+      - { name: paper_white, value: "#FFFFFF", role: alternative paper, neutral }
+      - { name: paper_gray, value: "#D8D6D1", role: alternative paper, cool }
+      - { name: paper_newsprint, value: "#EAE6D4", role: alternative paper, recycled feel }
+      - { name: ink_blue, value: "#1B3A8A", role: classic ink_1 }
+      - { name: ink_pink, value: "#E5347A", role: classic ink_2 }
+      - { name: ink_red, value: "#D72D2A", role: alternative ink, bold }
+      - { name: ink_green, value: "#2E8B57", role: alternative ink, organic }
+
+  typography:
+    families:
+      - id: structural
+        stack: "'Space Grotesk', system-ui, sans-serif"
+        role: body and titles
+        mixing_rule: "primary face for content"
+      - id: metadata
+        stack: "'Space Mono', ui-monospace, monospace"
+        role: timestamps, indices, technical labels
+        mixing_rule: "always for metadata; never for body"
+
+    scale:
+      - { size: 12, role: small }
+      - { size: 14, role: body }
+      - { size: 18, role: title }
+      - { size: 24, role: display_small }
+      - { size: 30, role: display_medium }
+
+    case:
+      metadata: uppercase
+      body: mixed
+      headers: mixed
+
+    tracking:
+      metadata: 0.10
+      body: 0
+      headers: -0.01
+
+  spacing:
+    grid_unit: 8
+    allowed_steps: [8, 16, 24, 32, 40, 48, 64]
+    enforcement: relaxed
+
+  borders:
+    radius_default: 0
+    radius_inputs: 0
+    radius_chrome: 0
+
+  elevation:
+    strategy: duotone_filter
+    config:
+      paper_presets:
+        - { id: cream, bg: "#F4EDD9", blend_mode: multiply, density: 0.85 }
+        - { id: kraft, bg: "#C9B895", blend_mode: multiply, density: 0.80 }
+        - { id: white, bg: "#FFFFFF", blend_mode: multiply, density: 1.00 }
+        - { id: gray, bg: "#D8D6D1", blend_mode: darken, density: 0.85 }
+        - { id: newsprint, bg: "#EAE6D4", blend_mode: multiply, density: 0.75 }
+
+      ink_presets:
+        - { id: classic, ink_1: "#1B3A8A", ink_2: "#E5347A" }
+        - { id: bold, ink_1: "#D72D2A", ink_2: "#1B3A8A" }
+        - { id: organic, ink_1: "#2E8B57", ink_2: "#E5347A" }
+
+# ────────────────────────────────────────────────────────────────────
+# SYSTEM STATE — NEW IN v0.2 (Change 4)
+# Runtime-adjustable parameters that change rendering. Promoted from
+# grammar_extensions.parametric_state in v0.1.
+# ────────────────────────────────────────────────────────────────────
+
+system_state:
+  - id: active_paper
+    type: enum
+    options: [cream, kraft, white, gray, newsprint]
+    default: cream
+    affects: [tokens.colors.page_bg, artifact_treatments.page_background]
+
+  - id: active_ink
+    type: enum
+    options: [classic, bold, organic]
+    default: classic
+    affects: [filter_library.riso_duotone, components.*.applies_filters]
+
+  - id: halftone_angle
+    type: number
+    range: [0, 90]
+    default: 15
+    affects: [filter_library.riso_halftone]
+
+  - id: halftone_dot_size
+    type: number
+    range: [0.5, 4.0]
+    default: 1.5
+    affects: [filter_library.riso_halftone]
+
+  - id: grain_opacity
+    type: number
+    range: [0.0, 0.5]
+    default: 0.12
+    affects: [filter_library.riso_grain, artifact_treatments.grain_overlay]
+
+  - id: registration_offset_px
+    type: number
+    range: [0, 2]
+    default: 0
+    affects: [artifact_treatments.registration_offset]
+
+# ────────────────────────────────────────────────────────────────────
+# FILTER LIBRARY — NEW IN v0.2 (Change 1)
+# Named SVG filter definitions. Components reference these via
+# applies_filters; artifact_treatments reference via filter_ref.
+# Each filter embeds its full SVG <defs> fragment for fidelity.
+# ────────────────────────────────────────────────────────────────────
+
+filter_library:
+  - id: riso_grain
+    description: "Continuous noise overlay simulating Riso print grain texture"
+    svg_defs: |
+      <filter id="riso_grain" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85"
+                      numOctaves="2" seed="42" result="noise"/>
+        <feColorMatrix in="noise" values="0 0 0 0 0
+                                          0 0 0 0 0
+                                          0 0 0 0 0
+                                          0 0 0 0.12 0" result="alphaNoise"/>
+        <feComposite in="alphaNoise" in2="SourceGraphic" operator="in"/>
+      </filter>
+    parameters:
+      base_frequency: 0.85           # bound to system_state.grain_opacity inversely
+      seed: 42
+      role: "exposed for runtime adjustment by system_state"
+
+  - id: riso_duotone_classic
+    description: "Classic blue+pink duotone matrix (paper-tinted shadows, ink-1 highlights)"
+    svg_defs: |
+      <filter id="riso_duotone_classic" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix"
+                       values="0.299 0.587 0.114 0  0
+                               0.299 0.587 0.114 0  0
+                               0.299 0.587 0.114 0  0
+                               0     0     0     1  0"
+                       result="luma"/>
+        <feComponentTransfer in="luma" result="duotone">
+          <feFuncR tableValues="0.106 0.957"/>
+          <feFuncG tableValues="0.227 0.957"/>
+          <feFuncB tableValues="0.541 0.851"/>
+        </feComponentTransfer>
+      </filter>
+    parameters:
+      ink_1: "#1B3A8A"
+      ink_2: "#E5347A"
+
+  - id: riso_duotone_bold
+    description: "Red+blue duotone variant"
+    svg_defs: |
+      <filter id="riso_duotone_bold" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix"
+                       values="0.299 0.587 0.114 0  0
+                               0.299 0.587 0.114 0  0
+                               0.299 0.587 0.114 0  0
+                               0     0     0     1  0"
+                       result="luma"/>
+        <feComponentTransfer in="luma" result="duotone">
+          <feFuncR tableValues="0.843 0.106"/>
+          <feFuncG tableValues="0.176 0.227"/>
+          <feFuncB tableValues="0.165 0.541"/>
+        </feComponentTransfer>
+      </filter>
+    parameters:
+      ink_1: "#D72D2A"
+      ink_2: "#1B3A8A"
+
+  - id: riso_halftone
+    description: "Halftone dot pattern overlay"
+    svg_defs: |
+      <filter id="riso_halftone">
+        <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="1" result="noise"/>
+        <feColorMatrix in="noise" values="0 0 0 0 0
+                                          0 0 0 0 0
+                                          0 0 0 0 0
+                                          1 0 0 0 0" result="grayNoise"/>
+        <feComposite in="SourceGraphic" in2="grayNoise" operator="in"/>
+      </filter>
+    parameters:
+      dot_size: 1.5
+      angle_deg: 15
+
+# ────────────────────────────────────────────────────────────────────
+# ARTIFACT TREATMENTS — NEW IN v0.2 (Change 2)
+# Layer-aware artifact-level treatments. Bottom layer paints first,
+# per_component is applied during component rendering, top paints last.
+# ────────────────────────────────────────────────────────────────────
+
+artifact_treatments:
+  - id: page_background
+    layer: bottom
+    type: fill
+    fill: ref:tokens.colors.page_bg
+    description: "Paper-tinted base substrate. All components composite onto this."
+
+  - id: registration_offset
+    layer: per_component
+    type: transform
+    transform: "translate({offset_x}px, {offset_y}px)"
+    parameters:
+      offset_x: 0   # bound to system_state.registration_offset_px (sign varies per component for jitter)
+      offset_y: 0
+    description: "Simulates Riso print misalignment by shifting component positions slightly"
+    optional: true   # off by default; opt-in for jittered presets
+
+  - id: grain_overlay
+    layer: top
+    type: filter_overlay
+    filter_ref: riso_grain
+    description: "Continuous grain noise across the entire artifact. Applied last so it overlays everything."
+
+# ────────────────────────────────────────────────────────────────────
+# COMPONENTS
+# ────────────────────────────────────────────────────────────────────
+
+components:
+  list_item:
+    tier: composite
+    composed_of: [avatar, label, badge]
+    anatomy:
+      # NEW IN v0.2 (Change 11): structured anatomy with spatial-yield constraints
+      - id: index
+        position: left
+        fixed_width: 32
+      - id: title
+        position: top_main
+        yields_to: [timestamp]
+        min_gap: 8
+      - id: timestamp
+        position: top_right
+        fixed_width: 40
+      - id: preview
+        position: middle_main
+        yields_to: [unread_count]
+        min_gap: 8
+      - id: unread_count
+        position: bottom_main
+        fixed_width: 60   # large duotone numeral needs space
+        optional: true
+
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        applies_filters: [riso_duotone_classic]
+        # NEW IN v0.2 (Change 10): selection_signal annotation
+        rendering_notes: "Index in Space Mono uppercase ink_1. Title in Space Grotesk ink_1 with duotone ghost layer. Timestamp 60% density. Unread count: large duotone numeral."
+        states: [default, hover, selected]
+
+      - id: selected
+        svg: components/list-item-selected.svg
+        applies_filters: [riso_duotone_classic]
+        selection_signal: text_treatment
+        selection_signal_detail:
+          density_change: { from: 0.65, to: 1.0 }
+          weight_bump: { from: 500, to: 700 }
+          additional_treatment: "halftone strip (8px) above the item in ink_2"
+        rendering_notes: "Same as default but ink density bumps to 1.0, halftone strip above, title weight 700. NO solid background — selection signaled by ink density and halftone."
+        states: [selected]
+
+    constraints:
+      - "Never use a solid color block as a selection background — Riso signals selection via density change and halftone strips"
+      - "All body text uses applies_filters to apply duotone treatment; metadata is exempt by convention"
+      - "Preview text yields to unread_count per anatomy.preview.yields_to (8px min gap)"
+
+# ────────────────────────────────────────────────────────────────────
+# RULEBOOK — NEW IN v0.2: each rule annotates check_method
+# ────────────────────────────────────────────────────────────────────
+
+rulebook:
+  # NEW IN v0.2 (Change 12): every rule annotates check_scope.
+
+  - id: riso-duotone-required
+    rule: "All body and display text rendered through duotone filter pipeline (applies_filters references a duotone filter)."
+    rationale: "The duotone treatment IS the system's identity. Plain text breaks the print metaphor."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: |
+      Verify every <text> element in component SVGs has applies_filters
+      referencing a riso_duotone_* filter, OR is explicitly exempted via
+      the riso-monospace-metadata rule below.
+
+  - id: riso-paper-bg-required
+    rule: "Page background uses an active paper preset color via artifact_treatments.page_background, not pure white (unless 'white' paper is the active preset)."
+    rationale: "Paper is a substrate, not a default."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact          # whole-page background, vacuous on fragments
+    check_implementation: |
+      Verify artifact_treatments contains a page_background with layer:bottom,
+      and that its fill resolves to a paper_preset color (not arbitrary white).
+
+  - id: riso-ink-pair-discipline
+    rule: "Exactly two inks are active per artifact. A third ink color requires a new ink preset, not ad-hoc addition."
+    rationale: "Riso printing physically uses two passes; the visual constraint is the system's structural truth."
+    severity: required
+    check_method: semantic
+    check_scope: artifact          # ink count is per-artifact
+    check_implementation: |
+      Render the artifact and verify visually that no more than 2 distinct
+      ink colors appear (paper background doesn't count). Mechanical check
+      could count distinct color-bearing pixels but would have false positives
+      from anti-aliasing.
+
+  - id: riso-grain-overlay
+    rule: "A grain layer is applied via artifact_treatments.grain_overlay (layer: top, filter_ref: riso_grain)."
+    rationale: "Grain unifies the artifact as a single 'print' rather than discrete vector elements."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact          # grain is artifact-level, not per-component
+    check_implementation: |
+      Verify artifact_treatments contains a grain_overlay entry with
+      layer:top and filter_ref:riso_grain.
+
+  - id: riso-no-shadows
+    rule: "Drop-shadows or box-shadows are not used. Depth comes from density change, halftone density, and registration offset."
+    rationale: "Shadows are a screen-light vocabulary; Riso is a print-ink vocabulary."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: |
+      Verify no <filter> elements with feDropShadow exist in the rendered
+      output, and no filter= references to shadow-producing filters.
+
+  - id: riso-monospace-metadata
+    rule: "Metadata text (timestamps, indices, technical labels) uses Space Mono and is exempt from the duotone filter."
+    rationale: "Metadata in Riso is the 'colophon' layer — it's *about* the print, not part of it."
+    severity: required
+    check_method: mechanical
+    check_scope: component
+    applies_when: "element font-family contains 'Space Mono'"
+    check_implementation: |
+      Verify <text> elements with font-family containing 'Space Mono'
+      do NOT have applies_filters set. Verify components.*.anatomy
+      entries with role:metadata use the metadata typeface family.
+
+# ────────────────────────────────────────────────────────────────────
+# GRAMMAR EXTENSIONS — print_texture family
+# Note: parametric_state moved to top-level system_state in v0.2.
+# Filter graph definitions moved to top-level filter_library.
+# ────────────────────────────────────────────────────────────────────
+
+grammar_extensions:
+  family: print_texture
+
+  per_system_signature:
+    duotone:
+      ghost_layer:
+        enabled: true
+        alpha_curve: "1 - luminance"
+        # NEW IN v0.2 (Change 3): em-based ratio, not absolute px
+        offset_x: { value: 0.04, unit: em }
+        offset_y: { value: 0.04, unit: em }
+        comment: "Em-based offset scales with type size — 0.04em on 24px display = ~0.96px, on 12px metadata = ~0.48px"
+
+    halftone:
+      available_as_component: true
+      density_responds_to_paper: true
+
+    print_inheritance:
+      enabled: true
+      role: "All components inherit the active paper bg, active ink colors, halftone dot params, and grain opacity from system_state. No component overrides these."
