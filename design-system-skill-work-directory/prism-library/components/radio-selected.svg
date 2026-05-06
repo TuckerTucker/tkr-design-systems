@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" width="120" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: rgba(255,255,255,0.90); font-family: Outfit, system-ui, sans-serif; }
+      .text-secondary { fill: rgba(255,255,255,0.60); font-family: Outfit, system-ui, sans-serif; }
+      .text-muted { fill: rgba(255,255,255,0.40); font-family: Outfit, system-ui, sans-serif; }
+      .text-very-muted { fill: rgba(255,255,255,0.30); font-family: Outfit, system-ui, sans-serif; }
+      .text-accent { fill: #7DDFBE; font-family: Outfit, system-ui, sans-serif; }
+    </style>
+    <linearGradient id="prism-bg-strip" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5A4A5E"/>
+      <stop offset="1" stop-color="#6B5A5A"/>
+    </linearGradient>
+  </defs>
+  <!-- RADIO-SELECTED -->
+  <rect x="0" y="0" width="120" height="32" fill="url(#prism-bg-strip)"/>
+
+  <circle cx="10" cy="16" r="9.5" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  <circle cx="10" cy="16" r="4.5" fill="#7DDFBE"/>
+  <text x="28" y="22" class="text-primary" font-size="13">Option</text>
+
+</svg>

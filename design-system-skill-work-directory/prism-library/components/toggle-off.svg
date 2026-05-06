@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 32" width="100" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: rgba(255,255,255,0.90); font-family: Outfit, system-ui, sans-serif; }
+      .text-secondary { fill: rgba(255,255,255,0.60); font-family: Outfit, system-ui, sans-serif; }
+      .text-muted { fill: rgba(255,255,255,0.40); font-family: Outfit, system-ui, sans-serif; }
+      .text-very-muted { fill: rgba(255,255,255,0.30); font-family: Outfit, system-ui, sans-serif; }
+      .text-accent { fill: #7DDFBE; font-family: Outfit, system-ui, sans-serif; }
+    </style>
+    <linearGradient id="prism-bg-strip" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5A4A5E"/>
+      <stop offset="1" stop-color="#6B5A5A"/>
+    </linearGradient>
+  </defs>
+  <!-- TOGGLE-OFF -->
+  <rect x="0" y="0" width="100" height="32" fill="url(#prism-bg-strip)"/>
+
+  <rect x="0" y="10" width="44" height="20" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <rect x="4" y="12" width="16" height="16" fill="rgba(255,255,255,0.14)" rx="8" ry="8"/>
+
+</svg>

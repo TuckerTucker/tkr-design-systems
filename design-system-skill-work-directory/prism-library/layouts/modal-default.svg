@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: rgba(255,255,255,0.90); font-family: Outfit, system-ui, sans-serif; }
+      .text-secondary { fill: rgba(255,255,255,0.60); font-family: Outfit, system-ui, sans-serif; }
+      .text-muted { fill: rgba(255,255,255,0.40); font-family: Outfit, system-ui, sans-serif; }
+      .text-very-muted { fill: rgba(255,255,255,0.30); font-family: Outfit, system-ui, sans-serif; }
+      .text-accent { fill: #7DDFBE; font-family: Outfit, system-ui, sans-serif; }
+    </style>
+    <linearGradient id="prism-bg" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate(0)">
+      <stop offset="0" stop-color="#4A5D6B"/>
+      <stop offset="0.40" stop-color="#5A4A5E"/>
+      <stop offset="0.70" stop-color="#6B5A5A"/>
+      <stop offset="1.00" stop-color="#4A6058"/>
+    </linearGradient>
+    <radialGradient id="orb-lavender" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="rgba(180,160,210,0.25)"/>
+      <stop offset="0.7" stop-color="rgba(180,160,210,0)"/>
+    </radialGradient>
+    <radialGradient id="orb-teal" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="rgba(130,200,180,0.20)"/>
+      <stop offset="0.7" stop-color="rgba(130,200,180,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- MODAL-DEFAULT -->
+
+  <!-- Gradient background -->
+  <rect x="0" y="0" width="1280" height="800" fill="url(#prism-bg)"/>
+
+  <!-- Dimming overlay -->
+  <rect x="0" y="0" width="1280" height="800" fill="rgba(0,0,0,0.30)"/>
+
+  <!-- Centered modal panel: 480×320 -->
+  <rect x="400" y="240" width="480" height="320" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="14" ry="14"/>
+
+  <!-- Header -->
+  <text x="416" y="272" class="text-secondary" font-size="9" font-weight="600">CONFIRM</text>
+  <text x="864" y="272" text-anchor="end" class="text-secondary" font-size="14" font-weight="500">×</text>
+
+  <!-- Title -->
+  <text x="416" y="320" class="text-primary" font-size="16" font-weight="500">Delete thread?</text>
+
+  <!-- Body -->
+  <text x="416" y="360" class="text-secondary" font-size="12">Tokyo Trip will be moved to archive.</text>
+  <text x="416" y="380" class="text-secondary" font-size="12">You can restore it within 30 days.</text>
+
+  <!-- Divider -->
+  <line x1="416" y1="496" x2="864" y2="496" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- Actions -->
+  <text x="416" y="536" class="text-secondary" font-size="12" font-weight="500">Cancel</text>
+  <text x="864" y="536" text-anchor="end" class="text-accent" font-size="12" font-weight="500">Delete</text>
+
+</svg>

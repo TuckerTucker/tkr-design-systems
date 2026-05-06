@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <!-- Prism dashboard — desktop 1280×800
+       grammar_family: contemporary_clean, elevation.strategy: glass_blur
+       Gradient bg + ambient orbs + glass panels.
+       SVG approximation: backdrop-filter doesn't render; we use rgba opacity.
+  -->
+
+  <defs>
+    <linearGradient id="prism-bg" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate(0)">
+      <stop offset="0" stop-color="#4A5D6B"/>
+      <stop offset="0.40" stop-color="#5A4A5E"/>
+      <stop offset="0.70" stop-color="#6B5A5A"/>
+      <stop offset="1.00" stop-color="#4A6058"/>
+    </linearGradient>
+    <radialGradient id="orb-lavender" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="rgba(180,160,210,0.25)"/>
+      <stop offset="0.7" stop-color="rgba(180,160,210,0)"/>
+    </radialGradient>
+    <radialGradient id="orb-teal" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="rgba(130,200,180,0.20)"/>
+      <stop offset="0.7" stop-color="rgba(130,200,180,0)"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Gradient page background -->
+  <rect x="0" y="0" width="1280" height="800" fill="url(#prism-bg)"/>
+
+  <!-- Ambient orbs: top-right lavender, bottom-left teal -->
+  <circle cx="1220" cy="-20" r="260" fill="url(#orb-lavender)"/>
+  <circle cx="80" cy="780" r="220" fill="url(#orb-teal)"/>
+
+  <!-- ════════════ SIDEBAR ════════════ -->
+
+  <!-- Brand: Outfit 16px white -->
+  <text x="14" y="36"
+        font-family="Outfit, system-ui, sans-serif"
+        font-size="16"
+        font-weight="500"
+        fill="rgba(255,255,255,0.9)"
+        letter-spacing="-0.32">Prism</text>
+
+  <!-- Search: glass panel -->
+  <rect x="14" y="54" width="252" height="32" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="26" y="74" font-family="Outfit, system-ui, sans-serif" font-size="12" fill="rgba(255,255,255,0.35)">⌕  Search...</text>
+
+  <!-- ─── List items (5 sessions) ──────────────────── -->
+  <!-- Selected item gets elevated glass tier -->
+  <rect x="6" y="106" width="268" height="56" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="12" ry="12"/>
+  <rect x="20" y="115" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="37" y="138" font-family="Outfit, system-ui, sans-serif" font-size="15" font-weight="500" text-anchor="middle">T</text>
+  <circle cx="52" cy="147" r="4" fill="#7DDFBE" stroke="rgba(74,93,107,0.8)" stroke-width="2"/>
+  <text x="64" y="129" font-family="Outfit, system-ui, sans-serif" font-size="12.5" font-weight="500" fill="rgba(255,255,255,0.85)">Tokyo Trip</text>
+  <text x="260" y="129" font-family="Outfit, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.30)" text-anchor="end">2m</text>
+  <text x="64" y="146" font-family="Outfit, system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.40)">Build itinerary?</text>
+  <rect x="238" y="138" width="18" height="18" fill="rgba(125,223,190,0.25)" stroke="rgba(125,223,190,0.40)" stroke-width="1" rx="6" ry="6"/>
+  <text x="247" y="151" font-family="Outfit, system-ui, sans-serif" font-size="9" font-weight="600" fill="#7DDFBE" text-anchor="middle">2</text>
+
+  <!-- Recipe Ideas -->
+  <rect x="14" y="180" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="31" y="203" font-family="Outfit, system-ui, sans-serif" font-size="15" font-weight="500" text-anchor="middle">R</text>
+  <text x="58" y="194" font-family="Outfit, system-ui, sans-serif" font-size="12.5" font-weight="500" fill="rgba(255,255,255,0.85)">Recipe Ideas</text>
+  <text x="266" y="194" font-family="Outfit, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.30)" text-anchor="end">1h</text>
+  <text x="58" y="211" font-family="Outfit, system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.40)">Here are 5 ramen variations you'll love...</text>
+
+  <!-- Book Club -->
+  <rect x="14" y="242" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="31" y="265" font-family="Outfit, system-ui, sans-serif" font-size="15" font-weight="500" text-anchor="middle">B</text>
+  <circle cx="46" cy="274" r="4" fill="#7DDFBE" stroke="rgba(74,93,107,0.8)" stroke-width="2"/>
+  <text x="58" y="256" font-family="Outfit, system-ui, sans-serif" font-size="12.5" font-weight="500" fill="rgba(255,255,255,0.85)">Book Club</text>
+  <text x="266" y="256" font-family="Outfit, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.30)" text-anchor="end">3h</text>
+  <text x="58" y="273" font-family="Outfit, system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.40)">Start with Murakami…</text>
+  <rect x="244" y="265" width="18" height="18" fill="rgba(125,223,190,0.25)" stroke="rgba(125,223,190,0.40)" stroke-width="1" rx="6" ry="6"/>
+  <text x="253" y="278" font-family="Outfit, system-ui, sans-serif" font-size="9" font-weight="600" fill="#7DDFBE" text-anchor="middle">1</text>
+
+  <!-- Fitness Plan -->
+  <rect x="14" y="304" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="31" y="327" font-family="Outfit, system-ui, sans-serif" font-size="15" font-weight="500" text-anchor="middle">F</text>
+  <text x="58" y="318" font-family="Outfit, system-ui, sans-serif" font-size="12.5" font-weight="500" fill="rgba(255,255,255,0.85)">Fitness Plan</text>
+  <text x="266" y="318" font-family="Outfit, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.30)" text-anchor="end">1d</text>
+  <text x="58" y="335" font-family="Outfit, system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.40)">Your 4-week progressive routine is ready.</text>
+
+  <!-- Code Review -->
+  <rect x="14" y="366" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="31" y="389" font-family="Outfit, system-ui, sans-serif" font-size="15" font-weight="500" text-anchor="middle">C</text>
+  <text x="58" y="380" font-family="Outfit, system-ui, sans-serif" font-size="12.5" font-weight="500" fill="rgba(255,255,255,0.85)">Code Review</text>
+  <text x="266" y="380" font-family="Outfit, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.30)" text-anchor="end">2d</text>
+  <text x="58" y="397" font-family="Outfit, system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.40)">The auth middleware looks solid, but...</text>
+
+  <!-- Account footer -->
+  <line x1="0" y1="744" x2="280" y2="744" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <rect x="14" y="754" width="28" height="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="8" ry="8"/>
+  <text x="28" y="773" font-family="Outfit, system-ui, sans-serif" font-size="12" fill="rgba(255,255,255,0.6)" text-anchor="middle">◈</text>
+  <text x="50" y="773" font-family="Outfit, system-ui, sans-serif" font-size="11" fill="rgba(255,255,255,0.5)">You · active</text>
+
+  <!-- ════════════ MAIN AREA ════════════ -->
+
+  <!-- Header: glass panel with emoji + title + status -->
+  <rect x="312" y="14" width="952" height="56" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="14" ry="14"/>
+  <text x="328" y="46" font-family="Outfit, system-ui, sans-serif" font-size="16" font-weight="700">T</text>
+  <text x="354" y="44" font-family="Outfit, system-ui, sans-serif" font-size="13.5" font-weight="500" fill="rgba(255,255,255,0.9)">Tokyo Trip</text>
+  <text x="354" y="60" font-family="Outfit, system-ui, sans-serif" font-size="10" fill="rgba(255,255,255,0.35)">active session</text>
+
+  <!-- ─── Messages: glass bubbles, asymmetric corners ─── -->
+
+  <!-- Message 01 — USER (right, higher opacity 0.18, tail at bottom-right) -->
+  <path d="M 780,108
+           L 1240,108
+           Q 1252,108 1252,120
+           L 1252,140
+           Q 1252,152 1240,152
+           L 800,152
+           Q 788,152 788,140
+           L 788,116
+           Q 788,108 800,108 Z"
+        fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  <text x="800" y="135" font-family="Outfit, system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.95)">Hey, can you help me plan a trip to Tokyo?</text>
+
+  <!-- Message 02 — AI (left, base opacity 0.08, tail at bottom-left) -->
+  <path d="M 320,180
+           L 940,180
+           Q 952,180 952,192
+           L 952,238
+           Q 952,250 940,250
+           L 332,250
+           Q 320,250 320,238
+           L 320,184
+           Q 320,180 320,180 Z"
+        fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  <text x="338" y="208" font-family="Outfit, system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">Absolutely! Tokyo is incredible. Are you looking for a culture-focused trip,</text>
+  <text x="338" y="232" font-family="Outfit, system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">food adventure, or a mix of everything?</text>
+
+  <!-- Message 03 — USER -->
+  <path d="M 836,278
+           L 1240,278
+           Q 1252,278 1252,290
+           L 1252,310
+           Q 1252,322 1240,322
+           L 856,322
+           Q 844,322 844,310
+           L 844,286
+           Q 844,278 856,278 Z"
+        fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  <text x="856" y="305" font-family="Outfit, system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.95)">Definitely a mix — temples in the morning, ramen at night.</text>
+
+  <!-- Message 04 — AI -->
+  <path d="M 320,350
+           L 1000,350
+           Q 1012,350 1012,362
+           L 1012,432
+           Q 1012,444 1000,444
+           L 332,444
+           Q 320,444 320,432
+           L 320,354
+           Q 320,350 320,350 Z"
+        fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  <text x="338" y="378" font-family="Outfit, system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">Perfect combo. I'd suggest starting in Asakusa for Senso-ji, then heading to</text>
+  <text x="338" y="402" font-family="Outfit, system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">Shibuya for the evening food scene. Want me to build a day-by-day</text>
+  <text x="338" y="426" font-family="Outfit, system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.80)">itinerary?</text>
+
+  <!-- Composer: glass panel + icon-only send button -->
+  <line x1="312" y1="704" x2="1264" y2="704" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <rect x="320" y="724" width="908" height="44" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="14" ry="14"/>
+  <text x="338" y="751" font-family="Outfit, system-ui, sans-serif" font-size="13" fill="rgba(255,255,255,0.40)">Message...</text>
+  <rect x="1234" y="730" width="32" height="32" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="1250" y="751" font-family="Outfit, system-ui, sans-serif" font-size="14" fill="rgba(255,255,255,0.7)" text-anchor="middle">↑</text>
+
+  <line x1="280" y1="0" x2="280" y2="800" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+</svg>

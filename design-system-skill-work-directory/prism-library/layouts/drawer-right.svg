@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: rgba(255,255,255,0.90); font-family: Outfit, system-ui, sans-serif; }
+      .text-secondary { fill: rgba(255,255,255,0.60); font-family: Outfit, system-ui, sans-serif; }
+      .text-muted { fill: rgba(255,255,255,0.40); font-family: Outfit, system-ui, sans-serif; }
+      .text-very-muted { fill: rgba(255,255,255,0.30); font-family: Outfit, system-ui, sans-serif; }
+      .text-accent { fill: #7DDFBE; font-family: Outfit, system-ui, sans-serif; }
+    </style>
+    <linearGradient id="prism-bg" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate(0)">
+      <stop offset="0" stop-color="#4A5D6B"/>
+      <stop offset="0.40" stop-color="#5A4A5E"/>
+      <stop offset="0.70" stop-color="#6B5A5A"/>
+      <stop offset="1.00" stop-color="#4A6058"/>
+    </linearGradient>
+    <radialGradient id="orb-lavender" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="rgba(180,160,210,0.25)"/>
+      <stop offset="0.7" stop-color="rgba(180,160,210,0)"/>
+    </radialGradient>
+    <radialGradient id="orb-teal" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="rgba(130,200,180,0.20)"/>
+      <stop offset="0.7" stop-color="rgba(130,200,180,0)"/>
+    </radialGradient>
+  </defs>
+  <!-- DRAWER-RIGHT -->
+
+  <!-- Gradient background -->
+  <rect x="0" y="0" width="1280" height="800" fill="url(#prism-bg)"/>
+
+  <!-- Ambient orbs -->
+  <circle cx="1220" cy="-20" r="260" fill="url(#orb-lavender)"/>
+  <circle cx="80" cy="780" r="220" fill="url(#orb-teal)"/>
+
+  <!-- Dimming overlay (left side only) -->
+  <rect x="0" y="0" width="800" height="800" fill="rgba(0,0,0,0.15)"/>
+
+  <!-- Drawer panel: 480 wide, right-anchored -->
+  <rect x="800" y="0" width="480" height="800" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+
+  <!-- Header strip -->
+  <text x="816" y="32" class="text-secondary" font-size="9" font-weight="600">EDIT PROFILE</text>
+  <text x="1264" y="32" text-anchor="end" class="text-secondary" font-size="13">×</text>
+  <line x1="800" y1="48" x2="1280" y2="48" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <!-- Title -->
+  <text x="816" y="96" class="text-primary" font-size="16" font-weight="500">Profile</text>
+  <text x="816" y="120" class="text-secondary" font-size="12">Update your personal information.</text>
+
+  <!-- Form fields -->
+  <text x="816" y="160" class="text-secondary" font-size="10">Display Name</text>
+  <rect x="816" y="172" width="432" height="32" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="828" y="196" class="text-primary" font-size="12">Alex Rivera</text>
+
+  <text x="816" y="240" class="text-secondary" font-size="10">Email</text>
+  <rect x="816" y="252" width="432" height="32" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="828" y="276" class="text-primary" font-size="12">alex@example.com</text>
+
+  <text x="816" y="320" class="text-secondary" font-size="10">Time zone</text>
+  <rect x="816" y="332" width="432" height="32" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
+  <text x="828" y="356" class="text-primary" font-size="12">America/Los_Angeles</text>
+
+  <!-- Footer -->
+  <line x1="800" y1="752" x2="1280" y2="752" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <text x="816" y="784" class="text-secondary" font-size="12" font-weight="500">Discard</text>
+  <text x="1264" y="784" text-anchor="end" class="text-accent" font-size="12" font-weight="500">Save</text>
+
+</svg>

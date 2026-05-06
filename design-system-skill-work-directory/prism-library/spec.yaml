@@ -1,0 +1,216 @@
+spec_version: "0.2"
+
+system:
+  id: prism
+  name: Prism
+  tagline: "Liquid Glass + Bento"
+  grammar_family: contemporary_clean
+  version: "1.2.0"   # bumped: project-wide no-emoji policy — single-letter monogram avatars on glass tier
+  source_jsx: ../design-system-integrated.jsx
+
+  # NEW IN v0.2 (Change 8): Prism's glass blur is the system most affected
+  # by SVG format limits — backdrop-filter has no SVG equivalent. Document
+  # the fitness gap so consumers know SVG previews are approximations.
+  format_fitness:
+    svg:
+      level: approximation
+      caveat: "backdrop-filter has no SVG equivalent. Semi-transparent fills approximate the glass treatment but underspecify the visual. The actual glass blur effect requires HTML/CSS rendering."
+      acceptable_for: [wireframing, layout_review]
+      not_acceptable_for: [final_design_review, production_handoff]
+    html_css:
+      level: native
+      acceptable_for: [all]
+
+  # tkr-kit project policy: no emoji glyphs anywhere (mechanically enforced
+  # by the prism-no-emoji-imagery rulebook entry). Identity in Prism uses
+  # single-letter monograms on a glass tier square — preserves the
+  # atmospheric minimalism without depending on emoji fonts. The
+  # online-indicator dot (teal #7DDFBE) remains as the only saturated mark.
+  requires_emoji: false
+  avatar_strategy:
+    mode: monogram
+    placeholder_size_px: 34
+    placeholder_surface: "rgba(255,255,255,0.08)"
+    placeholder_border: "1px rgba(255,255,255,0.12)"
+    placeholder_letter_typeface_ref: typography.families.structural
+    placeholder_letter_color: "rgba(255,255,255,0.85)"
+    placeholder_letter_weight: 500
+    rendering_notes: "Single-letter monogram (first letter of thread title), Outfit weight 500, centered in a 34×34 glass square (rgba 0.08 fill + 1px rgba 0.12 border). Online-indicator dot (teal) anchors the same way as before."
+
+tokens:
+  colors:
+    # Prism's "colors" are mostly opacities applied over a gradient.
+    # The explicit palette includes the gradient stops and the teal accent.
+    page_bg: "#5A5562"          # midpoint of the gradient — used for solid fallback
+    surface: "rgba(255,255,255,0.08)"
+    surface_elevated: "rgba(255,255,255,0.14)"
+    text_primary: "rgba(255,255,255,0.90)"
+    text_secondary: "rgba(255,255,255,0.60)"
+    text_muted: "rgba(255,255,255,0.40)"
+    accent: "#7DDFBE"
+
+    palette:
+      - { name: gradient_stop_1, value: "#4A5D6B", role: gradient top-left }
+      - { name: gradient_stop_2, value: "#5A4A5E", role: gradient mid-1 }
+      - { name: gradient_stop_3, value: "#6B5A5A", role: gradient mid-2 }
+      - { name: gradient_stop_4, value: "#4A6058", role: gradient bottom-right }
+      - { name: glass_base, value: "rgba(255,255,255,0.08)", role: default glass }
+      - { name: glass_hover, value: "rgba(255,255,255,0.14)", role: hover/selected glass }
+      - { name: glass_user, value: "rgba(255,255,255,0.18)", role: user message glass — highest opacity }
+      - { name: glass_border, value: "rgba(255,255,255,0.12)", role: glass panel borders }
+      - { name: teal_accent, value: "#7DDFBE", role: online indicators, unread accents }
+
+  typography:
+    families:
+      - id: structural
+        stack: "Outfit, system-ui, sans-serif"
+        role: all type
+        mixing_rule: "single typeface"
+    scale:
+      - { size: 9,  role: tiny }
+      - { size: 10, role: timestamp }
+      - { size: 11, role: preview }
+      - { size: 12.5, role: title }
+      - { size: 13, role: body }
+      - { size: 13.5, role: header_title }
+      - { size: 16, role: brand }
+    case:
+      metadata: mixed
+      body: mixed
+      headers: mixed
+    tracking:
+      metadata: 0
+      body: 0
+      headers: -0.02   # em — slight tightening on headers
+
+  spacing:
+    grid_unit: 2
+    allowed_steps: [2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32]
+    enforcement: relaxed
+
+  borders:
+    radius_default: 12
+    radius_inputs: 10
+    radius_chrome: 20
+
+  elevation:
+    strategy: glass_blur
+    config:
+      base_blur: 20  # px
+      base_opacity: 0.08
+      elevation_steps:
+        - { name: default, opacity: 0.08, role: standard panels }
+        - { name: hover, opacity: 0.14, role: hover and selected }
+        - { name: user_message, opacity: 0.18, role: user message bubbles }
+      ambient_lighting:
+        enabled: true
+        orbs:
+          - { position: top-right, size: 200, color: "rgba(180,160,210,0.20)", opacity: 0.20 }
+          - { position: bottom-left, size: 160, color: "rgba(130,200,180,0.18)", opacity: 0.18 }
+      gradient_bg:
+        type: linear
+        angle_deg: 150
+        stops:
+          - { position: 0, color: "#4A5D6B" }
+          - { position: 0.40, color: "#5A4A5E" }
+          - { position: 0.70, color: "#6B5A5A" }
+          - { position: 1.00, color: "#4A6058" }
+
+components:
+  list_item:
+    # Structured anatomy (Schema v0.2 Change 11) — formalizes the
+    # preview-yields-to-badge constraint. Online indicator hangs off the avatar
+    # rather than yielding sibling space, so it's positionally fixed.
+    anatomy:
+      - { id: avatar,           position: left,         fixed_width: 34 }
+      - { id: online_indicator, position: avatar_anchor, fixed_width: 8, optional: true }
+      - { id: title,            position: top_main,     yields_to: [timestamp] }
+      - { id: timestamp,        position: top_right,    fixed_width: 40 }
+      - { id: preview,          position: bottom_main,  yields_to: [unread_badge], min_gap: 8 }
+      - { id: unread_badge,     position: middle_right, fixed_width: 18, optional: true }
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Avatar 34px glass square with online indicator dot (teal) at bottom-right. Title in Outfit 12.5px weight 500, white at 0.85 opacity. Preview in 11px white at 0.40 opacity. Timestamp top-right 10px white at 0.30 opacity. Unread: 18px glass panel with teal border, teal text. Preview text MUST end at least 8px before the unread_badge x-position when badge is present; truncate with ellipsis (…). Without truncation, the preview overflows into the badge — and unlike opaque systems, the glass badge makes overlap especially visible."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        # Selection signal (Schema v0.2 Change 10) — glass opacity tier shift.
+        selection_signal: surface_fill
+        selection_signal_detail:
+          opacity_change: { from: 0.08, to: 0.14 }
+          treatment: "glass tier shift"
+        rendering_notes: "Same as default but glass opacity bumps from 0.08 to 0.14. NO accent bar, NO border highlight beyond glass. Same preview-yields-to-badge rule as default variant."
+        states: [selected]
+    constraints:
+      - "Selection signaled by glass opacity tier change, NEVER by accent bar"
+      - "All surfaces use glass treatment (semi-transparent + border) — no solid fills except the gradient bg"
+      - "Online indicators are solid teal dots with a dark border to read on glass"
+      - "Preview text yields horizontal space to unread_badge: minimum 8px gap before the badge's left edge. Truncate the preview content (do not let SVG text overflow). See SCHEMA v0.2 finding 11.5 for the formal yields_to constraint this rule encodes."
+
+rulebook:
+  # NEW IN v0.2: every rule annotates check_method (Change 9) and
+  # check_scope (Change 12).
+
+  - id: prism-glass-elevation
+    rule: "All elevated surfaces use semi-transparent glass: rgba(255,255,255,0.08) base with 1px rgba(255,255,255,0.12) border. NO solid fills."
+    rationale: "Glass IS the system's elevation primitive. Solid fills break the atmospheric depth."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "For each <rect> with width*height > 100px², verify fill is rgba()/none/url() (no opaque hex). Border verifies 1px stroke with rgba alpha 0.12-0.20."
+
+  - id: prism-no-shadows
+    rule: "box-shadow is never used. Depth comes from glass opacity tiers (0.08 → 0.14 → 0.18) and the ambient orbs."
+    rationale: "Shadows compete with the atmospheric blur for the depth signal."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Verify no <filter> elements with feDropShadow and no filter= references. (Ambient orbs use feGaussianBlur, which is permitted; explicitly check the filter type.)"
+
+  - id: prism-gradient-bg-required
+    rule: "The page background is the multi-stop gradient (150deg, #4A5D6B → #5A4A5E → #6B5A5A → #4A6058). Never solid."
+    rationale: "The gradient is the platform that all glass surfaces inherit; solid bg breaks the atmospheric coherence."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact
+    check_implementation: "Verify the root background <rect> uses fill=url(#gradient-id) where the linearGradient has the 4 expected stops at 0/0.40/0.70/1.00."
+
+  - id: prism-teal-as-signal
+    rule: "Teal (#7DDFBE) is reserved for online indicators, unread badges, and other status signals. NEVER decorative."
+    rationale: "Teal is the only saturated color in the system; using it decoratively dilutes its signal value."
+    severity: required
+    check_method: both
+    check_scope: artifact
+    check_implementation: "Mechanical: count distinct teal-bearing elements; flag as warning if > 6. Semantic: each teal element should fall into the status-signal category (online dot, unread)."
+
+  - id: prism-minimal-metadata
+    rule: "Timestamps, sender labels, and other metadata are minimized. AI/user messages are distinguished by glass opacity (0.08 vs 0.18), not by labels."
+    rationale: "Atmospheric minimalism is the Prism aesthetic; explicit labels feel utilitarian."
+    severity: required
+    check_method: semantic
+    check_scope: artifact
+    check_implementation: "Count distinct metadata text elements per message; flag screens where messages carry explicit AI/USER labels rather than relying on opacity tier."
+
+  - id: prism-no-emoji-imagery
+    rule: "No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations, status indicators). Identity uses single-letter monograms on glass tier squares."
+    rationale: "Project policy forbids emoji as an identifier strategy. Prism's atmospheric minimalism is more authentic to the system than colored emoji shapes."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Scan SVG text for codepoints in the Unicode emoji blocks (U+1F300-U+1F5FF, U+1F600-U+1F64F, U+1F680-U+1F6FF, U+1F900-U+1F9FF, U+2600-U+26FF, U+2700-U+27BF, U+1FA70-U+1FAFF). Any match is a violation."
+
+grammar_extensions:
+  family: contemporary_clean
+  per_system_signature:
+    glass_panels:
+      enabled: true
+      backdrop_filter: "blur(20px)"  # NOTE: not renderable in SVG; documented for HTML/CSS consumers
+      svg_approximation: "use rgba semi-transparent fills and 1px border; gradient bg shows through naturally"
+      svg_fallback_caveat: "true glass requires backdrop-filter which only works in HTML/CSS; SVG previews approximate but underspecify the visual"
+    ambient_orbs:
+      enabled: true
+      orbs:
+        - { x_anchor: top-right, y_offset_px: -60, x_offset_px: 60, size_px: 200, color_ref: "soft_lavender", opacity: 0.20 }
+        - { x_anchor: bottom-left, y_offset_px: 60, x_offset_px: -60, size_px: 160, color_ref: "soft_teal", opacity: 0.18 }
+      role: "creates implied light source; non-interactive; behind all glass panels"
