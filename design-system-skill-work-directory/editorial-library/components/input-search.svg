@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 32" width="280" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== INPUT-SEARCH ==================== -->
+
+  <line x1="0" y1="0" x2="280" y2="0" stroke="#D8CEB9" stroke-width="1"/>
+  <text x="0" y="22" class="text-muted" font-size="13" font-style="italic">search</text>
+
+</svg>

@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 800" width="640" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== FORM-DEFAULT ==================== -->
+
+  <rect width="640" height="800" fill="#F8F4EC"/>
+
+  <!-- Form header -->
+  <text x="32" y="52"
+        class="text-display"
+        font-size="24"
+        font-weight="700"
+        letter-spacing="-0.48">Create Your Dispatch</text>
+
+  <text x="32" y="80"
+        class="text-secondary"
+        font-size="13">Share a thought, idea, or question with the editorial voice.</text>
+
+  <line x1="32" y1="100" x2="608" y2="100" stroke="#D8CEB9" stroke-width="1"/>
+
+  <!-- Field 1: Title -->
+  <text x="32" y="132"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">TITLE</text>
+
+  <line x1="32" y1="138" x2="608" y2="138" stroke="#D8CEB9" stroke-width="1"/>
+
+  <text x="32" y="160"
+        class="text-primary"
+        font-size="14">Tokyo Trip Planning</text>
+
+  <line x1="32" y1="190" x2="608" y2="190" stroke="#E8DFCA" stroke-width="1"/>
+
+  <!-- Field 2: Category -->
+  <text x="32" y="222"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">CATEGORY</text>
+
+  <line x1="32" y1="228" x2="608" y2="228" stroke="#D8CEB9" stroke-width="1"/>
+
+  <text x="32" y="250"
+        class="text-primary"
+        font-size="14">Travel</text>
+
+  <line x1="32" y1="280" x2="608" y2="280" stroke="#E8DFCA" stroke-width="1"/>
+
+  <!-- Field 3: Body (textarea) -->
+  <text x="32" y="312"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">BODY TEXT</text>
+
+  <line x1="32" y1="318" x2="608" y2="318" stroke="#D8CEB9" stroke-width="1"/>
+
+  <text x="32" y="342"
+        class="text-primary"
+        font-size="13">A handsome serif system with warm cream paper and no emoji. Perfect</text>
+
+  <text x="32" y="362"
+        class="text-primary"
+        font-size="13">for long-form content and editorial voice.</text>
+
+  <line x1="32" y1="448" x2="608" y2="448" stroke="#D8CEB9" stroke-width="1"/>
+
+  <!-- Field 4: Tags -->
+  <text x="32" y="480"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">TAGS (OPTIONAL)</text>
+
+  <line x1="32" y1="486" x2="608" y2="486" stroke="#D8CEB9" stroke-width="1"/>
+
+  <text x="32" y="508"
+        class="text-secondary"
+        font-size="13" font-style="italic">add tags…</text>
+
+  <line x1="32" y1="538" x2="608" y2="538" stroke="#E8DFCA" stroke-width="1"/>
+
+  <!-- Action buttons: Cancel (secondary) | Submit (primary burgundy) -->
+  <text x="480" y="600"
+        class="text-secondary"
+        font-size="14">Cancel</text>
+
+  <text x="608" y="600"
+        text-anchor="end"
+        class="text-accent"
+        font-size="14"
+        font-weight="700">File Dispatch →</text>
+
+</svg>

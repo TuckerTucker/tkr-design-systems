@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== AVATAR-MONOGRAM-ALT ==================== -->
+
+  <rect x="0" y="0" width="32" height="32" fill="#F1ECDF"/>
+  <text x="16" y="24" text-anchor="middle" class="text-primary" font-size="16" font-weight="700">A</text>
+
+</svg>

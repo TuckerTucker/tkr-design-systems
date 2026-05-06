@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" width="120" height="32">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== TAB-ITEM-DEFAULT ==================== -->
+
+  <text x="60" y="20" text-anchor="middle" class="text-secondary" font-size="13">Tab</text>
+
+</svg>

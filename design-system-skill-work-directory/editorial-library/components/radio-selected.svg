@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 24" width="200" height="24">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== RADIO-SELECTED ==================== -->
+
+  <circle cx="10" cy="10" r="9" fill="#F8F4EC" stroke="#1A1614" stroke-width="1"/>
+  <circle cx="10" cy="10" r="5" fill="#1A1614"/>
+  <text x="32" y="16" class="text-primary" font-size="13">Selected</text>
+
+</svg>

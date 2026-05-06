@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 16" width="400" height="16">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== BREADCRUMB-TRUNCATED ==================== -->
+
+  <text x="0" y="13" class="text-secondary" font-size="11">Home</text>
+  <text x="56" y="13" class="text-secondary" font-size="11">/</text>
+  <text x="72" y="13" class="text-secondary" font-size="11">…</text>
+  <text x="96" y="13" class="text-secondary" font-size="11">/</text>
+  <text x="112" y="13" class="text-primary" font-size="11" font-weight="700">Profile</text>
+
+</svg>

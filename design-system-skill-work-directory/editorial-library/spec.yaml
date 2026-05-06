@@ -1,0 +1,309 @@
+spec_version: "0.2"
+
+system:
+  id: editorial
+  name: Editorial
+  tagline: "Long-form Serif + Newsprint Masthead"
+  grammar_family: contemporary_clean
+  version: "1.2.0"   # bumped: project-wide no-emoji policy — single-letter monogram avatars
+  source_jsx: ../design-system-editorial.jsx
+
+  # tkr-kit project policy: no emoji glyphs anywhere (mechanically enforced
+  # by the editorial-no-emoji-imagery rulebook entry). Identity in
+  # Editorial uses single-letter monograms in 32×32 paper-elevated squares,
+  # which fit the serif/typographic feel without depending on emoji fonts.
+  requires_emoji: false
+  avatar_strategy:
+    mode: monogram
+    placeholder_size_px: 32
+    placeholder_surface_ref: tokens.colors.surface_elevated
+    placeholder_letter_typeface_ref: typography.families.structural
+    placeholder_letter_weight: 700
+    rendering_notes: "Single-letter monogram (first letter of thread title), Fraunces weight 700, centered in a 32×32 paper-elevated square (#F1ECDF). No emoji, no photo, no illustration."
+
+# ────────────────────────────────────────────────────────────────────
+# TOKENS
+# ────────────────────────────────────────────────────────────────────
+
+tokens:
+  colors:
+    page_bg: "#F8F4EC"      # warm cream paper
+    surface: "#F8F4EC"
+    surface_elevated: "#FFFFFF"  # selected item / elevated content
+    text_primary: "#1A1614"      # deep ink
+    text_secondary: "#5C4F44"    # softer ink for secondary content
+    text_muted: "#8B7D6F"        # tracked metadata
+    accent: "#8B1E2D"            # masthead burgundy
+
+    palette:
+      - name: paper
+        value: "#F8F4EC"
+        role: page and primary surface
+        usage_constraint: "warm cream — never pure white for the page"
+
+      - name: paper_elevated
+        value: "#F1ECDF"
+        role: selected items, secondary surface
+        usage_constraint: "the only elevation tier above paper; subtle warmth"
+
+      - name: paper_white
+        value: "#FFFFFF"
+        role: extreme contrast surface
+        usage_constraint: "use sparingly; reserves contrast for important moments"
+
+      - name: ink_deep
+        value: "#1A1614"
+        role: body text and headlines
+        usage_constraint: "never substitute with mid-grays for body type"
+
+      - name: ink_secondary
+        value: "#5C4F44"
+        role: italic preview text, byline supporting type
+
+      - name: metadata_muted
+        value: "#8B7D6F"
+        role: 9px tracked uppercase Inter metadata only
+
+      - name: rule_hairline
+        value: "#E8DFCA"
+        role: hairline rules between threads
+
+      - name: rule_default
+        value: "#D8CEB9"
+        role: default 1px rules (sidebar borders, dispatch dividers)
+
+      - name: rule_strong
+        value: "#1A1614"
+        role: strong rules (top of thread list, byline divider)
+
+      - name: burgundy_masthead
+        value: "#8B1E2D"
+        role: dispatch overlines, drop caps, unread counts, double rule
+        usage_constraint: "the system's hero color; reserved for editorial signal"
+
+  typography:
+    families:
+      - id: structural
+        stack: "'Fraunces', Georgia, serif"
+        role: titles, body content, drop caps, "X new" unread counts
+        mixing_rule: "never on the same line as Inter"
+      - id: metadata
+        stack: "'Inter', system-ui, sans-serif"
+        role: timestamps, dispatch overlines, bylines, tracked uppercase
+        mixing_rule: "never on the same line as Fraunces"
+
+    scale:
+      - { size: 9,  role: metadata }
+      - { size: 11, role: italic_preview }
+      - { size: 13, role: byline_secondary }
+      - { size: 15, role: thread_title }
+      - { size: 24, role: masthead_title }
+      - { size: 54, role: drop_cap }
+
+    case:
+      metadata: uppercase
+      body: mixed
+      headers: mixed
+
+    tracking:
+      metadata: 0.16   # em — for Inter uppercase metadata
+      body: -0.01      # em — slight tightening on Fraunces titles
+      headers: -0.02   # em — same
+
+  spacing:
+    grid_unit: 4
+    allowed_steps: [4, 8, 10, 12, 16, 18, 20, 24, 32, 40, 48, 64]
+    enforcement: relaxed   # editorial layout sometimes uses 10/18 for type rhythm
+
+  borders:
+    radius_default: 0
+    radius_inputs: 2     # inputs allow a hint of softness
+    radius_chrome: 4
+
+  elevation:
+    strategy: paper_tiers
+    config:
+      tiers:
+        - name: deep_recess
+          bg: "#F1ECDF"
+          role: selected list items, recessed sections
+        - name: default_page
+          bg: "#F8F4EC"
+          role: standard surface
+        - name: elevated_card
+          bg: "#FFFFFF"
+          role: rare; reserved for emphasized callouts
+      rules:
+        - weight: hairline
+          color: "#E8DFCA"
+          width: 1
+          style: solid
+        - weight: default
+          color: "#D8CEB9"
+          width: 1
+          style: solid
+        - weight: strong
+          color: "#1A1614"
+          width: 1
+          style: solid
+        - weight: masthead
+          color: "#8B1E2D"
+          width: 3
+          style: double
+
+# ────────────────────────────────────────────────────────────────────
+# COMPONENTS — list_item only
+# ────────────────────────────────────────────────────────────────────
+
+components:
+  list_item:
+    anatomy:
+      - timestamp_overline    # uppercase tracked Inter, includes avatar emoji
+      - unread_marker         # "N new" in Fraunces burgundy, NOT a badge
+      - title                 # Fraunces 15px, weight bumps on selection
+      - preview               # Inter italic 11px in #5C4F44
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Top: timestamp + emoji in 9px Inter uppercase tracked, color #8B7D6F. If unread, 'N new' on right in Fraunces 11px serif weight 700, color burgundy. Title in Fraunces 15px weight 600, color #1A1614, slight negative tracking. Preview in Inter italic 11px, color #5C4F44, single-line truncated. Hairline rule below."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        # Selection signal (Schema v0.2 Change 10) — paper-tier shift only.
+        selection_signal: surface_fill
+        selection_signal_detail:
+          fill_ref: tokens.colors.surface_elevated
+          additional_treatment: "title weight 600 → 700"
+        rendering_notes: "Same anatomy as default but: background fills with #F1ECDF (paper_elevated), title weight bumps from 600 to 700. NO accent bar, NO border highlight — paper-tier shift is the only selection signal."
+        states: [selected]
+    constraints:
+      - "Selection signaled by paper-tier background shift, never by a colored bar"
+      - "Unread counts are 'N new' in Fraunces burgundy, NEVER a circular badge or pill"
+      - "Timestamps and metadata are Inter uppercase tracked; titles are Fraunces — never mix on a line"
+      - "Preview text is Inter italic, single-line truncated with ellipsis"
+
+# ────────────────────────────────────────────────────────────────────
+# RULEBOOK
+# ────────────────────────────────────────────────────────────────────
+
+rulebook:
+  # NEW IN v0.2: every rule annotates check_method (Change 9) and
+  # check_scope (Change 12) so consumers know how and where to verify.
+
+  - id: editorial-typeface-boundary
+    rule: "Fraunces and Inter never appear on the same line. Metadata navigation (timestamps, overlines, bylines, captions) is exclusively Inter uppercase tracked. Content (titles, body, drop caps, unread counts) is exclusively Fraunces."
+    rationale: "The typeface tells the reader what to navigate vs. what to read. Mixing breaks the signal."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "For each <text>, classify by font-family. Flag any line where two distinct families appear (e.g. tspan family overrides)."
+
+  - id: editorial-paper-bg-required
+    rule: "Page background is #F8F4EC (warm cream paper), not pure white. Any pure white surface is a deliberate emphasis."
+    rationale: "Paper is a substrate; pure white reads as digital glare in this system."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact          # full-page background context
+    check_implementation: "Verify the root <rect> covering viewBox uses fill #F8F4EC. Pure white surfaces are permitted only as elevated cards."
+
+  - id: editorial-no-shadows
+    rule: "box-shadow is never used. Depth comes from paper-tier backgrounds (cream → elevated → white) and 4 weights of horizontal rule (hairline, default, strong, masthead double)."
+    rationale: "Shadows belong to a screen vocabulary; Editorial uses a print vocabulary."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Verify no <filter> elements with feDropShadow and no filter= references."
+
+  - id: editorial-rules-not-boxes
+    rule: "Sections are separated by horizontal rules, not by boxed containers with borders. Rules carry hierarchy through weight (hairline → default → strong → masthead double)."
+    rationale: "Boxes feel digital; rules feel like print column dividers."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact
+    check_implementation: "Flag <rect> elements with stroke set (boxes) that are not the root background. Section dividers should be <line>, not bordered rects."
+
+  - id: editorial-tracked-metadata
+    rule: "All metadata (timestamps, overlines, bylines, section labels, dispatch headers) is rendered uppercase Inter at 8.5–9px with 0.16em–0.20em letter-spacing."
+    rationale: "Consistent metadata signature across the system; tracking + uppercase + small + muted = navigation, not content."
+    severity: required
+    check_method: mechanical
+    check_scope: component
+    applies_when: "element font-size in [8.5, 9]"
+    check_implementation: "For 9px Inter <text>, verify letter-spacing >= 1.44 (0.16em * 9px) and color resolves to #8B7D6F or #8B1E2D."
+
+  - id: editorial-drop-cap-ceremony
+    rule: "Drop caps are reserved for the FIRST AI message in a conversation, never elsewhere. 54px Fraunces weight 700 in burgundy, float-left, with body text wrapping for 3 lines."
+    rationale: "The drop cap is a ceremonial moment marking the start of a thread. Repeated use diminishes it."
+    severity: required
+    check_method: semantic
+    check_scope: artifact
+    check_implementation: "Verify by reading message ordering and AI/user roles. The first AI message (chronological, role=ai) should have a drop cap; no other message should."
+
+  - id: editorial-no-bubbles
+    rule: "Messages are NOT enclosed in chat bubbles. Speaker is signaled by alignment (AI left, user right) and italic body for user messages with a 2px burgundy left rule."
+    rationale: "Bubbles are a chat-app vocabulary; Editorial reads conversation as printed correspondence."
+    severity: required
+    check_method: both
+    check_scope: artifact
+    check_implementation: |
+      Mechanical: flag any <rect> with rx/ry > 4 enclosing message text
+      (bubble shape). Semantic: confirm user messages use italic + burgundy left
+      rule, AI messages are flush-left roman with no enclosing rect.
+
+  - id: editorial-burgundy-discipline
+    rule: "Burgundy (#8B1E2D) is used in: dispatch overlines, drop caps, unread 'N new' markers, masthead double rule, and the user-message left rule. No other uses without rationale."
+    rationale: "Burgundy is the masthead color and carries editorial authority. Inflation reads as a designer overplaying the brand."
+    severity: required
+    check_method: both
+    check_scope: artifact
+    check_implementation: "Mechanical: count distinct burgundy-bearing elements; flag if > 6 (the canonical max). Semantic: verify each burgundy element fits one of the 5 listed contexts."
+
+  - id: editorial-no-emoji-imagery
+    rule: "No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations, status indicators). Identity uses single-letter monograms in 32×32 paper-elevated squares; categories use prose labels."
+    rationale: "Project policy forbids emoji as an identifier strategy: rendering depends on system fonts and degrades silently in CairoSVG. Editorial's typographic identity is more authentic to the system anyway."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Scan SVG text for codepoints in the Unicode emoji blocks (U+1F300-U+1F5FF, U+1F600-U+1F64F, U+1F680-U+1F6FF, U+1F900-U+1F9FF, U+2600-U+26FF, U+2700-U+27BF, U+1FA70-U+1FAFF). Any match is a violation."
+
+# ────────────────────────────────────────────────────────────────────
+# GRAMMAR EXTENSIONS — contemporary_clean family
+# ────────────────────────────────────────────────────────────────────
+
+grammar_extensions:
+  family: contemporary_clean
+
+  per_system_signature:
+    drop_caps:
+      enabled: true
+      typeface_ref: typography.families.structural   # Fraunces
+      size_px: 54
+      weight: 700
+      color_ref: tokens.colors.accent                # burgundy
+      float: left
+      lines_to_wrap: 3
+      usage: "first AI message in a conversation only — see editorial-drop-cap-ceremony rule"
+
+    masthead_rule:
+      enabled: true
+      width: 3
+      color_ref: tokens.colors.accent                # burgundy
+      style: double
+      usage: "between sidebar brand and content; signals authority"
+
+    user_message_treatment:
+      enabled: true
+      alignment: right
+      max_width_pct: 68
+      typeface_style: italic
+      left_border:
+        width: 2
+        color_ref: tokens.colors.accent              # burgundy
+      usage: "signals 'this is the reader speaking' without a bubble"
+
+    ai_message_treatment:
+      enabled: true
+      alignment: left
+      max_width_pct: 86
+      typeface_style: roman
+      usage: "signals 'this is the publication speaking' — with drop cap on first only"

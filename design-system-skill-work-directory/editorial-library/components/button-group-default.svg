@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 40" width="280" height="40">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== BUTTON-GROUP-DEFAULT ==================== -->
+
+  <text x="0" y="20" text-anchor="middle" class="text-primary" font-size="13" font-weight="600">All</text>
+  <line x1="56" y1="4" x2="56" y2="32" stroke="#D8CEB9" stroke-width="1"/>
+  <text x="112" y="20" text-anchor="middle" class="text-primary" font-size="13">Active</text>
+  <line x1="168" y1="4" x2="168" y2="32" stroke="#D8CEB9" stroke-width="1"/>
+  <text x="224" y="20" text-anchor="middle" class="text-secondary" font-size="13">Archived</text>
+
+</svg>

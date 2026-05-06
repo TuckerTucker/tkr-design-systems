@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 800" width="1040" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== ARTICLE-DEFAULT ==================== -->
+
+  <rect width="1040" height="800" fill="#F8F4EC"/>
+
+  <!-- Masthead: title + byline metadata + divider -->
+  <text x="48" y="60"
+        class="text-display"
+        font-size="24"
+        font-weight="700"
+        letter-spacing="-0.48">Tokyo Trip: A Complete Itinerary</text>
+
+  <text x="48" y="90"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">DISPATCH · TOKYO DESK · JAN 2024</text>
+
+  <text x="992" y="90"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.26"
+        text-anchor="end">FILED 14:23 · 5 MIN READ</text>
+
+  <line x1="48" y1="108" x2="992" y2="108" stroke="#1A1614" stroke-width="1"/>
+
+  <!-- Body text with drop cap -->
+  <!-- Drop cap: 54px Fraunces 700 burgundy, floated left -->
+  <text x="48" y="188"
+        class="text-accent"
+        font-size="54"
+        font-weight="700">A</text>
+
+  <!-- Body wraps around drop cap for 3 lines -->
+  <text x="120" y="148"
+        class="text-primary"
+        font-size="14"
+        font-weight="400"
+        letter-spacing="-0.14">bsolutely breathtaking, Tokyo combines ancient temples with cutting-edge</text>
+
+  <text x="120" y="170"
+        class="text-primary"
+        font-size="14"
+        font-weight="400"
+        letter-spacing="-0.14">technology. Whether you're exploring Asakusa's sacred grounds or hunting for</text>
+
+  <text x="120" y="192"
+        class="text-primary"
+        font-size="14"
+        font-weight="400"
+        letter-spacing="-0.14">ramen in Shibuya, the city rewards curiosity.</text>
+
+  <!-- Continue body after drop cap -->
+  <text x="48" y="230"
+        class="text-primary"
+        font-size="14"
+        font-weight="400"
+        letter-spacing="-0.14">This guide covers five days of essential Tokyo: temples, food, museums, and urban</text>
+
+  <text x="48" y="252"
+        class="text-primary"
+        font-size="14"
+        font-weight="400"
+        letter-spacing="-0.14">exploration. Each day is timed for sunrise to evening, with ramen breaks built in.</text>
+
+  <!-- Section divider -->
+  <line x1="48" y1="290" x2="992" y2="290" stroke="#D8CEB9" stroke-width="1"/>
+
+  <!-- Next section: Day 1 -->
+  <text x="48" y="328"
+        class="text-primary"
+        font-size="15"
+        font-weight="700"
+        letter-spacing="-0.15">Day 1: Temples and Dawn</text>
+
+  <text x="48" y="360"
+        class="text-primary"
+        font-size="14"
+        font-weight="400"
+        letter-spacing="-0.14">Rise early for Senso-ji Temple at sunrise. The gate glows orange as crowds build.</text>
+
+  <text x="48" y="382"
+        class="text-primary"
+        font-size="14"
+        font-weight="400"
+        letter-spacing="-0.14">Explore the surrounding Nakamise shopping street for souvenirs and breakfast snacks.</text>
+
+  <text x="48" y="404"
+        class="text-primary"
+        font-size="14"
+        font-weight="400"
+        letter-spacing="-0.14">By afternoon, head to nearby Roppongi for museums and garden walks.</text>
+
+  <!-- Footnote section -->
+  <line x1="48" y1="720" x2="992" y2="720" stroke="#1A1614" stroke-width="1"/>
+
+  <text x="48" y="750"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">EDITORIAL VOICE</text>
+
+  <text x="48" y="770"
+        class="text-secondary"
+        font-size="11"
+        font-style="italic">This itinerary assumes moderate pace and comfort with public transit. All venues</text>
+
+  <text x="48" y="788"
+        class="text-secondary"
+        font-size="11"
+        font-style="italic">are accessible by train or walking from major stations.</text>
+
+</svg>

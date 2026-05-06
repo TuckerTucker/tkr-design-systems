@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 90" width="280" height="90">
+  <!-- Editorial list item — selected state
+       Per editorial paper-tier elevation: background fills with #F1ECDF (paper_elevated)
+       Title weight bumps from 600 to 700.
+       NO accent bar, NO border highlight.
+  -->
+
+  <!-- Background: elevated paper — the only selection signal -->
+  <rect x="0" y="0" width="280" height="90" fill="#F1ECDF"/>
+
+  <!-- Timestamp + emoji overline -->
+  <text x="16" y="22"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="9"
+        font-weight="600"
+        fill="#8B7D6F"
+        letter-spacing="1.44">2M AGO · DISPATCH</text>
+
+  <!-- Unread "2 new" — Fraunces burgundy -->
+  <text x="264" y="22"
+        font-family="Fraunces, Georgia, serif"
+        font-size="11"
+        font-weight="700"
+        fill="#8B1E2D"
+        text-anchor="end">2 new</text>
+
+  <!-- Title: Fraunces 15px weight 700 (bumped from 600 for selection) -->
+  <text x="16" y="46"
+        font-family="Fraunces, Georgia, serif"
+        font-size="15"
+        font-weight="700"
+        fill="#1A1614"
+        letter-spacing="-0.15">Tokyo Trip</text>
+
+  <!-- Preview: Inter italic 11px -->
+  <text x="16" y="66"
+        font-family="Inter, system-ui, sans-serif"
+        font-size="11"
+        font-style="italic"
+        font-weight="400"
+        fill="#5C4F44">Want me to build a day-by-day itinerary?</text>
+
+  <!-- Hairline rule below -->
+  <line x1="0" y1="89" x2="280" y2="89" stroke="#E8DFCA" stroke-width="1"/>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 80" width="280" height="80">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== CARD-ELEVATED ==================== -->
+
+  <rect width="280" height="80" fill="#F1ECDF"/>
+  <text x="16" y="25" class="text-metadata" font-size="9" font-weight="600" letter-spacing="1.44">ELEVATED</text>
+  <text x="16" y="48" class="text-primary" font-size="13">Paper-elevated surface for emphasis.</text>
+  <text x="16" y="68" class="text-secondary" font-size="13">One tier above page background.</text>
+
+</svg>

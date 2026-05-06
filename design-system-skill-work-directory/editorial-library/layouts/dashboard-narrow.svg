@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
+      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== DASHBOARD-NARROW ==================== -->
+
+  <rect x="0" y="0" width="1024" height="600" fill="#F8F4EC"/>
+
+  <!-- Sidebar: 240px (narrower for mobile) -->
+  <!-- Brand -->
+  <text x="16" y="40"
+        class="text-display"
+        font-size="20"
+        font-weight="700"
+        letter-spacing="-0.4">Editorial</text>
+
+  <text x="16" y="56"
+        class="text-metadata-accent"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">VOL. I · NO. 04</text>
+
+  <!-- Masthead rule -->
+  <line x1="16" y1="72" x2="224" y2="72" stroke="#8B1E2D" stroke-width="1"/>
+  <line x1="16" y1="76" x2="224" y2="76" stroke="#8B1E2D" stroke-width="1"/>
+
+  <!-- Search -->
+  <text x="16" y="100"
+        class="text-muted"
+        font-size="11"
+        font-style="italic">Search…</text>
+  <line x1="16" y1="108" x2="224" y2="108" stroke="#D8CEB9" stroke-width="1"/>
+
+  <!-- Recent Dispatches -->
+  <text x="16" y="132"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.62">RECENT</text>
+
+  <line x1="0" y1="144" x2="240" y2="144" stroke="#1A1614" stroke-width="1"/>
+
+  <!-- Dispatch 01: Selected -->
+  <rect x="0" y="144" width="240" height="72" fill="#F1ECDF"/>
+  <text x="16" y="162"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">2M AGO</text>
+  <text x="216" y="162"
+        text-anchor="end"
+        class="text-accent"
+        font-size="11"
+        font-weight="700">2 new</text>
+  <text x="16" y="182"
+        class="text-primary"
+        font-size="13"
+        font-weight="700">Tokyo Trip</text>
+  <text x="16" y="202"
+        class="text-secondary"
+        font-size="11"
+        font-style="italic">Plan a trip…</text>
+  <line x1="0" y1="215" x2="240" y2="215" stroke="#E8DFCA" stroke-width="1"/>
+
+  <!-- Dispatch 02 -->
+  <text x="16" y="238"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">1H AGO</text>
+  <text x="16" y="258"
+        class="text-primary"
+        font-size="13"
+        font-weight="600">Recipe Ideas</text>
+  <text x="16" y="278"
+        class="text-secondary"
+        font-size="11"
+        font-style="italic">Ramen variations…</text>
+  <line x1="0" y1="291" x2="240" y2="291" stroke="#E8DFCA" stroke-width="1"/>
+
+  <!-- Byline footer -->
+  <line x1="0" y1="552" x2="240" y2="552" stroke="#1A1614" stroke-width="1"/>
+  <text x="16" y="568"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">YOUR VOICE</text>
+  <text x="16" y="588"
+        class="text-primary"
+        font-size="12"
+        font-weight="600">T. Harris</text>
+
+  <!-- Divider between sidebar and main -->
+  <line x1="240" y1="0" x2="240" y2="600" stroke="#D8CEB9" stroke-width="1"/>
+
+  <!-- Main area: masthead + conversation (simplified for narrow layout) -->
+  <!-- Masthead -->
+  <text x="272" y="36"
+        class="text-metadata-accent"
+        font-size="9"
+        font-weight="700"
+        letter-spacing="1.8">DISPATCH · TOKYO DESK</text>
+
+  <text x="272" y="66"
+        class="text-display"
+        font-size="20"
+        font-weight="700"
+        letter-spacing="-0.4">Tokyo Trip</text>
+
+  <text x="1000" y="66"
+        text-anchor="end"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.26">FILED 14:23</text>
+
+  <line x1="272" y1="82" x2="1000" y2="82" stroke="#1A1614" stroke-width="1"/>
+
+  <!-- Message 01: User (right-aligned) -->
+  <text x="272" y="116"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">YOU · 14:23</text>
+
+  <line x1="480" y1="126" x2="480" y2="152" stroke="#8B1E2D" stroke-width="2"/>
+
+  <text x="498" y="144"
+        class="text-primary"
+        font-size="12"
+        font-style="italic">Help plan a Tokyo trip?</text>
+
+  <!-- Message 02: AI (with drop cap) -->
+  <text x="272" y="188"
+        class="text-metadata"
+        font-size="9"
+        font-weight="600"
+        letter-spacing="1.44">EDITORIAL · 14:24</text>
+
+  <text x="272" y="226"
+        class="text-accent"
+        font-size="40"
+        font-weight="700">A</text>
+
+  <text x="320" y="206"
+        class="text-primary"
+        font-size="12">bsolutely. Tokyo combines temples and food.</text>
+
+  <text x="320" y="226"
+        class="text-primary"
+        font-size="12">I'll build you a perfect itinerary.</text>
+
+  <!-- Composer -->
+  <line x1="272" y1="552" x2="1000" y2="552" stroke="#D8CEB9" stroke-width="1"/>
+
+  <text x="272" y="580"
+        class="text-muted"
+        font-size="12"
+        font-style="italic">Reply…</text>
+
+  <text x="1000" y="580"
+        text-anchor="end"
+        class="text-metadata-accent"
+        font-size="9"
+        font-weight="700"
+        letter-spacing="1.44">FILE →</text>
+
+</svg>
