@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 56" width="480" height="56">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== ACCORDION-DEFAULT ==================== -->
+
+  <text x="0" y="34" class="text-primary" font-size="14" font-weight="500">Notifications</text>
+  <text x="472" y="34" text-anchor="end" class="text-secondary" font-size="14">↓</text>
+  <line x1="0" y1="55.5" x2="480" y2="55.5" stroke="#E0E0E0" stroke-width="1"/>
+
+</svg>

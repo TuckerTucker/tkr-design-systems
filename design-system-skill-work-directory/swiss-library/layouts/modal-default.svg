@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== MODAL-DEFAULT ==================== -->
+
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+
+  <!-- Background dim — Swiss uses a near-opaque white wash, not black scrim -->
+  <rect width="1280" height="800" fill="#F5F5F5"/>
+
+  <!-- Centered modal panel: 480 x 320 -->
+  <rect x="400" y="240" width="480" height="320" fill="#FFFFFF"/>
+  <line x1="400" y1="240" x2="880" y2="240" stroke="#000000" stroke-width="1"/>
+  <line x1="400" y1="560" x2="880" y2="560" stroke="#000000" stroke-width="1"/>
+
+  <!-- Modal header: section metadata + close -->
+  <text x="416" y="272" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">CONFIRM</text>
+  <text x="864" y="272" text-anchor="end" class="text-secondary" font-size="14">×</text>
+
+  <!-- Title -->
+  <text x="416" y="320" class="text-primary" font-size="22" font-weight="500">Delete this thread?</text>
+
+  <!-- Body -->
+  <text x="416" y="360" class="text-secondary" font-size="13">Tokyo Trip will be moved to your archive.</text>
+  <text x="416" y="380" class="text-secondary" font-size="13">You can restore it within 30 days.</text>
+
+  <!-- Footer hairline -->
+  <line x1="416" y1="496" x2="864" y2="496" stroke="#F0F0F0" stroke-width="1"/>
+
+  <!-- Actions: cancel left as text-button, primary right as red CTA -->
+  <text x="416" y="536" class="text-secondary" font-size="13">Cancel</text>
+  <text x="864" y="536" text-anchor="end" class="text-accent" font-size="13" font-weight="500">Delete →</text>
+
+</svg>

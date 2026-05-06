@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 70" width="320" height="70">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== FORM-FIELD-WITH-ERROR ==================== -->
+
+  <text x="0" y="14" class="text-secondary" font-size="11" font-weight="500" letter-spacing="1.76">EMAIL ADDRESS</text>
+  <line x1="0" y1="22" x2="320" y2="22" stroke="#E3000B" stroke-width="1.5"/>
+  <text x="0" y="44" class="text-primary" font-size="14">invalid-email</text>
+  <text x="0" y="64" class="text-accent" font-size="11">Please enter a valid email address.</text>
+
+</svg>

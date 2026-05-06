@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width="120" height="40">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== TAB-ITEM-DEFAULT ==================== -->
+
+  <text x="60" y="26" text-anchor="middle" class="text-secondary" font-size="13">Tab Label</text>
+
+</svg>

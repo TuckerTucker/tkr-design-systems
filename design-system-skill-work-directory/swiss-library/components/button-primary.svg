@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 48" width="140" height="48">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== BUTTON-PRIMARY ==================== -->
+
+  <rect width="140" height="48" fill="#FFFFFF"/>
+  <text x="70" y="30" text-anchor="middle" class="text-accent" font-size="14" font-weight="500">Send →</text>
+
+</svg>

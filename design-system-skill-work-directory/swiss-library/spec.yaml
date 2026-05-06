@@ -1,0 +1,413 @@
+spec_version: "0.2"
+
+system:
+  id: swiss
+  name: Swiss
+  tagline: "Grid + Grotesk + Single Saturated Accent"
+  grammar_family: contemporary_clean
+  version: "1.0.0"
+  source_jsx: ../design-system-swiss.jsx
+
+# ────────────────────────────────────────────────────────────────────
+# TOKENS
+# ────────────────────────────────────────────────────────────────────
+
+tokens:
+  colors:
+    page_bg: "#FFFFFF"
+    surface: "#FFFFFF"
+    surface_elevated: "#F5F5F5"
+    text_primary: "#000000"
+    text_secondary: "#000000"  # Swiss has no soft grays for body — black or it isn't text
+    text_muted: "#666666"      # used only for metadata, never body
+    accent: "#E3000B"
+
+    palette:
+      - name: ink
+        value: "#000000"
+        role: all body and structural type
+        usage_constraint: "the only color for body type; never substituted with grays"
+
+      - name: paper
+        value: "#FFFFFF"
+        role: page and primary surface
+        usage_constraint: "no off-whites or warm whites; pure paper"
+
+      - name: gray_surface
+        value: "#F5F5F5"
+        role: secondary surface (selection background, message blocks)
+        usage_constraint: "the only gray surface; no intermediate tiers"
+
+      - name: gray_metadata
+        value: "#666666"
+        role: 9px uppercase metadata only
+        usage_constraint: "never used for body type or anything above 11px"
+
+      - name: rule_hairline
+        value: "#F0F0F0"
+        role: 1px dividers between subtle sections
+
+      - name: rule_default
+        value: "#E0E0E0"
+        role: 1px dividers between distinct sections
+
+      - name: red
+        value: "#E3000B"
+        role: the system's only accent
+        usage_constraint: "exactly 4 uses per screen — see rulebook"
+
+  typography:
+    families:
+      - id: structural
+        stack: "Inter, system-ui, sans-serif"
+        role: every piece of type in the system
+        mixing_rule: "no other family permitted; this is a single-typeface system"
+
+    scale:
+      - { size: 9,  role: metadata }
+      - { size: 11, role: small_label }
+      - { size: 13, role: secondary_body }
+      - { size: 14, role: body }
+      - { size: 22, role: display_small }
+      - { size: 32, role: display_medium }
+      - { size: 40, role: display_large }
+
+    case:
+      metadata: uppercase
+      body: mixed
+      headers: mixed
+
+    tracking:
+      metadata: 0.16
+      body: 0
+      headers: 0
+
+  spacing:
+    grid_unit: 8
+    allowed_steps: [8, 16, 24, 32, 40, 48, 64]
+    enforcement: strict          # no off-grid spacing values permitted
+
+  borders:
+    radius_default: 0
+    radius_inputs: 0
+    radius_chrome: 0
+    no_radius_anywhere: true
+
+  elevation:
+    strategy: typographic
+    config:
+      rule_weight_hairline:
+        width: 1
+        color: "#F0F0F0"
+      rule_weight_default:
+        width: 1
+        color: "#E0E0E0"
+      rule_weight_strong:
+        width: 1
+        color: "#000000"
+      accent_bar:
+        width: 2
+        color: "#E3000B"
+        position: left
+        usage: "selected list items only"
+      spacing_units: [8, 16, 24, 32, 40, 48, 64]
+      no_shadow: true
+      no_radius: true
+
+# ────────────────────────────────────────────────────────────────────
+# COMPONENTS
+# ────────────────────────────────────────────────────────────────────
+
+components:
+  button:
+    anatomy:
+      - label
+    variants:
+      - id: primary
+        svg: components/button-primary.svg
+        rendering_notes: "Text label only. No border, no background. Red color (accent). Optional `→` after label."
+        states: [default, hover, active]
+      - id: text
+        svg: components/button-text.svg
+        rendering_notes: "Black text label. Used for secondary actions."
+        states: [default, hover]
+    constraints:
+      - "Never wrap button labels in pill or rounded backgrounds"
+      - "Send/submit buttons always use red (accent); other actions use black"
+
+  card:
+    anatomy:
+      - label
+      - body
+    variants:
+      - id: default
+        svg: components/card-default.svg
+        rendering_notes: "No border, no background by default. Just a 9px uppercase label above the content with 8px gap. Body content is 13px or 14px, left-aligned."
+        states: [default]
+      - id: gray_surface
+        svg: components/card-gray-surface.svg
+        rendering_notes: "Used when card needs visual containment. Background #F5F5F5, no border, no radius. Padding 16px or 24px (grid-aligned)."
+        states: [default]
+    constraints:
+      - "Never apply border-radius"
+      - "Never apply box-shadow"
+      - "Use gray surface only when the layout demands containment; default to no surface"
+
+  input:
+    anatomy:
+      - placeholder
+      - submit_affordance
+    variants:
+      - id: text
+        svg: components/input-text.svg
+        rendering_notes: "White background with 1px solid black top rule. No bottom border, no side borders. Placeholder is a single word, lowercase (e.g. 'type'). Send affordance (e.g. 'Send →') in red, right-aligned."
+        states: [default, focus]
+    constraints:
+      - "Never use placeholder phrases — single words only"
+      - "Top rule must be 1px black, never a pill or full border"
+
+  list_item:
+    anatomy:
+      - index
+      - title
+      - preview
+      - timestamp
+      - unread_count
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Index number top-left, zero-padded (01, 02, ..). Time top-right in 9px uppercase. Title 13px medium-weight black. Preview 11px gray (#666). If unread, count rendered as 32px red numeral below the preview, not as a badge."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        rendering_notes: "Same as default plus 2px red accent bar on left edge and #F5F5F5 background fill. Transition is instant (no animation in static wireframe)."
+        states: [selected]
+    constraints:
+      - "Index numbers always zero-padded to 2 digits"
+      - "Unread counts are display type (32px red), never a circular badge"
+      - "Selection bar is exactly 2px red, exactly on the left edge"
+
+  badge:
+    anatomy: []
+    variants: []
+    rendering_notes: "Swiss does not use badges. Counts are rendered as display type, statuses as small dots."
+    constraints:
+      - "Do not render badges; use numerical display type or status dots instead"
+
+  avatar:
+    anatomy:
+      - identifier
+    variants:
+      - id: index_only
+        svg: components/avatar-index.svg
+        rendering_notes: "No avatar imagery. Identity is communicated by the zero-padded index number in the list item."
+        states: [default]
+    constraints:
+      - "Never use emoji avatars or image avatars"
+      - "Identity through numerical index, optionally a single-letter monogram for chat headers"
+
+  nav:
+    anatomy:
+      - brand
+      - search
+      - list
+      - footer
+    variants:
+      - id: sidebar
+        # Sidebar lives at the pattern tier (layouts/sidebar-default.svg) since
+        # it composes brand + search + nav-item list + footer block. Resolved
+        # there for full-screen consumers; design intent below.
+        svg: layouts/sidebar-default.svg
+        rendering_notes: "Fixed 280px width. Brand at top in 14px medium. 1px black rule below brand. Search input below rule. Thread list fills remainder. Account block at bottom, separated by 1px hairline rule."
+        states: [default]
+    constraints:
+      - "Sidebar width is fixed at 280px, no responsive collapse in wireframe"
+      - "Section divisions use 1px rules at strong/default/hairline weights, never spacing alone"
+
+  section_header:
+    anatomy:
+      - label
+    variants:
+      - id: metadata
+        # 9px tracked uppercase metadata is the `label-metadata` primitive in
+        # this library; section_header is just its semantic role at section level.
+        svg: components/label-metadata.svg
+        rendering_notes: "9px uppercase Inter, tracked 0.16em, color #666. Rendered above a section with 8px gap."
+        states: [default]
+    constraints:
+      - "Section headers are metadata-style only (9px uppercase tracked)"
+      - "Never use larger headers within sections; hierarchy is signaled by spacing and rule weight"
+
+  separator:
+    # The `divider` primitive carries the same role (1px rules at three weights);
+    # `separator` is preserved here as a semantic alias mapping to those SVGs.
+    anatomy: []
+    variants:
+      - id: hairline
+        svg: components/divider-hairline.svg
+        rendering_notes: "1px solid #F0F0F0, full width, 16px or 24px vertical margin"
+      - id: default
+        svg: components/divider-default.svg
+        rendering_notes: "1px solid #E0E0E0, full width, 24px or 32px vertical margin"
+      - id: strong
+        svg: components/divider-strong.svg
+        rendering_notes: "1px solid #000000, full width, 32px or 48px vertical margin. Used to separate major regions (sidebar from main, brand from content)."
+
+# ────────────────────────────────────────────────────────────────────
+# LAYOUT TEMPLATES
+# ────────────────────────────────────────────────────────────────────
+
+layout_templates:
+  # Templates are aligned with the SVGs actually authored under
+  # swiss-library/layouts/. Phase 2 added the full pattern set:
+  # auth-sign-in, dashboard, data-table-default, drawer-right,
+  # empty-state-default, empty-state-no-results, form-single-column,
+  # header-default, header-with-actions, modal-default,
+  # settings-layout-default, sidebar-default. Specs that reference
+  # generic genres (login, settings, empty_state) point at the
+  # canonical authored variant.
+
+  auth:
+    svg: layouts/auth-sign-in.svg
+    description: "Centered single-column form. 280px max width. Brand at top, 32px gap, then form fields stacked with 24px gap. Submit button below, red text label. No card surface around the form."
+
+  dashboard:
+    svg: layouts/dashboard.svg
+    description: "Sidebar + main split. Sidebar 280px (per nav.sidebar). Main content uses display type (32px or 40px) for primary metrics, 13px body for supporting text. Numerical hierarchy throughout."
+
+  settings_layout:
+    svg: layouts/settings-layout-default.svg
+    description: "Sidebar + main. Main content is a vertical list of setting groups separated by 1px default rules. Each group has 9px uppercase metadata header, then key-value pairs with 16px gap."
+
+  data_table:
+    svg: layouts/data-table-default.svg
+    description: "Tabular data with zero-padded indices, 9px tracked uppercase column headers, 9px tracked uppercase status text (ACTIVE/PENDING/INACTIVE) — text-only, no pill badges. Hairline rules between rows."
+
+  form:
+    svg: layouts/form-single-column.svg
+    description: "Single-column form with stacked fields. Each field uses the input-text grammar: 9px tracked uppercase label, 1px black top rule, 14px primary value. Save → in red as the right-aligned CTA."
+
+  empty_state:
+    svg: layouts/empty-state-default.svg
+    description: "Centered single line of 13px text in #666. No illustration. Optional 11px hint below in #666. Maximum restraint."
+
+  modal:
+    svg: layouts/modal-default.svg
+    description: "Centered 480-wide panel on a #F5F5F5 wash. 1px black top/bottom rules frame the panel. CONFIRM tracked metadata + 22px display title + body + Cancel/Delete actions. No drop shadow, no rounded corners."
+
+  drawer:
+    svg: layouts/drawer-right.svg
+    description: "Right-anchored 480-wide panel, full height. 1px black left rule frames it against the dimmed page. Header strip with EDIT PROFILE metadata + close ×. Form-style content below."
+
+  header:
+    svg: layouts/header-default.svg
+    description: "64-tall top horizontal bar with 1px black rule below. Brand left, primary nav middle, search + account on the right. No shadow."
+
+  sidebar:
+    svg: layouts/sidebar-default.svg
+    description: "280px-wide vertical navigation column. Brand at top, 1px black rule below, search input, then nav items as zero-padded list, then account block at bottom separated by 1px hairline rule. Same shape as nav.sidebar component variant."
+
+# ────────────────────────────────────────────────────────────────────
+# RULEBOOK
+# ────────────────────────────────────────────────────────────────────
+
+rulebook:
+  - id: swiss-red-finite-resource
+    rule: "Red (#E3000B) is bounded above by 4 usages per screen. Red appears only in these contexts: (1) primary CTAs, (2) selection bars on list items, (3) user/identity tags, (4) status dots. A 5th red usage on a screen is a violation. Not every screen must use all four — a sign-in form may use only 1 (the CTA), an empty data table may use 0."
+    rationale: "Red is the system's only accent. Inflation degrades its semantic load — when everything is red, nothing is. The four contexts are the *exhaustive* set, not a checklist."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact          # screen-level count; vacuous on component fragments
+
+  - id: swiss-grid-alignment
+    rule: "All spacing values are multiples of 8 (8, 16, 24, 32, 40, 48, 64). Off-grid spacing (e.g. 12px, 20px) is not permitted."
+    rationale: "The 8-point grid is the system's structural backbone. Off-grid breaks visual rhythm and signals carelessness."
+    severity: required
+    check_method: both             # mechanical first-pass + semantic for text baseline judgment
+    check_scope: both
+
+  - id: swiss-zero-radius
+    rule: "border-radius is 0 on every element. No rounded corners, ever."
+    rationale: "Radius is a softening device. Swiss is not soft."
+    severity: required
+    check_method: mechanical
+    check_scope: both              # never a rounded corner anywhere, period
+
+  - id: swiss-no-shadows
+    rule: "box-shadow is never used. Depth is communicated through typography (size, weight, tracking) and 1px rules at three weights (hairline #F0F0F0, default #E0E0E0, strong #000000)."
+    rationale: "Shadows are an elevation strategy from a different vocabulary. Swiss uses typographic and structural elevation."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: swiss-numerical-display
+    rule: "Numerical values (counts, indices, metrics) are rendered as display type (22px–40px) when they're meaningful information. Never as small badges or pills."
+    rationale: "Numbers are content. Treating them as decoration (in badges) hides the information."
+    severity: required
+    check_method: semantic
+    check_scope: both
+
+  - id: swiss-zero-padded-indices
+    rule: "List item indices are zero-padded to 2 digits (01, 02, ..., 99). 3-digit lists pad to 3 (001, 002)."
+    rationale: "Consistent column width. Numerical indices read as a typographic texture."
+    severity: required
+    check_method: semantic
+    check_scope: component
+    applies_when: "component is list_item"
+
+  - id: swiss-fixed-type-scale
+    rule: "Only 7 type sizes are permitted: 9, 11, 13, 14, 22, 32, 40. Sizes between (10, 12, 15, etc.) are not allowed."
+    rationale: "If 13 vs 14 feels right, pick one. The scale is prescriptive about elimination, not expansion."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: swiss-single-typeface
+    rule: "Inter is the only typeface. No serifs, no monospace, no decorative families."
+    rationale: "Single typeface enforces hierarchy through size, weight, tracking, and case alone."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: swiss-metadata-uppercase
+    rule: "All metadata (timestamps, labels, captions) is rendered uppercase, 9px Inter, tracked 0.16em, color #666."
+    rationale: "Metadata is structurally distinct from content. Uppercase + tracking + small size + muted color = consistent metadata signature."
+    severity: required
+    check_method: mechanical
+    check_scope: component
+    applies_when: "element font-size == 9"   # vacuous on fragments without 9px text
+
+  - id: swiss-no-emoji-imagery
+    rule: "No emoji avatars, no decorative imagery, no illustrations. Identity is numerical or monogram-based."
+    rationale: "Emoji and illustration are warmth devices. Swiss is functional, not warm."
+    severity: required
+    check_method: semantic
+    check_scope: both
+
+# ────────────────────────────────────────────────────────────────────
+# GRAMMAR EXTENSIONS
+# ────────────────────────────────────────────────────────────────────
+
+grammar_extensions:
+  family: contemporary_clean
+
+  per_system_signature:
+    # Swiss is mostly tokens + rulebook; minimal extensions needed.
+    # Where Editorial uses drop_caps and Sketch uses annotations,
+    # Swiss uses numerical display as its signature treatment.
+
+    numerical_display:
+      enabled: true
+      sizes: [22, 32, 40]
+      role: "treat counts and metrics as primary content, not metadata"
+      examples:
+        - "Unread count below preview, 32px red"
+        - "Active session count in main header, 40px black"
+        - "Item index in lists, 14px black zero-padded"
+
+    accent_bar_selection:
+      enabled: true
+      width: 2
+      color: ref:tokens.colors.accent
+      position: left
+      role: "the only selection treatment; no checkmarks, no fills, no shadows"

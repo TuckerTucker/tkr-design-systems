@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 48" width="320" height="48">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== BUTTON-GROUP-SEGMENTED ==================== -->
+
+  <line x1="0" y1="0" x2="320" y2="0" stroke="#000000" stroke-width="1"/>
+  <text x="40" y="32" text-anchor="middle" class="text-primary" font-size="14" font-weight="500">Day</text>
+  <text x="120" y="32" text-anchor="middle" class="text-secondary" font-size="14">Week</text>
+  <text x="200" y="32" text-anchor="middle" class="text-secondary" font-size="14">Month</text>
+  <text x="280" y="32" text-anchor="middle" class="text-secondary" font-size="14">Year</text>
+  <line x1="0" y1="47.5" x2="320" y2="47.5" stroke="#F0F0F0" stroke-width="1"/>
+
+</svg>

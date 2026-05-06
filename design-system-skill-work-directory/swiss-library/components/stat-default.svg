@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" width="200" height="80">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== STAT-DEFAULT ==================== -->
+
+  <text x="0" y="14" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">REVENUE</text>
+  <text x="0" y="56" class="text-primary" font-size="40" font-weight="500">24,580</text>
+  <text x="0" y="76" class="text-secondary" font-size="11">vs 21,200 last month</text>
+
+</svg>

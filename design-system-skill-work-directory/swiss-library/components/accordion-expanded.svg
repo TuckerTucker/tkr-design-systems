@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 144" width="480" height="144">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== ACCORDION-EXPANDED ==================== -->
+
+  <text x="0" y="34" class="text-primary" font-size="14" font-weight="500">Notifications</text>
+  <text x="472" y="34" text-anchor="end" class="text-secondary" font-size="14">↑</text>
+  <line x1="0" y1="55.5" x2="480" y2="55.5" stroke="#F0F0F0" stroke-width="1"/>
+  <text x="0" y="80" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">EMAIL</text>
+  <text x="0" y="104" class="text-primary" font-size="13">Daily digest at 09:00</text>
+  <text x="0" y="128" class="text-secondary" font-size="13">Replies in real time</text>
+  <line x1="0" y1="143.5" x2="480" y2="143.5" stroke="#E0E0E0" stroke-width="1"/>
+
+</svg>

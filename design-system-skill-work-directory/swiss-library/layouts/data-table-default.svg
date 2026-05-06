@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" width="1000" height="400">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DATA-TABLE-DEFAULT ==================== -->
+
+  <rect width="1000" height="400" fill="#FFFFFF"/>
+
+  <!-- Header row -->
+  <line x1="0" y1="31.5" x2="1000" y2="31.5" stroke="#000000" stroke-width="1"/>
+  <text x="16" y="22" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">#</text>
+  <text x="48" y="22" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">NAME</text>
+  <text x="280" y="22" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">EMAIL</text>
+  <text x="600" y="22" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">ROLE</text>
+  <text x="800" y="22" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">JOINED</text>
+  <text x="984" y="22" text-anchor="end" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">STATUS</text>
+
+  <!-- Row 01 -->
+  <text x="16" y="62" class="text-primary" font-size="13" font-weight="500">01</text>
+  <text x="48" y="62" class="text-primary" font-size="13">Alex Rivera</text>
+  <text x="280" y="62" class="text-secondary" font-size="13">alex@northwind.com</text>
+  <text x="600" y="62" class="text-secondary" font-size="13">Administrator</text>
+  <text x="800" y="62" class="text-secondary" font-size="13">Jan 2024</text>
+  <text x="984" y="62" text-anchor="end" class="text-primary" font-size="11" font-weight="500" letter-spacing="1.76">ACTIVE</text>
+  <line x1="0" y1="79.5" x2="1000" y2="79.5" stroke="#F0F0F0" stroke-width="1"/>
+
+  <!-- Row 02 -->
+  <text x="16" y="110" class="text-primary" font-size="13" font-weight="500">02</text>
+  <text x="48" y="110" class="text-primary" font-size="13">Jordan Chen</text>
+  <text x="280" y="110" class="text-secondary" font-size="13">jordan@northwind.com</text>
+  <text x="600" y="110" class="text-secondary" font-size="13">Editor</text>
+  <text x="800" y="110" class="text-secondary" font-size="13">Mar 2024</text>
+  <text x="984" y="110" text-anchor="end" class="text-primary" font-size="11" font-weight="500" letter-spacing="1.76">ACTIVE</text>
+  <line x1="0" y1="127.5" x2="1000" y2="127.5" stroke="#F0F0F0" stroke-width="1"/>
+
+  <!-- Row 03 -->
+  <text x="16" y="158" class="text-primary" font-size="13" font-weight="500">03</text>
+  <text x="48" y="158" class="text-primary" font-size="13">Sam Okafor</text>
+  <text x="280" y="158" class="text-secondary" font-size="13">sam@northwind.com</text>
+  <text x="600" y="158" class="text-secondary" font-size="13">Editor</text>
+  <text x="800" y="158" class="text-secondary" font-size="13">Apr 2024</text>
+  <text x="984" y="158" text-anchor="end" class="text-secondary" font-size="11" font-weight="500" letter-spacing="1.76">PENDING</text>
+  <line x1="0" y1="175.5" x2="1000" y2="175.5" stroke="#F0F0F0" stroke-width="1"/>
+
+  <!-- Row 04 -->
+  <text x="16" y="206" class="text-primary" font-size="13" font-weight="500">04</text>
+  <text x="48" y="206" class="text-primary" font-size="13">Taylor Kim</text>
+  <text x="280" y="206" class="text-secondary" font-size="13">taylor@northwind.com</text>
+  <text x="600" y="206" class="text-secondary" font-size="13">Viewer</text>
+  <text x="800" y="206" class="text-secondary" font-size="13">May 2024</text>
+  <text x="984" y="206" text-anchor="end" class="text-disabled" font-size="11" font-weight="500" letter-spacing="1.76">INACTIVE</text>
+  <line x1="0" y1="223.5" x2="1000" y2="223.5" stroke="#F0F0F0" stroke-width="1"/>
+
+  <!-- Row 05 -->
+  <text x="16" y="254" class="text-primary" font-size="13" font-weight="500">05</text>
+  <text x="48" y="254" class="text-primary" font-size="13">Robin Patel</text>
+  <text x="280" y="254" class="text-secondary" font-size="13">robin@northwind.com</text>
+  <text x="600" y="254" class="text-secondary" font-size="13">Administrator</text>
+  <text x="800" y="254" class="text-secondary" font-size="13">Jun 2024</text>
+  <text x="984" y="254" text-anchor="end" class="text-primary" font-size="11" font-weight="500" letter-spacing="1.76">ACTIVE</text>
+  <line x1="0" y1="271.5" x2="1000" y2="271.5" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- Pagination -->
+  <text x="0" y="320" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">05 OF 247</text>
+  <text x="900" y="320" class="text-secondary" font-size="11">‹ Prev</text>
+  <text x="984" y="320" text-anchor="end" class="text-primary" font-size="11">Next ›</text>
+
+</svg>

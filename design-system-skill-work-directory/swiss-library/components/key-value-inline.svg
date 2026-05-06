@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 24" width="320" height="24">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== KEY-VALUE-INLINE ==================== -->
+
+  <text x="0" y="16" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">PLAN</text>
+  <text x="80" y="16" class="text-primary" font-size="11" font-weight="500">Pro</text>
+
+</svg>

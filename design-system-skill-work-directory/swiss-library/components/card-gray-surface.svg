@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" width="320" height="120">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== CARD-GRAY-SURFACE ==================== -->
+
+  <rect width="320" height="120" fill="#F5F5F5"/>
+  <text x="16" y="30" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">CONTAINED CARD</text>
+  <text x="16" y="56" class="text-primary" font-size="14">Used when layout demands</text>
+  <text x="16" y="76" class="text-primary" font-size="14">visual containment.</text>
+  <text x="16" y="100" class="text-secondary" font-size="13">No border, no radius.</text>
+
+</svg>

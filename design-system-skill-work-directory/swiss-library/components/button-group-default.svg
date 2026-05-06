@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 48" width="320" height="48">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== BUTTON-GROUP-DEFAULT ==================== -->
+
+  <text x="40" y="30" text-anchor="middle" class="text-primary" font-size="14" font-weight="500">All</text>
+  <line x1="80" y1="16" x2="80" y2="32" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="120" y="30" text-anchor="middle" class="text-primary" font-size="14">Active</text>
+  <line x1="160" y1="16" x2="160" y2="32" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="200" y="30" text-anchor="middle" class="text-primary" font-size="14">Archived</text>
+  <line x1="240" y1="16" x2="240" y2="32" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="280" y="30" text-anchor="middle" class="text-secondary" font-size="14">Draft</text>
+
+</svg>

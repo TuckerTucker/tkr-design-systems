@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== EMPTY-STATE-NO-RESULTS ==================== -->
+
+  <rect width="1280" height="800" fill="#FFFFFF"/>
+
+  <text x="640" y="392" text-anchor="middle" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">NO MATCHES</text>
+  <text x="640" y="432" text-anchor="middle" class="text-primary" font-size="22" font-weight="500">No results for "tokyo"</text>
+  <text x="640" y="464" text-anchor="middle" class="text-secondary" font-size="13">Try a different search or clear filters.</text>
+
+</svg>

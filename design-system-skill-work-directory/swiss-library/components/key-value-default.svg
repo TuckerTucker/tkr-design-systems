@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40" width="320" height="40">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== KEY-VALUE-DEFAULT ==================== -->
+
+  <text x="0" y="16" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">DISPLAY NAME</text>
+  <text x="0" y="34" class="text-primary" font-size="13">Alex Rivera</text>
+
+</svg>

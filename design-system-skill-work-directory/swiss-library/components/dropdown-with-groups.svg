@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="240" height="200">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== DROPDOWN-WITH-GROUPS ==================== -->
+
+  <line x1="0" y1="0" x2="240" y2="0" stroke="#000000" stroke-width="1"/>
+  <text x="16" y="24" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">ACCOUNT</text>
+  <text x="16" y="48" class="text-primary" font-size="13">Profile</text>
+  <text x="16" y="72" class="text-primary" font-size="13">Settings</text>
+  <line x1="0" y1="87.5" x2="240" y2="87.5" stroke="#F0F0F0" stroke-width="1"/>
+  <text x="16" y="112" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">WORKSPACE</text>
+  <text x="16" y="136" class="text-primary" font-size="13">Switch team</text>
+  <text x="16" y="160" class="text-primary" font-size="13">Members</text>
+  <line x1="0" y1="175.5" x2="240" y2="175.5" stroke="#F0F0F0" stroke-width="1"/>
+  <text x="16" y="192" class="text-accent" font-size="13">Sign out</text>
+  <line x1="0" y1="199.5" x2="240" y2="199.5" stroke="#000000" stroke-width="1"/>
+
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" width="320" height="120">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== CARD-DEFAULT ==================== -->
+
+  <text x="0" y="14" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">CARD LABEL</text>
+  <text x="0" y="40" class="text-primary" font-size="14">Card content with no surface,</text>
+  <text x="0" y="60" class="text-secondary" font-size="13">just label and content.</text>
+
+</svg>

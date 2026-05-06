@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 56" width="640" height="56">
+  <defs>
+    <style>
+      .text-primary { fill: #000000; font-family: Inter, system-ui, sans-serif; }
+      .text-secondary { fill: #666666; font-family: Inter, system-ui, sans-serif; }
+      .text-disabled { fill: #999999; font-family: Inter, system-ui, sans-serif; }
+      .text-accent { fill: #E3000B; font-family: Inter, system-ui, sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: Inter, system-ui, sans-serif; }
+    </style>
+  </defs>
+  <!-- ==================== BANNER-INFO ==================== -->
+
+  <line x1="0" y1="0" x2="640" y2="0" stroke="#000000" stroke-width="1"/>
+  <text x="0" y="34" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">UPDATE</text>
+  <text x="80" y="34" class="text-primary" font-size="13">A new version of the editor is available.</text>
+  <text x="624" y="34" text-anchor="end" class="text-accent" font-size="13" font-weight="500">Reload →</text>
+  <line x1="0" y1="55.5" x2="640" y2="55.5" stroke="#F0F0F0" stroke-width="1"/>
+
+</svg>
