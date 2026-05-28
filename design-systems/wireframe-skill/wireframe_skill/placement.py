@@ -33,7 +33,11 @@ logger = structlog.get_logger(__name__)
 PATTERN_HEURISTICS: list[tuple[str, list[str]]] = [
     # (brief-keyword pattern, ordered list of pattern-ids to try)
     ("dashboard|overview|home|metrics|kpi|analytics", ["dashboard"]),
-    ("login|sign in|sign-in|signin|auth|password|create account|sign up|sign-up", ["auth"]),
+    ("login|sign in|sign-in|signin|log in|log-in", ["auth-sign-in", "auth"]),
+    ("create account|sign up|sign-up|register", ["auth-sign-up", "auth"]),
+    ("reset password|forgot password|password reset", ["auth-reset-password", "auth"]),
+    ("verify|verification code|otp|two.factor|2fa|mfa", ["auth-verify-code", "auth"]),
+    ("auth", ["auth"]),
     ("settings|preferences|profile|account", ["settings-layout", "settings_layout"]),
     ("form|registration|new \\w+|create \\w+|edit", ["form"]),
     ("table|list of \\w+|members|users|directory", ["data-table", "data_table"]),
