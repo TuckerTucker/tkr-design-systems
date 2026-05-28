@@ -1,4 +1,4 @@
-import { StrictMode, useState, lazy, Suspense } from "react";
+import { StrictMode, useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import Home from "./Home.jsx";
 
@@ -20,20 +20,38 @@ const systems = {
   riso: RisoSystem,
 };
 
+function parseHash() {
+  const raw = window.location.hash.slice(1);
+  const slash = raw.indexOf("/");
+  const system = slash === -1 ? raw : raw.slice(0, slash);
+  const section = slash === -1 ? "" : raw.slice(slash + 1);
+  return { system: systems[system] ? system : "home", section };
+}
+
 function Root() {
-  const [route, setRoute] = useState("home");
+  const [route, setRoute] = useState(() => parseHash().system);
+
+  useEffect(() => {
+    const onHashChange = () => setRoute(parseHash().system);
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  const navigate = useCallback((id) => {
+    window.location.hash = id === "home" ? "" : id;
+  }, []);
 
   const SystemComponent = systems[route];
   if (SystemComponent) {
     return (
       <Suspense fallback={<Loading />}>
-        <BackButton onClick={() => setRoute("home")} />
+        <BackButton onClick={() => navigate("home")} />
         <SystemComponent />
       </Suspense>
     );
   }
 
-  return <Home onNavigate={setRoute} />;
+  return <Home onNavigate={navigate} />;
 }
 
 function BackButton({ onClick }) {

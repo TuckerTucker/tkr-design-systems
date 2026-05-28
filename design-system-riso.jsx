@@ -1,4 +1,4 @@
-import { useState, useContext, createContext, useId } from "react";
+import { useState, useEffect, useCallback, useContext, createContext, useId } from "react";
 import portrait1 from "./images/portraits/pexels-isabel-ponce-2161054782-37185454.jpg";
 import portrait2 from "./images/portraits/pexels-esrakorkmaz-17191688.jpg";
 import portrait3 from "./images/portraits/pexels-matvalina-16059612.jpg";
@@ -1021,8 +1021,11 @@ function ThemeView({ sec, setSec, sel, setSel }) {
    MAIN APP
    ═══════════════════════════════════════════════════════════════ */
 export default function App() {
-  const [sec, setSec] = useState("preview");
+  const readSection = () => { const s = window.location.hash.slice(1).split("/")[1]; return s || "preview"; };
+  const [sec, setSecRaw] = useState(readSection);
   const [sel, setSel] = useState(1);
+  const setSec = useCallback((id) => { const sys = window.location.hash.slice(1).split("/")[0]; window.location.hash = sys + "/" + id; }, []);
+  useEffect(() => { const h = () => setSecRaw(readSection()); window.addEventListener("hashchange", h); return () => window.removeEventListener("hashchange", h); }, []);
 
   return (
     <div style={{ width: "100%", minHeight: "100vh", background: "#0A0A0A", fontFamily: "'DM Sans', system-ui, sans-serif", color: "#EEE" }}>
