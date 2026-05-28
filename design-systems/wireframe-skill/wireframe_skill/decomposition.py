@@ -125,7 +125,17 @@ def build_decomposition_request(
                     "w": canvas_w,
                     "h": canvas_h - 64,
                     "components": [
-                        {"component_id": "card-default", "x": 20, "y": 80, "w": 300, "h": 150}
+                        {"component_id": "card-default", "x": 20, "y": 80, "w": 300, "h": 150},
+                        {
+                            "type": "custom",
+                            "component_id": "custom-slider",
+                            "x": 20, "y": 240,
+                            "svg": (
+                                "<rect x='0' y='8' width='260' height='4' "
+                                "rx='2' fill='#E0E0E0'/>"
+                                "<circle cx='130' cy='10' r='10' fill='#424242'/>"
+                            ),
+                        },
                     ],
                 },
             ],
@@ -288,11 +298,25 @@ def validate_blueprint(blueprint: dict, spec: dict) -> list[str]:
 
         for comp in components:
             comp_id = comp.get("component_id")
+            comp_type = comp.get("type")
             comp_x = comp.get("x", 0)
             comp_y = comp.get("y", 0)
 
-            # Check that component_id exists.
-            if comp_id not in valid_ids and valid_ids:
+            if comp_type == "custom":
+                if not comp.get("svg", "").strip():
+                    errors.append(
+                        f"Region '{region_id}': custom component "
+                        f"missing non-empty 'svg' field"
+                    )
+                if "x" not in comp:
+                    errors.append(
+                        f"Region '{region_id}': custom component missing 'x'"
+                    )
+                if "y" not in comp:
+                    errors.append(
+                        f"Region '{region_id}': custom component missing 'y'"
+                    )
+            elif comp_id not in valid_ids and valid_ids:
                 errors.append(
                     f"Region '{region_id}': component '{comp_id}' not found in system"
                 )

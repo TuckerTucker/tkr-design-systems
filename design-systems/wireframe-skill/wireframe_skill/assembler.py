@@ -65,24 +65,37 @@ def assemble_blueprint(blueprint: dict, spec: dict) -> tuple[str, list[str]]:
         components = region.get("components", [])
         for comp_idx, comp in enumerate(components):
             comp_id = comp.get("component_id")
+            comp_type = comp.get("type")
             comp_x = comp.get("x", 0)
             comp_y = comp.get("y", 0)
 
-            if not comp_id:
-                warnings.append(f"Region '{region_id}': component missing component_id")
-                continue
+            if comp_type == "custom":
+                comp_svg = comp.get("svg", "")
+                if not comp_svg.strip():
+                    warnings.append(
+                        f"Region '{region_id}': custom component has empty svg"
+                    )
+                    continue
+                comp_id = comp_id or f"custom-{comp_idx}"
+            else:
+                if not comp_id:
+                    warnings.append(
+                        f"Region '{region_id}': component missing component_id"
+                    )
+                    continue
 
-            # Load component SVG.
-            comp_path = components_dir / f"{comp_id}.svg"
-            if not comp_path.exists():
-                warnings.append(f"Component not found: {comp_id} at {comp_path}")
-                continue
+                comp_path = components_dir / f"{comp_id}.svg"
+                if not comp_path.exists():
+                    warnings.append(
+                        f"Component not found: {comp_id} at {comp_path}"
+                    )
+                    continue
 
-            try:
-                comp_svg = comp_path.read_text()
-            except Exception as e:
-                warnings.append(f"Failed to read component {comp_id}: {e}")
-                continue
+                try:
+                    comp_svg = comp_path.read_text()
+                except Exception as e:
+                    warnings.append(f"Failed to read component {comp_id}: {e}")
+                    continue
 
             # Extract <defs> block.
             defs_content = _extract_defs_block(comp_svg)

@@ -59,6 +59,9 @@ from wireframe_skill import (  # noqa: E402
     apply_substitutions,
     validate_blueprint,
     assemble_blueprint,
+    export_tokens_for_authoring,
+    read_component,
+    read_components_batch,
 )
 from mcp.server.fastmcp import FastMCP  # noqa: E402
 
@@ -451,13 +454,18 @@ def wf_assemble_from_blueprint(
             for region in blueprint.get("regions", []):
                 for comp in region.get("components", []):
                     comp_id = comp.get("component_id")
-                    if comp_id:
-                        components_used.append({
-                            "id": comp_id,
+                    comp_type = comp.get("type", "library")
+                    if comp_id or comp_type == "custom":
+                        entry = {
+                            "id": comp_id or "custom",
                             "region": region.get("id", "unknown"),
                             "x": comp.get("x", 0),
                             "y": comp.get("y", 0),
-                        })
+                            "type": comp_type,
+                        }
+                        if comp_type == "custom":
+                            entry["svg_length"] = len(comp.get("svg", ""))
+                        components_used.append(entry)
             canvas = blueprint.get("canvas", {})
             svg_path, spec_path = emit_artifact(
                 Path(output_dir),
@@ -477,6 +485,78 @@ def wf_assemble_from_blueprint(
             result["components_used"] = components_used
 
         return result
+    except Exception as exc:
+        return _error_result(exc)
+
+
+@mcp.tool()
+def wf_get_tokens(system_id: str) -> dict[str, Any]:
+    """Get design tokens formatted for freehand SVG authoring.
+
+    Returns the system's visual vocabulary restructured for direct use
+    in SVG: palette colors with roles, drawing rules as SVG attribute
+    strings (e.g. stroke='#E0E0E0' stroke-width='1'), typography scale,
+    CSS class block for <defs><style>, and layout constants.
+
+    Use this before drawing custom SVG to ensure all fills, strokes,
+    font sizes, and radii come from the system's token set.
+    """
+    try:
+        sys_result = load_system(system_id)
+        if not sys_result.ok:
+            return {
+                "ok": False,
+                "errors": [e.message for e in sys_result.errors],
+            }
+        tokens = export_tokens_for_authoring(sys_result.data)
+        tokens["ok"] = True
+        return tokens
+    except Exception as exc:
+        return _error_result(exc)
+
+
+@mcp.tool()
+def wf_read_component(
+    system_id: str,
+    component_id: str | None = None,
+    component_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """Read component SVG source and metadata for reference.
+
+    Use to learn how the system draws a specific component — its stroke
+    weights, fills, radii, and sizing — then draw custom variants at
+    whatever dimensions you need.
+
+    Accepts a single component_id (e.g. "toggle-default" or just
+    "toggle" which resolves to "toggle-default") or a list of
+    component_ids for batch reads.
+
+    Returns rendering_notes (authoring instructions from the spec),
+    anatomy labels, tier, states, constraints, viewBox dimensions,
+    and the raw SVG source.
+    """
+    try:
+        sys_result = load_system(system_id)
+        if not sys_result.ok:
+            return {
+                "ok": False,
+                "errors": [e.message for e in sys_result.errors],
+            }
+        spec = sys_result.data
+
+        if component_ids:
+            results = read_components_batch(component_ids, spec)
+            return {"ok": True, "components": results}
+
+        if component_id:
+            return read_component(component_id, spec)
+
+        return {
+            "ok": False,
+            "errors": [
+                "Provide component_id (single) or component_ids (list)."
+            ],
+        }
     except Exception as exc:
         return _error_result(exc)
 
