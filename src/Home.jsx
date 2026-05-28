@@ -2,6 +2,14 @@ import { useState } from "react";
 
 const systems = [
   {
+    id: "neutral",
+    name: "Neutral",
+    tag: "Greyscale Wireframe Reference",
+    description: "The universal wireframe baseline. System fonts, greyscale-only palette, borders-only elevation, and 42 canonical components. Every other system is a transformation of this reference.",
+    colors: ["#424242"],
+    themes: ["Neutral"],
+  },
+  {
     id: "sketch",
     name: "Sketch",
     tag: "Linear + Hand-Drawn",

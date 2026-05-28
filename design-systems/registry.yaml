@@ -43,3 +43,7 @@ systems:
     spec: riso-library/spec.yaml
     status: available
     library_root: riso-library
+  - id: neutral
+    spec: wireframe-library/spec.yaml
+    status: available
+    library_root: wireframe-library

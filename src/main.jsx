@@ -9,8 +9,10 @@ const TerminalSystem = lazy(() => import("../design-system-terminal.jsx"));
 const EditorialSystem = lazy(() => import("../design-system-editorial.jsx"));
 const SwissSystem = lazy(() => import("../design-system-swiss.jsx"));
 const RisoSystem = lazy(() => import("../design-system-riso.jsx"));
+const NeutralSystem = lazy(() => import("../design-system-neutral.jsx"));
 
 const systems = {
+  neutral: NeutralSystem,
   sketch: SketchSystem,
   prism: PrismSystem,
   revolt: RevoltSystem,
