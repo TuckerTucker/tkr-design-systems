@@ -60,8 +60,6 @@ from wireframe_skill import (  # noqa: E402
     validate_blueprint,
     assemble_blueprint,
 )
-from wireframe_skill.placement import select_layout_pattern  # noqa: E402
-
 from mcp.server.fastmcp import FastMCP  # noqa: E402
 
 _DEFAULT_OUTPUT_DIR = Path(tempfile.gettempdir()) / "tkr-wireframes"
@@ -208,21 +206,23 @@ def wf_generate(
 ) -> dict[str, Any]:
     """Generate a wireframe SVG from a free-text brief.
 
-    Executes the full 7-step flow: load system spec, select layout pattern,
-    compose SVG, apply artifact treatments, run compliance check, emit files.
-    With system=None, uses the neutral wireframe library.
+    When neither layout_id nor compose is set, returns a routing_request
+    listing available patterns and components for the agent to choose from.
+    Call again with layout_id=<pattern_id> or compose=True.
 
-    When substitute=True, returns early after selecting the layout pattern
-    with a substitution_request (text_nodes and grammar_caveats) but no
-    svg_path. Call wf_apply_substitutions with the filled substitutions.
+    When layout_id is set, selects the named layout directly and runs the
+    full 7-step flow: load system spec, compose SVG, apply artifact
+    treatments, run compliance check, emit files.
+
+    When substitute=True (requires layout_id), returns early with a
+    substitution_request (text_nodes and grammar_caveats) but no svg_path.
+    Call wf_apply_substitutions with the filled substitutions.
 
     When compose=True, skips template selection and returns a
     decomposition_request for blueprint-based assembly. Call
     wf_assemble_from_blueprint with the filled blueprint.
 
-    When layout_id is set, bypasses keyword heuristic and selects the
-    named layout directly.
-
+    With system=None, uses the neutral wireframe library.
     Output files are written to output_dir (defaults to a temp directory).
     """
     try:
@@ -249,12 +249,13 @@ def wf_build_substitution_request(
     brief: str,
     system_id: str,
     platform: str = "desktop",
+    layout_id: str | None = None,
 ) -> dict[str, Any]:
     """Build a content substitution request for a wireframe pattern.
 
-    Pass 1 of the two-pass substitution workflow. Selects a layout pattern
-    from the system matching the brief, extracts its text nodes, and
-    combines them with grammar caveats into a structured JSON request.
+    Pass 1 of the two-pass substitution workflow. Requires layout_id to
+    identify which pattern to extract text nodes from. Use wf_select_layout
+    first to browse available patterns.
 
     You (the calling model) process this request to produce a list of
     {find, replace, rationale} substitutions, then pass them to
@@ -272,13 +273,29 @@ def wf_build_substitution_request(
             }
         spec = sys_result.data
 
-        selection = select_layout_pattern(brief, spec, platform=platform)
-        if selection is None:
+        if layout_id is not None:
+            from wireframe_skill.placement import apply_layout_selection
+            selection = apply_layout_selection(
+                {"selected_pattern_id": layout_id, "rationale": "explicit layout_id"},
+                spec, platform,
+            )
+            if selection is None:
+                return {
+                    "ok": False,
+                    "errors": [
+                        f"layout_id '{layout_id}' not found in system '{system_id}'."
+                    ],
+                }
+        else:
+            from wireframe_skill.placement import build_layout_selection_request
+            layout_req = build_layout_selection_request(brief, spec, platform)
             return {
                 "ok": False,
                 "errors": [
-                    f"System '{system_id}' has no layout patterns available."
+                    "layout_id is required. Use wf_select_layout to browse "
+                    "available patterns, then pass layout_id."
                 ],
+                "available_patterns": layout_req.get("available_patterns", []),
             }
 
         request = build_substitution_request(brief, spec, selection.svg_path)
@@ -336,16 +353,16 @@ def wf_select_layout(
     system_id: str,
     platform: str = "desktop",
 ) -> dict[str, Any]:
-    """Build a layout selection request for a wireframe brief.
+    """Browse a system's library of layout patterns and components.
 
-    Returns a structured request listing all available layout patterns
-    from the system, with descriptions and canvas dimensions. Choose the
-    best-fitting pattern and pass its pattern_id to wf_generate via the
-    layout_id parameter, or use wf_assemble_from_blueprint for a custom
-    composition.
+    Returns available layout patterns (with descriptions and canvas
+    dimensions) and available components. Use this to decide the best
+    routing path, then call wf_generate with layout_id=<pattern_id> to
+    use a pattern, or compose=True to assemble from components.
 
     Returns {ok, schema_version, brief, system_id, platform, canvas,
-    available_patterns, grammar_caveats, response_format_example}.
+    available_patterns, available_components, grammar_caveats,
+    response_format_example}.
     """
     try:
         sys_result = load_system(system_id)
@@ -359,6 +376,20 @@ def wf_select_layout(
         from wireframe_skill.placement import build_layout_selection_request
         request = build_layout_selection_request(brief, spec, platform)
         request["ok"] = True
+
+        from pathlib import Path as _Path
+        library_root = _Path(spec["_meta"]["library_root"])
+        components_dir = library_root / "components"
+        if components_dir.exists():
+            try:
+                from wireframe_skill.decomposition import build_decomposition_request
+                decomp_req = build_decomposition_request(brief, spec, platform)
+                request["available_components"] = decomp_req["components"]
+            except (ValueError, ImportError):
+                request["available_components"] = []
+        else:
+            request["available_components"] = []
+
         return request
     except Exception as exc:
         return _error_result(exc)

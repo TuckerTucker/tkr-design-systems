@@ -30,29 +30,6 @@ logger = structlog.get_logger(__name__)
 # resolved here must exist in the loaded system spec (we verify before
 # committing).
 
-PATTERN_HEURISTICS: list[tuple[str, list[str]]] = [
-    # (brief-keyword pattern, ordered list of pattern-ids to try)
-    ("dashboard|overview|home|metrics|kpi|analytics", ["dashboard"]),
-    ("login|sign in|sign-in|signin|log in|log-in", ["auth-sign-in", "auth"]),
-    ("create account|sign up|sign-up|register", ["auth-sign-up", "auth"]),
-    ("reset password|forgot password|password reset", ["auth-reset-password", "auth"]),
-    ("verify|verification code|otp|two.factor|2fa|mfa", ["auth-verify-code", "auth"]),
-    ("auth", ["auth"]),
-    ("settings|preferences|profile|account", ["settings-layout", "settings_layout"]),
-    ("form|registration|new \\w+|create \\w+|edit", ["form"]),
-    ("table|list of \\w+|members|users|directory", ["data-table", "data_table"]),
-    ("modal|confirm|dialog|alert", ["modal"]),
-    ("drawer|side panel|side-panel|panel", ["drawer"]),
-    ("empty|no results|nothing|first use|onboarding", ["empty-state", "empty_state"]),
-    ("article|read|story|long-form|long form|post", ["article"]),
-    ("sidebar|nav|navigation", ["sidebar"]),
-    ("header|top bar|top-bar|toolbar", ["header"]),
-    ("command palette|command-palette|cmdk|search overlay", ["command-palette", "command_palette"]),
-]
-
-# Default fallback when no keyword matches.
-DEFAULT_PATTERN_FALLBACK = ["dashboard", "settings-layout", "auth", "empty-state"]
-
 # Mobile keywords trigger a `-mobile` suffix preference if the system
 # has a mobile variant authored.
 MOBILE_HINT_KEYWORDS = re.compile(
@@ -81,19 +58,24 @@ def select_layout_pattern(
 ) -> LayoutSelection | None:
     """Select a layout pattern from the system library matching the brief.
 
+    Agent-driven routing: ``auto`` and ``request`` modes both return None,
+    deferring the routing decision to the calling agent.  Use ``exact``
+    when the agent has already identified a pattern name in the brief.
+
     Args:
         brief: Free-text brief (e.g. "dashboard for a chat app").
         spec: Loaded system spec dict.
         platform: "desktop" or "mobile" (default: "desktop").
         select_mode: Selection strategy:
-            "auto"    — keyword heuristic + fallback (default, backward compat)
+            "auto"    — returns None (agent decides via inventory)
             "exact"   — match only if brief explicitly names a pattern base
-            "request" — always return None (caller uses build_layout_selection_request)
+            "request" — returns None (same as auto)
 
     Returns:
-        LayoutSelection with chosen pattern, or None if unavailable.
+        LayoutSelection with chosen pattern, or None when routing is
+        deferred to the agent.
     """
-    if select_mode == "request":
+    if select_mode in ("auto", "request"):
         return None
 
     library_root = Path(spec["_meta"]["library_root"])
@@ -108,7 +90,6 @@ def select_layout_pattern(
         platform == "mobile" or bool(MOBILE_HINT_KEYWORDS.search(brief))
     )
 
-    # Extract known base names from available patterns.
     base_names = _extract_base_names(available)
 
     if select_mode == "exact":
@@ -128,51 +109,7 @@ def select_layout_pattern(
                     )
         return None
 
-    # "auto" mode: keyword heuristic + fallback
-    brief_lc = brief.lower()
-    for kw_pattern, base_candidates in PATTERN_HEURISTICS:
-        if not re.search(kw_pattern, brief_lc):
-            continue
-        for base in base_candidates:
-            chosen = _pick_variant(available, base, prefer_mobile)
-            if chosen is not None:
-                return LayoutSelection(
-                    pattern_id=chosen,
-                    base_pattern=base,
-                    svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
-                    width=0, height=0,
-                    rationale=f"keyword '{kw_pattern}' matched brief; chose {chosen}",
-                    requested_system=spec["_meta"]["system_id"],
-                    available_patterns=available,
-                )
-
-    # Fallback path
-    for base in DEFAULT_PATTERN_FALLBACK:
-        chosen = _pick_variant(available, base, prefer_mobile)
-        if chosen is not None:
-            return LayoutSelection(
-                pattern_id=chosen,
-                base_pattern=base,
-                svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
-                width=0, height=0,
-                rationale=f"no keyword matched; fell back to {chosen}",
-                fallback=True,
-                requested_system=spec["_meta"]["system_id"],
-                available_patterns=available,
-            )
-
-    # Last-ditch: any pattern at all.
-    chosen = available[0]
-    return LayoutSelection(
-        pattern_id=chosen,
-        base_pattern=chosen,
-        svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
-        width=0, height=0,
-        rationale=f"system has only ad-hoc patterns; chose first available ({chosen})",
-        fallback=True,
-        requested_system=spec["_meta"]["system_id"],
-        available_patterns=available,
-    )
+    return None
 
 
 def _pick_variant(available: list[str], base: str, prefer_mobile: bool) -> str | None:

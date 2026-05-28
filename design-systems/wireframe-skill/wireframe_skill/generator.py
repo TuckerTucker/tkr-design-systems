@@ -38,7 +38,6 @@ from .compose import (  # noqa: E402
 )
 from .emit import emit_artifact  # noqa: E402
 from .placement import (  # noqa: E402
-    select_layout_pattern,
     derive_content_substitutions,
     LayoutSelection,
 )
@@ -74,13 +73,14 @@ class GenerationResult:
     system_id: str | None = None
     substitution_request: dict | None = None
     decomposition_request: dict | None = None
+    routing_request: dict | None = None
 
     def to_dict(self) -> dict:
         """Serialize to dict for non-Python consumers.
 
         Returns:
             A dict with ok, svg_path, spec_path, errors, warnings, compliance_summary,
-            selection, system_id.
+            selection, system_id, and optional request dicts.
         """
         return {
             "ok": self.ok,
@@ -108,6 +108,7 @@ class GenerationResult:
             "system_id": self.system_id,
             "substitution_request": self.substitution_request,
             "decomposition_request": self.decomposition_request,
+            "routing_request": self.routing_request,
         }
 
 
@@ -193,23 +194,62 @@ def wireframe(
                 system_id=effective_system,
             )
     else:
-        selection = select_layout_pattern(brief, spec, platform=platform)
+        selection = None
 
     if selection is None and not compose:
-        # Check if components/ exists for decomposition fallback
-        from pathlib import Path as _Path
-        library_root = _Path(spec["_meta"]["library_root"])
-        if (library_root / "components").exists():
-            compose = True
-        else:
-            return GenerationResult(
-                ok=False,
-                errors=[
-                    f"System '{effective_system}' has no patterns in its layouts/ "
-                    f"directory. Cannot derive a wireframe from the brief."
-                ],
-                system_id=effective_system,
+        from .placement import build_layout_selection_request
+        library_root = Path(spec["_meta"]["library_root"])
+        layouts_dir = library_root / "layouts"
+        components_dir = library_root / "components"
+
+        inventory: dict = {
+            "schema_version": "1.0",
+            "action": "select_routing",
+            "brief": brief,
+            "system_id": effective_system,
+            "platform": platform,
+        }
+
+        if layouts_dir.exists():
+            layout_req = build_layout_selection_request(brief, spec, platform)
+            inventory["available_patterns"] = layout_req["available_patterns"]
+            inventory["canvas"] = layout_req["canvas"]
+            inventory["grammar_caveats"] = layout_req.get("grammar_caveats", {})
+            inventory["response_format_example"] = layout_req.get(
+                "response_format_example", {}
             )
+        else:
+            inventory["available_patterns"] = []
+            canvas_w, canvas_h = (
+                (375, 812) if platform == "mobile" else (1280, 800)
+            )
+            inventory["canvas"] = {"width": canvas_w, "height": canvas_h}
+            inventory["grammar_caveats"] = {}
+
+        if components_dir.exists():
+            try:
+                from .decomposition import build_decomposition_request as _build_decomp
+                decomp_req = _build_decomp(brief, spec, platform=platform)
+                inventory["available_components"] = decomp_req["components"]
+            except (ValueError, ImportError):
+                inventory["available_components"] = []
+        else:
+            inventory["available_components"] = []
+
+        inventory["instructions"] = (
+            "No layout was auto-selected. Review the available patterns and "
+            "components, then choose one of: "
+            "(a) call again with layout_id=<pattern_id> to use a pattern, "
+            "(b) call again with compose=True to assemble from components, "
+            "(c) author SVG directly for truly novel layouts."
+        )
+
+        return GenerationResult(
+            ok=True,
+            routing_request=inventory,
+            system_id=effective_system,
+            warnings=warnings,
+        )
 
     # Composition mode: return decomposition request (two-turn flow)
     if compose or selection is None:

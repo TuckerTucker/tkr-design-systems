@@ -30,13 +30,17 @@ def _setup_path() -> None:
 
 
 def _main_legacy(argv: list[str]) -> int:
-    """Legacy flat-arg interface (wireframe --brief ... --system ...).
+    """Generate a wireframe SVG, or return a routing inventory.
+
+    Without --layout-id or --compose, prints an inventory of available
+    patterns and components (exit code 2). With explicit routing, generates
+    the wireframe (exit code 0 on success, 1 on error).
 
     Args:
         argv: Command-line args (without prog name).
 
     Returns:
-        0 on success, 1 on failure.
+        0 on success, 1 on failure, 2 when routing decision is needed.
     """
     from wireframe_skill import wireframe  # noqa: E402
 
@@ -53,6 +57,10 @@ def _main_legacy(argv: list[str]) -> int:
                         help="Filename stem for outputs (default: wireframe).")
     parser.add_argument("--spec-version", default=None,
                         help="Pin to a specific spec_version (currently informational).")
+    parser.add_argument("--layout-id", default=None,
+                        help="Explicit layout pattern id (from wf_select_layout).")
+    parser.add_argument("--compose", action="store_true",
+                        help="Use component decomposition path instead of a pattern.")
     args = parser.parse_args(argv)
 
     result = wireframe(
@@ -62,7 +70,22 @@ def _main_legacy(argv: list[str]) -> int:
         output_dir=args.out,
         spec_version=args.spec_version,
         filename_stem=args.filename,
+        layout_id=args.layout_id,
+        compose=args.compose,
     )
+
+    if result.routing_request is not None:
+        print(json.dumps({
+            "ok": True,
+            "routing_required": True,
+            "routing_request": result.routing_request,
+            "hint": (
+                "Rerun with --layout-id <pattern_id> or --compose to proceed. "
+                "Available patterns are listed in routing_request.available_patterns."
+            ),
+        }, indent=2))
+        return 2
+
     print(json.dumps(result.to_dict(), indent=2))
     return 0 if result.ok else 1
 
@@ -72,6 +95,7 @@ def _main_substitution_prompt(argv: list[str]) -> int:
 
     Extracts text nodes from pattern SVG + grammar caveats from spec,
     writes JSON request to --out file for the calling Claude to process.
+    Requires either --pattern (explicit SVG path) or --layout-id.
 
     Args:
         argv: Subcommand args (without 'substitution-prompt').
@@ -81,7 +105,7 @@ def _main_substitution_prompt(argv: list[str]) -> int:
     """
     from wireframe_skill.substitution import build_substitution_request  # noqa: E402
     from design_system_skill.loader import load_system  # noqa: E402
-    from wireframe_skill.placement import select_layout_pattern  # noqa: E402
+    from wireframe_skill.placement import apply_layout_selection  # noqa: E402
 
     parser = argparse.ArgumentParser(
         prog="wireframe-skill substitution-prompt",
@@ -90,29 +114,40 @@ def _main_substitution_prompt(argv: list[str]) -> int:
     parser.add_argument("--brief", required=True, help="Brief to process.")
     parser.add_argument("--system", required=True, help="Design system id (e.g. swiss).")
     parser.add_argument("--pattern", default=None,
-                        help="Override: explicit pattern SVG path. If omitted, inferred from brief + system.")
+                        help="Override: explicit pattern SVG path.")
+    parser.add_argument("--layout-id", default=None,
+                        help="Layout pattern id (use wf_select_layout to browse).")
     parser.add_argument("--out", required=True, help="Output JSON file path.")
     args = parser.parse_args(argv)
 
     try:
-        # Load spec.
         result = load_system(args.system)
         if not result.ok:
             print(json.dumps({"ok": False, "errors": result.errors}))
             return 1
         spec = result.data
 
-        # Determine pattern path.
         if args.pattern:
             pattern_path = Path(args.pattern).resolve()
-        else:
-            selection = select_layout_pattern(args.brief, spec, platform="desktop")
+        elif args.layout_id:
+            selection = apply_layout_selection(
+                {"selected_pattern_id": args.layout_id, "rationale": "CLI --layout-id"},
+                spec, "desktop",
+            )
             if selection is None:
-                print(json.dumps({"ok": False, "errors": [f"No pattern found for brief in system {args.system}"]}))
+                print(json.dumps({
+                    "ok": False,
+                    "errors": [f"layout_id '{args.layout_id}' not found in system '{args.system}'."],
+                }))
                 return 1
             pattern_path = selection.svg_path
+        else:
+            print(json.dumps({
+                "ok": False,
+                "errors": ["Provide --pattern or --layout-id. Use wf_select_layout to browse available patterns."],
+            }))
+            return 1
 
-        # Build request.
         request = build_substitution_request(args.brief, spec, pattern_path)
         out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)

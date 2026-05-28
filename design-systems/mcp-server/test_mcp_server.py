@@ -232,12 +232,13 @@ def test_ds_register_unregister_roundtrip():
 # ─── wf_generate ──────────────────────────────────────────────────────
 
 def test_wf_generate_with_system():
-    section("wf_generate (with system)")
+    section("wf_generate (with system + layout_id)")
     with tempfile.TemporaryDirectory() as tmpdir:
         result = wf_generate(
             brief="dashboard for a project tracker",
             system="swiss",
             output_dir=tmpdir,
+            layout_id="dashboard",
         )
 
         assert_(result["ok"] is True, "ok is True", f"errors: {result.get('errors')}")
@@ -256,11 +257,12 @@ def test_wf_generate_with_system():
 
 
 def test_wf_generate_neutral():
-    section("wf_generate (neutral / no system)")
+    section("wf_generate (neutral / no system, with layout_id)")
     with tempfile.TemporaryDirectory() as tmpdir:
         result = wf_generate(
             brief="settings page",
             output_dir=tmpdir,
+            layout_id="settings-layout-default",
         )
 
         assert_(result["ok"] is True, "ok is True", f"errors: {result.get('errors')}")
@@ -268,6 +270,23 @@ def test_wf_generate_neutral():
             result["system_id"] == "wireframe",
             "system_id defaults to 'wireframe'",
         )
+
+
+def test_wf_generate_no_routing_returns_inventory():
+    section("wf_generate (no routing → routing_request)")
+    result = wf_generate(
+        brief="image viewer with carousel",
+        system="swiss",
+    )
+
+    assert_(result["ok"] is True, "ok is True for inventory response")
+    assert_(result.get("routing_request") is not None,
+            "routing_request is present")
+    assert_(result.get("svg_path") is None, "no svg_path")
+    req = result.get("routing_request", {})
+    assert_("available_patterns" in req, "has available_patterns")
+    assert_("available_components" in req, "has available_components")
+    assert_("instructions" in req, "has instructions")
 
 
 def test_wf_generate_bad_system():
@@ -281,10 +300,11 @@ def test_wf_generate_bad_system():
 # ─── wf_build_substitution_request ────────────────────────────────────
 
 def test_wf_build_substitution_request():
-    section("wf_build_substitution_request")
+    section("wf_build_substitution_request (with layout_id)")
     result = wf_build_substitution_request(
         brief="dashboard for a meditation app",
         system_id="swiss",
+        layout_id="dashboard",
     )
 
     assert_(result.get("ok") is True, "ok is True", f"errors: {result.get('errors')}")
@@ -298,8 +318,21 @@ def test_wf_build_substitution_request():
     )
     assert_(
         "selected_pattern" in result,
-        "selected_pattern is present (auto-selected)",
+        "selected_pattern is present",
     )
+
+
+def test_wf_build_substitution_request_no_layout_id():
+    section("wf_build_substitution_request (no layout_id → error with hint)")
+    result = wf_build_substitution_request(
+        brief="dashboard for a meditation app",
+        system_id="swiss",
+    )
+
+    assert_(result.get("ok") is False,
+            "ok is False without layout_id")
+    assert_("available_patterns" in result,
+            "available_patterns hint provided")
 
 
 def test_wf_build_substitution_request_bad_system():
@@ -479,9 +512,9 @@ tokens:
 
 
 def test_wf_generate_substitute():
-    section("wf_generate(substitute=True) (Change E)")
+    section("wf_generate(substitute=True, layout_id) (Change E)")
     result = wf_generate(brief="dashboard for a chat app", system="swiss",
-                         substitute=True)
+                         substitute=True, layout_id="dashboard")
     assert_(result["ok"] is True, "ok=True with substitute")
     assert_(result.get("svg_path") is None, "no svg_path in substitute mode")
     assert_(result.get("substitution_request") is not None,
@@ -516,7 +549,7 @@ def test_wf_generate_layout_id():
 
 
 def test_wf_select_layout():
-    section("wf_select_layout (Change D)")
+    section("wf_select_layout (includes patterns + components)")
     result = wf_select_layout(brief="video generation workspace",
                                system_id="swiss")
     assert_(result.get("ok") is True, "ok=True")
@@ -527,6 +560,9 @@ def test_wf_select_layout():
     assert_("base_name" in first, "pattern has base_name")
     assert_(result.get("canvas", {}).get("width") == 1280,
             "canvas width is 1280")
+    components = result.get("available_components", [])
+    assert_(len(components) > 0,
+            f"available_components non-empty (got {len(components)})")
 
 
 def test_wf_assemble_with_output_dir():
@@ -579,8 +615,10 @@ if __name__ == "__main__":
     test_ds_register_unregister_roundtrip()
     test_wf_generate_with_system()
     test_wf_generate_neutral()
+    test_wf_generate_no_routing_returns_inventory()
     test_wf_generate_bad_system()
     test_wf_build_substitution_request()
+    test_wf_build_substitution_request_no_layout_id()
     test_wf_build_substitution_request_bad_system()
     test_wf_apply_substitutions()
     test_wf_assemble_from_blueprint_invalid()

@@ -1,18 +1,17 @@
-"""End-to-end tests for wireframe-skill v3.0.
+"""End-to-end tests for wireframe-skill v3.0 (agent-driven routing).
 
 Run from the project root:
     python3 wireframe-skill/test_wireframe_skill.py
 
 The tests confirm:
-  - wireframe(brief, system='swiss', platform='desktop') produces an
-    SVG + spec.yaml in the output dir
+  - wireframe(brief, layout_id, system) produces an SVG + spec.yaml
   - The SVG has correct viewBox dimensions
   - The spec.yaml has the design_system block populated with the
     expected system id, version, and rulebook compliance summary
   - Rulebook check passes on the generated artifact (no mechanical
     failures)
   - mobile + desktop both work
-  - keyword heuristics route briefs to the expected patterns
+  - wireframe() without routing returns a routing_request inventory
   - missing systems fail cleanly
   - emit happens even when compliance has advisory warnings
 """
@@ -70,6 +69,7 @@ def test_swiss_dashboard_desktop():
             system="swiss",
             platform="desktop",
             output_dir=td,
+            layout_id="dashboard",
         )
         assert_(result.ok, "result.ok=True", "; ".join(result.errors)[:300])
         if not result.ok:
@@ -104,17 +104,15 @@ def test_swiss_dashboard_desktop():
 
 
 def test_swiss_dashboard_mobile():
-    section("wireframe(... system='swiss', platform='mobile')")
+    section("wireframe(... system='swiss', platform='mobile', layout_id='dashboard')")
     with tempfile.TemporaryDirectory() as td:
         result = wireframe(
             brief="dashboard for a chat app",
             system="swiss",
             platform="mobile",
             output_dir=td,
+            layout_id="dashboard",
         )
-        # Swiss has no mobile-suffixed dashboard; skill should fall back
-        # to the desktop variant gracefully. Either way, the call should
-        # succeed and emit valid output.
         assert_(result.svg_path is not None and result.svg_path.exists(),
                 "wireframe.svg exists for mobile request")
         assert_(result.spec_path is not None and result.spec_path.exists(),
@@ -125,13 +123,14 @@ def test_swiss_dashboard_mobile():
 
 
 def test_wireframe_library_dashboard_desktop():
-    section("wireframe(... system='wireframe', platform='desktop')")
+    section("wireframe(... system='wireframe', platform='desktop', layout_id='dashboard-mixed')")
     with tempfile.TemporaryDirectory() as td:
         result = wireframe(
             brief="dashboard with metrics",
             system="wireframe",
             platform="desktop",
             output_dir=td,
+            layout_id="dashboard-mixed",
         )
         assert_(result.ok, "result.ok=True", "; ".join(result.errors)[:300])
         if not result.ok:
@@ -139,21 +138,22 @@ def test_wireframe_library_dashboard_desktop():
         spec = yaml.safe_load(result.spec_path.read_text())
         ds = spec["design_system"]
         assert_(ds["id"] == "wireframe", "system id wireframe")
-        assert_(ds["base_pattern"] == "dashboard",
-                f"base pattern is dashboard (got {ds['base_pattern']})")
+        assert_(ds["base_pattern"] == "dashboard-mixed",
+                f"base pattern is dashboard-mixed (got {ds['base_pattern']})")
         comp = ds.get("rulebook_compliance") or {}
         assert_(comp.get("mechanical_failed") == 0,
                 "wireframe library dashboard has no mechanical failures")
 
 
 def test_wireframe_library_dashboard_mobile_uses_mobile_variant():
-    section("wireframe(... system='wireframe', platform='mobile') picks -mobile variant")
+    section("wireframe(... system='wireframe', platform='mobile', layout_id='dashboard-mobile')")
     with tempfile.TemporaryDirectory() as td:
         result = wireframe(
             brief="dashboard with metrics",
             system="wireframe",
             platform="mobile",
             output_dir=td,
+            layout_id="dashboard-mobile",
         )
         assert_(result.ok, "result.ok=True")
         if not result.ok:
@@ -167,28 +167,39 @@ def test_wireframe_library_dashboard_mobile_uses_mobile_variant():
         assert_(w == 375, f"mobile dashboard SVG width is 375 (got {w})")
 
 
-def test_keyword_routing():
-    section("brief keyword routing")
-    cases = [
-        ("login screen for chat app", "swiss", "auth"),
-        ("settings panel for an account", "swiss", "settings-layout"),
-        ("a long form for new user data", "swiss", "form"),
-        ("data table of members", "swiss", "data-table"),
-        ("modal to confirm an action", "swiss", "modal"),
-        ("empty state when no threads exist", "swiss", "empty-state"),
-    ]
-    for brief, system, expected_base in cases:
-        with tempfile.TemporaryDirectory() as td:
-            result = wireframe(brief=brief, system=system, output_dir=td)
-            if not result.ok:
-                # Some patterns may have rulebook advisory warnings that don't
-                # affect ok status. If failed, skip with detail.
-                print(f"  SKIP  '{brief}' produced errors: {result.errors}")
-                continue
-            spec = yaml.safe_load(result.spec_path.read_text())
-            base = spec["design_system"]["base_pattern"]
-            assert_(base == expected_base,
-                    f"brief '{brief}' chose base '{expected_base}' (got '{base}')")
+def test_no_routing_returns_inventory():
+    section("wireframe() without routing returns routing_request")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="image viewer with carousel and duotone filters",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+        )
+        assert_(result.ok, "ok=True for inventory response")
+        assert_(result.routing_request is not None, "routing_request is present")
+        assert_(result.svg_path is None, "no SVG emitted")
+        req = result.routing_request
+        assert_("available_patterns" in req, "has available_patterns")
+        assert_(len(req.get("available_patterns", [])) > 0,
+                "available_patterns is non-empty")
+        assert_("available_components" in req, "has available_components")
+        assert_("instructions" in req, "has instructions field")
+        assert_(req.get("system_id") == "swiss", "system_id is swiss")
+        assert_(req.get("platform") == "desktop", "platform is desktop")
+        assert_("canvas" in req, "has canvas dimensions")
+
+
+def test_auto_mode_returns_none():
+    section("select_layout_pattern(mode='auto') returns None (heuristic removed)")
+    from wireframe_skill.placement import select_layout_pattern
+    from design_system_skill.loader import load_system
+    res = load_system("swiss")
+    if not res.ok:
+        return
+    selection = select_layout_pattern("dashboard for a chat app", res.data,
+                                      platform="desktop", select_mode="auto")
+    assert_(selection is None, "auto mode returns None (agent decides)")
 
 
 def test_unknown_system_fails_cleanly():
@@ -202,9 +213,12 @@ def test_unknown_system_fails_cleanly():
 
 
 def test_no_system_uses_wireframe_library():
-    section("wireframe(... system=None) falls back to wireframe library")
+    section("wireframe(... system=None, layout_id='dashboard-mixed') uses wireframe library")
     with tempfile.TemporaryDirectory() as td:
-        result = wireframe(brief="dashboard for an app", system=None, output_dir=td)
+        result = wireframe(
+            brief="dashboard for an app", system=None, output_dir=td,
+            layout_id="dashboard-mixed",
+        )
         assert_(result.ok, "result.ok=True with no system",
                 "; ".join(result.errors)[:300])
         if not result.ok:
@@ -225,7 +239,8 @@ def test_invalid_platform_fails():
 def test_emit_happens_even_with_advisory():
     section("emit happens when compliance has advisory warnings")
     with tempfile.TemporaryDirectory() as td:
-        result = wireframe(brief="dashboard", system="swiss", output_dir=td)
+        result = wireframe(brief="dashboard", system="swiss", output_dir=td,
+                           layout_id="dashboard")
         if not result.ok:
             return
         # Swiss dashboard has at least one grid-alignment advisory.
@@ -242,6 +257,7 @@ def test_filename_stem_override():
         result = wireframe(
             brief="dashboard", system="swiss",
             output_dir=td, filename_stem="my_dash",
+            layout_id="dashboard",
         )
         if not result.ok:
             return
@@ -319,6 +335,7 @@ def test_apply_artifact_treatments_noop_for_swiss():
             brief="settings page",
             system="swiss",
             output_dir=td,
+            layout_id="settings-layout-default",
         )
         assert_(result.ok, "result.ok=True", "; ".join(result.errors)[:300])
         if not result.ok:
@@ -677,6 +694,7 @@ def test_wf_generate_substitute_returns_request():
             platform="desktop",
             output_dir=td,
             substitute=True,
+            layout_id="dashboard",
         )
         assert_(result.ok, "result.ok=True in substitute mode",
                 "; ".join(result.errors))
@@ -708,6 +726,7 @@ def test_wf_generate_substitute_false_unchanged():
             platform="desktop",
             output_dir=td,
             substitute=False,
+            layout_id="dashboard",
         )
         assert_(result.ok, "result.ok=True", "; ".join(result.errors))
         assert_(result.svg_path is not None and result.svg_path.exists(),
@@ -724,6 +743,7 @@ def test_wf_generate_substitute_to_dict():
             system="swiss",
             output_dir=td,
             substitute=True,
+            layout_id="settings-layout-default",
         )
         d = result.to_dict()
         assert_("substitution_request" in d,
@@ -882,7 +902,7 @@ def test_wireframe_compose_returns_decomposition_request():
 
 
 def test_wireframe_compose_false_unchanged():
-    section("wireframe(compose=False): normal template flow")
+    section("wireframe(compose=False, layout_id='dashboard'): normal template flow")
     with tempfile.TemporaryDirectory() as td:
         result = wireframe(
             brief="dashboard for a chat app",
@@ -890,6 +910,7 @@ def test_wireframe_compose_false_unchanged():
             platform="desktop",
             output_dir=td,
             compose=False,
+            layout_id="dashboard",
         )
         assert_(result.ok, "result.ok=True", "; ".join(result.errors))
         assert_(result.svg_path is not None, "svg_path written")
@@ -1040,7 +1061,8 @@ def main():
     test_swiss_dashboard_mobile()
     test_wireframe_library_dashboard_desktop()
     test_wireframe_library_dashboard_mobile_uses_mobile_variant()
-    test_keyword_routing()
+    test_no_routing_returns_inventory()
+    test_auto_mode_returns_none()
     test_unknown_system_fails_cleanly()
     test_no_system_uses_wireframe_library()
     test_invalid_platform_fails()
