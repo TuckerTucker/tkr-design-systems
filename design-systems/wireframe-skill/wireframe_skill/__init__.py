@@ -28,6 +28,10 @@ from .decomposition import (
     validate_blueprint,
 )
 from .assembler import assemble_blueprint
+from .placement import (
+    build_layout_selection_request,
+    apply_layout_selection,
+)
 
 __all__ = [
     "wireframe",
@@ -40,4 +44,6 @@ __all__ = [
     "build_decomposition_request",
     "validate_blueprint",
     "assemble_blueprint",
+    "build_layout_selection_request",
+    "apply_layout_selection",
 ]

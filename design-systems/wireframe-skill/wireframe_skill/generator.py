@@ -72,6 +72,8 @@ class GenerationResult:
     compliance: dict | None = None
     selection: LayoutSelection | None = None
     system_id: str | None = None
+    substitution_request: dict | None = None
+    decomposition_request: dict | None = None
 
     def to_dict(self) -> dict:
         """Serialize to dict for non-Python consumers.
@@ -104,6 +106,8 @@ class GenerationResult:
                 }
             ),
             "system_id": self.system_id,
+            "substitution_request": self.substitution_request,
+            "decomposition_request": self.decomposition_request,
         }
 
 
@@ -115,6 +119,9 @@ def wireframe(
     output_dir: str | Path = ".",
     spec_version: str | None = None,
     filename_stem: str = "wireframe",
+    substitute: bool = False,
+    compose: bool = False,
+    layout_id: str | None = None,
 ) -> GenerationResult:
     """Generate a wireframe SVG and metadata spec.
 
@@ -131,6 +138,13 @@ def wireframe(
         output_dir: Directory for output files (default: ".").
         spec_version: Expected spec version or None to allow any.
         filename_stem: Filename prefix (default: "wireframe").
+        substitute: If True, return early after step 2 with a
+            substitution_request dict. The caller processes the request
+            and calls wf_apply_substitutions to complete.
+        compose: If True, skip template selection and return a
+            decomposition_request for blueprint-based assembly.
+        layout_id: Explicit layout pattern override (bypasses keyword
+            heuristic). Used with wf_select_layout responses.
 
     Returns:
         GenerationResult with ok, svg_path, spec_path, errors, warnings.
@@ -163,18 +177,76 @@ def wireframe(
         )
 
     # Step 2: brief → layout pattern.
-    selection = select_layout_pattern(brief, spec, platform=platform)
-    if selection is None:
-        return GenerationResult(
-            ok=False,
-            errors=[
-                f"System '{effective_system}' has no patterns in its layouts/ "
-                f"directory. Cannot derive a wireframe from the brief."
-            ],
-            system_id=effective_system,
+    selection: LayoutSelection | None = None
+    if compose:
+        selection = None
+    elif layout_id is not None:
+        from .placement import apply_layout_selection
+        selection = apply_layout_selection(
+            {"selected_pattern_id": layout_id, "rationale": "explicit layout_id override"},
+            spec, platform,
         )
+        if selection is None:
+            return GenerationResult(
+                ok=False,
+                errors=[f"layout_id '{layout_id}' not found in system '{effective_system}'"],
+                system_id=effective_system,
+            )
+    else:
+        selection = select_layout_pattern(brief, spec, platform=platform)
+
+    if selection is None and not compose:
+        # Check if components/ exists for decomposition fallback
+        from pathlib import Path as _Path
+        library_root = _Path(spec["_meta"]["library_root"])
+        if (library_root / "components").exists():
+            compose = True
+        else:
+            return GenerationResult(
+                ok=False,
+                errors=[
+                    f"System '{effective_system}' has no patterns in its layouts/ "
+                    f"directory. Cannot derive a wireframe from the brief."
+                ],
+                system_id=effective_system,
+            )
+
+    # Composition mode: return decomposition request (two-turn flow)
+    if compose or selection is None:
+        from .decomposition import build_decomposition_request
+        try:
+            decomp_request = build_decomposition_request(brief, spec, platform=platform)
+        except ValueError as e:
+            return GenerationResult(
+                ok=False, errors=[str(e)], system_id=effective_system,
+            )
+        return GenerationResult(
+            ok=True,
+            decomposition_request=decomp_request,
+            system_id=effective_system,
+            warnings=warnings,
+        )
+
     if selection.fallback:
         warnings.append(selection.rationale)
+
+    # Substitution mode: return substitution request (two-turn flow)
+    if substitute:
+        from .substitution import build_substitution_request
+        try:
+            sub_request = build_substitution_request(brief, spec, selection.svg_path)
+        except FileNotFoundError as e:
+            return GenerationResult(
+                ok=False, errors=[str(e)], system_id=effective_system,
+                selection=selection,
+            )
+        return GenerationResult(
+            ok=True,
+            substitution_request=sub_request,
+            selection=selection,
+            system_id=effective_system,
+            warnings=warnings,
+        )
 
     # Step 3: brief → component placements. LLM seam; currently no-op.
     substitutions = derive_content_substitutions(brief, spec, selection)

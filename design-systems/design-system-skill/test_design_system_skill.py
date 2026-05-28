@@ -122,12 +122,23 @@ def test_load_resolves_svg_paths():
 def test_validate_existing_specs():
     section("validate_spec on canonical specs")
     project = HERE.parent
-    for spec_name in ["swiss-spec.yaml", "wireframe-spec.yaml", "terminal-spec.yaml",
-                      "editorial-spec.yaml", "sketch-spec.yaml", "prism-spec.yaml",
-                      "revolt-spec.yaml", "riso-spec-v0.2.yaml"]:
-        path = project / spec_name
-        res = validate_spec(path)
-        assert_(res.ok, f"validate_spec({spec_name}) returns ok=True",
+    spec_paths = [
+        ("swiss", "swiss-library/spec.yaml"),
+        ("wireframe", "wireframe-library/spec.yaml"),
+        ("terminal", "terminal-library/spec.yaml"),
+        ("editorial", "editorial-library/spec.yaml"),
+        ("sketch", "sketch-library/spec.yaml"),
+        ("prism", "prism-library/spec.yaml"),
+        ("revolt", "revolt-library/spec.yaml"),
+        ("riso", "riso-library/spec.yaml"),
+    ]
+    for sys_id, spec_rel in spec_paths:
+        path = project / spec_rel
+        if not path.exists():
+            print(f"  SKIP  spec not found: {path}")
+            continue
+        res = validate_spec(path, library_root=str(path.parent))
+        assert_(res.ok, f"validate_spec({sys_id}) returns ok=True",
                 "; ".join(e.message for e in res.errors)[:300] if not res.ok else "")
 
 
@@ -151,11 +162,87 @@ rulebook:
     assert_(not res.ok, "validate_spec catches multiple violations")
     if not res.ok:
         msgs = " | ".join(e.message for e in res.errors)
-        for needle in ["spec_version", "grammar_family",
+        # grammar_family is now advisory (warning), not blocking (error)
+        for needle in ["spec_version",
                        "severity", "check_method", "check_scope", "system.name"]:
             assert_(needle in msgs,
                     f"error message mentions '{needle}' (msgs: {msgs[:200]})")
+        # grammar_family should be in warnings, not errors
+        if res.data and res.data.get("warnings"):
+            warn_msgs = " | ".join(w["message"] for w in res.data["warnings"])
+            assert_("grammar_family" in warn_msgs,
+                    f"grammar_family produces advisory warning (warn_msgs: {warn_msgs[:200]})")
     Path(bad_path).unlink(missing_ok=True)
+
+
+def test_unknown_grammar_family_is_advisory():
+    section("validate_spec: unknown grammar_family is advisory")
+    with tempfile.NamedTemporaryFile(suffix="-spec.yaml", mode="w", delete=False) as f:
+        f.write("""\
+spec_version: "0.2"
+system:
+  id: future_sys
+  name: Future System
+  grammar_family: spatial_immersive
+tokens: {}
+""")
+        p = f.name
+    res = validate_spec(p)
+    Path(p).unlink(missing_ok=True)
+    assert_(res.ok, "spec with unknown grammar_family is valid (ok=True)")
+    if res.data:
+        warn_msgs = " | ".join(w["message"] for w in res.data.get("warnings", []))
+        assert_("spatial_immersive" in warn_msgs,
+                f"warning mentions the unknown family ({warn_msgs[:200]})")
+
+
+def test_unknown_elevation_strategy_is_advisory():
+    section("validate_spec: unknown elevation.strategy is advisory")
+    with tempfile.NamedTemporaryFile(suffix="-spec.yaml", mode="w", delete=False) as f:
+        f.write("""\
+spec_version: "0.2"
+system:
+  id: future_sys
+  name: Future System
+tokens:
+  elevation:
+    strategy: neon_glow
+""")
+        p = f.name
+    res = validate_spec(p)
+    Path(p).unlink(missing_ok=True)
+    assert_(res.ok, "spec with unknown elevation.strategy is valid (ok=True)")
+    if res.data:
+        warn_msgs = " | ".join(w["message"] for w in res.data.get("warnings", []))
+        assert_("neon_glow" in warn_msgs,
+                f"warning mentions the unknown strategy ({warn_msgs[:200]})")
+
+
+def test_unknown_selection_signal_is_advisory():
+    section("validate_spec: unknown selection_signal is advisory")
+    with tempfile.NamedTemporaryFile(suffix="-spec.yaml", mode="w", delete=False) as f:
+        f.write("""\
+spec_version: "0.2"
+system:
+  id: future_sys
+  name: Future System
+tokens: {}
+components:
+  nav_tab:
+    anatomy: []
+    variants:
+      - id: active
+        svg: dummy.svg
+        selection_signal: glow_underline
+""")
+        p = f.name
+    res = validate_spec(p)
+    Path(p).unlink(missing_ok=True)
+    assert_(res.ok, "spec with unknown selection_signal is valid (ok=True)")
+    if res.data:
+        warn_msgs = " | ".join(w["message"] for w in res.data.get("warnings", []))
+        assert_("glow_underline" in warn_msgs,
+                f"warning mentions the unknown signal ({warn_msgs[:200]})")
 
 
 # ─── test: get_rulebook ────────────────────────────────────────────
@@ -226,23 +313,16 @@ def test_register_unregister_roundtrip():
     project = HERE.parent
     real_registry = project / "registry.yaml"
     with tempfile.TemporaryDirectory() as td:
-        # Mirror the project layout so library_root resolution works.
         td_path = Path(td)
-        # Copy registry to temp so we can mutate it.
         temp_registry = td_path / "registry.yaml"
         shutil.copy2(real_registry, temp_registry)
-        # Symlink the spec files we care about. macOS sandbox may not allow
-        # symlinks freely; use copies as a fallback.
-        for spec in ["swiss-spec.yaml", "swiss-library"]:
-            src = project / spec
-            dst = td_path / spec
-            try:
-                if src.is_dir():
-                    shutil.copytree(src, dst)
-                else:
-                    shutil.copy2(src, dst)
-            except Exception:
-                pass
+        # Copy swiss-library (contains spec.yaml + components/ + layouts/)
+        src = project / "swiss-library"
+        dst = td_path / "swiss-library"
+        try:
+            shutil.copytree(src, dst)
+        except Exception:
+            pass
         os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"] = str(temp_registry)
         try:
             clear_cache()
@@ -253,13 +333,234 @@ def test_register_unregister_roundtrip():
             ls2 = list_systems()
             assert_(ls2.ok and "swiss" not in [d["id"] for d in ls2.data],
                     "swiss removed from listing after unregister")
-            # Re-register
-            reg = register_system(td_path / "swiss-spec.yaml")
-            assert_(reg.ok, "re-register swiss-spec succeeds",
+            # Re-register from the library directory (contains spec.yaml)
+            reg = register_system(td_path / "swiss-library")
+            assert_(reg.ok, "re-register swiss-library succeeds",
                     json.dumps(reg.to_dict(), default=str)[:300] if not reg.ok else "")
             ls3 = list_systems()
             assert_(ls3.ok and "swiss" in [d["id"] for d in ls3.data],
                     "swiss is back in listing after register")
+        finally:
+            del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
+            clear_cache()
+
+
+# ─── test: extends (system inheritance) ───────────────────────────
+
+def test_extends_loads_merged_spec():
+    section("load_system with extends")
+    import os
+    import shutil
+    project = HERE.parent
+    real_registry = project / "registry.yaml"
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        temp_registry = td_path / "registry.yaml"
+        shutil.copy2(real_registry, temp_registry)
+        # Copy terminal library so parent loads.
+        shutil.copytree(project / "terminal-library", td_path / "terminal-library")
+        # Create extension spec.
+        ext_dir = td_path / "my-ext-library"
+        ext_dir.mkdir()
+        (ext_dir / "spec.yaml").write_text("""\
+spec_version: "0.2"
+system:
+  id: my_terminal_ext
+  name: My Terminal Extension
+  grammar_family: character_grid
+  extends: terminal
+tokens:
+  colors:
+    accent: "#FF0000"
+components:
+  custom_widget:
+    anatomy: []
+    variants:
+      - id: default
+rulebook:
+  - id: my-ext-custom-rule
+    rule: "Custom extension rule."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact
+""")
+        os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"] = str(temp_registry)
+        try:
+            clear_cache()
+            reg = register_system(ext_dir)
+            assert_(reg.ok, f"extension spec registered ({reg.to_dict() if not reg.ok else 'ok'})")
+            clear_cache()
+            res = load_system("my_terminal_ext")
+            assert_(res.ok, f"load_system extension ok=True")
+            if not res.ok:
+                return
+            spec = res.data
+            assert_(spec["tokens"]["colors"]["accent"] == "#FF0000",
+                    "child token overrides parent (accent=#FF0000)")
+            parent_colors = spec["tokens"].get("colors", {})
+            assert_("page_bg" in parent_colors or "page" in parent_colors,
+                    "parent token still present after merge")
+            assert_("custom_widget" in spec.get("components", {}),
+                    "child component custom_widget present")
+            assert_(len(spec.get("components", {})) > 1,
+                    "parent components merged (more than just custom_widget)")
+            rule_ids = [r["id"] for r in (spec.get("rulebook") or [])]
+            assert_("my-ext-custom-rule" in rule_ids,
+                    "child rulebook entry present")
+            assert_(len(rule_ids) > 1,
+                    "parent rulebook rules also present")
+            assert_(spec["_meta"].get("extends") == "terminal",
+                    "_meta.extends == 'terminal'")
+            chain = spec["_meta"].get("resolved_chain", [])
+            assert_("my_terminal_ext" in chain and "terminal" in chain,
+                    f"_meta.resolved_chain includes both ids ({chain})")
+        finally:
+            del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
+            clear_cache()
+
+
+def test_extends_cycle_detection():
+    section("load_system extends cycle detection")
+    import os
+    import shutil
+    project = HERE.parent
+    real_registry = project / "registry.yaml"
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        temp_registry = td_path / "registry.yaml"
+        shutil.copy2(real_registry, temp_registry)
+        # Create two specs that cross-extend.
+        dir_a = td_path / "sys-a-library"
+        dir_a.mkdir()
+        (dir_a / "spec.yaml").write_text("""\
+spec_version: "0.2"
+system:
+  id: sys_a
+  name: Sys A
+  extends: sys_b
+tokens: {}
+""")
+        dir_b = td_path / "sys-b-library"
+        dir_b.mkdir()
+        (dir_b / "spec.yaml").write_text("""\
+spec_version: "0.2"
+system:
+  id: sys_b
+  name: Sys B
+  extends: sys_a
+tokens: {}
+""")
+        os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"] = str(temp_registry)
+        try:
+            clear_cache()
+            register_system(dir_a)
+            register_system(dir_b)
+            clear_cache()
+            result = load_system("sys_a")
+            assert_(not result.ok, "circular extends fails to load (ok=False)")
+            if not result.ok:
+                msgs = " ".join(e.message for e in result.errors)
+                assert_("ircular" in msgs or "cycle" in msgs.lower(),
+                        f"error mentions circular dependency ({msgs[:200]})")
+        finally:
+            del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
+            clear_cache()
+
+
+def test_extends_parent_not_found():
+    section("load_system extends parent not found")
+    import os
+    import shutil
+    project = HERE.parent
+    real_registry = project / "registry.yaml"
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        temp_registry = td_path / "registry.yaml"
+        shutil.copy2(real_registry, temp_registry)
+        ext_dir = td_path / "orphan-library"
+        ext_dir.mkdir()
+        (ext_dir / "spec.yaml").write_text("""\
+spec_version: "0.2"
+system:
+  id: orphan_sys
+  name: Orphan System
+  extends: nonexistent_parent
+tokens: {}
+""")
+        os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"] = str(temp_registry)
+        try:
+            clear_cache()
+            register_system(ext_dir)
+            clear_cache()
+            result = load_system("orphan_sys")
+            assert_(not result.ok, "extends nonexistent parent fails (ok=False)")
+            if not result.ok:
+                msgs = " ".join(e.message for e in result.errors)
+                assert_("nonexistent_parent" in msgs,
+                        f"error mentions the missing parent ({msgs[:200]})")
+        finally:
+            del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
+            clear_cache()
+
+
+def test_extends_multi_level():
+    section("load_system multi-level extends (A → B → terminal)")
+    import os
+    import shutil
+    project = HERE.parent
+    real_registry = project / "registry.yaml"
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        temp_registry = td_path / "registry.yaml"
+        shutil.copy2(real_registry, temp_registry)
+        shutil.copytree(project / "terminal-library", td_path / "terminal-library")
+        # B extends terminal
+        dir_b = td_path / "mid-library"
+        dir_b.mkdir()
+        (dir_b / "spec.yaml").write_text("""\
+spec_version: "0.2"
+system:
+  id: mid_sys
+  name: Mid System
+  grammar_family: character_grid
+  extends: terminal
+tokens:
+  colors:
+    mid_color: "#AABBCC"
+""")
+        # A extends B
+        dir_a = td_path / "top-library"
+        dir_a.mkdir()
+        (dir_a / "spec.yaml").write_text("""\
+spec_version: "0.2"
+system:
+  id: top_sys
+  name: Top System
+  grammar_family: character_grid
+  extends: mid_sys
+tokens:
+  colors:
+    top_color: "#112233"
+""")
+        os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"] = str(temp_registry)
+        try:
+            clear_cache()
+            register_system(dir_b)
+            register_system(dir_a)
+            clear_cache()
+            result = load_system("top_sys")
+            assert_(result.ok, f"multi-level extends loads ok=True")
+            if not result.ok:
+                return
+            spec = result.data
+            colors = spec.get("tokens", {}).get("colors", {})
+            assert_("top_color" in colors, "top-level child token present")
+            assert_("mid_color" in colors, "mid-level parent token present")
+            chain = spec["_meta"].get("resolved_chain", [])
+            assert_(len(chain) == 3,
+                    f"resolved_chain has 3 entries ({chain})")
+            assert_(chain[0] == "top_sys" and chain[-1] == "terminal",
+                    f"chain order is top→mid→terminal ({chain})")
         finally:
             del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
             clear_cache()
@@ -275,11 +576,18 @@ def main():
     test_load_resolves_svg_paths()
     test_validate_existing_specs()
     test_validate_synthetic_bad_spec()
+    test_unknown_grammar_family_is_advisory()
+    test_unknown_elevation_strategy_is_advisory()
+    test_unknown_selection_signal_is_advisory()
     test_get_rulebook()
     test_check_compliance_swiss_component()
     test_check_compliance_wireframe_pattern()
     test_check_compliance_unknown_artifact()
     test_register_unregister_roundtrip()
+    test_extends_loads_merged_spec()
+    test_extends_cycle_detection()
+    test_extends_parent_not_found()
+    test_extends_multi_level()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

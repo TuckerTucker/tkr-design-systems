@@ -29,6 +29,7 @@ def emit_artifact(
     width: int,
     height: int,
     filename_stem: str = "wireframe",
+    components_used: list[dict] | None = None,
 ) -> tuple[Path, Path]:
     """Write wireframe SVG and spec.yaml to output directory.
 
@@ -62,6 +63,7 @@ def emit_artifact(
         width=width,
         height=height,
         svg_filename=svg_path.name,
+        components_used=components_used,
     )
     spec_path.write_text(yaml.safe_dump(metadata, sort_keys=False))
     return svg_path, spec_path
@@ -77,6 +79,7 @@ def _build_spec_yaml(
     width: int,
     height: int,
     svg_filename: str,
+    components_used: list[dict] | None = None,
 ) -> dict:
     """Build the spec.yaml metadata dict.
 
@@ -137,7 +140,7 @@ def _build_spec_yaml(
             ds["selection_rationale"] = selection.rationale
             if selection.fallback:
                 ds["selection_was_fallback"] = True
-        ds["components_used"] = []  # LLM seam — populated when placement returns structured plan
+        ds["components_used"] = components_used or []
         if compliance is not None:
             ds["rulebook_compliance"] = {
                 "checked": compliance.get("passed", 0)

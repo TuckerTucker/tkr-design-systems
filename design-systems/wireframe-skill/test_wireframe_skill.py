@@ -665,6 +665,375 @@ def test_assemble_blueprint_dedupes_filter_ids():
     assert_(True, "assembled SVG with duplicate component placeholders")
 
 
+# ─── Change E: substitution mode ──────────────────────────────────
+
+
+def test_wf_generate_substitute_returns_request():
+    section("wireframe(substitute=True): returns substitution_request")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="dashboard for a chat app",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            substitute=True,
+        )
+        assert_(result.ok, "result.ok=True in substitute mode",
+                "; ".join(result.errors))
+        assert_(result.svg_path is None,
+                "svg_path is None (no file written)")
+        assert_(result.spec_path is None,
+                "spec_path is None (no file written)")
+        assert_(result.substitution_request is not None,
+                "substitution_request is present")
+        if result.substitution_request:
+            req = result.substitution_request
+            assert_("text_nodes" in req, "has text_nodes key")
+            assert_("grammar_caveats" in req, "has grammar_caveats key")
+            assert_(req.get("schema_version") == "1.0",
+                    f"schema_version is 1.0 (got {req.get('schema_version')})")
+            assert_(req.get("system_id") == "swiss",
+                    f"system_id is swiss (got {req.get('system_id')})")
+            emitted = list(Path(td).glob("*.svg"))
+            assert_(len(emitted) == 0,
+                    f"no SVG files written to output_dir ({emitted})")
+
+
+def test_wf_generate_substitute_false_unchanged():
+    section("wireframe(substitute=False): normal generation unaffected")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="dashboard for a chat app",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            substitute=False,
+        )
+        assert_(result.ok, "result.ok=True", "; ".join(result.errors))
+        assert_(result.svg_path is not None and result.svg_path.exists(),
+                "svg_path written to disk")
+        assert_(result.substitution_request is None,
+                "substitution_request is None in normal mode")
+
+
+def test_wf_generate_substitute_to_dict():
+    section("GenerationResult.to_dict() with substitution_request")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="settings page",
+            system="swiss",
+            output_dir=td,
+            substitute=True,
+        )
+        d = result.to_dict()
+        assert_("substitution_request" in d,
+                "to_dict() includes substitution_request key")
+        assert_(d["substitution_request"] is not None,
+                "substitution_request value is not None")
+
+
+def test_wf_generate_substitute_unknown_system():
+    section("wireframe(substitute=True, unknown system) fails at Step 1")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="anything",
+            system="no_such_system",
+            output_dir=td,
+            substitute=True,
+        )
+        assert_(not result.ok, "unknown system fails (ok=False)")
+        assert_(result.substitution_request is None,
+                "no substitution_request on failure")
+
+
+# ─── Change D: smarter template selection ─────────────────────────
+
+
+def test_select_layout_exact_finds_dashboard():
+    section("select_layout_pattern(mode='exact') finds dashboard")
+    from wireframe_skill.placement import select_layout_pattern
+    from design_system_skill.loader import load_system
+    res = load_system("swiss")
+    if not res.ok:
+        return
+    selection = select_layout_pattern("dashboard for a chat app", res.data,
+                                      platform="desktop", select_mode="exact")
+    assert_(selection is not None, "exact mode found a match")
+    if selection:
+        assert_(selection.base_pattern == "dashboard",
+                f"base_pattern is dashboard (got {selection.base_pattern})")
+
+
+def test_select_layout_exact_rejects_synonym():
+    section("select_layout_pattern(mode='exact') rejects 'login'")
+    from wireframe_skill.placement import select_layout_pattern
+    from design_system_skill.loader import load_system
+    res = load_system("swiss")
+    if not res.ok:
+        return
+    selection = select_layout_pattern("login screen", res.data,
+                                      platform="desktop", select_mode="exact")
+    assert_(selection is None, "exact mode returns None for synonym 'login'")
+
+
+def test_wan_regression_edit_not_form():
+    section("select_layout_pattern(mode='exact'): 'edit mode' does NOT match form")
+    from wireframe_skill.placement import select_layout_pattern
+    from design_system_skill.loader import load_system
+    res = load_system("wireframe")
+    if not res.ok:
+        return
+    selection = select_layout_pattern(
+        "video generation tool with edit mode", res.data,
+        platform="desktop", select_mode="exact",
+    )
+    assert_(selection is None,
+            "exact mode returns None for 'edit mode' (no false match to form)")
+
+
+def test_select_layout_request_mode():
+    section("select_layout_pattern(mode='request') always returns None")
+    from wireframe_skill.placement import select_layout_pattern
+    from design_system_skill.loader import load_system
+    res = load_system("swiss")
+    if not res.ok:
+        return
+    selection = select_layout_pattern("dashboard for a chat app", res.data,
+                                      platform="desktop", select_mode="request")
+    assert_(selection is None, "request mode always returns None")
+
+
+def test_build_layout_selection_request_structure():
+    section("build_layout_selection_request: returns structured request")
+    from wireframe_skill.placement import build_layout_selection_request
+    from design_system_skill.loader import load_system
+    res = load_system("swiss")
+    if not res.ok:
+        return
+    req = build_layout_selection_request("video generation workspace", res.data,
+                                         platform="desktop")
+    assert_(req.get("schema_version") == "1.0",
+            f"schema_version is 1.0 (got {req.get('schema_version')})")
+    assert_(req.get("system_id") == "swiss",
+            f"system_id is swiss (got {req.get('system_id')})")
+    patterns = req.get("available_patterns", [])
+    assert_(len(patterns) > 0, f"available_patterns non-empty (got {len(patterns)})")
+    first = patterns[0]
+    assert_("pattern_id" in first, "pattern has pattern_id")
+    assert_("base_name" in first, "pattern has base_name")
+    assert_("svg_path" in first, "pattern has svg_path")
+    assert_("description" in first, "pattern has description key")
+    canvas = req.get("canvas", {})
+    assert_(canvas.get("width") == 1280 and canvas.get("height") == 800,
+            f"canvas dimensions are 1280x800 (got {canvas})")
+
+
+def test_apply_layout_selection_valid():
+    section("apply_layout_selection: valid choice")
+    from wireframe_skill.placement import apply_layout_selection
+    from design_system_skill.loader import load_system
+    res = load_system("swiss")
+    if not res.ok:
+        return
+    response = {"selected_pattern_id": "dashboard", "rationale": "best fit"}
+    selection = apply_layout_selection(response, res.data, platform="desktop")
+    assert_(selection is not None, "valid choice returns a LayoutSelection")
+    if selection:
+        assert_(not selection.fallback, "fallback is False for explicit selection")
+
+
+def test_apply_layout_selection_invalid():
+    section("apply_layout_selection: invalid choice")
+    from wireframe_skill.placement import apply_layout_selection
+    from design_system_skill.loader import load_system
+    res = load_system("swiss")
+    if not res.ok:
+        return
+    response = {"selected_pattern_id": "nonexistent-layout", "rationale": "test"}
+    selection = apply_layout_selection(response, res.data, platform="desktop")
+    assert_(selection is None, "invalid choice returns None")
+
+
+# ─── Change B: composition layer ─────────────────────────────────
+
+
+def test_wireframe_compose_returns_decomposition_request():
+    section("wireframe(compose=True): returns decomposition_request")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="kanban board with three columns",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            compose=True,
+        )
+        assert_(result.ok, "result.ok=True in compose mode",
+                "; ".join(result.errors))
+        assert_(result.svg_path is None,
+                "svg_path is None (no file written)")
+        assert_(result.decomposition_request is not None,
+                "decomposition_request is present")
+        if result.decomposition_request:
+            req = result.decomposition_request
+            assert_("components" in req, "has components key")
+            assert_("canvas" in req, "has canvas key")
+            assert_(len(req.get("components", [])) > 0,
+                    "components list non-empty")
+
+
+def test_wireframe_compose_false_unchanged():
+    section("wireframe(compose=False): normal template flow")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="dashboard for a chat app",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            compose=False,
+        )
+        assert_(result.ok, "result.ok=True", "; ".join(result.errors))
+        assert_(result.svg_path is not None, "svg_path written")
+        assert_(result.decomposition_request is None,
+                "decomposition_request is None in normal mode")
+
+
+def test_wireframe_layout_id_override():
+    section("wireframe(layout_id='auth-sign-in'): explicit override")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="anything at all",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            layout_id="auth-sign-in",
+        )
+        assert_(result.ok, "result.ok=True with layout_id",
+                "; ".join(result.errors))
+        if result.selection:
+            assert_(result.selection.pattern_id == "auth-sign-in",
+                    f"pattern_id matches layout_id (got {result.selection.pattern_id})")
+
+
+def test_wireframe_invalid_layout_id():
+    section("wireframe(layout_id='nonexistent'): fails")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="anything",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            layout_id="nonexistent-layout",
+        )
+        assert_(not result.ok, "invalid layout_id returns ok=False")
+
+
+def test_wireframe_compose_takes_precedence():
+    section("wireframe(compose=True, layout_id=...): compose wins")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="anything",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            compose=True,
+            layout_id="dashboard",
+        )
+        assert_(result.ok, "ok=True")
+        assert_(result.decomposition_request is not None,
+                "compose=True takes precedence (got decomposition_request)")
+        assert_(result.selection is None,
+                "no selection when compose=True")
+
+
+def test_emit_with_components_used():
+    section("emit_artifact with components_used")
+    from wireframe_skill.emit import emit_artifact
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        components = [{"id": "button-primary", "region": "header", "x": 10, "y": 10}]
+        svg_path, spec_path = emit_artifact(
+            td_path,
+            '<svg viewBox="0 0 1280 800"><text>test</text></svg>',
+            brief="test",
+            platform="desktop",
+            spec={"_meta": {"system_id": "test", "spec_version": "0.2",
+                            "system_version": "1.0"}},
+            selection=None,
+            compliance=None,
+            width=1280,
+            height=800,
+            components_used=components,
+        )
+        import yaml as _yaml
+        spec_data = _yaml.safe_load(spec_path.read_text())
+        ds = spec_data.get("design_system", {})
+        assert_(len(ds.get("components_used", [])) == 1,
+                f"components_used has 1 entry (got {len(ds.get('components_used', []))})")
+        assert_(ds["components_used"][0]["id"] == "button-primary",
+                "component id is button-primary")
+
+
+def test_full_composition_e2e():
+    section("full composition e2e: compose → blueprint → assemble")
+    from wireframe_skill.assembler import assemble_blueprint
+    from design_system_skill.loader import load_system
+    import xml.etree.ElementTree as ET
+
+    with tempfile.TemporaryDirectory() as td:
+        # Step 1: get decomposition request
+        result = wireframe(
+            brief="video generation workspace",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            compose=True,
+        )
+        assert_(result.ok and result.decomposition_request is not None,
+                "compose mode returns decomposition_request")
+        if not result.decomposition_request:
+            return
+
+        # Step 2: build a blueprint from available components
+        components = result.decomposition_request.get("components", [])
+        comp_ids = [c["component_id"] for c in components]
+        button_id = next((c for c in comp_ids if "button" in c), comp_ids[0])
+        card_id = next((c for c in comp_ids if "card" in c), comp_ids[0])
+
+        blueprint = {
+            "schema_version": "1.0",
+            "canvas": {"width": 1280, "height": 800},
+            "regions": [
+                {
+                    "id": "header",
+                    "x": 0, "y": 0, "w": 1280, "h": 64,
+                    "components": [
+                        {"component_id": button_id, "x": 10, "y": 10}
+                    ],
+                },
+                {
+                    "id": "main",
+                    "x": 0, "y": 64, "w": 1280, "h": 736,
+                    "components": [
+                        {"component_id": card_id, "x": 20, "y": 20}
+                    ],
+                },
+            ],
+        }
+
+        # Step 3: assemble
+        res = load_system("swiss")
+        if not res.ok:
+            return
+        svg_text, warnings = assemble_blueprint(blueprint, res.data)
+        try:
+            ET.fromstring(svg_text)
+            assert_(True, "assembled SVG is valid XML")
+        except Exception as e:
+            assert_(False, f"SVG not valid XML: {e}")
+        assert_(button_id.replace("-", "_") in svg_text or button_id in svg_text,
+                "SVG contains the chosen button component")
+
+
 def main():
     print("wireframe-skill v3.0 end-to-end tests\n" + "=" * 50)
     test_swiss_dashboard_desktop()
@@ -691,6 +1060,27 @@ def main():
     test_validate_blueprint_flags_oversized_component()
     test_assemble_blueprint_swiss_dashboard_minimal()
     test_assemble_blueprint_dedupes_filter_ids()
+    # Change E: substitution mode
+    test_wf_generate_substitute_returns_request()
+    test_wf_generate_substitute_false_unchanged()
+    test_wf_generate_substitute_to_dict()
+    test_wf_generate_substitute_unknown_system()
+    # Change D: smarter template selection
+    test_select_layout_exact_finds_dashboard()
+    test_select_layout_exact_rejects_synonym()
+    test_wan_regression_edit_not_form()
+    test_select_layout_request_mode()
+    test_build_layout_selection_request_structure()
+    test_apply_layout_selection_valid()
+    test_apply_layout_selection_invalid()
+    # Change B: composition layer
+    test_wireframe_compose_returns_decomposition_request()
+    test_wireframe_compose_false_unchanged()
+    test_wireframe_layout_id_override()
+    test_wireframe_invalid_layout_id()
+    test_wireframe_compose_takes_precedence()
+    test_emit_with_components_used()
+    test_full_composition_e2e()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

@@ -37,29 +37,28 @@ logger = structlog.get_logger(__name__)
 
 # ─── Enum vocabularies ──────────────────────────────────────────────
 
-VALID_GRAMMAR_FAMILIES = {
+KNOWN_GRAMMAR_FAMILIES = {
     "wireframe",
     "contemporary_clean",
     "character_grid",
     "print_texture",
-    # Future: spatial, brutalist_extended, etc.
 }
 
-VALID_ELEVATION_STRATEGIES = {
-    "typographic",      # Swiss
-    "paper_tiers",      # Editorial
-    "borders_only",     # Sketch, Terminal, Wireframe
-    "glass_blur",       # Prism
-    "hard_offset",      # Revolt
-    "duotone_filter",   # Riso (and other print_texture systems with a 2-ink filter pipeline)
-    "filter_pipeline",  # generic fallback for filter-driven elevation
+KNOWN_ELEVATION_STRATEGIES = {
+    "typographic",
+    "paper_tiers",
+    "borders_only",
+    "glass_blur",
+    "hard_offset",
+    "duotone_filter",
+    "filter_pipeline",
 }
 
 VALID_SEVERITIES = {"required", "recommended", "advisory"}
 VALID_CHECK_METHODS = {"mechanical", "semantic", "both"}
 VALID_CHECK_SCOPES = {"artifact", "component", "both"}
 
-VALID_SELECTION_SIGNALS = {
+KNOWN_SELECTION_SIGNALS = {
     "accent_bar",
     "prompt_character",
     "surface_fill",
@@ -117,8 +116,8 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
 
     _check_top_level_shape(data, errors)
     _check_spec_version(data, errors)
-    _check_system_block(data, errors)
-    _check_tokens(data, errors)
+    _check_system_block(data, errors, warnings)
+    _check_tokens(data, errors, warnings)
     _check_components(data, spec_dir, errors, warnings, lib_root)
     _check_layout_templates(data, spec_dir, errors, warnings, lib_root)
     _check_rulebook(data, errors, warnings)
@@ -182,11 +181,10 @@ def _check_spec_version(data: dict, errors: list[Error]) -> None:
         ))
 
 
-def _check_system_block(data: dict, errors: list[Error]) -> None:
+def _check_system_block(data: dict, errors: list[Error], warnings: list[Error]) -> None:
     """Verify system block has required fields and valid grammar_family."""
     sys_block = data.get("system")
     if not isinstance(sys_block, dict):
-        # Already reported as missing top-level if absent.
         return
     for required in ("id", "name"):
         if required not in sys_block:
@@ -196,15 +194,39 @@ def _check_system_block(data: dict, errors: list[Error]) -> None:
                 {"missing": f"system.{required}"},
             ))
     gf = sys_block.get("grammar_family")
-    if gf is not None and gf not in VALID_GRAMMAR_FAMILIES:
-        errors.append(Error(
+    if gf is not None and gf not in KNOWN_GRAMMAR_FAMILIES:
+        warnings.append(Error(
             "SCHEMA_VALIDATION_FAILED",
-            f"Unknown grammar_family '{gf}'. Allowed: {sorted(VALID_GRAMMAR_FAMILIES)}",
+            f"grammar_family '{gf}' is not a known convention. "
+            f"Known values: {sorted(KNOWN_GRAMMAR_FAMILIES)}",
             {"system_id": sys_block.get("id"), "grammar_family": gf},
         ))
 
+    extends_id = sys_block.get("extends")
+    if extends_id is not None:
+        if not isinstance(extends_id, str) or not extends_id.strip():
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                "system.extends must be a non-empty string (a system id)",
+                {"extends": extends_id},
+            ))
+        else:
+            try:
+                from .registry import Registry
+                reg_result = Registry.load()
+                if reg_result.ok and extends_id not in reg_result.data:
+                    warnings.append(Error(
+                        "SCHEMA_VALIDATION_FAILED",
+                        f"system.extends '{extends_id}' is not in the registry. "
+                        f"Register it first, or this system will fail to load.",
+                        {"extends": extends_id,
+                         "available": [e.id for e in reg_result.data.all()]},
+                    ))
+            except Exception:
+                pass
 
-def _check_tokens(data: dict, errors: list[Error]) -> None:
+
+def _check_tokens(data: dict, errors: list[Error], warnings: list[Error]) -> None:
     """Verify elevation strategy is valid."""
     tokens = data.get("tokens")
     if not isinstance(tokens, dict):
@@ -212,10 +234,11 @@ def _check_tokens(data: dict, errors: list[Error]) -> None:
     elev = tokens.get("elevation")
     if isinstance(elev, dict):
         strategy = elev.get("strategy")
-        if strategy is not None and strategy not in VALID_ELEVATION_STRATEGIES:
-            errors.append(Error(
+        if strategy is not None and strategy not in KNOWN_ELEVATION_STRATEGIES:
+            warnings.append(Error(
                 "SCHEMA_VALIDATION_FAILED",
-                f"Unknown elevation.strategy '{strategy}'. Allowed: {sorted(VALID_ELEVATION_STRATEGIES)}",
+                f"elevation.strategy '{strategy}' is not a known convention. "
+                f"Known values: {sorted(KNOWN_ELEVATION_STRATEGIES)}",
                 {"strategy": strategy},
             ))
 
@@ -290,10 +313,12 @@ def _check_components(
                 ))
 
             sig = variant.get("selection_signal")
-            if sig is not None and sig not in VALID_SELECTION_SIGNALS:
-                errors.append(Error(
+            if sig is not None and sig not in KNOWN_SELECTION_SIGNALS:
+                warnings.append(Error(
                     "SCHEMA_VALIDATION_FAILED",
-                    f"components.{comp_id}.variants[{variant.get('id')}].selection_signal '{sig}' is not in {sorted(VALID_SELECTION_SIGNALS)}",
+                    f"components.{comp_id}.variants[{variant.get('id')}].selection_signal "
+                    f"'{sig}' is not a known convention. "
+                    f"Known values: {sorted(KNOWN_SELECTION_SIGNALS)}",
                     {"component": comp_id, "variant_id": variant.get("id"), "selection_signal": sig},
                 ))
 

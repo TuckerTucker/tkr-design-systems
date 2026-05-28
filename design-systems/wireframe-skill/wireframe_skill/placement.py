@@ -73,24 +73,25 @@ def select_layout_pattern(
     brief: str,
     spec: dict,
     platform: str = "desktop",
+    select_mode: str = "auto",
 ) -> LayoutSelection | None:
     """Select a layout pattern from the system library matching the brief.
-
-    Strategy:
-        1. Scan system's library_root/layouts/ for available patterns.
-        2. For each keyword rule, match against brief (prefer mobile variant
-           when platform=='mobile' and brief mentions mobile).
-        3. If no match, fall back to DEFAULT_PATTERN_FALLBACK.
-        4. Return None if system has no patterns.
 
     Args:
         brief: Free-text brief (e.g. "dashboard for a chat app").
         spec: Loaded system spec dict.
         platform: "desktop" or "mobile" (default: "desktop").
+        select_mode: Selection strategy:
+            "auto"    — keyword heuristic + fallback (default, backward compat)
+            "exact"   — match only if brief explicitly names a pattern base
+            "request" — always return None (caller uses build_layout_selection_request)
 
     Returns:
         LayoutSelection with chosen pattern, or None if unavailable.
     """
+    if select_mode == "request":
+        return None
+
     library_root = Path(spec["_meta"]["library_root"])
     layouts_dir = library_root / "layouts"
     if not layouts_dir.exists():
@@ -103,6 +104,27 @@ def select_layout_pattern(
         platform == "mobile" or bool(MOBILE_HINT_KEYWORDS.search(brief))
     )
 
+    # Extract known base names from available patterns.
+    base_names = _extract_base_names(available)
+
+    if select_mode == "exact":
+        brief_lc = brief.lower()
+        for base in base_names:
+            if re.search(r'\b' + re.escape(base) + r'\b', brief_lc):
+                chosen = _pick_variant(available, base, prefer_mobile)
+                if chosen is not None:
+                    return LayoutSelection(
+                        pattern_id=chosen,
+                        base_pattern=base,
+                        svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
+                        width=0, height=0,
+                        rationale=f"exact match: '{base}' found in brief; chose {chosen}",
+                        requested_system=spec["_meta"]["system_id"],
+                        available_patterns=available,
+                    )
+        return None
+
+    # "auto" mode: keyword heuristic + fallback
     brief_lc = brief.lower()
     for kw_pattern, base_candidates in PATTERN_HEURISTICS:
         if not re.search(kw_pattern, brief_lc):
@@ -114,7 +136,7 @@ def select_layout_pattern(
                     pattern_id=chosen,
                     base_pattern=base,
                     svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
-                    width=0, height=0,  # filled by compose step
+                    width=0, height=0,
                     rationale=f"keyword '{kw_pattern}' matched brief; chose {chosen}",
                     requested_system=spec["_meta"]["system_id"],
                     available_patterns=available,
@@ -198,6 +220,147 @@ class ContentSubstitution:
     find: str
     replace: str
     rationale: str = ""
+
+
+_VARIANT_SUFFIXES = re.compile(
+    r'-(mobile|default|no-[\w]+|with-[\w-]+|error|first-use|narrow|conversation)$'
+)
+
+
+def _extract_base_names(available: list[str]) -> list[str]:
+    """Extract unique base pattern names from available pattern ids."""
+    bases: dict[str, None] = {}
+    for pattern_id in available:
+        base = _VARIANT_SUFFIXES.sub('', pattern_id)
+        bases[base] = None
+    return list(bases.keys())
+
+
+PLATFORM_DIMENSIONS = {
+    "mobile": (375, 812),
+    "desktop": (1280, 800),
+}
+
+
+def build_layout_selection_request(
+    brief: str,
+    spec: dict,
+    platform: str = "desktop",
+) -> dict:
+    """Build a structured layout selection request for the calling model.
+
+    Lists all available layout patterns from the system with descriptions
+    and canvas dimensions. The caller chooses the best-fitting pattern.
+
+    Args:
+        brief: Free-text brief.
+        spec: Loaded system spec dict.
+        platform: "desktop" or "mobile".
+
+    Returns:
+        Dict with schema_version, brief, system_id, platform, canvas,
+        available_patterns, grammar_caveats, response_format_example.
+    """
+    system_id = spec.get("_meta", {}).get("system_id", "unknown")
+    library_root = Path(spec["_meta"]["library_root"])
+    layouts_dir = library_root / "layouts"
+
+    available_patterns: list[dict] = []
+    if layouts_dir.exists():
+        layout_specs = spec.get("layout_templates") or {}
+        for svg_path in sorted(layouts_dir.glob("*.svg")):
+            pattern_id = svg_path.stem
+            base_name = _VARIANT_SUFFIXES.sub('', pattern_id)
+            # Try to find description from spec
+            description = None
+            for spec_key, spec_val in layout_specs.items():
+                if isinstance(spec_val, dict):
+                    norm_key = spec_key.replace("_", "-")
+                    if norm_key == base_name or norm_key == pattern_id:
+                        description = spec_val.get("description")
+                        break
+            available_patterns.append({
+                "pattern_id": pattern_id,
+                "base_name": base_name,
+                "svg_path": str(svg_path.resolve()),
+                "description": description,
+            })
+
+    canvas_w, canvas_h = PLATFORM_DIMENSIONS.get(platform, (1280, 800))
+
+    caveats = _extract_grammar_caveats_for_placement(spec)
+
+    return {
+        "schema_version": "1.0",
+        "brief": brief,
+        "system_id": system_id,
+        "platform": platform,
+        "canvas": {"width": canvas_w, "height": canvas_h},
+        "grammar_caveats": caveats,
+        "available_patterns": available_patterns,
+        "response_format_example": {
+            "selected_pattern_id": "dashboard",
+            "rationale": "Main workspace with sidebar controls maps to dashboard layout",
+        },
+    }
+
+
+def _extract_grammar_caveats_for_placement(spec: dict) -> dict:
+    """Extract grammar rules from spec that constrain layout selection."""
+    caveats: dict = {}
+    typography = spec.get("tokens", {}).get("typography", {})
+    case_rules = typography.get("case", {})
+    if case_rules:
+        caveats["case_rules"] = case_rules
+    avatar_strategy = spec.get("system", {}).get("avatar_strategy")
+    if avatar_strategy:
+        caveats["avatar_strategy"] = avatar_strategy.get("mode")
+    return caveats
+
+
+def apply_layout_selection(
+    selection_response: dict,
+    spec: dict,
+    platform: str = "desktop",
+) -> LayoutSelection | None:
+    """Apply a model's layout selection response.
+
+    Args:
+        selection_response: Dict with selected_pattern_id and rationale.
+        spec: Loaded system spec dict.
+        platform: "desktop" or "mobile".
+
+    Returns:
+        LayoutSelection if the chosen pattern exists, None otherwise.
+    """
+    pattern_id = selection_response.get("selected_pattern_id")
+    rationale = selection_response.get("rationale", "")
+    if not pattern_id:
+        return None
+
+    library_root = Path(spec["_meta"]["library_root"])
+    layouts_dir = library_root / "layouts"
+    if not layouts_dir.exists():
+        return None
+
+    svg_path = (layouts_dir / f"{pattern_id}.svg").resolve()
+    if not svg_path.exists():
+        return None
+
+    base_name = _VARIANT_SUFFIXES.sub('', pattern_id)
+
+    available = sorted(p.stem for p in layouts_dir.glob("*.svg"))
+
+    return LayoutSelection(
+        pattern_id=pattern_id,
+        base_pattern=base_name,
+        svg_path=svg_path,
+        width=0, height=0,
+        rationale=rationale,
+        fallback=False,
+        requested_system=spec["_meta"]["system_id"],
+        available_patterns=available,
+    )
 
 
 def derive_content_substitutions(
