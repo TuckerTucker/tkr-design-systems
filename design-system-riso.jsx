@@ -993,9 +993,9 @@ function risoSpec(a) { return {
    ═══════════════════════════════════════════════════════════════ */
 function ThemeView({ sec, setSec, sel, setSel }) {
   const specSections = [
-    { id: "overview", l: "Overview" }, { id: "color", l: "Color" }, { id: "typography", l: "Typography" },
+    { id: "preview", l: "⬡ Preview + Tweaks" }, { id: "overview", l: "Overview" }, { id: "color", l: "Color" }, { id: "typography", l: "Typography" },
     { id: "elevation", l: "Elevation" }, { id: "components", l: "Components" }, { id: "patterns", l: "Patterns" },
-    { id: "extensions", l: "Extensions" }, { id: "voice", l: "Voice & Tone" }, { id: "preview", l: "⬡ Preview + Tweaks" },
+    { id: "extensions", l: "Extensions" }, { id: "voice", l: "Voice & Tone" },
   ];
   const spec = risoSpec(TM.color);
   return (<div style={{ display: "flex", minHeight: "100%" }}>
@@ -1021,7 +1021,7 @@ function ThemeView({ sec, setSec, sel, setSel }) {
    MAIN APP
    ═══════════════════════════════════════════════════════════════ */
 export default function App() {
-  const [sec, setSec] = useState("overview");
+  const [sec, setSec] = useState("preview");
   const [sel, setSel] = useState(1);
 
   return (
