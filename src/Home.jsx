@@ -2,16 +2,32 @@ import { useState } from "react";
 
 const systems = [
   {
-    id: "integrated",
-    name: "Integrated System",
-    tag: "Sketch + Prism + Revolt",
-    description: "Multi-theme design system with three distinct visual languages — hand-drawn warmth, liquid glass, and neobrutalist energy.",
-    colors: ["#B8A9C8", "#7DDFBE", "#FF3366"],
-    themes: ["Sketch", "Prism", "Revolt"],
+    id: "sketch",
+    name: "Sketch",
+    tag: "Linear + Hand-Drawn",
+    description: "Clean, linear foundation with hand-drawn cursive annotations. IBM Plex Sans for structure, Caveat for editorial warmth. Borders only — zero shadows.",
+    colors: ["#B8A9C8"],
+    themes: ["Sketch"],
+  },
+  {
+    id: "prism",
+    name: "Prism",
+    tag: "Liquid Glass + Bento",
+    description: "Atmospheric frosted glass panels over moody gradients. Depth through transparency and backdrop-filter blur. Outfit typeface, teal accent.",
+    colors: ["#7DDFBE"],
+    themes: ["Prism"],
+  },
+  {
+    id: "revolt",
+    name: "Revolt",
+    tag: "Neobrutalist + Y2K",
+    description: "Hard borders, offset shadows, zero radius. Five-color palette — black, white, cream, neon lime, hot pink. Space Mono uppercase throughout.",
+    colors: ["#FF3366"],
+    themes: ["Revolt"],
   },
   {
     id: "terminal",
-    name: "Terminal System",
+    name: "Terminal",
     tag: "CLI + Phosphor Heritage",
     description: "Monochrome terminal aesthetic with phosphor green accents. Sharp edges, monospace type, command-line heritage.",
     colors: ["#00FF66"],
@@ -19,7 +35,7 @@ const systems = [
   },
   {
     id: "editorial",
-    name: "Editorial System",
+    name: "Editorial",
     tag: "Long-form Serif + Newsprint Masthead",
     description: "Classic editorial typography with deep crimson accents. Serif-driven hierarchy built for long-form reading and newsprint gravitas.",
     colors: ["#8B1E2D"],
@@ -27,7 +43,7 @@ const systems = [
   },
   {
     id: "swiss",
-    name: "Swiss System",
+    name: "Swiss",
     tag: "Grid-strict + Rams Heritage",
     description: "Grid-strict neo-grotesk aesthetic in the Rams lineage. A fixed seven-size type scale, a single saturated red used sparingly, and typography — including large numerals — carrying all hierarchy.",
     colors: ["#E3000B"],
@@ -35,7 +51,7 @@ const systems = [
   },
   {
     id: "riso",
-    name: "Riso System",
+    name: "Riso",
     tag: "Duotone Print + Tweakable Press",
     description: "Two-ink risograph aesthetic with paper stock presets, halftone, grain, and live misregistration controls. A tweakable press, rendered in CSS.",
     colors: ["#3255A4", "#FF48B0"],
@@ -131,7 +147,7 @@ export default function Home({ onNavigate }) {
                     <div key={i} style={{
                       width: 12,
                       height: 12,
-                      borderRadius: (sys.id === "terminal" || sys.id === "riso" || sys.id === "swiss") ? 0 : 6,
+                      borderRadius: (sys.id === "terminal" || sys.id === "riso" || sys.id === "swiss" || sys.id === "revolt") ? 0 : 6,
                       background: c,
                       transition: "transform 0.2s",
                       transform: isHovered ? "scale(1.2)" : "scale(1)",
@@ -173,7 +189,7 @@ export default function Home({ onNavigate }) {
                   <span key={t} style={{
                     fontSize: 10,
                     padding: "3px 8px",
-                    borderRadius: (sys.id === "terminal" || sys.id === "riso" || sys.id === "swiss") ? 0 : 4,
+                    borderRadius: (sys.id === "terminal" || sys.id === "riso" || sys.id === "swiss" || sys.id === "revolt") ? 0 : 4,
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.06)",
                     color: "#999",

@@ -2,56 +2,33 @@ import { StrictMode, useState, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import Home from "./Home.jsx";
 
-const IntegratedSystem = lazy(() => import("../design-system-integrated.jsx"));
+const SketchSystem = lazy(() => import("../design-system-sketch.jsx"));
+const PrismSystem = lazy(() => import("../design-system-prism.jsx"));
+const RevoltSystem = lazy(() => import("../design-system-revolt.jsx"));
 const TerminalSystem = lazy(() => import("../design-system-terminal.jsx"));
 const EditorialSystem = lazy(() => import("../design-system-editorial.jsx"));
 const SwissSystem = lazy(() => import("../design-system-swiss.jsx"));
 const RisoSystem = lazy(() => import("../design-system-riso.jsx"));
 
+const systems = {
+  sketch: SketchSystem,
+  prism: PrismSystem,
+  revolt: RevoltSystem,
+  terminal: TerminalSystem,
+  editorial: EditorialSystem,
+  swiss: SwissSystem,
+  riso: RisoSystem,
+};
+
 function Root() {
   const [route, setRoute] = useState("home");
 
-  if (route === "integrated") {
+  const SystemComponent = systems[route];
+  if (SystemComponent) {
     return (
       <Suspense fallback={<Loading />}>
         <BackButton onClick={() => setRoute("home")} />
-        <IntegratedSystem />
-      </Suspense>
-    );
-  }
-
-  if (route === "terminal") {
-    return (
-      <Suspense fallback={<Loading />}>
-        <BackButton onClick={() => setRoute("home")} />
-        <TerminalSystem />
-      </Suspense>
-    );
-  }
-
-  if (route === "editorial") {
-    return (
-      <Suspense fallback={<Loading />}>
-        <BackButton onClick={() => setRoute("home")} />
-        <EditorialSystem />
-      </Suspense>
-    );
-  }
-
-  if (route === "swiss") {
-    return (
-      <Suspense fallback={<Loading />}>
-        <BackButton onClick={() => setRoute("home")} />
-        <SwissSystem />
-      </Suspense>
-    );
-  }
-
-  if (route === "riso") {
-    return (
-      <Suspense fallback={<Loading />}>
-        <BackButton onClick={() => setRoute("home")} />
-        <RisoSystem />
+        <SystemComponent />
       </Suspense>
     );
   }
