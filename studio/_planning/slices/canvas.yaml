@@ -1,0 +1,129 @@
+# Slices — canvas
+# Layer: ui | Wave: 6
+
+capability: canvas
+
+slices:
+
+  # ── svg-stage ───────────────────────────────────────────────────
+
+  - title: "Canvas panel and native SVG stage"
+    number: 1
+    layer: ui
+    delivers:
+      - "Canvas panel component registered in the docking-shell panel registry (center slot, never railed)"
+      - "Native inline SVG rendering of the active artifact head version (no rasterization)"
+      - "SVG content fetched from /api/workspaces/:wsId/artifacts/:artId/versions/:n/svg (sanitized server content, stable node IDs preserved)"
+      - "Single device frame at true platform dimensions (375×812 mobile or 1280×800 desktop per artifact platform)"
+      - "Empty state when the workspace has no artifact (points at the chat panel)"
+      - "Inline error display on SVG fetch failure (what failed, how to fix, in place)"
+      - "CanvasViewState model in studio/client/src/canvas/ (artifact, version, platform mode, viewport, inspect, highlight)"
+      - "TypeScript strict, named exports, contract types imported from packages/contract"
+    depends_on: []
+    story_ids:
+      - designer-sees-generated-artifact-on-canvas
+
+  - title: "Platform frames and side-by-side mode"
+    number: 2
+    layer: ui
+    delivers:
+      - "Platform mode switcher (mobile, desktop, side-by-side) on the stage toolbar"
+      - "Side-by-side mode rendering mobile and desktop frames simultaneously at true dimensions"
+      - "Frame chrome (device outline, platform label, dimensions) distinct from artifact content"
+      - "Mode disabled-with-reason when a platform variant does not exist for the artifact (greyed, not hidden)"
+      - "Fit-to-frame recalculation on mode change"
+      - "Reduced-motion respect for mode transitions"
+    depends_on: [1]
+    story_ids:
+      - designer-compares-platforms-side-by-side
+
+  # ── stage-navigation ────────────────────────────────────────────
+
+  - title: "Zoom/pan with fit-to-frame default and keyboard controls"
+    number: 3
+    layer: ui
+    delivers:
+      - "Viewport transform model (zoom factor, pan offset) over the framed stage"
+      - "Fit-to-frame default on artifact load, platform-mode change, and panel resize"
+      - "Mouse/trackpad zoom (scroll + modifier, pinch) and drag-to-pan"
+      - "Keyboard controls: +/- zoom, 0 fit-to-frame, 1 actual size, arrow keys pan"
+      - "Zoom clamped (10%–400%) and pan bounded (artifact never lost off-screen)"
+      - "Zoom level indicator with reset-to-fit action"
+      - "Side-by-side mode driven as a single shared viewport"
+      - "Per-artifact viewport memory within the session"
+      - "Reduced-motion respect (no animated easing under prefers-reduced-motion)"
+    depends_on: [1, 2]
+    story_ids:
+      - designer-navigates-stage-with-keyboard
+
+  # ── inspect-overlay ─────────────────────────────────────────────
+
+  - title: "Inspect-on-hover overlay"
+    number: 4
+    layer: ui
+    delivers:
+      - "Inspect mode toggle (toolbar button + keyboard shortcut), off by default"
+      - "Node metadata map built from the version spec endpoint (components_used, design_system block) keyed by stable node ID"
+      - "Hover hit-testing with non-destructive outline overlay (artifact SVG never mutated)"
+      - "Popover with component id/name, variant, and token references (color, typography, spacing, radius)"
+      - "Keyboard inspection (Tab/arrow keys cycle inspectable nodes, same popover as hover)"
+      - "Edge-aware popover positioning (flips/shifts inside the panel)"
+      - "Unmapped-node fallback (node id + 'no component metadata' note)"
+      - "Screen-reader exposure of popover content (aria-describedby on the inspect target)"
+    depends_on: [1, 3]
+    story_ids:
+      - designer-inspects-component-and-tokens
+
+  # ── history-filmstrip ───────────────────────────────────────────
+
+  - title: "Generation-history filmstrip"
+    number: 5
+    layer: ui
+    delivers:
+      - "Filmstrip of version thumbnails under the stage (oldest → newest, head marked)"
+      - "Thumbnails rendered as scaled native SVG from version content"
+      - "Version metadata on hover/focus (number, brief excerpt, tool, created — from version provenance)"
+      - "Scrub-to-preview (hover/arrow keys render that version on the stage; leaving returns to head)"
+      - "Restore-as-new-head action via studio-api's POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore (studio-api slice 4; no confirmation dialog; artifact-pipeline owns the semantics)"
+      - "Inline Undo after restore (previous head restored as another new head; the new version number comes from the RestoreResponse — the new head's VersionSummary — while the filmstrip also appends live via artifact.version_created)"
+      - "Keyboard parity (Left/Right scrub, Home/End first/head, Enter restores)"
+      - "Horizontal scroll when versions exceed panel width"
+      - "Single-version handling (restore disabled with reason, not hidden)"
+    depends_on: [1]
+    story_ids:
+      - designer-scrubs-history-and-restores-version
+
+  # ── compliance-bar ──────────────────────────────────────────────
+
+  - title: "Compliance bar with violation highlighting"
+    number: 6
+    layer: ui
+    delivers:
+      - "Persistent bar under the stage: overall status + per-rule pass/warn/fail chips"
+      - "Compliance data fetched from /api/workspaces/:wsId/artifacts/:artId/versions/:n/compliance for the rendered version (head or scrub preview)"
+      - "Per-rule inline expansion listing violations (rule, message, severity) — no modal"
+      - "Click/Enter on a violation highlights the offending SVG node (outline + pan into view) via stable node IDs"
+      - "Node-less violations shown list-only with highlight disabled-with-reason"
+      - "Pending state while compliance has not arrived for the rendered version (non-blocking)"
+      - "Keyboard parity (Tab chips, Enter expand, arrows through violations, Enter highlight)"
+      - "WCAG AA status colors with non-color indicators (icon/shape per status)"
+    depends_on: [1, 3]
+    story_ids:
+      - designer-locates-compliance-violation
+
+  # ── live updates ────────────────────────────────────────────────
+
+  - title: "Live artifact events and progressive generation loading"
+    number: 7
+    layer: ui
+    delivers:
+      - "Subscription to artifact.version_created and artifact.compliance_completed WebSocket events (contract types from packages/contract)"
+      - "Stage swaps to the new head on artifact.version_created without user action"
+      - "Filmstrip appends the new version thumbnail live"
+      - "Compliance bar refreshes on artifact.compliance_completed; pending state in between"
+      - "Progressive, non-blocking generation state (current version stays visible and interactive; status shown contextually on the stage)"
+      - "Stale-event handling (events for non-active artifacts update caches, never hijack the stage)"
+      - "Reconnect resync (on WebSocket resume, re-fetch head and compliance for the active artifact)"
+    depends_on: [1, 5, 6]
+    story_ids:
+      - designer-watches-live-generation

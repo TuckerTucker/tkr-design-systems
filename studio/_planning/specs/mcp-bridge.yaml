@@ -1,0 +1,452 @@
+# Capability Spec — mcp-bridge
+# 13-section architectural design
+# Layer: infrastructure | Wave: 2
+
+capability: mcp-bridge
+status: implemented
+
+context: |
+  The mcp-bridge capability is the studio server's direct-call MCP client
+  for the tkr-design-systems MCP server (design-systems/mcp-server/server.py,
+  Python FastMCP over stdio). The studio runs a dual-connection topology
+  (decided in architecture.md): the Claude Agent SDK owns its own MCP
+  connection for agent-driven tool use (wf_generate, substitution,
+  blueprint assembly); this bridge owns a second, independent stdio
+  connection serving tool invocations that happen OUTSIDE the agent loop —
+  the library endpoints and artifact-pipeline compliance runs. The MCP
+  server is stateless per call, so dual connections are safe.
+
+  The bridge wraps exactly six direct-call tools: ds_list_systems,
+  ds_load_system, ds_get_rulebook, ds_check_compliance, wf_get_tokens,
+  wf_read_component. It is built on the official MCP TypeScript SDK
+  (@modelcontextprotocol/sdk) — Client + StdioClientTransport — where the
+  transport spawns and owns the server subprocess from the launch command
+  declared in repo-root .mcp.json (/usr/local/bin/python3
+  design-systems/mcp-server/server.py, relative path resolved against the
+  repo root as cwd). The bridge supervises that subprocess, serializes
+  calls over the single transport, enforces per-call timeout and
+  cancellation, and translates every failure mode into a typed
+  BridgeResult — errors never thrown across the capability seam. Bridge
+  state (up, restarting, failed) feeds the studio-server health registry
+  and the bridge.status WS event. The bridge is injected into its
+  consumers (artifact-pipeline, studio-api) via IoC — never imported as
+  a singleton. Per the testing policy, bridge tests run against the REAL
+  MCP server; it is never mocked.
+
+problem_statement: |
+  Studio's library endpoints and compliance pipeline need MCP tool results
+  inside a Node process, but no client exists:
+  - The MCP server speaks stdio JSON-RPC; nothing in the studio spawns,
+    handshakes with, or supervises it for direct calls
+  - The Agent SDK's connection is scoped to the agent loop; library
+    browsing and per-version compliance runs happen outside any agent turn
+  - A single stdio transport cannot multiplex naive concurrent callers;
+    without serialization, interleaved calls corrupt request/response pairing
+  - The Python skills return heterogeneous result shapes ({ok, data,
+    warnings} envelopes, flat {ok, ...} dicts, string-vs-object error
+    lists); consumers need one typed contract
+  - A crashed or hung server subprocess must surface as a visible bridge
+    state and in-place errors — never as an unhandled exception, a hung
+    request, or a console-only failure
+
+scope:
+  in:
+    - MCP client over stdio via @modelcontextprotocol/sdk (Client + StdioClientTransport)
+    - Server subprocess spawn from the .mcp.json launch command (command, args, cwd resolved through studio-server config)
+    - Subprocess supervision — crash detection, restart with exponential backoff, restart budget, failed terminal state
+    - Call serialization/queueing over the single transport (FIFO, one in-flight call)
+    - Per-call timeout (configurable default, per-call override) and AbortSignal cancellation
+    - Typed wrappers for exactly six tools — ds_list_systems, ds_load_system, ds_get_rulebook, ds_check_compliance, wf_get_tokens, wf_read_component
+    - Error translation (MCP protocol errors, tool-level failures, timeouts, cancellation, bridge-down) into BridgeResult — never thrown across the seam
+    - Bridge status reporting (up, restarting, failed) into the studio-server health registry and the bridge.status WS event
+    - Result payload handling (SVG source, token vocabularies, normalized specs, raw compliance results — incl. parsing JSON-string rule details into structured form)
+    - McpBridge interface + createMcpBridge factory for IoC injection
+    - Integration tests against the REAL design-systems MCP server (testing policy — never mocked)
+  out:
+    - Agent-driven tool calls — wf_generate, wf_build_substitution_request, wf_apply_substitutions, wf_select_layout, wf_assemble_from_blueprint run over the Agent SDK's own MCP connection (see agent-orchestration)
+    - Registry mutation tools (ds_register_system, ds_unregister_system, ds_validate_spec) — system-authoring is deferred; not wrapped
+    - Deciding which tool to call for an intent (see agent-orchestration)
+    - Persisting generation or compliance results (see artifact-pipeline, workspace-store)
+    - Caching of library responses (see studio-api library endpoints); the bridge exposes NO registry-change signal — studio-api watches design-systems/registry.yaml directly for cache invalidation
+    - HTTP/WS delivery of bridge data and events (see studio-api)
+    - MCP server implementation itself (design-systems/mcp-server, read-only dependency)
+
+dependencies:
+  upstream:
+    - "studio-server — configuration (launch command, repo root, timeout/backoff settings), pino logger, health registry, WS event emission seam"
+    - "design-systems/mcp-server/server.py — the MCP server (read-only; tool signatures are the source of truth)"
+    - ".mcp.json (repo root) — launch command for the server subprocess (/usr/local/bin/python3 design-systems/mcp-server/server.py)"
+    - "@modelcontextprotocol/sdk — official MCP TypeScript SDK (Client, StdioClientTransport)"
+  downstream:
+    - "artifact-pipeline — runs ds_check_compliance per artifact version through the injected bridge"
+    - "studio-api — library endpoints (systems, tokens, components, rulebooks) proxy through the injected bridge; /api/health reports bridge state; bridge.status pushed over WS"
+  external:
+    - "Python 3 at /usr/local/bin/python3 with mcp, structlog, and the skill packages importable (existing working setup proven by Claude Code's own .mcp.json usage)"
+    - "design-system-skill and wireframe-skill Python packages — produce the result shapes the wrappers type"
+
+data_contracts: |
+  ## Typed Result Model (the capability seam — errors never thrown)
+
+  Declared in the contract package (architecture.md module ownership:
+  bridge.ts is owned by mcp-bridge; consumers import, never redeclare).
+  Translation functions from MCP/skill error shapes into these types are
+  bridge-internal in studio/server/src/mcp/errors.ts.
+
+  ```typescript
+  // studio/packages/contract/src/bridge.ts (@studio/contract)
+  export type BridgeErrorKind =
+    | "protocol"     // transport/JSON-RPC failure, isError response, unparseable content
+    | "tool"         // tool executed and returned ok: false (skill-level failure)
+    | "timeout"      // per-call timeout expired
+    | "cancelled"    // caller aborted via AbortSignal
+    | "bridge_down"; // bridge failed/stopped, or restart budget exhausted
+
+  export interface BridgeError {
+    kind: BridgeErrorKind;
+    message: string;
+    code?: string;                     // stable skill code when kind === "tool":
+                                       // SYSTEM_NOT_FOUND | SPEC_FILE_MISSING |
+                                       // SPEC_PARSE_FAILED | SCHEMA_VALIDATION_FAILED |
+                                       // REFERENCED_FILE_MISSING | INVALID_PATH |
+                                       // RULESET_UNKNOWN | INTERNAL | ...
+    detail?: Record<string, unknown>;  // skill error detail passthrough
+  }
+
+  export interface BridgeWarning {
+    code: string;
+    message: string;
+    detail: Record<string, unknown>;
+  }
+
+  export type BridgeResult<T> =
+    | { ok: true; value: T; warnings: BridgeWarning[] }
+    | { ok: false; error: BridgeError };
+  ```
+
+  ## Bridge Interface (IoC — consumers receive it, never construct it)
+
+  ```typescript
+  // studio/server/src/mcp/bridge.ts
+  export interface CallOptions {
+    timeoutMs?: number;     // overrides the configured default per call
+    signal?: AbortSignal;   // cancellation
+  }
+
+  export interface McpBridge {
+    start(): Promise<void>;
+    stop(): Promise<void>;
+    status(): BridgeStatus;
+    onStatusChange(listener: (status: BridgeStatus) => void): () => void;
+
+    listSystems(opts?: CallOptions): Promise<BridgeResult<SystemDescriptor[]>>;
+    loadSystem(
+      params: { systemId: string; validate?: boolean },  // → ds_load_system(system_id, validate=True)
+      opts?: CallOptions,
+    ): Promise<BridgeResult<LoadedSystemSpec>>;
+    getRulebook(
+      params: { systemId: string },                      // → ds_get_rulebook(system_id)
+      opts?: CallOptions,
+    ): Promise<BridgeResult<RulebookEntry[]>>;
+    checkCompliance(
+      params: { systemId: string; artifactPath: string; scope?: "component" | "artifact" },
+      opts?: CallOptions,                                // → ds_check_compliance(system_id, artifact_path, scope=None)
+    ): Promise<BridgeResult<RawComplianceResult>>;
+    getTokens(
+      params: { systemId: string },                      // → wf_get_tokens(system_id)
+      opts?: CallOptions,
+    ): Promise<BridgeResult<AuthoringTokens>>;
+    readComponent(
+      params: { systemId: string; componentId: string }, // → wf_read_component(system_id, component_id)
+      opts?: CallOptions,
+    ): Promise<BridgeResult<ComponentRead>>;
+    readComponents(
+      params: { systemId: string; componentIds: string[] }, // → wf_read_component(system_id, component_ids=[...])
+      opts?: CallOptions,
+    ): Promise<BridgeResult<ComponentRead[]>>;
+  }
+
+  export function createMcpBridge(config: BridgeConfig, logger: Logger): McpBridge;
+
+  export interface BridgeConfig {
+    command: string;          // "/usr/local/bin/python3" (from .mcp.json)
+    args: string[];           // ["design-systems/mcp-server/server.py"]
+    cwd: string;              // repo root — server.py path in .mcp.json is repo-relative
+    defaultTimeoutMs: number;
+    restart: { maxAttempts: number; initialDelayMs: number; maxDelayMs: number };
+  }
+  ```
+
+  ## Tool Payload Types (mirror server.py and skill result shapes exactly)
+
+  ```typescript
+  // studio/server/src/mcp/types.ts (bridge-internal — NOT in the contract package)
+
+  // ds_list_systems — Result envelope, data = descriptor list.
+  // Unreadable specs degrade to a stub descriptor plus a warning
+  // (SPEC_FILE_MISSING / SPEC_PARSE_FAILED) — surfaced via warnings.
+  export interface SystemDescriptor {
+    id: string;
+    name: string;
+    tagline: string;
+    grammar_family: string | null;
+    version: string | null;
+    spec_version: string | null;
+    status: string;                    // e.g. "draft", "stable"
+  }
+
+  // ds_load_system — Result envelope, data = full normalized spec.
+  export interface LoadedSystemSpec {
+    system: Record<string, unknown>;             // id, name, tagline, version, ...
+    tokens: Record<string, unknown>;             // colors, typography, spacing, borders, elevation, ...
+    components: unknown;                         // component entries with absolute SVG paths
+    layouts?: unknown;                           // layout templates
+    rulebook?: RulebookEntry[];
+    grammar_extensions?: Record<string, unknown>;
+    _meta: { library_root: string; [key: string]: unknown };
+    [key: string]: unknown;                      // spec sections are schema-versioned; unknown keys preserved
+  }
+
+  // ds_get_rulebook — Result envelope, data = flattened rule list.
+  export interface RulebookEntry {
+    id: string;
+    rule: string;
+    rationale: string | null;
+    severity: string;
+    check_method: string | null;
+    check_scope: "component" | "artifact" | "both";
+    applies_when: string | null;
+    scope: "global" | "component";     // derived: component ⇢ "component", else "global"
+    check_implementation: string | null;
+  }
+
+  // ds_check_compliance — Result envelope, data = raw result.
+  export interface ComplianceRuleResult {
+    rule_id: string;
+    status: string;                    // pass | fail | advisory (mechanical check outcome)
+    detail: Record<string, unknown>;   // structured — the bridge parses the wire's
+                                       // JSON-string detail before returning; artifact-pipeline's
+                                       // violation-to-node mapper depends on these fields
+  }
+
+  // Raw MCP result shape — bridge-internal. The name ComplianceReport belongs
+  // exclusively to artifact-pipeline's domain model in @studio/contract (artifact.ts).
+  export interface RawComplianceResult {
+    system_id: string;
+    artifact_path: string;
+    scope: string;                     // "component" | "artifact" | "all" (auto-detected when not passed)
+    passed: number;
+    failed: number;
+    advisory: number;
+    results: ComplianceRuleResult[];
+    ruleset: string | null;            // null when no mechanical ruleset exists for the system
+    mechanical_only: boolean;
+    note?: string;                     // present when ruleset is null
+  }
+
+  // wf_get_tokens — flat dict (NOT Result-enveloped): {ok: true, ...payload}
+  // or {ok: false, errors: string[]} on load failure.
+  export interface PaletteEntry {
+    name: string;
+    value: string;
+    role: string;
+    usage_constraint: string;
+  }
+
+  export interface AuthoringTokens {
+    system_id: string;
+    palette: PaletteEntry[];
+    drawing_rules: Record<string, unknown>;  // SVG-ready attribute strings + CSS class block
+    typography: Record<string, unknown>;     // type scale formatted for SVG authoring
+    layout: Record<string, unknown>;         // spacing/layout constants
+  }
+
+  // wf_read_component — single: flat dict {ok: true, ...ComponentRead};
+  // batch: {ok: true, components: ComponentRead[]};
+  // {ok: false, errors: string[]} on failure.
+  export interface ComponentRead {
+    component_id: string;              // canonical id after variant resolution ("toggle" → "toggle-default")
+    svg_source: string;                // raw SVG text
+    viewBox: { w: number; h: number };
+    rendering_notes: string | null;
+    anatomy: unknown | null;           // anatomy labels from the parent component spec
+    tier: string;                      // "primitive" | "composite" | "pattern" | "unknown"
+    states: unknown | null;
+    constraints: unknown | null;
+  }
+  ```
+
+  ## Status Contract (shared with the client via packages/contract)
+
+  The bridge contributes the bridge.ts module to the already-scaffolded
+  @studio/contract package (skeleton created in Wave 1 by studio-server
+  slice 1). mcp-bridge owns this module; BridgeState is canonical here —
+  other capabilities import it and handle all five states. The module also
+  carries BridgeResult/BridgeError/BridgeWarning (declared above).
+
+  ```typescript
+  // studio/packages/contract/src/bridge.ts (continued)
+  export type BridgeState = "starting" | "up" | "restarting" | "failed" | "stopped";
+
+  export interface BridgeStatus {
+    state: BridgeState;
+    restartCount: number;   // restarts since process start
+    lastError?: string;     // most recent crash/handshake failure summary
+    since: string;          // ISO 8601 timestamp of the current state's start
+  }
+
+  // WS event: { type: "bridge.status", payload: BridgeStatus }
+  ```
+
+  ## Wire Notes (binding on the implementation)
+
+  - FastMCP serializes each tool's dict return value as JSON text content;
+    wrappers parse `content[0].text` into the typed payload. An isError
+    response or unparseable content translates to kind "protocol".
+  - ds_* tools return the skill Result envelope:
+    `{ok: true, data, warnings?}` / `{ok: false, errors: [{code, message, detail}]}`.
+    wf_get_tokens and wf_read_component return flat `{ok, ...}` dicts whose
+    error lists are plain strings. The server's exception catchall
+    (_error_result) also returns `{ok: false, errors: ["<message>"]}` —
+    translation handles both object and string error entries.
+  - Tool arguments are snake_case on the wire (system_id, artifact_path,
+    component_id, component_ids, validate, scope); wrapper params are
+    camelCase and mapped at the call site.
+  - artifactPath for checkCompliance must be an absolute path — the MCP
+    server resolves it against its own process, not the caller's.
+  - Each compliance rule's `detail` arrives on the MCP wire as a JSON
+    string; the checkCompliance wrapper parses it into
+    `Record<string, unknown>` before returning RawComplianceResult —
+    artifact-pipeline's violation-to-node mapper depends on the structured
+    detail fields. An unparseable detail string translates to kind
+    "protocol".
+
+file_locations:
+  - studio/server/src/mcp/bridge.ts — McpBridge interface + createMcpBridge factory (composition of transport, supervisor, queue, tools)
+  - studio/server/src/mcp/transport.ts — launch-command resolution, SDK Client + StdioClientTransport wiring, handshake, stderr→pino piping
+  - studio/server/src/mcp/supervisor.ts — crash detection, exponential backoff restart, restart budget, bridge state machine
+  - studio/server/src/mcp/queue.ts — FIFO call serialization, per-call timeout, AbortSignal cancellation, drain semantics
+  - studio/server/src/mcp/errors.ts — translation from MCP and skill error shapes into BridgeResult (type declarations live in packages/contract/src/bridge.ts)
+  - studio/server/src/mcp/tools.ts — the six typed wrappers (camelCase params → snake_case arguments → envelope unwrap)
+  - studio/server/src/mcp/types.ts — SystemDescriptor, LoadedSystemSpec, RulebookEntry, RawComplianceResult, AuthoringTokens, ComponentRead (bridge-internal payload types, not in the contract package)
+  - studio/server/src/mcp/index.ts — named re-exports (no default exports)
+  - studio/packages/contract/src/bridge.ts — BridgeResult/BridgeError/BridgeWarning/BridgeState/BridgeStatus + bridge.status WS payload type (module contributed by mcp-bridge to the already-scaffolded @studio/contract package; shared with client)
+  - studio/server/test/mcp/bridge.integration.test.ts — lifecycle + wrapper tests against the REAL MCP server (vitest)
+  - studio/server/test/mcp/supervisor.integration.test.ts — kill/restart/backoff/status tests against the real subprocess
+  - studio/server/test/mcp/errors.test.ts — unit tests for every translation path (pure logic)
+  - .mcp.json — launch command source of truth (READ-ONLY)
+  - design-systems/mcp-server/server.py — MCP server tool definitions (READ-ONLY)
+
+implementation_steps:
+  - Declare BridgeResult, BridgeError, BridgeWarning in the contract bridge.ts module (contributed to the already-scaffolded @studio/contract package), then implement translation functions for the skill Result envelope, flat-dict shapes, and string-vs-object error lists (errors.ts, unit-tested first)
+  - Define the six payload types from the actual server.py signatures and skill result shapes (types.ts, bridge-internal — incl. RawComplianceResult with rule detail typed Record<string, unknown>)
+  - Implement transport.ts — resolve command/args/cwd from studio-server config (mirroring .mcp.json), construct StdioClientTransport, connect Client, pipe stderr to pino
+  - Verify the handshake — listTools must include the six direct-call tool names; missing tools fail start() with a configuration error
+  - Implement queue.ts — FIFO dispatch, one in-flight call, per-call timeout timer, AbortSignal handling, drain on shutdown/failure
+  - Implement tools.ts — six wrappers mapping camelCase params to snake_case arguments, parsing FastMCP JSON text content, unwrapping envelopes through errors.ts, and parsing each compliance rule's JSON-string detail into Record<string, unknown>
+  - Implement supervisor.ts — state machine (starting/up/restarting/failed/stopped), transport close/error hooks, exponential backoff with restart budget, queue hold during restarting
+  - "Implement bridge.ts — createMcpBridge factory composing transport, supervisor, queue, and tools behind the McpBridge interface (IoC: config + logger injected)"
+  - Add BridgeState/BridgeStatus to the contract bridge.ts module and wire onStatusChange into the studio-server health registry and bridge.status WS emission seam
+  - Write errors.test.ts unit tests covering every BridgeErrorKind translation path
+  - Write bridge.integration.test.ts against the real MCP server — start/stop, all six wrappers happy-path, SYSTEM_NOT_FOUND tool error, timeout, cancellation, serialization order
+  - Write supervisor.integration.test.ts — kill the real subprocess mid-session, observe restarting → up, verify in-flight failure and post-restart success, exhaust the budget to reach failed
+  - Document BridgeConfig defaults in studio-server config schema (command, args, cwd, defaultTimeoutMs, restart backoff settings)
+
+error_handling: |
+  - Spawn failure (python3 missing, server.py path wrong) → start() resolves the bridge into failed with lastError; health reports it; no throw
+  - Handshake failure or missing direct-call tools in listTools → failed with a configuration-shaped lastError naming the missing tools
+  - Subprocess crash while idle → supervisor logs exit code, transitions to restarting, emits bridge.status, restarts with backoff
+  - Subprocess crash with calls in flight → in-flight call resolves {ok: false, kind: "protocol"}; queued calls hold through restarting and replay on up
+  - Restart budget exhausted → failed (terminal until explicit restart); held and new calls resolve {ok: false, kind: "bridge_down"}
+  - Per-call timeout expired → {ok: false, kind: "timeout"}; the transport is NOT torn down (the MCP server is stateless per call; a late response for a timed-out requestId is discarded)
+  - Caller aborts via AbortSignal → queued call removed without dispatch; in-flight call resolves {ok: false, kind: "cancelled"}
+  - Tool returns {ok: false, errors: [{code, message, detail}]} → {ok: false, kind: "tool", code, message, detail} (e.g. SYSTEM_NOT_FOUND, INVALID_PATH)
+  - Tool returns {ok: false, errors: ["string message"]} (flat wf_* shape or _error_result catchall) → kind "tool", code undefined, message from the first entry, remainder in detail
+  - JSON-RPC error response or isError content → kind "protocol" with the MCP error message
+  - Unparseable tool content (not valid JSON) → kind "protocol", raw text excerpt in detail
+  - Call invoked before start() or after stop() → {ok: false, kind: "bridge_down"} immediately
+  - Every failure path logs structured pino (requestId, tool, kind, code) — errors cross the seam as values, never as thrown exceptions
+
+edge_cases: |
+  - ds_list_systems with an unreadable registered spec → success with a degraded stub descriptor (name=id, status="draft") plus a SPEC_FILE_MISSING/SPEC_PARSE_FAILED warning — warnings passed through, not flattened into an error
+  - ds_check_compliance on a system with no mechanical ruleset → success with ruleset: null, zero counts, and a note string — consumers must branch on ruleset, not on failed === 0
+  - ds_check_compliance with a relative artifact path → the server resolves it against its own cwd; the wrapper requires an absolute path and rejects relative input as INVALID_PATH-shaped tool misuse before dispatch
+  - wf_read_component with a bare family id ("toggle") → server resolves to the default variant ("toggle-default"); ComponentRead.component_id carries the canonical id, not the requested one
+  - wf_read_component batch where one id is unknown → the underlying read raises inside the server and the whole call returns the flat error shape; the wrapper surfaces one tool error (no partial batch)
+  - Both componentId and componentIds supplied → wrapper API makes this unrepresentable (separate readComponent/readComponents methods); neither supplied is likewise impossible
+  - Large payloads (full LoadedSystemSpec, multi-component batch SVG) → parsed in one buffer; no streaming; studio-api caching keeps repeat cost off the bridge
+  - Cancellation racing completion → first settlement wins; a result arriving after abort is discarded, never delivered twice
+  - Timeout racing completion → same single-settlement guarantee; late responses matched by requestId and dropped
+  - Crash during restarting (server dies again before up) → backoff continues from the next attempt; restartCount increments per attempt
+  - stop() while calls are queued → queue drains as bridge_down; subprocess terminated; no orphan python3 process (verified by integration test)
+  - Two bridge instances in one process (tests) → safe by design: each owns its own subprocess; the MCP server is stateless per call
+
+integration_points:
+  - "studio-server: provides BridgeConfig (command/args/cwd from .mcp.json semantics, timeout and backoff settings), the pino logger, the health registry the bridge registers into, and the WS emission seam for bridge.status"
+  - "artifact-pipeline: receives the injected McpBridge and calls checkCompliance(systemId, artifactPath) for every artifact version; branches on BridgeResult and on RawComplianceResult.ruleset === null; consumes the structured rule detail (Record<string, unknown>) in its violation-to-node mapper and projects the raw result into its own ComplianceReport domain model (contract artifact.ts)"
+  - "studio-api: receives the injected McpBridge for the library endpoints — /api/library/systems (listSystems), /api/library/:systemId/tokens (getTokens), /api/library/:systemId/components/:componentId (readComponent), rulebook/spec data (getRulebook, loadSystem); caches at the API layer, not in the bridge — the bridge exposes no registry-change signal; studio-api watches design-systems/registry.yaml directly"
+  - "packages/contract: mcp-bridge contributes the bridge.ts module (BridgeResult, BridgeError, BridgeWarning, BridgeState, BridgeStatus, bridge.status event payload) to the already-scaffolded @studio/contract package (skeleton created in Wave 1 by studio-server slice 1); declared once, imported by server and client — never redeclared"
+  - "agent-orchestration: NO integration — the Agent SDK owns its own MCP connection; the bridge and the SDK never share a transport"
+  - "design-systems/mcp-server: read-only upstream; tool signatures in server.py are the source of truth for wrapper types"
+
+verification_criteria:
+  - start() spawns the real MCP server from the .mcp.json command with cwd = repo root and completes the MCP handshake
+  - listTools after handshake contains all six direct-call tool names; start() fails into failed state if any is missing
+  - listSystems() returns the registered systems with id, name, tagline, grammar_family, version, spec_version, status fields populated
+  - 'loadSystem({ systemId: "swiss" }) returns the normalized spec with tokens, components, rulebook, and _meta.library_root present'
+  - getRulebook({ systemId }) returns entries with derived scope ("global" for artifact/both, "component" for component check_scope)
+  - checkCompliance on a real generated SVG returns passed/failed/advisory counts and per-rule results whose detail is a structured Record<string, unknown> (parsed from the wire's JSON string, never a raw string); on a system without a mechanical ruleset returns ruleset null with a note
+  - getTokens({ systemId }) returns palette entries with name/value/role/usage_constraint and drawing_rules/typography/layout sections
+  - 'readComponent({ systemId, componentId: "toggle" }) resolves to the canonical default variant and returns non-empty svg_source with viewBox dimensions'
+  - readComponents() returns one ComponentRead per requested id in order
+  - 'loadSystem with an unknown system id resolves {ok: false, error.kind: "tool", error.code: "SYSTEM_NOT_FOUND"} — no exception observable by the caller'
+  - Two concurrent calls are dispatched serially (FIFO) and both resolve correctly
+  - A call with a deliberately small timeoutMs resolves kind "timeout" while the bridge stays up and a subsequent call succeeds
+  - Aborting a queued call prevents dispatch; aborting an in-flight call resolves kind "cancelled"
+  - Killing the server subprocess mid-session transitions status up → restarting → up, emits bridge.status on each transition, fails in-flight calls as protocol, and replays held calls after recovery
+  - Exhausting the restart budget reaches failed; calls resolve bridge_down; /api/health reflects the failed bridge
+  - stop() terminates the subprocess (no orphan python3 process remains) and drains pending calls as bridge_down
+  - All bridge tests run against the real design-systems MCP server — no mock of the server appears anywhere in the test suite
+  - TypeScript strict compilation passes; all exports are named; consumers receive the bridge via injection (no module-level singleton instance exported)
+
+performance: |
+  - Single in-flight call by design: throughput is bounded by serialization,
+    which is correct for the workload — library reads are user-paced and
+    compliance runs are per-version, not bulk. Bulk needs (batch component
+    reads) go through readComponents, one MCP call for N components.
+  - Per-call timeout default comes from BridgeConfig (a configuration
+    value, tuned against real compliance-run behavior in integration
+    tests), with per-call override for known-heavier calls like
+    checkCompliance on large artifacts.
+  - Payload sizes: LoadedSystemSpec and batch ComponentRead responses are
+    the largest payloads (full spec + raw SVG text). They are parsed
+    in-memory per call; the bridge holds no cache — repeat-read cost is
+    absorbed by studio-api's library cache, keeping the bridge stateless.
+  - Restart backoff is exponential between configured initial and max
+    delays, so a flapping server cannot spin the CPU with spawn loops,
+    and a healthy restart returns the bridge to up after a single attempt.
+  - Queue depth is logged per call; sustained depth growth is the
+    operational signal that a consumer is misusing the bridge for bulk
+    work that belongs elsewhere.
+
+security: |
+  - Localhost-only, single-user deployment (product decision); the bridge
+    adds no network surface — it speaks stdio to a local child process.
+  - The launch command is sourced from server configuration mirroring the
+    repo's own .mcp.json, never from user input, request payloads, or
+    workspace files — no injection path into spawn arguments.
+  - The subprocess inherits a minimal environment; ANTHROPIC_API_KEY is
+    NOT passed to the bridge's MCP server subprocess (only the Agent SDK
+    needs it, on its own connection).
+  - artifactPath values originate from workspace-store version directories
+    (server-controlled), not from raw client input; the wrapper rejects
+    relative paths so the server never resolves paths against an
+    unexpected cwd.
+  - No secrets appear in tool arguments, results, or logs; pino redaction
+    is configured at the studio-server layer and bridge logs carry only
+    tool names, ids, paths, and error codes.
+  - SVG content returned by the bridge is treated as untrusted data by
+    downstream consumers (artifact-pipeline sanitizes before serving);
+    the bridge passes it through verbatim and never evaluates it.
+  - The MCP server runs with the same user privileges as the studio
+    process and writes only to its own temp output directory; the bridge
+    never grants it additional capabilities.

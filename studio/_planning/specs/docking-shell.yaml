@@ -1,0 +1,368 @@
+# Capability Spec — docking-shell
+# 13-section architectural design
+# Layer: ui | Wave: 5
+
+capability: docking-shell
+status: planned
+
+context: |
+  The docking-shell capability is the first UI deliverable (Phase 2,
+  Wave 5) of the Studio: the React SPA shell every panel capability
+  mounts into. It arrives after the headless phase is verified — the
+  studio-api WebSocket/HTTP surface (Wave 4) is the only thing it talks
+  to. The shell is a docking system, not a fixed grid: the artifact
+  canvas is always center; two rails flank it, each hosting zero or
+  more panels. Panels are first-class citizens registered in a panel
+  registry — chat and library first, with future panels (compliance
+  detail, history, blueprint tree) plugging in without shell changes.
+
+  The shell owns the docking mechanics, workspace routing, the
+  WebSocket client, and the persistence plumbing. Panel CONTENTS are
+  explicitly out of scope: chat-panel, canvas, and library-panel
+  (Wave 6) own what renders inside the slots the shell provides. The
+  architecture contract (studio/_planning/architecture.md) is binding:
+  React 19 + Vite + TypeScript strict in studio/client, typed messages
+  from packages/contract, layout persisted through GET/PUT
+  /api/preferences, one WebSocket connection to /ws with workspace
+  attachment by message.
+
+problem_statement: |
+  The headless server can run brief → generate → refine → compliance
+  with no UI, but there is no browser surface at all:
+  - No SPA exists in studio/client; nothing consumes the Wave 4 API
+  - Without a docking model, panel arrangement would be hard-coded and
+    every future panel (compliance detail, history, blueprint tree)
+    would require shell surgery
+  - Without silent layout persistence, users would re-arrange panels
+    every session or be forced into a save action
+  - Without URL ↔ workspace routing, workspaces cannot be deep-linked
+    or resumed where the user left off
+  - Without a reconnect/resume WebSocket client, every network blip
+    would orphan the chat stream and hide the failure — or surface it
+    as a toast, which the UX philosophy prohibits
+  - Without keyboard parity and reduced-motion handling at the shell
+    level, every panel operation would be pointer-only and motion-heavy
+    by default
+
+scope:
+  in:
+    - Vite + React 19 + TypeScript strict application scaffold in studio/client (npm workspace member)
+    - ShellFrame layout — canvas slot always center, two flanking rails
+    - Panel registry (PanelDefinition contract; future panels register without shell changes)
+    - Dock state model (placements, stack order, per-rail active tab, collapsed state, rail widths)
+    - Drag panel header to the other rail with drop indicators; per-panel settings toggle as fallback
+    - Stack/tab behavior when multiple panels share a rail; both-panels-on-one-rail supported
+    - Collapse-to-icon-strip per panel with one-click restore
+    - Silent layout persistence via GET/PUT /api/preferences (no save action) and hydrate-before-first-paint restore
+    - Workspace switcher with URL ↔ active workspace routing and last-workspace restore
+    - WebSocket client (single /ws connection, typed envelope, reconnect with capped backoff, re-attach resume)
+    - Inline connection state in shell chrome (never a toast); bridge.status and auth.status distribution
+    - Keyboard parity for every panel operation (move, collapse, restore, focus, tab activation)
+    - Reduced-motion respect for drag and collapse animations
+    - Application error boundary surfacing render failures in place
+  out:
+    - Panel contents — chat rendering, canvas rendering, library browsing (see chat-panel, canvas, library-panel)
+    - WebSocket message schema definitions (owned by studio-api in the contract package; the shell contributes UI-specific contract types like LayoutPreference)
+    - Preferences storage mechanics (see workspace-store) and endpoint implementation (see studio-api)
+    - Agent behavior, artifact lifecycle, compliance computation (server capabilities)
+    - The showcase SPA at src/ (untouched, not migrated)
+    - Multi-window or detached-panel layouts (future; single window, two rails)
+
+dependencies:
+  upstream:
+    - "studio-api — GET/PUT /api/preferences, GET /api/workspaces (+ create), /ws WebSocket endpoint with the documented envelope"
+    - "packages/contract — typed WS envelopes (workspace.attach, chat.*, chips.updated, artifact.*, bridge.status, auth.status) and HTTP payload types; this capability contributes the src/preferences.ts module (LayoutPreference) to the package already scaffolded in Wave 1"
+    - "studio-server — static hosting for the built client bundle"
+    - "Architecture contract (studio/_planning/architecture.md) — stack, monorepo layout, envelope, endpoints; binding"
+  downstream:
+    - "chat-panel — registers in the panel registry, mounts in a rail slot, consumes the WS client subscription API"
+    - "canvas — mounts in the always-center slot, consumes artifact events through the WS client"
+    - "library-panel — registers in the panel registry, mounts in a rail slot"
+    - "Future panels (compliance detail, history, blueprint tree) — register via PanelDefinition with zero shell changes"
+  external:
+    - "React 19, Vite, TypeScript strict (per architecture contract)"
+    - "vitest + Testing Library (client test stack, per architecture contract)"
+
+data_contracts: |
+  ## Panel Registry Contract
+
+  ```typescript
+  // studio/client/src/shell/types.ts
+  import type { ComponentType, LazyExoticComponent } from "react";
+
+  export type RailSide = "left" | "right";
+
+  export interface PanelDefinition {
+    id: string;                                   // kebab-case, unique ("chat", "library", future "compliance-detail")
+    title: string;                                // panel header and tab label
+    icon: ComponentType<{ size?: number }>;       // icon strip entry and tab glyph
+    component: LazyExoticComponent<ComponentType>; // panel content, code-split
+    defaultPlacement: { rail: RailSide; order: number };
+    minWidth: number;                             // px; rail width clamps to the widest hosted panel
+  }
+
+  export interface PanelRegistry {
+    register(definition: PanelDefinition): void;  // duplicate id is a startup error
+    get(id: string): PanelDefinition | undefined;
+    list(): readonly PanelDefinition[];
+  }
+  ```
+
+  ## Rail / Dock Model (runtime state, reducer-owned)
+
+  ```typescript
+  export interface PanelPlacement {
+    panelId: string;
+    rail: RailSide;
+    order: number;        // stack position within the rail (tab order)
+    collapsed: boolean;   // true → panel lives in the rail's icon strip
+  }
+
+  export interface DockState {
+    placements: readonly PanelPlacement[];
+    activeTab: Record<RailSide, string | null>;   // visible panel when 2+ stack on a rail
+    railWidths: Record<RailSide, number>;         // px, clamped to hosted minWidths
+  }
+
+  export type DockAction =
+    | { type: "move"; panelId: string; rail: RailSide; order?: number }
+    | { type: "collapse"; panelId: string }
+    | { type: "restore"; panelId: string }
+    | { type: "activateTab"; rail: RailSide; panelId: string }
+    | { type: "resizeRail"; rail: RailSide; width: number }
+    | { type: "hydrate"; layout: LayoutPreference };
+  ```
+
+  ## Layout Preference (wire shape, GET/PUT /api/preferences)
+
+  ```typescript
+  // studio/packages/contract/src/preferences.ts — owned by docking-shell,
+  // contributed to the already-scaffolded contract package (the shell never
+  // creates the package). docking-shell is the semantic owner of this shape:
+  // workspace-store persists the document opaquely (round-trips it without
+  // interpreting fields) and studio-api's GET/PUT /api/preferences uses
+  // LayoutPreference directly.
+  export interface LayoutPreference {
+    schemaVersion: 1;
+    placements: PanelPlacement[];
+    activeTab: { left: string | null; right: string | null };
+    railWidths: { left: number; right: number };
+    lastWorkspaceId: string | null;
+  }
+  ```
+
+  ## WebSocket Client API
+
+  ```typescript
+  // Envelope unions come from packages/contract:
+  // ClientEnvelope = workspace.attach | chat.send | chat.cancel | chip.update
+  // ServerEnvelope = chat.message_started | chat.assistant_delta | chat.tool_started
+  //   | chat.tool_finished | chat.message_completed | chat.error | chips.updated
+  //   | artifact.version_created | artifact.compliance_completed | bridge.status | auth.status
+
+  export type ConnectionState =
+    | "connecting"     // initial connect in flight
+    | "open"           // connected and attached
+    | "reconnecting"   // dropped; capped exponential backoff in progress
+    | "offline";       // backoff at cap; retries continue at the capped interval
+
+  export type Unsubscribe = () => void;
+
+  export interface StudioSocket {
+    connect(): void;
+    attachWorkspace(workspaceId: string): void;   // sends workspace.attach; re-sent automatically after every reconnect
+    send(message: ClientEnvelope): SendResult;    // typed result while disconnected, never a silent drop
+    on<T extends ServerEnvelope["type"]>(
+      type: T,
+      handler: (message: Extract<ServerEnvelope, { type: T }>) => void,
+    ): Unsubscribe;
+    onConnectionState(handler: (state: ConnectionState) => void): Unsubscribe;
+    close(): void;
+  }
+
+  export type SendResult =
+    | { ok: true }
+    | { ok: false; reason: "disconnected"; state: ConnectionState };
+  ```
+
+file_locations:
+  - studio/client/package.json — client workspace package (Vite, React 19, vitest)
+  - studio/client/vite.config.ts — Vite config (build output for studio-server static hosting)
+  - studio/client/tsconfig.json — TypeScript strict configuration
+  - studio/client/index.html — SPA entry document
+  - studio/client/src/main.tsx — application entry (registry bootstrap, hydrate, render)
+  - studio/client/src/App.tsx — shell composition (error boundary, router, ShellFrame)
+  - studio/client/src/shell/types.ts — PanelDefinition, DockState, DockAction, RailSide
+  - studio/client/src/shell/panelRegistry.ts — panel registry implementation
+  - studio/client/src/shell/dockReducer.ts — dock state reducer (single source of layout truth)
+  - studio/client/src/shell/ShellFrame.tsx — center canvas slot + two rails layout
+  - studio/client/src/shell/Rail.tsx — rail rendering (panel stack, tab strip, icon strip, width)
+  - studio/client/src/shell/PanelHost.tsx — panel chrome (header, drag handle, collapse control, content mount)
+  - studio/client/src/shell/TabStrip.tsx — tab strip for stacked panels
+  - studio/client/src/shell/IconStrip.tsx — collapsed-panel icon strip with restore
+  - studio/client/src/shell/PanelSettingsMenu.tsx — per-panel settings toggle (move fallback, sync status)
+  - studio/client/src/shell/dragController.ts — pointer-event drag with Escape cancel
+  - studio/client/src/shell/DropIndicator.tsx — drop target highlighting during drag
+  - studio/client/src/shell/useReducedMotion.ts — prefers-reduced-motion hook
+  - studio/client/src/shell/keyboardMap.ts — keyboard bindings for move/collapse/restore/focus/tab
+  - studio/client/src/preferences/layoutPersistence.ts — hydrate on load, debounced PUT, retry, schemaVersion gate
+  - studio/client/src/routing/workspaceRoutes.ts — URL ↔ active workspace mapping (/w/<workspace-id>)
+  - studio/client/src/routing/WorkspaceSwitcher.tsx — switcher in shell chrome (list, create, active)
+  - studio/client/src/ws/studioSocket.ts — WebSocket client (typed envelope, reconnect, re-attach resume)
+  - studio/client/src/ws/ConnectionStatus.tsx — inline connection state in shell chrome
+  - studio/client/src/panels/chatPlaceholder.tsx — lazy chat registration target until chat-panel lands
+  - studio/client/src/panels/libraryPlaceholder.tsx — lazy library registration target until library-panel lands
+  - studio/packages/contract/src/preferences.ts — LayoutPreference wire type (owned by docking-shell; module contributed to the already-scaffolded @studio/contract package)
+  - studio/client/src/shell/__tests__/ — reducer, registry, drag, persistence, socket tests
+
+implementation_steps:
+  - Scaffold studio/client (Vite + React 19 + TypeScript strict, ES modules, named exports) as an npm workspace member
+  - Wire packages/contract as a dependency; import envelope and payload types, never redeclare
+  - Build ShellFrame (center canvas slot, left/right rails, full-height flex) with base styles and shell tokens
+  - Add the application error boundary (failures rendered in place) and useReducedMotion hook
+  - Define PanelDefinition / PanelRegistry and implement the registry with duplicate-id startup errors
+  - Implement dockReducer covering move, collapse, restore, activateTab, resizeRail, hydrate
+  - Build PanelHost chrome (header, drag handle, collapse control, lazy content mount with loading state)
+  - Build TabStrip (stacked panels on one rail, click + keyboard activation) and empty-rail zero-width handling
+  - Register chat and library as lazy placeholders at their default placements
+  - Implement dragController (pointer events, Escape cancel) and DropIndicator rendering
+  - Implement same-rail reorder on drop and the PanelSettingsMenu move toggle fallback
+  - Implement IconStrip collapse/restore with focus management
+  - Implement keyboardMap — keyboard paths for move, collapse, restore, panel-focus cycling, tab activation
+  - Apply reduced-motion gating to the drag ghost and collapse/expand transitions
+  - Contribute the LayoutPreference module (studio/packages/contract/src/preferences.ts) to the already-scaffolded contract package; implement layoutPersistence (hydrate before first rail paint, debounced PUT, retry, schemaVersion gate, unknown-panel tolerance)
+  - Implement studioSocket (typed envelope, capped exponential backoff, automatic workspace.attach re-send on reconnect, typed SendResult while disconnected)
+  - Build ConnectionStatus inline in shell chrome; distribute bridge.status and auth.status to subscribers
+  - Implement workspaceRoutes (/w/<workspace-id> ↔ active workspace, back/forward, unknown-id in-place handling) and WorkspaceSwitcher with last-workspace restore
+  - Write tests — dockReducer and registry units; persistence and socket integration over real HTTP/WS; Testing Library coverage for drag, collapse, tabs, keyboard parity
+  - Verify the production build serves through studio-server static hosting
+
+error_handling: |
+  - GET /api/preferences fails on load → shell renders first-run defaults
+    immediately, retries in the background; when the stored layout arrives
+    it hydrates only if the user has not re-arranged in the meantime
+  - PUT /api/preferences fails → local dock state stays authoritative;
+    background retry with backoff; sync status visible inline in the panel
+    settings menu (never a toast, never blocking)
+  - Persisted placement references an unregistered panel id → that
+    placement is dropped, the remainder hydrates, and the next debounced
+    PUT writes the cleaned layout back
+  - Unrecognized LayoutPreference schemaVersion → defaults applied; the
+    stored value is left untouched until the user re-arranges
+  - Duplicate panel id registration → startup error naming both
+    registrations (developer error, fail fast)
+  - WebSocket drop → state transitions to reconnecting; backoff begins;
+    ConnectionStatus shows what is happening inline; on reconnect the
+    client re-attaches the active workspace automatically
+  - send() while disconnected → typed { ok: false, reason: "disconnected" }
+    result so callers (panels) can disable their affordances with the
+    reason shown in place — never a silent drop
+  - URL names an unknown workspace id → switcher opens in place naming
+    the unresolved id and listing available workspaces; no redirect loop
+  - GET /api/workspaces fails → switcher shows the failure and a retry
+    affordance in place
+  - Panel content throws during render → the panel-level error boundary
+    contains it; the panel shows what failed in place; the shell, rails,
+    and other panels keep working
+  - Drag canceled with Escape (or pointer released outside any drop
+    target) → panel returns to its origin with no state change
+
+edge_cases: |
+  - Both panels dragged to one rail → supported arrangement; the empty
+    rail collapses to zero width and the canvas absorbs the space
+  - All panels collapsed → two icon strips only; canvas at maximum width
+  - Rail hosting exactly one panel → no tab strip rendered (chrome only
+    appears when it has a job)
+  - Drop on the panel's own rail → reorders the stack instead of swapping
+  - Collapsing the active tab on a rail with 2+ panels → the next panel
+    in stack order becomes the active tab
+  - Restoring a collapsed panel → it returns to its prior rail, order,
+    and tab activation; focus moves into the restored panel
+  - Window narrower than the sum of rail minWidths + canvas minimum →
+    rails clamp at minWidth; the canvas keeps its minimum; no overlap
+  - Rail resize below the widest hosted panel minWidth → clamped, the
+    resize handle stops (constraint, not error)
+  - prefers-reduced-motion set → drag ghost and collapse/expand
+    transitions are instant; drop indicators still render (they are
+    information, not motion)
+  - First run with no stored preference → defaults (chat left, library
+    right, nothing collapsed); the first arrangement change writes the
+    first preference
+  - URL names no workspace → lastWorkspaceId from preferences opens; if
+    none exists the switcher presents the workspace list
+  - Reconnect succeeds while the user is mid-drag → re-attach happens in
+    the background; the drag is not interrupted
+  - Server restarts between sessions → stale workspace list refetched on
+    switcher open; the attached workspace re-validates on attach
+
+integration_points:
+  - "studio-api: GET/PUT /api/preferences (silent layout persistence), GET/POST /api/workspaces (switcher), /ws endpoint (single connection, workspace.attach by message per the architecture contract)"
+  - "packages/contract: every WS envelope and HTTP payload type imported from the contract package; this capability owns studio/packages/contract/src/preferences.ts (LayoutPreference) — workspace-store persists the preference document opaquely and studio-api's GET/PUT /api/preferences uses LayoutPreference directly, so docking-shell is the semantic owner"
+  - "chat-panel: registers via PanelDefinition, mounts in a rail slot, subscribes to chat.* events through StudioSocket"
+  - "canvas: mounts in the always-center slot, subscribes to artifact.version_created / artifact.compliance_completed through StudioSocket"
+  - "library-panel: registers via PanelDefinition, mounts in a rail slot"
+  - "Future panels (compliance detail, history, blueprint tree): register via PanelDefinition — zero shell changes by design"
+  - "studio-server: serves the built client bundle; /api/health auth and bridge state mirror the auth.status / bridge.status events the shell distributes"
+
+verification_criteria:
+  - TypeScript strict compile with zero errors; all exports named with explicit return types
+  - ShellFrame renders canvas slot center with left and right rails flanking it
+  - Registering a new PanelDefinition makes the panel appear at its default placement with no shell code changes
+  - Duplicate panel id registration fails at startup with both registrations named
+  - Dragging a panel header to the other rail shows drop indicators and moves the panel on drop
+  - Escape during drag cancels with no state change
+  - Same-rail drop reorders the stack
+  - Settings toggle moves a panel between rails identically to drag
+  - Two panels on one rail render as tabs; exactly one panel visible per rail; tab activation works by click and keyboard
+  - Both-panels-on-one-rail leaves the empty rail at zero width with the canvas widened
+  - Collapse sends a panel to the icon strip; one click (or keyboard activation) restores it to its prior placement with focus inside
+  - Every panel operation (move, collapse, restore, focus cycle, tab activation) completes with keyboard only
+  - With prefers-reduced-motion set, drag and collapse animations are instant
+  - Re-arranging panels triggers a debounced PUT /api/preferences with no save affordance anywhere in the UI
+  - Reloading the app restores the persisted arrangement with no default-layout flash before hydration
+  - A persisted placement for an unknown panel id is dropped while the rest of the layout hydrates
+  - Opening /w/<workspace-id> attaches that workspace; switching workspaces updates the URL; back/forward traverse workspace history
+  - With no workspace in the URL, the last active workspace reopens
+  - Killing the WS connection shows reconnecting inline in shell chrome (no toast); on reconnect the workspace re-attaches without user action
+  - send() while disconnected returns a typed disconnected result
+  - bridge.status and auth.status events reach subscribed panels
+  - WCAG AA — visible focus ring on every shell control; tabs, icon strip, and settings menu carry correct ARIA roles and labels; axe audit passes on the shell chrome
+  - Persistence and socket integration tests run over real HTTP/WS connections (per the testing policy, no mocked server)
+
+performance: |
+  - Layout hydration: GET /api/preferences resolves before first rail
+    paint — one localhost round-trip; no default-then-stored layout flash
+  - Drag feedback: transform-only ghost and indicator updates within the
+    frame budget (no layout thrash, no re-render of panel contents while
+    dragging)
+  - Persistence writes: debounced so a burst of arrangement changes
+    settles into a single PUT; payload under 2KB
+  - Panel content: code-split via lazy components — collapsed or
+    unregistered panels load zero content bytes
+  - Dock operations: reducer transitions O(number of panels); panel
+    contents are not remounted on move, collapse, or tab switch (state
+    inside panels survives docking operations)
+  - Reconnect: capped exponential backoff (cap on the order of tens of
+    seconds) so a down server is not hammered while recovery stays prompt
+  - Bundle: shell chrome (excluding panel contents) small enough that
+    first paint is dominated by the single preferences round-trip, not
+    script parse
+
+security: |
+  - The client talks only to the localhost-bound studio-server; no
+    third-party network calls from the shell
+  - ANTHROPIC_API_KEY never reaches the client — auth surfaces only as
+    the auth.status state (configured / missing / invalid)
+  - LayoutPreference carries arrangement data only — no secrets, no
+    workspace content
+  - Workspace ids from the URL are treated as untrusted input: matched
+    against the server's workspace list, never interpolated into markup
+    or filesystem-shaped requests
+  - All inbound WS messages are validated against the packages/contract
+    envelope types before distribution; unknown message types are logged
+    and dropped, never executed
+  - No dynamic HTML injection in shell chrome (panel titles and workspace
+    names render as text nodes); SVG sanitization remains
+    artifact-pipeline's responsibility upstream of the canvas
+  - TypeScript strict mode and named exports throughout; no implicit any
+    at the docking, persistence, or socket seams

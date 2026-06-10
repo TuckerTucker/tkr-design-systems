@@ -1,0 +1,318 @@
+# Interaction Stories — agent-orchestration
+# Layer: domain | Wave: 3
+
+capability: agent-orchestration
+
+stories:
+
+  # ── auth-and-cancellation ───────────────────────────────────────
+
+  - name: user-runs-studio-without-api-key
+    feature: auth-and-cancellation
+    number: 1
+    actor: Studio User
+    intent: "Open the studio with no ANTHROPIC_API_KEY configured; browsing works, generation is refused with the fix shown in place."
+    preconditions:
+      - "Studio server is running"
+      - "ANTHROPIC_API_KEY is absent from the process environment and studio/.env"
+      - "Auth resolution and keyless degradation are implemented"
+    trigger_action: "Send a chat message asking for a wireframe with no key configured"
+    steps:
+      - actor: Studio User
+        action: "Starts the studio server without setting ANTHROPIC_API_KEY anywhere"
+        system_response: "Server starts normally; /api/health reports auth status missing; auth.status event carries { status: 'missing', source: null }"
+      - actor: Studio User
+        action: "Browses library data and prior artifacts (mcp-bridge surfaces)"
+        system_response: "Library browsing, canvas review, and compliance display work — keyless mode degrades only generation, nothing else"
+      - actor: Studio User
+        action: "Sends a chat message: 'wireframe a login screen in Swiss'"
+        system_response: "Session emits a single error event (code auth_missing) naming ANTHROPIC_API_KEY and stating the fix: set it in the environment or studio/.env; no SDK process spawns"
+      - actor: Studio User
+        action: "Adds ANTHROPIC_API_KEY to studio/.env and retries the message"
+        system_response: "Key resolves (source dotenv), auth status flips to configured, and the generation turn proceeds normally"
+      - actor: System
+        action: "Logs the resolution and the failed turn via pino"
+        system_response: "No log line anywhere contains the key value (redaction paths cover all agent loggers)"
+    acceptance_criteria:
+      - given: "No key in the environment or studio/.env"
+        when: "A chat message requests generation"
+        then: "An auth_missing error event is returned with the fix in place; no SDK subprocess is spawned; the server does not crash"
+      - given: "No key configured"
+        when: "/api/health is queried"
+        then: "Auth status reports missing; library and artifact read paths remain functional"
+      - given: "A key is added to studio/.env while the server runs"
+        when: "The next chat message arrives"
+        then: "Resolution order (env, then studio/.env) finds the key, auth status becomes configured, and generation proceeds"
+      - given: "Any agent log output"
+        when: "Logs are inspected"
+        then: "The key value appears nowhere (pino redaction verified); AuthState exposes only status and source"
+
+  # ── agent-session ───────────────────────────────────────────────
+
+  - name: designer-chats-plain-conversation
+    feature: agent-session
+    number: 2
+    actor: Designer
+    intent: "Ask the agent a question that needs no generation; receive a streamed answer with zero tool calls."
+    preconditions:
+      - "ANTHROPIC_API_KEY is configured"
+      - "A workspace exists and the client is attached to it"
+      - "AgentSession and SDK stream translation are implemented"
+    trigger_action: "Send a discussion message that implies no artifact work"
+    steps:
+      - actor: Designer
+        action: "Sends 'what's the difference between the substitution flow and the compose flow?'"
+        system_response: "SessionManager lazily creates the workspace's AgentSession (SDK query() with the design-systems MCP server configured in options); message_started is emitted with a new messageId"
+      - actor: System
+        action: "Routes the message as intent converse"
+        system_response: "assistant_delta events stream the answer as the SDK yields text; no tool_started events occur"
+      - actor: System
+        action: "Completes the turn"
+        system_response: "message_completed carries RoutingResult { intent: 'converse', artifactId: null }; the turn persists to the transcript through workspace-store"
+      - actor: Designer
+        action: "Sends a second message while none is in flight"
+        system_response: "The same session is reused — no new SDK session is created for the workspace"
+    acceptance_criteria:
+      - given: "An attached workspace with a configured key"
+        when: "A discussion message is sent"
+        then: "Events arrive in order: message_started, one or more assistant_delta, message_completed — and no tool events"
+      - given: "A completed converse turn"
+        when: "The transcript is read from workspace-store"
+        then: "The message, streamed text, and RoutingResult (intent converse) are persisted"
+      - given: "A turn is in flight"
+        when: "A second chat.send arrives on the same workspace"
+        then: "It is rejected with a typed session_busy error naming the active requestId; the in-flight run is unaffected"
+
+  # ── intent-routing ──────────────────────────────────────────────
+
+  - name: designer-generates-from-brief
+    feature: intent-routing
+    number: 3
+    actor: Designer
+    intent: "Type a brief in chat and get a wireframe artifact, with the agent choosing system, layout, and platform itself."
+    preconditions:
+      - "ANTHROPIC_API_KEY is configured; workspace attached"
+      - "Generate flow and decision-chip emission are implemented"
+      - "design-systems MCP server is reachable over the SDK's own connection"
+    trigger_action: "Send a fresh brief: 'a dashboard for a meditation app'"
+    steps:
+      - actor: Designer
+        action: "Sends the brief with no system, layout, or platform stated"
+        system_response: "message_started; the agent routes intent generate and calls wf_generate(brief) — tool_started is emitted with a human-readable summary"
+      - actor: System
+        action: "wf_generate (no layout_id) returns a routing_request listing available patterns and components"
+        system_response: "The agent selects the closest pattern (e.g. a dashboard layout — directly or via wf_select_layout), picks the system from brief cues or workspace setting, defaults platform to desktop — it does not ask the user anything"
+      - actor: System
+        action: "Agent calls wf_generate again with layout_id, system, and platform for the full 7-step run"
+        system_response: "tool_finished reports ok; artifact_produced carries ArtifactSource { kind: 'paths', svgPath, specPath } (wf_generate emits files to disk) and provenance { brief, tool: 'wf_generate', parameters, parentArtifactVersion: null }"
+      - actor: System
+        action: "Emits the agent's choices as chips"
+        system_response: "chips_updated carries a ChipSet with system, layout, and platform chips — each with real option vocabularies (registry systems, routing_request patterns, mobile/desktop)"
+      - actor: System
+        action: "Completes the turn and persists it"
+        system_response: "message_completed carries RoutingResult { intent: 'generate', defaults }; transcript records the message, tool calls, chips, and routing result"
+    acceptance_criteria:
+      - given: "A fresh brief with no parameters stated"
+        when: "The turn completes"
+        then: "An artifact_produced event carries an ArtifactSource ({ kind: 'paths', svgPath, specPath } — wf_generate's emitted files) generated through wf_generate, and the user was never asked to choose system, layout, or platform"
+      - given: "The generation turn"
+        when: "chips_updated is emitted"
+        then: "System, layout, and platform chips are present with options sourced from the registry, the routing_request's available_patterns, and the mobile/desktop set"
+      - given: "wf_generate returns ok:false (e.g. unknown system requested in the brief)"
+        when: "The turn completes"
+        then: "A tool_failed error event carries the tool's own error messages, including available systems when listed"
+      - given: "The completed turn"
+        when: "Event order is inspected"
+        then: "message_started is first, message_completed is last, and tool_started/tool_finished pairs are ordered between"
+
+  - name: designer-refines-content-in-context
+    feature: intent-routing
+    number: 4
+    actor: Designer
+    intent: "Refine the artifact's copy with a short follow-up — no brief restatement — via the two-pass substitution flow."
+    preconditions:
+      - "An artifact exists from a prior generation turn and is the workspace's active artifact"
+      - "Per-artifact context windows and the substitution flow are implemented"
+    trigger_action: "Send 'swap the header copy for something calmer' with no other context"
+    steps:
+      - actor: Designer
+        action: "Sends the refinement without restating the brief, system, layout, or platform"
+        system_response: "The per-artifact context window supplies all of it; the agent routes intent substitute targeting the active artifact"
+      - actor: System
+        action: "Agent calls wf_build_substitution_request(brief, system_id, platform, layout_id) — pass 1"
+        system_response: "tool_finished delivers text_nodes and grammar_caveats for the artifact's pattern"
+      - actor: System
+        action: "Agent judgment produces {find, replace, rationale} substitutions respecting the system's grammar (e.g. Revolt uppercase, Editorial title-case, Terminal lowercase-snake)"
+        system_response: "Agent calls wf_apply_substitutions(svg_path, substitutions, system_id) — pass 2"
+      - actor: System
+        action: "wf_apply_substitutions returns svg_text, unapplied_finds, grammar_warnings"
+        system_response: "artifact_produced carries ArtifactSource { kind: 'paths', svgPath, specPath } (wf_apply_substitutions emits the substituted files to disk) with provenance { tool: 'wf_apply_substitutions', parentArtifactVersion: <prior head> }; any unapplied_finds and grammar_warnings surface in the event stream and transcript"
+      - actor: System
+        action: "Carries the decision chips forward"
+        system_response: "chips_updated repeats the same system/layout/platform values (unchanged by a content refinement)"
+    acceptance_criteria:
+      - given: "An active artifact and a refinement message with no restated parameters"
+        when: "The turn runs"
+        then: "The two-pass flow executes (wf_build_substitution_request then wf_apply_substitutions) using system, layout, and platform recovered from the per-artifact context"
+      - given: "A system with grammar rules (e.g. Revolt uppercase)"
+        when: "Substitutions are produced"
+        then: "Replacements respect the grammar_caveats, and any grammar_warnings returned by the tool are surfaced, never dropped"
+      - given: "A substitution whose find text no longer matches"
+        when: "wf_apply_substitutions returns unapplied_finds"
+        then: "The artifact is still produced and the unapplied finds are reported in the tool_finished summary and transcript"
+      - given: "Two artifacts in the same workspace"
+        when: "An untargeted refinement is sent"
+        then: "It applies to the active artifact only; the other artifact's context is untouched"
+
+  - name: designer-requests-novel-layout
+    feature: intent-routing
+    number: 5
+    actor: Designer
+    intent: "Ask for a layout the system has not authored; the agent decomposes, authors a LayoutBlueprint, and assembles it."
+    preconditions:
+      - "ANTHROPIC_API_KEY is configured; workspace attached"
+      - "Compose flow with validation-failure recovery is implemented"
+    trigger_action: "Send 'a kanban board with three columns, in Swiss'"
+    steps:
+      - actor: Designer
+        action: "Sends a brief that matches no pre-authored pattern in the system"
+        system_response: "The agent routes intent compose (the routing rationale records why pattern routing was rejected) and calls wf_generate(brief, system, compose=True)"
+      - actor: System
+        action: "wf_generate returns a decomposition_request listing the system's available components and canvas dimensions"
+        system_response: "tool_finished delivers the component catalog; the agent authors a LayoutBlueprint JSON — canvas {width, height}, regions, and component placements {component_id, x, y}"
+      - actor: System
+        action: "Agent calls wf_assemble_from_blueprint(blueprint, system_id, output_dir)"
+        system_response: "Validation runs first; on validation_errors (unknown component_ids, out-of-bounds placements) the agent revises the blueprint and retries within a bounded budget"
+      - actor: System
+        action: "Assembly succeeds"
+        system_response: "artifact_produced carries ArtifactSource { kind: 'text', svgText, specYaml? } — the composited SVG text returned by the tool (defs deduplicated, per-component transforms applied) — with provenance { tool: 'wf_assemble_from_blueprint', parameters including the blueprint }; assembly warnings surface in the stream"
+      - actor: System
+        action: "Emits chips for the compose turn"
+        system_response: "chips_updated carries system and platform chips; the layout chip reflects the composed result"
+    acceptance_criteria:
+      - given: "A brief implying a layout the system has not authored"
+        when: "The agent routes the message"
+        then: "Intent compose is recorded with a rationale, and the flow runs decomposition_request → agent-authored LayoutBlueprint → wf_assemble_from_blueprint"
+      - given: "A blueprint with an unknown component_id"
+        when: "wf_assemble_from_blueprint returns validation_errors"
+        then: "The agent revises and retries; if the bounded retries exhaust, a blueprint_invalid error event lists the unresolved validation errors"
+      - given: "A successful assembly"
+        when: "artifact_produced is emitted"
+        then: "Provenance records the tool as wf_assemble_from_blueprint and includes the blueprint in parameters, giving artifact-pipeline full reproduction context"
+
+  # ── decision-chips ──────────────────────────────────────────────
+
+  - name: designer-edits-decision-chip
+    feature: decision-chips
+    number: 6
+    actor: Designer
+    intent: "Change one of the agent's default choices after the fact; only the affected step re-runs."
+    preconditions:
+      - "A generation turn completed with chips_updated (system: swiss, layout: dashboard, platform: desktop)"
+      - "updateChip re-run mapping is implemented"
+    trigger_action: "Change the platform chip from desktop to mobile"
+    steps:
+      - actor: Designer
+        action: "Edits the platform chip on the agent turn (the chip.update wire payload ChipUpdatePayload { messageId, kind: 'platform', value: 'mobile' } arrives at studio-api, which resolves artifactId from the ChipSet emitted for that messageId and hands the session the domain ChipUpdate { requestId, artifactId, kind, value })"
+        system_response: "The value is validated against the chip's options at the boundary; the session re-runs the generation step at platform mobile — the conversation is not replayed"
+      - actor: System
+        action: "Re-runs wf_generate with the same brief, system, and layout at the new platform"
+        system_response: "tool_started/tool_finished stream as usual; artifact_produced carries the mobile-dimension SVG with provenance linking the prior version as parent"
+      - actor: System
+        action: "Emits the updated chip set"
+        system_response: "chips_updated reflects platform mobile; system and layout chips are unchanged"
+      - actor: Designer
+        action: "Later changes the system chip from swiss to terminal"
+        system_response: "The generation step re-runs in the terminal system; the layout chip's options refresh from terminal's routing_request patterns"
+      - actor: Designer
+        action: "Sends a chip value that is not among the options (malformed client)"
+        system_response: "The update is rejected as a typed error before any re-run starts; nothing is generated"
+    acceptance_criteria:
+      - given: "A completed generation turn with chips"
+        when: "The platform chip changes from desktop to mobile"
+        then: "Only the generation step re-runs (same brief, system, layout) and a new artifact result is produced at mobile dimensions"
+      - given: "A system chip change"
+        when: "The re-run executes"
+        then: "Generation runs in the new system and the layout chip options are re-sourced from that system's available patterns"
+      - given: "A chip.update whose value is outside the chip's options"
+        when: "It reaches the session"
+        then: "It is rejected with a typed error in place; no tool call occurs"
+      - given: "Chip state on a persisted turn"
+        when: "The workspace is reopened"
+        then: "Historical chips render with the values that produced each version (chips persist in the transcript with their turn)"
+
+  # ── conversation-context-and-events ─────────────────────────────
+
+  - name: designer-resumes-workspace-conversation
+    feature: conversation-context-and-events
+    number: 7
+    actor: Designer
+    intent: "Close the studio mid-project and resume later; the conversation and artifact context restore without restatement."
+    preconditions:
+      - "A workspace has a transcript with a generation turn and a substitution refinement"
+      - "Transcript persistence and restore-on-create are implemented"
+    trigger_action: "Reopen the workspace after a server restart and send a further refinement"
+    steps:
+      - actor: Designer
+        action: "Stops the studio server (or closes the workspace) and later reopens the workspace"
+        system_response: "SessionManager creates a fresh AgentSession lazily; prior turns load from workspace-store and seed the per-artifact context windows"
+      - actor: Designer
+        action: "Sends 'now make the stats card show weekly numbers' with no other context"
+        system_response: "The restored context supplies the artifact, brief, system, layout, and platform; the agent routes intent substitute against the active artifact"
+      - actor: System
+        action: "Runs the two-pass substitution flow and completes the turn"
+        system_response: "artifact_produced links the restored artifact's head as parent; the new turn appends to the same transcript"
+      - actor: System
+        action: "Persists every element of the turn"
+        system_response: "Messages, tool-call records (secrets excluded), chip sets, and routing results (written as TranscriptRecord kind 'routing_result') are all on disk through workspace-store repositories — reviewable as plain files"
+    acceptance_criteria:
+      - given: "A workspace with persisted conversation history"
+        when: "The server restarts and the workspace is reopened"
+        then: "The transcript restores and a refinement proceeds with no restatement of brief, system, layout, or platform"
+      - given: "A restored session"
+        when: "A refinement targets the active artifact"
+        then: "Per-artifact context is intact — the refinement applies to the correct artifact and its provenance links the correct parent version"
+      - given: "Any completed turn"
+        when: "The transcript file is inspected on disk"
+        then: "Messages, tool-call records, chips, and routing results are present; no API key material appears anywhere"
+      - given: "A long-running conversation on one artifact"
+        when: "Context is assembled for the next turn"
+        then: "Assembly stays within bounds (oldest refinement turns truncated/summarized) while the brief and current defaults survive"
+
+  # ── auth-and-cancellation ───────────────────────────────────────
+
+  - name: designer-cancels-generation
+    feature: auth-and-cancellation
+    number: 8
+    actor: Designer
+    intent: "Stop an in-flight generation mid-run; the transcript and artifact state stay consistent and the session keeps working."
+    preconditions:
+      - "A generation turn is in flight (tool events streaming)"
+      - "Cancellation via AbortController is implemented"
+    trigger_action: "Send chat.cancel with the in-flight requestId"
+    steps:
+      - actor: Designer
+        action: "Sends chat.cancel for the active requestId while wf_generate is running"
+        system_response: "The session aborts the SDK query via AbortController; the event stream terminates with an error event (code cancelled)"
+      - actor: System
+        action: "Reconciles state after the abort"
+        system_response: "No partial artifact version is emitted — the prior head is untouched; the transcript persists the turn marked cancelled with any partial assistant text retained for review"
+      - actor: Designer
+        action: "Sends a new message on the same workspace"
+        system_response: "The same session handles it normally — cancellation did not poison the session or the MCP connection"
+      - actor: Designer
+        action: "Sends chat.cancel again for the already-finished requestId"
+        system_response: "CancelResult { cancelled: false, reason: 'already_completed' } — a typed no-op, not an exception"
+    acceptance_criteria:
+      - given: "An in-flight generation turn"
+        when: "chat.cancel arrives with its requestId"
+        then: "The stream ends with a cancelled error event, no artifact_produced is emitted, and the prior artifact head is unchanged"
+      - given: "A cancelled turn"
+        when: "The transcript is read"
+        then: "The turn is persisted marked cancelled, with partial assistant text retained"
+      - given: "A session that just cancelled a run"
+        when: "The next chat.send arrives"
+        then: "It runs to completion normally on the same session"
+      - given: "A chat.cancel for an unknown or completed requestId"
+        when: "It reaches the session"
+        then: "A typed no-op CancelResult is returned (not_running or already_completed); nothing throws"

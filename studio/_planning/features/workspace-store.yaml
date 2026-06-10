@@ -1,0 +1,106 @@
+# Features — workspace-store
+# Capability: Plain-file persistence for workspaces, transcripts, artifacts, and preferences
+# Layer: data | Wave: 1
+
+capability: workspace-store
+
+features:
+
+  - name: store-foundation
+    description: |
+      The shared persistence machinery every repository builds on. Atomic
+      write primitive (write to a temp file in the same directory, then
+      rename), YAML I/O through the `yaml` package, kebab-case slug ID
+      generation unique within a parent, typed StoreResult/StoreError
+      contracts, and the IoC factory that constructs all repositories
+      from a single root-directory config. Corruption tolerance is a
+      foundation concern: a damaged file degrades that one item to a
+      typed `corrupt` result — it never throws and never takes down the
+      rest of the store.
+    scope:
+      - Store root resolution (studio/workspaces/ from studio-server config; created on first use; nothing outside it is ever written)
+      - Atomic write primitive (temp file + rename in the same directory; applies to every YAML and SVG write)
+      - YAML serialization/deserialization via the `yaml` package (never hand-rolled parsing)
+      - Kebab-case slug ID generation from display names, uniqueness enforced within the parent (workspace IDs within the root, artifact IDs within a workspace), collision suffixing (-2, -3, …)
+      - "Typed result contract: StoreResult<T> success/failure union with StoreError codes (not_found, corrupt, conflict, io_error) — errors cross the seam as values, never thrown exceptions"
+      - Corruption tolerance primitive (parse failure or schema mismatch → corrupt result for that item; sibling items and the rest of the store remain readable)
+      - "IoC factory: createWorkspaceStore(config, logger) returns the four repositories; consumers receive interfaces, never construct repositories or touch paths"
+      - pino child logger per repository (entry/exit, errors, state changes as structured JSON)
+      - Path safety (IDs validated against the slug grammar before any filesystem use; traversal sequences rejected as invalid)
+      - vitest suite against a real temp directory (per testing policy; no filesystem mocks)
+
+  - name: workspace-lifecycle
+    description: |
+      Workspace directories as the unit of user state. Listing scans the
+      store root for workspace directories, creation scaffolds a slug-named
+      directory with workspace.yaml, updates patch name/settings/active
+      artifact, and soft-delete renames the directory with a .trash- prefix
+      so deletion is always recoverable — undo, not confirmation. A damaged
+      workspace.yaml degrades that workspace in listings; it never hides
+      the others.
+    scope:
+      - Workspace listing (scan store root, read each workspace.yaml, return summaries; .trash- directories excluded)
+      - Workspace creation (display name → unique kebab-case slug ID, directory scaffold, initial workspace.yaml with created/updated stamps)
+      - Workspace read (full workspace.yaml model — id, name, created, updated, active artifact, settings)
+      - "Workspace update (patch: rename, settings, active-artifact pointer; updated stamp refreshed; atomic rewrite)"
+      - Soft delete (rename directory to .trash-<workspace-id>; contents untouched; never destructive)
+      - Trash listing and recovery (enumerate .trash- directories, restore by renaming back; slug-collision handling on restore)
+      - Corrupt workspace.yaml tolerance (workspace surfaces as a degraded entry with its corrupt error; siblings list normally)
+      - Listing fitness for resume (enough metadata — name, updated, active artifact — for the client to reopen where the user left off)
+
+  - name: transcript-persistence
+    description: |
+      Storage mechanics for the per-workspace chat transcript at
+      transcript.yaml: ordered records appended over time, each carrying
+      an envelope (id, kind, timestamp) around a payload the store treats
+      as opaque. What a message means — roles, tool-call semantics,
+      decision-chip behavior — belongs to agent-orchestration; this
+      feature only guarantees the records land atomically, in order,
+      and come back intact.
+    scope:
+      - transcript.yaml per workspace (single ordered document; created empty on first append)
+      - "Record envelope contract: id, kind (message | tool_call | decision_chips | routing_result), timestamp — payload preserved verbatim as written"
+      - Append operation (read-modify-write with atomic rename; order of appended records preserved)
+      - Full-transcript read (all records in append order, for workspace resume)
+      - Human readability on disk (plain YAML, multiline text as YAML block scalars — reviewable without tooling)
+      - Corrupt transcript tolerance (parse failure → corrupt result for the transcript; workspace metadata and artifacts unaffected)
+      - No interpretation of payloads (chat semantics live in agent-orchestration; the store never inspects message content)
+
+  - name: artifact-version-storage
+    description: |
+      Storage mechanics for artifacts and their immutable versions.
+      artifacts/<artifact-id>/artifact.yaml holds identity and the head
+      version pointer; versions/<NNNN>/ directories (zero-padded,
+      sequential) each hold wireframe.svg, wireframe.spec.yaml,
+      compliance.yaml, and version.yaml provenance. The store assigns
+      version numbers and writes files; what a version means and when
+      one is created belongs to artifact-pipeline.
+    scope:
+      - Artifact creation (name/system/platform → unique kebab-case artifact-id within the workspace, artifact.yaml scaffold)
+      - Artifact listing and read per workspace (artifact.yaml models with version inventories)
+      - "Version directory allocation: zero-padded sequential numbering (0001, 0002, …) derived from existing directories; next number assigned by the store, never by the caller"
+      - "Version write as a unit: wireframe.svg, wireframe.spec.yaml, and version.yaml staged then placed so a crash never leaves a directory that looks complete but isn't"
+      - "version.yaml provenance fields: parent version, brief, tool, parameters, created (recorded as given by artifact-pipeline)"
+      - compliance.yaml written per version when the pipeline delivers a compliance result (may arrive after the version itself)
+      - "Version reads: SVG content, spec YAML, compliance YAML, provenance — individually addressable by version number"
+      - Head pointer updates in artifact.yaml (restore-as-new-head is a pointer move; version directories are immutable once written, never rewritten or deleted)
+      - Corrupt version tolerance (one damaged version file degrades that version; other versions and the artifact remain readable)
+
+  - name: preferences-store
+    description: |
+      The single-user preference file at the store root:
+      studio/workspaces/preferences.yaml holding docking-shell's
+      LayoutPreference document (placements, active tab, rail widths,
+      last-open workspace). Read on startup, written
+      whole on every change — silent persistence with no save action.
+      The preference schema is owned by its consumers (docking-shell via
+      studio-api); the store persists the document and guarantees a
+      missing or damaged file degrades to defaults, never to a failed
+      launch.
+    scope:
+      - preferences.yaml at the store root (sibling of workspace directories, not inside any workspace)
+      - Read operation (absent file → null result so first launch needs no setup; docking-shell applies its defaults)
+      - Whole-document write with atomic rename (last write wins; single-user, no merge logic)
+      - "Document typed as LayoutPreference (owned by docking-shell, studio/packages/contract/src/preferences.ts); the store persists it opaquely — round-trip without interpreting fields, unknown keys preserved for forward compatibility"
+      - Corrupt preferences tolerance (parse failure → corrupt result; callers fall back to defaults and the next write repairs the file)
+      - No preference semantics (what a panel arrangement means belongs to docking-shell; the store persists and returns the document)

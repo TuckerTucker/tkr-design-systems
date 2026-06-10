@@ -1,0 +1,293 @@
+# Interaction Stories — workspace-store
+# Layer: data | Wave: 1
+
+capability: workspace-store
+
+stories:
+
+  # ── store-foundation ────────────────────────────────────────────
+
+  - name: engineer-injects-store-repositories
+    feature: store-foundation
+    number: 1
+    actor: Server Engineer
+    intent: "Construct the workspace store from config via IoC and exercise repositories against a real temp directory without touching paths."
+    preconditions:
+      - "server/src/store/ module is built with named exports"
+      - "createWorkspaceStore(config, logger) factory exists"
+      - "Repository interfaces are declared and shared payload types live in studio/packages/contract/src/store.ts"
+    trigger_action: "Call createWorkspaceStore with a rootDir pointing at a fresh temp directory and use the returned repositories"
+    steps:
+      - actor: Server Engineer
+        action: "Calls createWorkspaceStore({ rootDir: tmpDir }, logger) in a vitest setup"
+        system_response: "Factory returns { workspaces, transcripts, artifacts, preferences }; the root directory is created on first use; no other location is touched"
+      - actor: Server Engineer
+        action: "Calls workspaces.create('Checkout Flow') and then workspaces.list()"
+        system_response: "checkout-flow/workspace.yaml exists under the temp root; list returns one entry whose fields round-trip exactly (id, name, created, updated, activeArtifactId, settings)"
+      - actor: Server Engineer
+        action: "Calls workspaces.create('Checkout Flow') a second time"
+        system_response: "Slug collision resolves automatically to checkout-flow-2; no error surfaces"
+      - actor: Server Engineer
+        action: "Calls workspaces.get('nope') and workspaces.get('../escape')"
+        system_response: "Both resolve to { ok: false } StoreResults (not_found); traversal input is rejected before any path composition — nothing is thrown"
+      - actor: Server Engineer
+        action: "Inspects the temp directory by hand"
+        system_response: "Everything on disk is plain YAML parseable by the `yaml` package and readable without tooling"
+    acceptance_criteria:
+      - given: "A fresh temp directory and a config object"
+        when: "createWorkspaceStore is called and a workspace is created"
+        then: "All four repositories work against that root; consumers never compose a path (path logic exists only inside server/src/store/)"
+      - given: "Two workspaces created with the same display name"
+        when: "The second create resolves"
+        then: "It receives a -2 suffixed slug and both list correctly"
+      - given: "An id containing traversal sequences"
+        when: "Any repository method receives it"
+        then: "A typed not_found result returns and the filesystem is never touched with that input"
+      - given: "Any repository method failure"
+        when: "The result is inspected"
+        then: "It is a StoreResult value with a coded StoreError — no exception crosses the repository seam"
+
+  - name: store-survives-crash-during-write
+    feature: store-foundation
+    number: 2
+    actor: Studio User
+    intent: "Lose nothing already saved when the server dies mid-write — atomicity as the 'never lose user work' guarantee."
+    preconditions:
+      - "Atomic write primitive (temp file + same-directory rename) is used by every store mutation"
+      - "Test fault-injection hook can abort between temp-file write and rename"
+      - "A workspace exists with a saved transcript and an artifact version"
+    trigger_action: "The server process is killed while the store is mid-way through writing an updated transcript.yaml"
+    steps:
+      - actor: Studio User
+        action: "Sends a chat message; the agent persists it; the process dies during the transcript write (fault injection in tests)"
+        system_response: "The rename never executed: transcript.yaml on disk still holds the complete prior content; only a .tmp- file remains beside it"
+      - actor: Studio User
+        action: "Restarts the studio"
+        system_response: "Store startup sweeps orphaned .tmp- files and logs the sweep; the workspace opens with every previously saved message intact"
+      - actor: System
+        action: "artifact-pipeline retries the interrupted operation"
+        system_response: "The write succeeds cleanly; for an interrupted version write, no half-complete versions/<NNNN>/ directory ever appeared, and the version number is reallocated"
+    acceptance_criteria:
+      - given: "A crash injected between temp-file write and rename"
+        when: "The target file is read after restart"
+        then: "It contains the complete prior content — never a truncated or merged document"
+      - given: "Orphaned .tmp- files left by a crash"
+        when: "The store starts"
+        then: "They are swept and logged; no orphan is ever read as data"
+      - given: "A crash during createVersion"
+        when: "Versions are listed after restart"
+        then: "No partial version directory exists; the next createVersion succeeds with a clean sequential number"
+
+  # ── workspace-lifecycle ─────────────────────────────────────────
+
+  - name: user-resumes-workspace-after-restart
+    feature: workspace-lifecycle
+    number: 3
+    actor: Studio User
+    intent: "Reopen the studio and land exactly where I left off — workspace, transcript, and active artifact restored without any save action ever taken."
+    preconditions:
+      - "WorkspaceRepository and PreferencesRepository are implemented"
+      - "A workspace exists with messages in transcript.yaml and an active artifact recorded in workspace.yaml"
+      - "preferences.yaml records lastWorkspaceId"
+    trigger_action: "Start the studio server after a full machine restart and request the workspace list"
+    steps:
+      - actor: Studio User
+        action: "Opens the studio"
+        system_response: "workspaces.list() scans the store root and returns every workspace with name, updated stamp, and active artifact — enough for the client to resume; preferences.get() supplies the LayoutPreference document carrying lastWorkspaceId"
+      - actor: Studio User
+        action: "Opens the remembered workspace"
+        system_response: "workspaces.get() returns the full model; the activeArtifactId points at the artifact that was on the canvas"
+      - actor: System
+        action: "The user renames the workspace and continues working"
+        system_response: "workspaces.update() rewrites workspace.yaml atomically with a refreshed updated stamp; the slug ID is stable — only the display name changes"
+    acceptance_criteria:
+      - given: "Workspaces saved in a previous session"
+        when: "The studio starts and lists workspaces"
+        then: "Every workspace appears with id, name, updated, and activeArtifactId read from workspace.yaml — no setup or migration step"
+      - given: "A workspace rename via update()"
+        when: "workspace.yaml is re-read"
+        then: "name and updated changed; id, created, and the directory name are unchanged"
+      - given: "An update patch touching settings only"
+        when: "The workspace is re-read"
+        then: "name and activeArtifactId are untouched (patch semantics, not whole-document replacement by the caller)"
+
+  - name: user-recovers-deleted-workspace
+    feature: workspace-lifecycle
+    number: 4
+    actor: Studio User
+    intent: "Delete a workspace, change my mind, and get it back whole — undo, not an 'Are you sure?' dialog."
+    preconditions:
+      - "Soft delete via .trash- directory prefix is implemented"
+      - "A workspace exists with transcript and artifact versions on disk"
+    trigger_action: "Delete the workspace, then restore it"
+    steps:
+      - actor: Studio User
+        action: "Deletes the workspace (no confirmation dialog — deletion is immediately undoable)"
+        system_response: "softDelete renames <id>/ to .trash-<id>/; every file inside is untouched; the workspace disappears from list()"
+      - actor: Studio User
+        action: "Asks for recoverable workspaces"
+        system_response: "listDeleted() returns the id, sourced from .trash- directories at the store root"
+      - actor: Studio User
+        action: "Restores the workspace"
+        system_response: "restore() renames the directory back; transcript, artifacts, and every version are byte-identical to before deletion; it reappears in list()"
+      - actor: Studio User
+        action: "In another timeline: creates a new workspace that took the same slug, then tries to restore"
+        system_response: "restore() returns a typed conflict result naming the trash directory so the user can resolve it; both directories remain intact — nothing is overwritten"
+    acceptance_criteria:
+      - given: "A workspace with content"
+        when: "It is soft-deleted"
+        then: "The directory becomes .trash-<id> with contents untouched, and it no longer appears in list()"
+      - given: "A soft-deleted workspace"
+        when: "restore() is called"
+        then: "The workspace returns whole — transcript and artifact files byte-identical — and lists normally"
+      - given: "A new workspace reusing the deleted slug"
+        when: "restore() is attempted"
+        then: "A conflict StoreError returns and neither directory is modified"
+
+  # ── transcript-persistence ──────────────────────────────────────
+
+  - name: agent-appends-transcript-messages
+    feature: transcript-persistence
+    number: 5
+    actor: Agent Orchestrator (agent-orchestration)
+    intent: "Persist every chat record as it happens so a workspace's conversation survives restarts, without the store knowing what the records mean."
+    preconditions:
+      - "TranscriptRepository is implemented"
+      - "A workspace exists; agent-orchestration holds an injected TranscriptRepository"
+    trigger_action: "The agent loop appends records during a conversation turn"
+    steps:
+      - actor: Agent Orchestrator (agent-orchestration)
+        action: "Appends a user message record, a routing_result record, then a tool_call record, then a decision_chips record as the turn progresses"
+        system_response: "Each append lands atomically in transcript.yaml in order; the file is created with the first record if absent"
+      - actor: Agent Orchestrator (agent-orchestration)
+        action: "Reads the transcript on workspace attach"
+        system_response: "read() returns every record in append order with payloads verbatim — multiline message text intact via YAML block scalars"
+      - actor: Studio User
+        action: "Opens transcript.yaml in a text editor"
+        system_response: "The conversation is human-readable plain YAML — reviewable without tooling, per the plain-files decision"
+      - actor: System
+        action: "Two appends race within the process"
+        system_response: "Per-file serialization queues them; both records persist, neither is lost or interleaved"
+    acceptance_criteria:
+      - given: "A workspace with no transcript.yaml"
+        when: "The first record is appended"
+        then: "The file is created containing exactly that record"
+      - given: "Many records appended across turns"
+        when: "read() is called"
+        then: "Records return in append order with id, kind, timestamp, and payload exactly as written"
+      - given: "A record payload containing multiline text"
+        when: "The file is inspected on disk"
+        then: "It is readable YAML (block scalars), and round-trips byte-equal through read()"
+      - given: "Concurrent appends in one process"
+        when: "Both settle"
+        then: "Both records are present in a consistent order; the file is never corrupted by interleaving"
+
+  # ── artifact-version-storage ────────────────────────────────────
+
+  - name: pipeline-persists-artifact-version
+    feature: artifact-version-storage
+    number: 6
+    actor: Artifact Pipeline (artifact-pipeline)
+    intent: "Land a generation result as an immutable, numbered version with provenance and later compliance — storage the history scrubber can trust."
+    preconditions:
+      - "ArtifactRepository is implemented"
+      - "A workspace exists; artifact-pipeline holds an injected ArtifactRepository"
+      - "A generation result (SVG + spec.yaml + provenance) is in hand"
+    trigger_action: "The pipeline persists a new version for an artifact"
+    steps:
+      - actor: Artifact Pipeline (artifact-pipeline)
+        action: "Calls artifacts.create() for a new artifact, then createVersion() with SVG, spec, and provenance"
+        system_response: "The store allocates versions/0001/, writes wireframe.svg, wireframe.spec.yaml, and version.yaml as a unit, and returns VersionMeta with the assigned number"
+      - actor: Artifact Pipeline (artifact-pipeline)
+        action: "Runs ds_check_compliance and delivers the report"
+        system_response: "writeCompliance() lands compliance.yaml inside the same version directory — late attachment is normal, the version was already complete without it"
+      - actor: Artifact Pipeline (artifact-pipeline)
+        action: "Persists a refinement as the next version, then restores version 1 as head"
+        system_response: "versions/0002/ allocates sequentially; setHead(…, 1) moves only the pointer in artifact.yaml — both version directories remain byte-identical"
+      - actor: Studio User
+        action: "Scrubs history on the canvas (via studio-api reads)"
+        system_response: "readSvg/readSpec/readCompliance serve each version by number; provenance in version.yaml shows brief, tool, parameters, and parent for every step"
+    acceptance_criteria:
+      - given: "An artifact with no versions"
+        when: "createVersion is called"
+        then: "versions/0001/ contains wireframe.svg, wireframe.spec.yaml, and version.yaml; the returned number is 1 and the store assigned it"
+      - given: "Existing versions 0001 and 0002"
+        when: "Another version is created"
+        then: "It lands in 0003 — zero-padded, sequential, allocated from the directory listing"
+      - given: "A compliance report delivered after version creation"
+        when: "writeCompliance runs"
+        then: "compliance.yaml appears in that version directory and readCompliance returns it; before delivery, readCompliance returns not_found (not corrupt)"
+      - given: "setHead to a prior version"
+        when: "artifact.yaml and the version directories are compared before/after"
+        then: "Only artifact.yaml changed — version directories are immutable (restore is a pointer move, never a rollback)"
+
+  # ── preferences-store ───────────────────────────────────────────
+
+  - name: shell-persists-panel-preferences
+    feature: preferences-store
+    number: 7
+    actor: Studio User
+    intent: "Arrange panels once and have the layout follow me across sessions with no save button anywhere."
+    preconditions:
+      - "PreferencesRepository is implemented"
+      - "studio-api exposes GET/PUT /api/preferences over it"
+    trigger_action: "Drag the library panel to the other rail and collapse the chat panel, then restart the studio"
+    steps:
+      - actor: Studio User
+        action: "Rearranges panels in the docking shell"
+        system_response: "The shell PUTs the LayoutPreference document; preferences.put() replaces studio/workspaces/preferences.yaml atomically — persisted opaquely, silent persistence, no save action"
+      - actor: Studio User
+        action: "Restarts the studio"
+        system_response: "preferences.get() returns the document; the shell restores placements, rail widths, active tab, and lastWorkspaceId exactly"
+      - actor: Studio User
+        action: "Launches on a brand-new machine (no preferences.yaml)"
+        system_response: "get() returns null — first launch needs no setup; the shell applies its default arrangement"
+      - actor: System
+        action: "A future panel writes a preference key the current contract does not type"
+        system_response: "The unknown key survives every subsequent read/write round-trip verbatim (forward compatibility)"
+    acceptance_criteria:
+      - given: "A panel arrangement written via preferences.put()"
+        when: "The studio restarts and reads preferences"
+        then: "schemaVersion, placements, activeTab, railWidths, and lastWorkspaceId match what was written"
+      - given: "No preferences.yaml on disk"
+        when: "get() is called"
+        then: "An ok result carrying null returns — never an error on first launch; the shell applies its defaults"
+      - given: "A preferences document containing unknown keys"
+        when: "It is read and written back"
+        then: "Unknown keys are preserved byte-for-byte"
+
+  - name: store-degrades-corrupt-file-gracefully
+    feature: store-foundation
+    number: 8
+    actor: Studio User
+    intent: "A single damaged file costs me one item, never the whole store — and the studio tells me which file and how to fix it, in place."
+    preconditions:
+      - "All four repositories are implemented with corrupt-result translation in yaml-io"
+      - "A store exists with multiple workspaces, transcripts, artifacts, and preferences"
+    trigger_action: "One workspace.yaml is hand-edited into invalid YAML (or truncated by an external cause); the studio is opened"
+    steps:
+      - actor: Studio User
+        action: "Opens the studio with the damaged file present"
+        system_response: "workspaces.list() succeeds: healthy workspaces list normally; the damaged one appears as a degraded entry carrying a corrupt StoreError that names the offending file path"
+      - actor: Studio User
+        action: "Opens a healthy workspace"
+        system_response: "Transcript, artifacts, and versions all read normally — the damage is contained to the one item"
+      - actor: Studio User
+        action: "Encounters a damaged version file inside an otherwise healthy artifact"
+        system_response: "That version reads as corrupt; sibling versions and artifact.yaml read fine; setHead to a healthy version puts a good artifact back on the canvas"
+      - actor: Studio User
+        action: "Fixes the named file on disk (it is plain, human-readable YAML)"
+        system_response: "The next read returns ok — no restart, no rebuild, no migration"
+    acceptance_criteria:
+      - given: "One corrupt workspace.yaml among several workspaces"
+        when: "list() runs"
+        then: "The list succeeds with healthy entries plus one degraded entry whose error has code corrupt and the file path"
+      - given: "A corrupt transcript.yaml"
+        when: "The workspace metadata and artifacts are read"
+        then: "Only the transcript returns corrupt; everything else in the workspace reads ok"
+      - given: "A corrupt file in versions/0002/"
+        when: "Versions 0001 and 0003 are read"
+        then: "Both return ok; only 0002 degrades"
+      - given: "A corrupt preferences.yaml"
+        when: "The studio launches and the user adjusts any panel"
+        then: "Defaults apply, the next write repairs the file, and no launch failure occurs"

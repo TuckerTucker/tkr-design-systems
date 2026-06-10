@@ -1,0 +1,103 @@
+# Slices — workspace-store
+# Layer: data | Wave: 1
+
+capability: workspace-store
+
+slices:
+
+  # ── store-foundation ────────────────────────────────────────────
+
+  - title: "Store foundation: atomic writes, YAML I/O, slug IDs, and repository contracts"
+    number: 1
+    layer: data
+    delivers:
+      - "server/src/store/ module with named exports and the createWorkspaceStore IoC factory"
+      - "Atomic write primitive (temp file in the same directory + rename) used by every YAML and SVG write"
+      - "YAML read/write helpers over the `yaml` package (no hand-rolled parsing)"
+      - "Kebab-case slug generation from display names with uniqueness within a parent (collision suffixes -2, -3, …)"
+      - "Slug grammar validation before any filesystem use (path traversal sequences rejected as invalid IDs)"
+      - "StoreResult<T> / StoreError typed result contract (codes: not_found, corrupt, conflict, io_error) — errors as values, never thrown across the seam"
+      - "Corruption tolerance primitive: parse or shape failure yields a corrupt result for that item only"
+      - "Repository interfaces declared (WorkspaceRepository, TranscriptRepository, ArtifactRepository, PreferencesRepository) with shared domain types contributed as studio/packages/contract/src/store.ts to the already-scaffolded @studio/contract package (skeleton created in Wave 1 by studio-server slice 1)"
+      - "Store root resolution from studio-server config (studio/workspaces/, created on first use; nothing written outside it)"
+      - "pino child loggers per repository (structured entry/exit, errors, state changes)"
+      - "vitest suite against a real temp directory: atomic-write crash simulation (temp file present, target intact), slug collisions, corrupt-file degradation"
+    depends_on: []
+    story_ids:
+      - engineer-injects-store-repositories
+      - store-survives-crash-during-write
+
+  # ── workspace-lifecycle ─────────────────────────────────────────
+
+  - title: "Workspace lifecycle: listing, creation, update, soft-delete with recovery"
+    number: 2
+    layer: data
+    delivers:
+      - "WorkspaceRepository implementation over <workspace-id>/workspace.yaml"
+      - "Listing (store-root scan, summaries from workspace.yaml; .trash- directories excluded; corrupt entries surfaced as degraded, siblings unaffected)"
+      - "Creation (display name → unique slug ID, directory scaffold, initial workspace.yaml with created/updated stamps)"
+      - "Read (full model: id, name, created, updated, activeArtifactId, settings)"
+      - "Update (patch rename/settings/active-artifact; updated stamp refreshed; atomic rewrite)"
+      - "Soft delete (directory renamed to .trash-<workspace-id>; contents untouched)"
+      - "Trash listing and restore (rename back; slug-collision handling when the original ID has been reused)"
+      - "vitest coverage in a real temp directory: create/list/update round-trip, delete-then-restore, corrupt workspace.yaml degradation"
+    depends_on: [1]
+    story_ids:
+      - user-resumes-workspace-after-restart
+      - user-recovers-deleted-workspace
+
+  # ── transcript-persistence ──────────────────────────────────────
+
+  - title: "Transcript repository: append-ordered records in transcript.yaml"
+    number: 3
+    layer: data
+    delivers:
+      - "TranscriptRepository implementation over <workspace-id>/transcript.yaml"
+      - "Record envelope (id, kind: message | tool_call | decision_chips | routing_result, timestamp) with payload preserved verbatim — no chat semantics in the store"
+      - "Append operation (read-modify-write, atomic rename, order preserved; file created empty on first append)"
+      - "Full-transcript read in append order for workspace resume"
+      - "Human-readable YAML on disk (multiline text as block scalars)"
+      - "Corrupt transcript degrades only the transcript (workspace metadata and artifacts still readable)"
+      - "vitest coverage in a real temp directory: append/read round-trip, ordering across many appends, corrupt-file degradation"
+    depends_on: [1, 2]
+    story_ids:
+      - agent-appends-transcript-messages
+
+  # ── artifact-version-storage ────────────────────────────────────
+
+  - title: "Artifact repository: immutable zero-padded versions with head pointer"
+    number: 4
+    layer: data
+    delivers:
+      - "ArtifactRepository implementation over artifacts/<artifact-id>/artifact.yaml + versions/<NNNN>/"
+      - "Artifact creation (unique artifact-id slug within the workspace; artifact.yaml with name, system, platform, head pointer)"
+      - "Artifact listing/read per workspace with version inventories"
+      - "Version allocation: zero-padded sequential directories (0001, 0002, …) — next number assigned by the store from existing directories"
+      - "Version write as a unit (wireframe.svg + wireframe.spec.yaml + version.yaml staged then placed; a crash never leaves a directory that passes for complete)"
+      - "version.yaml provenance recorded as given (parent version, brief, tool, parameters, created)"
+      - "compliance.yaml written per version when delivered (may arrive after the version files)"
+      - "Per-version reads addressable by number: SVG content, spec YAML, compliance YAML, provenance"
+      - "Head-pointer update in artifact.yaml (restore-as-new-head is a pointer move; version directories are never rewritten or deleted)"
+      - "Corrupt version file degrades that version only; siblings and artifact metadata readable"
+      - "vitest coverage in a real temp directory: sequential numbering, version-unit atomicity, head moves, late compliance attach, corrupt-version degradation"
+    depends_on: [1, 2]
+    story_ids:
+      - pipeline-persists-artifact-version
+
+  # ── preferences-store ───────────────────────────────────────────
+
+  - title: "Preferences repository and store-wide corruption tolerance verification"
+    number: 5
+    layer: data
+    delivers:
+      - "PreferencesRepository implementation over studio/workspaces/preferences.yaml (store root, outside any workspace)"
+      - "Read with absent-file null result (first launch yields null; docking-shell applies its defaults, no setup step)"
+      - "Whole-document atomic write (silent persistence; last write wins, single-user)"
+      - "Document typed as LayoutPreference (owned by docking-shell, studio/packages/contract/src/preferences.ts); persisted opaquely — round-trip without interpreting fields, unknown keys preserved"
+      - "Corrupt preferences degrade to defaults; next write repairs the file"
+      - "Store-wide corruption tolerance verification: damaged preferences.yaml, workspace.yaml, transcript.yaml, and version files each degrade exactly one item while every sibling stays readable"
+      - "vitest coverage in a real temp directory: default read, write/read round-trip, unknown-key preservation, cross-repository corruption matrix"
+    depends_on: [1, 2, 3, 4]
+    story_ids:
+      - shell-persists-panel-preferences
+      - store-degrades-corrupt-file-gracefully

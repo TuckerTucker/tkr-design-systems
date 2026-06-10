@@ -1,0 +1,136 @@
+# Slices — agent-orchestration
+# Layer: domain | Wave: 3
+
+capability: agent-orchestration
+
+slices:
+
+  # ── auth-and-cancellation ───────────────────────────────────────
+
+  - title: "API key resolution and auth status reporting"
+    number: 1
+    layer: domain
+    delivers:
+      - "Key resolution module (process environment first, then studio/.env gitignored local config)"
+      - "AuthState model (status: configured | missing | invalid; source: env | dotenv | null)"
+      - "pino redaction configuration covering ANTHROPIC_API_KEY in every agent logger"
+      - "Auth status surface for studio-server /api/health and the auth.status event stream"
+      - "Keyless degradation contract — generation entry points return a typed error (reason + fix in place) when no key is configured; no SDK process spawns"
+      - "Invalid-key detection mapping SDK authentication failures to status invalid"
+      - "Documented constraint: claude.ai subscription login is out of scope (Anthropic policy for embedded SDK apps); API key is the only auth path"
+      - "vitest unit tests (resolution order, redaction, keyless refusal)"
+    depends_on: []
+    story_ids:
+      - user-runs-studio-without-api-key
+
+  # ── agent-session ───────────────────────────────────────────────
+
+  - title: "Agent SDK session per workspace with plain conversation"
+    number: 2
+    layer: domain
+    delivers:
+      - "@anthropic-ai/claude-agent-sdk dependency in studio/server (TypeScript, ES modules)"
+      - "AgentSession wrapping query() with the design-systems MCP server configured via options (SDK-owned connection, independent of mcp-bridge)"
+      - "MCP launch configuration sourced from studio-server config (command per repo-root .mcp.json)"
+      - "ANTHROPIC_API_KEY injection into the SDK subprocess environment (from slice 1 resolution)"
+      - "SessionManager (one session per workspace, lazy create, dispose on close/shutdown)"
+      - "Routing system prompt v1 (intent definitions, default-selection rules, chip emission instructions, grammar respect)"
+      - "Plain conversation path — discussion messages stream assistant deltas with zero tool calls"
+      - "SDK stream → AgentEvent translation (message_started, assistant_delta, tool_started, tool_finished, message_completed, error)"
+      - "Single in-flight run per workspace with typed busy rejection"
+      - "AgentEvent union declared in studio/packages/contract/src/agent-events.ts — agent-orchestration's contributed module in the already-scaffolded @studio/contract package (skeleton created Wave 1 by studio-server slice 1; shared with studio-api)"
+      - "pino child loggers with workspaceId/requestId correlation"
+      - "vitest integration test driving a plain-conversation turn programmatically"
+    depends_on: [1]
+    story_ids:
+      - designer-chats-plain-conversation
+
+  # ── intent-routing + decision-chips ─────────────────────────────
+
+  - title: "Generation flow with default selection as decision chips"
+    number: 3
+    layer: domain
+    delivers:
+      - "Generate intent routing — fresh brief drives wf_generate over the SDK's MCP connection"
+      - "routing_request handling — wf_generate without layout_id returns available patterns + components; agent selects layout_id (directly or via wf_select_layout) and re-invokes for the full 7-step run"
+      - "Default selection (system, layout archetype, platform) chosen by the agent from brief cues, registry, and routing_request patterns — never asked up front"
+      - "DecisionChip model (kind, value, options, rerun step) and chips_updated event per tool-bearing turn"
+      - "Chip option vocabularies from real data (registry systems, routing_request available_patterns, mobile/desktop)"
+      - "updateChip entry point — receives the domain ChipUpdate {requestId, artifactId, kind, value} (studio-api resolves artifactId from the wire payload's messageId) and re-runs the affected step (system/layout → re-generate; platform → re-generate at new platform) producing a new artifact result"
+      - "artifact_produced event (ArtifactSource {kind: 'paths', svgPath, specPath} — wf_generate emits files to disk — plus provenance: brief, tool, parameters, parent version) consumed by artifact-pipeline"
+      - "RoutingResult recorded per turn (intent, rationale, target artifact, defaults)"
+      - "Typed tool-failure handling (wf_generate ok:false errors surface as error events with the tool's message)"
+      - "vitest integration tests against the real design-systems MCP server (brief → artifact, chip change → re-run)"
+    depends_on: [2]
+    story_ids:
+      - designer-generates-from-brief
+      - designer-edits-decision-chip
+
+  # ── conversation-context-and-events ─────────────────────────────
+
+  - title: "Per-artifact context and transcript persistence"
+    number: 4
+    layer: domain
+    delivers:
+      - "Per-artifact conversation context windows (transcript slices keyed by artifactId assembled into refinement turns)"
+      - "Active-artifact tracking — untargeted refinements apply to the workspace's active artifact"
+      - "Context assembly bounds (older refinement turns summarized/truncated)"
+      - "Transcript persistence through workspace-store TranscriptRepository (IoC-injected; messages, tool-call records, chip sets, and routing results written as TranscriptRecord kind 'routing_result')"
+      - "Tool-call records persisted with secrets excluded"
+      - "Transcript restore on session creation — reopening a workspace seeds the context with prior turns"
+      - "Event ordering guarantee (message_started first; message_completed or error last; deltas/tool events strictly ordered)"
+      - "vitest integration tests (restore-and-refine round trip against a real temp workspace directory)"
+    depends_on: [3]
+    story_ids:
+      - designer-resumes-workspace-conversation
+
+  - title: "Two-pass substitution refinement"
+    number: 5
+    layer: domain
+    delivers:
+      - "Substitute intent routing — content-refinement messages on an existing artifact route to the two-pass flow"
+      - "Pass 1: wf_build_substitution_request(brief, system_id, platform, layout_id) returning text_nodes + grammar_caveats + selected_pattern"
+      - "Agent judgment producing {find, replace, rationale} substitutions respecting per-system grammar (Revolt uppercase, Editorial title-case, Terminal lowercase-snake)"
+      - "Pass 2: wf_apply_substitutions(svg_path, substitutions, system_id) returning svg_text + unapplied_finds + grammar_warnings"
+      - "Refinement without restatement — brief, system, layout, and platform recovered from the per-artifact context (slice 4)"
+      - "unapplied_finds and grammar_warnings surfaced in the event stream and transcript, never dropped"
+      - "artifact_produced event (ArtifactSource {kind: 'paths'} — wf_apply_substitutions emits files to disk) with substitution provenance (parent version linkage for artifact-pipeline)"
+      - "Decision chips carried forward on refinement turns (same system/layout/platform unless changed)"
+      - "vitest integration tests against the real MCP server (refine header copy, verify grammar warning path)"
+    depends_on: [4]
+    story_ids:
+      - designer-refines-content-in-context
+
+  - title: "Blueprint composition for novel layouts"
+    number: 6
+    layer: domain
+    delivers:
+      - "Compose intent routing — briefs implying layouts the system has not authored route to the compose flow"
+      - "Decomposition request via wf_generate(compose=True) returning available components and canvas dimensions"
+      - "Agent-authored LayoutBlueprint JSON ({canvas: {width, height}, regions: [{id, components: [{component_id, x, y}]}]})"
+      - "Assembly via wf_assemble_from_blueprint(blueprint, system_id, output_dir, filename_stem) — defs deduplication and per-component transforms handled by the tool"
+      - "Validation-failure recovery loop — validation_errors (unknown component_ids, out-of-bounds placements) feed a blueprint revision and retry; bounded retries then typed error"
+      - "Assembly warnings surfaced in the event stream"
+      - "artifact_produced event (ArtifactSource {kind: 'text', svgText, specYaml?} — wf_assemble_from_blueprint returns SVG text) with compose provenance (blueprint recorded in parameters)"
+      - "Decision chips on compose turns (system, platform; layout chip reflects the composed result)"
+      - "vitest integration tests against the real MCP server (kanban-style brief → assembled artifact; invalid blueprint → recovery)"
+    depends_on: [3]
+    story_ids:
+      - designer-requests-novel-layout
+
+  # ── auth-and-cancellation (cancellation) ────────────────────────
+
+  - title: "Mid-generation cancellation"
+    number: 7
+    layer: domain
+    delivers:
+      - "cancel(requestId) on AgentSession — chat.cancel aborts the in-flight SDK query via AbortController"
+      - "Cancellation event (error event with code cancelled) terminating the turn's event stream"
+      - "Transcript consistency — the cancelled turn persists marked cancelled; partial assistant text retained for review"
+      - "Artifact consistency — no partial artifact version emitted; prior head untouched"
+      - "Session reuse after cancellation — the next chat.send runs normally on the same session"
+      - "Cancel of an unknown or already-completed requestId returns a typed no-op result (not an exception)"
+      - "vitest integration test (cancel mid-generation, then complete a follow-up turn)"
+    depends_on: [3]
+    story_ids:
+      - designer-cancels-generation

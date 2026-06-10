@@ -1,0 +1,115 @@
+# Features — library-panel
+# Capability: Visual browser over registered design systems, as a docked panel
+# Layer: ui | Wave: 6
+
+capability: library-panel
+
+features:
+
+  - name: system-switcher
+    description: |
+      The panel's entry point: a system switcher fed by /api/library/systems
+      (proxying ds_list_systems), showing each registered system's name,
+      tagline, and status. Selecting a system scopes every other panel
+      section (tokens, components, layouts, search) to that system. The
+      last-viewed system persists silently through the preferences API.
+      When the MCP bridge is down, the switcher and all sections continue
+      serving cached data with staleness indicated in place — browsing
+      never hard-fails to a blank panel.
+    scope:
+      - System list from GET /api/library/systems (id, name, tagline, grammar_family, version, spec_version, status)
+      - Switcher UI inside the library panel header (compact select or list, current system always visible)
+      - Status rendering (registered vs. draft; draft systems selectable but badged)
+      - Selection scopes token browser, component gallery, layout browser, and search to the active system
+      - Last-viewed system persisted via the preferences endpoints (no save action)
+      - Client-side cache of library payloads keyed by system id, with fetched-at metadata
+      - bridge.status WebSocket events drive an in-place staleness indicator (cached data shown, never a modal or toast)
+      - Loading and error states rendered inline within the panel (what failed, how to fix)
+      - Keyboard parity (switcher operable by keyboard, focus management on system change)
+
+  - name: token-browser
+    description: |
+      Visual rendering of a system's token vocabulary from
+      /api/library/:systemId/tokens (wf_get_tokens). Palette swatches with
+      hex values, roles, and usage constraints; type-scale specimens
+      rendered at their real pixel sizes in the system's actual font
+      stack; spacing-grid visualization of the grid unit and allowed
+      steps; border-radius and elevation rules rendered as drawn examples
+      (border strokes for borders-only systems, the elevation note for
+      others). The browser makes spec.yaml's abstract tokens visible
+      without reading a single line of YAML.
+    scope:
+      - Palette section — one swatch per palette entry showing color chip, name, hex value, role, and usage_constraint
+      - Swatch values copyable in place (click copies hex; confirmation shown inline on the swatch)
+      - Type-scale section — one specimen per scale entry rendered at its real px size in the system's structural font stack, labeled with size and role
+      - Case and tracking rules displayed alongside the specimens they govern (e.g. uppercase metadata at 0.16 tracking)
+      - Spacing section — grid_unit and allowed_steps rendered as a proportional bar/grid visualization, page margins and gaps labeled
+      - Borders section — radius_default, radius_inputs, radius_chrome rendered as drawn corner examples (including radius 0 systems)
+      - Elevation section — borders-only systems render stroke_border / stroke_border_strong as drawn rules; other strategies render the elevation_note verbatim
+      - Sections collapse/expand per user preference within the panel (progressive disclosure, state persisted)
+      - WCAG AA — swatch text legible against chips, specimens carry accessible labels (size + role announced)
+
+  - name: component-gallery
+    description: |
+      The component gallery renders the real library SVGs — not redrawn
+      approximations — for every component in the active system. The
+      component index comes from /api/library/:systemId/components; each
+      card fetches its SVG through
+      /api/library/:systemId/components/:componentId (wf_read_component)
+      progressively as it scrolls into view, never all-or-nothing.
+      Components with multiple variants get a variant toggle that swaps
+      the rendered SVG in place. Anatomy, tier, states, constraints, and
+      rendering notes surface on demand per card.
+    scope:
+      - Component index from GET /api/library/:systemId/components (spec key, anatomy, tier, constraints, variants with states and rendering_notes)
+      - Gallery grid of component cards, one per component, grouped or badged by tier
+      - Progressive SVG loading — cards fetch GET /api/library/:systemId/components/:componentId only when scrolled into view (IntersectionObserver), with non-blocking placeholders
+      - Native inline SVG rendering scaled to the card from the component's viewBox (no rasterization)
+      - Variant toggle per multi-variant component — switching variants swaps the rendered SVG in place, selection per card retained while the panel lives
+      - Details on demand per card — rendering_notes, anatomy labels, states, constraints (progressive disclosure, not shown by default)
+      - Per-component fetch failure rendered inline on that card (other cards unaffected)
+      - No pagination — systems have well under 100 components; the gallery is one scrollable surface
+      - Keyboard and screen-reader support (cards focusable, variant toggles operable by keyboard, SVG carries an accessible name)
+
+  - name: layout-browser
+    description: |
+      Browsable thumbnails of the system's layout templates from
+      /api/library/:systemId/layouts — the authored layout SVGs (auth,
+      dashboard, settings_layout, data_table, form, empty_state, modal,
+      drawer, header, sidebar) rendered as scaled-down native SVG
+      thumbnails with the template id and its spec description. Gives the
+      user the same layout vocabulary the agent draws from when routing a
+      brief, so "use the dashboard layout" is a choice made by looking,
+      not guessing.
+    scope:
+      - Layout template list from GET /api/library/:systemId/layouts (template id, description, layout SVG)
+      - Thumbnail grid — each template's real layout SVG rendered scaled-down (native SVG, no rasterization)
+      - Template id and spec description shown with each thumbnail
+      - Thumbnails load progressively as scrolled, same mechanism as the component gallery
+      - Click/keyboard activation expands a template to a larger in-panel preview (no modal navigation away)
+      - Per-template load failure rendered inline on that thumbnail
+      - Layout templates participate in reference-into-chat (typed layout reference)
+
+  - name: search-and-chat-reference
+    description: |
+      The two features that make the library active rather than
+      decorative. Search/filter: one query field filtering components
+      (id, anatomy, variant ids, rendering notes) and tokens (palette
+      names, hex values, roles) within the active system, filtering live
+      as the user types against the cached index. Reference-into-chat:
+      any component variant, token, or layout template can be sent into
+      the chat composer — by drag or by an explicit send action — as a
+      typed reference that grounds the agent's next step ("use this card
+      style"), so intent points at a real artifact instead of a prose
+      description.
+    scope:
+      - Single search field scoped to the active system, filtering as the user types (client-side over cached index, no network per keystroke)
+      - Component matching across component id, variant ids, anatomy labels, and rendering notes
+      - Token matching across palette names, hex values, and roles
+      - Matching sections stay visible with non-matches filtered out; match counts shown per section
+      - Empty result state rendered in place with a one-click clear-filter affordance
+      - Typed reference payload (LibraryReference — component | token | layout discriminated union) declared in @studio/contract (packages/contract/src/library.ts, owned by library-panel; chat-panel imports the same type)
+      - Drag-to-chat — gallery cards, swatches, and layout thumbnails draggable onto the chat composer with a typed drag payload
+      - Explicit send action on every referenceable item (keyboard-reachable parity for drag)
+      - Composer receives the reference as a removable chip via its reference intake; the reference rides the next chat.send as ChatSendPayload's references field so the agent grounds its next tool call on it
+      - Reference works while the chat panel is collapsed (panel restores/indicates receipt; no silent drop)

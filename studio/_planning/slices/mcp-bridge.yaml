@@ -1,0 +1,102 @@
+# Slices — mcp-bridge
+# Layer: infrastructure | Wave: 2
+
+capability: mcp-bridge
+
+slices:
+
+  # ── transport-and-supervision ───────────────────────────────────
+
+  - title: "Stdio transport and subprocess lifecycle"
+    number: 1
+    layer: infrastructure
+    delivers:
+      - studio/server/src/mcp/ module with SDK Client + StdioClientTransport wiring
+      - Launch command resolution from studio-server config (command /usr/local/bin/python3, args design-systems/mcp-server/server.py, cwd = repo root, per .mcp.json semantics)
+      - Subprocess spawn owned by StdioClientTransport (stderr piped into pino logs)
+      - MCP initialize handshake and capability exchange
+      - Startup verification (listTools contains ds_list_systems, ds_load_system, ds_get_rulebook, ds_check_compliance, wf_get_tokens, wf_read_component)
+      - Bridge state machine skeleton (starting, up, stopped) with transition logging
+      - Graceful shutdown (close transport, subprocess terminates, no orphan processes)
+      - Integration test connecting to the REAL design-systems MCP server (never mocked)
+    depends_on: []
+    story_ids:
+      - engineer-connects-bridge-to-real-mcp-server
+
+  # ── call-management ─────────────────────────────────────────────
+
+  - title: "Call serialization, timeout, and cancellation"
+    number: 2
+    layer: infrastructure
+    delivers:
+      - FIFO call queue over the single stdio transport (one in-flight call at a time)
+      - "CallOptions contract (timeoutMs override, AbortSignal)"
+      - Per-call timeout with configurable default from studio-server config
+      - Timeout expiry resolves the call as a typed timeout failure; transport stays up and the queue continues
+      - Cancellation (queued call removed before dispatch; in-flight call resolves as cancelled)
+      - Queue drain on shutdown (pending calls resolve as bridge_down, never hang)
+      - Correlation logging per call (requestId, tool name, queue depth, outcome)
+      - Integration tests for serialization order, timeout, and cancellation against the real MCP server
+    depends_on: [1]
+    story_ids:
+      - engineer-cancels-slow-tool-call
+
+  # ── error-translation ───────────────────────────────────────────
+
+  - title: "Typed result model and error translation"
+    number: 3
+    layer: infrastructure
+    delivers:
+      - "BridgeResult<T> discriminated union ({ ok: true; value; warnings } | { ok: false; error }) — declared in the bridge-owned contract bridge.ts module (@studio/contract); translation lives in server errors.ts"
+      - "BridgeError model (kind: protocol | tool | timeout | cancelled | bridge_down; message; code?; detail?)"
+      - "Skill Result envelope unwrapping ({ok, data, warnings} success; {ok: false, errors} failure)"
+      - Skill error code passthrough (SYSTEM_NOT_FOUND, INVALID_PATH, SPEC_PARSE_FAILED, … as BridgeError.code)
+      - Handling both error shapes — structured {code, message, detail} objects and plain message strings from the server's _error_result catchall
+      - MCP protocol error translation (JSON-RPC errors, isError responses, transport closed, unparseable content) → kind protocol
+      - Warning passthrough on success results
+      - No-throw guarantee across the seam (wrappers are total functions over BridgeResult)
+      - Unit tests for every translation path; integration test provoking SYSTEM_NOT_FOUND against the real server
+    depends_on: [1]
+    story_ids:
+      - consumer-receives-typed-error-result
+
+  # ── typed-tool-wrappers ─────────────────────────────────────────
+
+  - title: "Typed wrappers for the six direct-call tools"
+    number: 4
+    layer: infrastructure
+    delivers:
+      - "listSystems() → BridgeResult<SystemDescriptor[]>"
+      - "loadSystem({ systemId, validate? }) → BridgeResult<LoadedSystemSpec>"
+      - "getRulebook({ systemId }) → BridgeResult<RulebookEntry[]>"
+      - "checkCompliance({ systemId, artifactPath, scope? }) → BridgeResult<RawComplianceResult> (bridge-internal raw shape in studio/server/src/mcp/types.ts; per-rule detail parsed from the wire's JSON string into Record<string, unknown>)"
+      - "getTokens({ systemId }) → BridgeResult<AuthoringTokens>"
+      - "readComponent({ systemId, componentId }) → BridgeResult<ComponentRead>; readComponents({ systemId, componentIds }) → BridgeResult<ComponentRead[]>"
+      - camelCase params mapped to snake_case tool arguments (system_id, artifact_path, component_id, component_ids)
+      - FastMCP JSON text content parsing (content[0].text → typed payload)
+      - McpBridge interface (named export) for IoC injection into artifact-pipeline and studio-api
+      - createMcpBridge factory (config + logger in, McpBridge out — no singleton)
+      - Integration tests per wrapper against the real MCP server (real registry, real component SVGs, real compliance run)
+    depends_on: [1, 2, 3]
+    story_ids:
+      - server-fetches-tokens-through-typed-wrapper
+
+  # ── transport-and-supervision (restart + status) ────────────────
+
+  - title: "Crash supervision, restart with backoff, and status reporting"
+    number: 5
+    layer: infrastructure
+    delivers:
+      - Crash detection (transport onclose/onerror, subprocess exit code logging)
+      - Restart with exponential backoff and configured restart budget
+      - Budget exhaustion transitions to failed (no further spawn attempts until explicit restart)
+      - Full bridge state machine (starting, up, restarting, failed, stopped) with transition events
+      - In-flight call failure on crash (kind protocol) and queue hold-then-replay-or-fail during restarting
+      - "BridgeState/BridgeStatus in the bridge-owned contract bridge.ts module (state: starting|up|restarting|failed|stopped; restartCount; lastError?; since) — added to the already-scaffolded @studio/contract package"
+      - Status registration into the studio-server health registry (/api/health bridge field)
+      - bridge.status WS event emission on every state transition
+      - onStatusChange subscription on the McpBridge interface (unsubscribe function returned)
+      - Integration test killing the real MCP server subprocess and observing restarting → up recovery
+    depends_on: [1, 3]
+    story_ids:
+      - bridge-recovers-from-server-crash

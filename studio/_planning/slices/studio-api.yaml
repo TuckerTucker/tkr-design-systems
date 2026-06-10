@@ -1,0 +1,134 @@
+# Slices — studio-api
+# Layer: api | Wave: 4
+
+capability: studio-api
+
+slices:
+
+  # ── contract-package ────────────────────────────────────────────
+
+  - title: "@studio/contract message and payload types"
+    number: 1
+    layer: api
+    delivers:
+      - "studio-api's protocol modules (envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts) contributed to @studio/contract — the package skeleton (TypeScript strict, ES modules, named exports, zero runtime dependencies) is scaffolded in Wave 1 by studio-server slice 1; npm name @studio/contract ↔ path studio/packages/contract"
+      - "ClientEnvelope ({ type, requestId?, payload }, no seq) and ServerEnvelope ({ type, requestId?, seq, payload }) per architecture.md"
+      - "Client→server payload types (workspace.attach, chat.send with optional references as LibraryReference[] from library.ts, chat.cancel, chip.update with kind field)"
+      - "Server→client payload types (chat.message_started, chat.assistant_delta, chat.tool_started, chat.tool_finished, chat.message_completed, chat.error, chips.updated, artifact.version_created, artifact.compliance_completed, bridge.status, auth.status)"
+      - "ClientMessage and ServerMessage discriminated unions"
+      - "HTTP payload types (WorkspaceSummary, WorkspaceCreateRequest, WorkspacePatchRequest, ArtifactSummary, ArtifactDetail, VersionSummary, RestoreResponse, ComplianceResponse, RuleResult, LibrarySystem, TokenSetResponse, ComponentIndexEntry, ComponentDetail, LayoutTemplate); HealthResponse (health.ts, studio-server) and LayoutPreference (preferences.ts, docking-shell) imported, never redeclared"
+      - "ApiError structured error type (code, message, fix, field) shared by HTTP errors and chat.error"
+      - "Domain literal unions (Platform, ChipKind, AuthState, compliance statuses); BridgeState imported from bridge.ts (owned by mcp-bridge, five states)"
+      - "Type-level tests asserting the unions match the architecture.md message list exactly"
+    depends_on: []
+    story_ids:
+      - engineer-imports-shared-contract
+
+  # ── ws-session-management ───────────────────────────────────────
+
+  - title: "WebSocket channel: workspace attach and reconnect-with-resume"
+    number: 2
+    layer: api
+    delivers:
+      - "/ws endpoint mounted on the studio-server Fastify instance (@fastify/websocket)"
+      - "Connection registry with connectionId / requestId / workspaceId pino correlation"
+      - "workspace.attach handling (workspace existence validated, connection bound, previous binding detached)"
+      - "Per-workspace event journal with monotonic seq stamped on server→client envelopes"
+      - "Resume replay (attach with lastEventSeq inside the journal window replays missed events in order)"
+      - "State re-sync (attach without a usable cursor re-emits current state via existing event types: completed chat events, artifact.version_created, artifact.compliance_completed, bridge.status, auth.status)"
+      - "Attach failures answered as chat.error envelopes with requestId echo and structured ApiError"
+      - "Connection teardown with bounded journal retention per workspace"
+    depends_on: [1]
+    story_ids:
+      - scripted-client-attaches-and-resumes
+
+  # ── chat-streaming-relay ────────────────────────────────────────
+
+  - title: "Chat streaming relay from the agent event stream"
+    number: 3
+    layer: api
+    delivers:
+      - "chat.send dispatch into agent-orchestration with attached-workspace context and optional artifactId scoping"
+      - "Agent stream → envelope mapping (chat.message_started, chat.assistant_delta, chat.tool_started, chat.tool_finished, chat.message_completed) with requestId echo"
+      - "Decision-chip relay (chips.updated on agent selections; chip-update resolution — relay resolves artifactId via the ChipSet emitted for the messageId and hands agent-orchestration the domain ChipUpdate { requestId, artifactId, kind, value } for re-run)"
+      - "Artifact event relay (artifact.version_created, artifact.compliance_completed from artifact-pipeline)"
+      - "chat.cancel aborting the in-flight turn (turn always closes with message_completed or chat.error)"
+      - "Agent and tool failures surfaced as chat.error with structured ApiError; auth-missing errors reference the auth.status fix"
+      - "bridge.status and auth.status pushed on change to attached connections"
+      - "Single in-flight turn per workspace (concurrent chat.send rejected as chat.error with busy reason)"
+      - "All relayed events journaled through slice 2 so streams survive reconnect"
+    depends_on: [1, 2]
+    story_ids:
+      - scripted-client-streams-brief-to-artifact
+
+  # ── workspace-artifact-endpoints ────────────────────────────────
+
+  - title: "Workspace, artifact, and preferences HTTP endpoints"
+    number: 4
+    layer: api
+    delivers:
+      - "GET/POST /api/workspaces (list, create with auto-naming when name omitted)"
+      - "GET/PATCH/DELETE /api/workspaces/:wsId (read, rename/settings, soft-delete via workspace-store trash semantics)"
+      - "GET /api/workspaces/:wsId/artifacts (artifact summaries)"
+      - "GET /api/workspaces/:wsId/artifacts/:artId (metadata + version list with provenance and compliance status)"
+      - "GET /api/workspaces/:wsId/artifacts/:artId/versions/:n/svg (raw SVG, image/svg+xml, stable node IDs preserved)"
+      - "GET /api/workspaces/:wsId/artifacts/:artId/versions/:n/spec (spec.yaml parsed to JSON via the yaml package)"
+      - "GET /api/workspaces/:wsId/artifacts/:artId/versions/:n/compliance (ComplianceResponse — projection of artifact-pipeline's domain ComplianceReport with violation nodeIds resolved)"
+      - "POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore (delegates to artifact-pipeline's restore-as-new-head, returns RestoreResponse — the new head's VersionSummary; artifact.version_created emitted through the normal pipeline path)"
+      - "GET/PUT /api/preferences (LayoutPreference from preferences.ts, owned by docking-shell, through workspace-store)"
+      - "GET /api/health route and its HealthResponse type (health.ts) owned by studio-server — studio-api only references the type"
+      - "404 responses with structured ApiError for unknown workspace, artifact, or version"
+    depends_on: [1]
+    story_ids:
+      - scripted-client-manages-workspaces-and-artifacts
+
+  # ── library-endpoints ───────────────────────────────────────────
+
+  - title: "Library endpoints with cache and registry invalidation"
+    number: 5
+    layer: api
+    delivers:
+      - "GET /api/library/systems (ds_list_systems → LibrarySystem[])"
+      - "GET /api/library/:systemId/tokens (wf_get_tokens → TokenSetResponse)"
+      - "GET /api/library/:systemId/components (component index from the loaded spec)"
+      - "GET /api/library/:systemId/components/:componentId (wf_read_component → ComponentDetail with SVG)"
+      - "GET /api/library/:systemId/layouts (LayoutTemplate[] from the loaded spec)"
+      - "In-memory response cache keyed by route + systemId"
+      - "Cache invalidation on registry change — fs.watch on design-systems/registry.yaml directly (path from studio-server config); full flush, repopulate on next request"
+      - "Bridge-down degradation (cached entries served; uncached requests 503 with ApiError referencing bridge status)"
+      - "Unknown systemId → 404 with ApiError pointing at GET /api/library/systems"
+    depends_on: [1]
+    story_ids:
+      - scripted-client-browses-library-with-cache
+
+  # ── boundary-validation-and-headless-verification ───────────────
+
+  - title: "Boundary validation and structured error responses"
+    number: 6
+    layer: api
+    delivers:
+      - "Validation schemas derived from @studio/contract for every HTTP body, query, and route param"
+      - "Slug shape validation for wsId/artId and numeric bounds for version params before any store lookup (path-traversal hardening)"
+      - "WebSocket message validation (envelope shape, known type, payload schema) before dispatch"
+      - "Invalid WS messages answered as chat.error with requestId echo and structured ApiError"
+      - "Typed-result error seam (domain failures mapped to HTTP status + ApiError, never thrown across the boundary)"
+      - "Every rejection carries code, message, fix, and offending field; no stack traces or internals leak"
+      - "Consistent error vocabulary documented in the contract package (error codes as literal union)"
+    depends_on: [1, 2, 3, 4, 5]
+    story_ids:
+      - scripted-client-receives-structured-errors
+
+  - title: "Headless conversational loop integration suite"
+    number: 7
+    layer: api
+    delivers:
+      - "vitest integration suite over real HTTP/WS connections (real server instance, real workspace-store temp directory, real design-systems MCP server through the bridge — no mocks at the seams)"
+      - "Headless loop test: scripted WS client attaches → sends brief → receives full generation stream → refines via follow-up chat.send (two-pass substitution) → receives refinement stream → fetches SVG, spec, and compliance over HTTP → asserts version lineage (v2 parent is v1)"
+      - "Reconnect-resume test: socket dropped mid-stream, reattach with lastEventSeq, no missed or duplicated events"
+      - "Cancellation test: chat.cancel mid-generation closes the turn with message_completed or chat.error"
+      - "Library cache test: second tokens request served from cache; registry change invalidates"
+      - "Validation test matrix: malformed bodies, bad slugs, unknown message types, out-of-range versions all rejected with structured ApiError before domain code runs"
+      - "Keyless-mode test: with ANTHROPIC_API_KEY absent, library and artifact serving work; chat.send fails with chat.error carrying the auth fix"
+    depends_on: [2, 3, 4, 5, 6]
+    story_ids:
+      - scripted-client-completes-headless-loop

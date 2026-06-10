@@ -1,0 +1,405 @@
+# Capability Spec — library-panel
+# 13-section architectural design
+# Layer: ui | Wave: 6
+
+capability: library-panel
+status: planned
+
+context: |
+  The library-panel capability is the visual browser over the registered
+  design systems, delivered as a docked panel inside the studio's docking
+  shell (Wave 6, after the chat-panel + canvas MVP triangle). Today the
+  systems' tokens and components are only visible by reading spec.yaml and
+  SVG sources on disk; the showcase SPA displays static approximations.
+  This panel renders the real thing, sourced live from studio-api's
+  library endpoints, which proxy the design-systems MCP server through
+  the mcp-bridge: /api/library/systems (ds_list_systems),
+  /api/library/:systemId/tokens (wf_get_tokens),
+  /api/library/:systemId/components and
+  /api/library/:systemId/components/:componentId (wf_read_component), and
+  /api/library/:systemId/layouts (layout templates from the loaded spec).
+
+  The panel is a first-class docking-shell citizen: swappable between
+  rails, stackable, collapsible to an icon strip, with arrangement
+  persisted silently. Beyond browsing, it actively grounds the
+  conversational loop — any component variant, token, or layout template
+  can be referenced into the chat composer ("use this card style") so the
+  agent's next tool call targets a real artifact instead of a prose
+  description. Library browsing works in keyless mode and survives bridge
+  outages on cached data with staleness indicated in place.
+
+problem_statement: |
+  The studio needs a visual surface over the registered design systems:
+  - Tokens are invisible — palette, type scale, spacing, border, and
+    elevation rules exist only as YAML; nobody can see what a system
+    looks like without generating an artifact
+  - Component libraries are invisible — the real SVGs live on disk;
+    variants and rendering constraints require reading spec.yaml
+  - Layout vocabulary is invisible — the agent routes briefs against
+    layout templates the user has never seen
+  - Chat grounding is lossy — without typed references, users describe
+    components in prose and the agent guesses which artifact they mean
+  - No graceful degradation exists — when the MCP bridge is down there
+    is currently nothing to show at all
+
+scope:
+  in:
+    - Docked library panel registered with the docking-shell panel registry
+    - System switcher fed by /api/library/systems (name, tagline, status)
+    - Token browser — palette swatches with hex values, type-scale specimens at real sizes, spacing-grid visualization, border-radius and elevation rules
+    - Component gallery rendering the real library SVGs with variant toggles, loaded progressively as scrolled
+    - Layout-template browser with native-SVG thumbnails and spec descriptions
+    - Search/filter across components and tokens within the active system
+    - Reference-into-chat — drag or explicit action sends a typed component/token/layout reference into the chat composer
+    - Client-side library cache with staleness indicated in place when the bridge is down
+    - Silent persistence of last-viewed system and section expand/collapse state via the preferences API
+    - Keyboard parity and WCAG AA accessibility for every interaction
+  out:
+    - Spec editing, token editing, or system registration (system-authoring, deferred)
+    - Library endpoint implementation, caching at the server, and wire payload shapes (studio-api owns the library endpoints)
+    - MCP communication and bridge supervision (mcp-bridge)
+    - Panel docking mechanics — drag-to-swap, stacking, collapse (docking-shell)
+    - Chat composer rendering and chat.send mechanics (chat-panel; this capability only emits the typed reference)
+    - Cross-system search (search is scoped to the active system; comparison is system-comparison, deferred)
+    - Token export formats — CSS/Tailwind/JSON (export-surface, deferred)
+
+dependencies:
+  upstream:
+    - "docking-shell — panel registry, rail/slot assignment, collapse/restore, layout persistence plumbing"
+    - "studio-api — /api/library/* endpoints, /api/preferences, shared contract package types, bridge.status WebSocket event"
+    - "design-systems MCP server result shapes (read-only, via studio-api): ds_list_systems {id, name, tagline, grammar_family, version, spec_version, status}; wf_get_tokens {system_id, palette, drawing_rules, typography, layout}; wf_read_component {component_id, svg_source, viewBox, rendering_notes, anatomy, tier, states, constraints}"
+    - "Per-system spec.yaml structure (read-only): tokens (colors/typography/spacing/borders/elevation), components with variants, layout_templates"
+  downstream:
+    - "chat-panel — its composer reference intake receives LibraryReference payloads (removable reference chips, included as references on ChatSendPayload)"
+    - "agent-orchestration — grounds its next tool call on references attached to chat.send (indirect, via chat-panel)"
+    - "system-authoring (deferred) — fork-from-existing starts from what this panel displays"
+  external:
+    - "React 19 + Vite + TypeScript strict (architecture contract)"
+    - "IntersectionObserver (browser native) for progressive loading"
+    - "Testing Library + vitest for component tests (architecture contract)"
+
+data_contracts: |
+  View models live in the panel's view-model layer. Wire payload shapes
+  are owned by studio-api's contract package (studio/packages/contract)
+  and consumed read-only; these view models are the panel-side projection
+  of those payloads. One contract module is owned by this capability:
+  studio/packages/contract/src/library.ts holds LibraryReference, which
+  both panels import from @studio/contract — chat-panel never redeclares
+  it.
+
+  ```typescript
+  // studio/client/src/panels/library/model/types.ts
+
+  // GET /api/library/systems → ds_list_systems
+  export interface SystemSummaryView {
+    id: string;
+    name: string;
+    tagline: string;
+    grammarFamily: string | null;   // null when spec missing/unparsable
+    version: string | null;
+    specVersion: string | null;
+    status: "registered" | "draft";
+  }
+
+  // GET /api/library/:systemId/tokens → wf_get_tokens
+  export interface TokenBrowserView {
+    systemId: string;
+    palette: PaletteEntryView[];
+    drawingRules: DrawingRulesView;
+    typography: TypographyView;
+    layout: LayoutTokensView;
+  }
+
+  export interface PaletteEntryView {
+    name: string;                   // e.g. "ink", "red"
+    value: string;                  // hex, e.g. "#E3000B"
+    role: string;                   // e.g. "the system's only accent"
+    usageConstraint: string;        // may be empty
+  }
+
+  export interface DrawingRulesView {
+    fillPageBg: string;
+    fillSurface: string;
+    fillSurfaceElevated: string;
+    fillInteractive: string;
+    textPrimary: string;
+    textSecondary: string;
+    textDisabled: string;
+    textInverse: string;
+    radiusDefault: number;
+    radiusInputs: number;
+    radiusChrome: number;
+    // present only for borders_only elevation strategy
+    strokeBorder?: string;          // SVG attribute string, e.g. "stroke='#E0E0E0' stroke-width='1'"
+    strokeBorderStrong?: string;
+    noShadow?: boolean;
+    elevationNote: string;          // rendered verbatim for non-borders strategies
+  }
+
+  export interface TypographyView {
+    fontStackStructural: string;
+    fontStackMono: string;          // may be empty
+    scale: Array<{ px: number; role: string }>;
+    caseRules: Record<string, string>;     // e.g. { metadata: "uppercase" }
+    trackingRules: Record<string, number>; // e.g. { metadata: 0.16 }
+  }
+
+  export interface LayoutTokensView {
+    gridUnit: number;
+    allowedSteps: number[];
+    pageMarginMobile: number;
+    pageMarginDesktop: number;
+    componentGap: number;
+    sectionGap: number;
+  }
+
+  // GET /api/library/:systemId/components → component index from the loaded spec
+  export interface ComponentIndexView {
+    systemId: string;
+    components: ComponentSummaryView[];
+  }
+
+  export interface ComponentSummaryView {
+    id: string;                     // spec key, e.g. "list_item"
+    tier: string;                   // e.g. "primitive", "composite", "unknown"
+    anatomy: string[];
+    constraints: string[];
+    variants: Array<{
+      id: string;                   // e.g. "primary", "gray_surface"
+      states: string[];
+      renderingNotes: string;
+    }>;
+  }
+
+  // GET /api/library/:systemId/components/:componentId → wf_read_component
+  export interface ComponentDetailView {
+    componentId: string;            // canonical variant id, e.g. "card-gray-surface"
+    svgSource: string;              // raw library SVG, rendered inline after sanitization
+    viewBox: { w: number; h: number };
+    renderingNotes: string | null;
+    anatomy: string[] | null;
+    tier: string;
+    states: string[] | null;
+    constraints: string[] | null;
+  }
+
+  // GET /api/library/:systemId/layouts → layout_templates from the loaded spec
+  export interface LayoutTemplateView {
+    id: string;                     // template key, e.g. "dashboard"
+    description: string;            // spec description, shown with the thumbnail
+    svgSource: string;              // authored layout SVG, scaled for thumbnail
+  }
+
+  // Reference-into-chat payload delivered to the chat composer.
+  // Declared in studio/packages/contract/src/library.ts (owned by
+  // library-panel); both panels import it from @studio/contract. The
+  // panel's reference/referencePayload.ts builds and drag-encodes these
+  // values; chat-panel's composer renders them as removable chips and
+  // attaches them to chat.send as ChatSendPayload's
+  // references?: LibraryReference[].
+  export type LibraryReference =
+    | {
+        kind: "component";
+        systemId: string;
+        componentId: string;        // spec key, e.g. "card"
+        variantId: string;          // e.g. "gray_surface"
+        label: string;              // human label for the composer chip
+      }
+    | {
+        kind: "token";
+        systemId: string;
+        tokenPath: string;          // e.g. "colors.palette.red", "typography.scale.22"
+        value: string;              // e.g. "#E3000B", "22px display_small"
+        label: string;
+      }
+    | {
+        kind: "layout";
+        systemId: string;
+        templateId: string;         // e.g. "dashboard"
+        label: string;
+      };
+
+  // Cache envelope — staleness rendered in place, never a toast
+  export interface CachedLibraryData<T> {
+    data: T;
+    fetchedAt: string;              // ISO 8601
+    stale: boolean;                 // true when bridge is down and cache is serving
+  }
+  ```
+
+file_locations:
+  - studio/client/src/panels/library/LibraryPanel.tsx — Panel root; registers with the docking-shell panel registry, owns active-system context
+  - studio/client/src/panels/library/SystemSwitcher.tsx — System switcher (list, status badges, selection)
+  - studio/client/src/panels/library/model/types.ts — View models (SystemSummaryView, TokenBrowserView, ComponentIndexView, ComponentDetailView, LayoutTemplateView, CachedLibraryData)
+  - studio/client/src/panels/library/model/libraryClient.ts — Typed HTTP client over /api/library/* (named exports, explicit return types)
+  - studio/client/src/panels/library/model/libraryCache.ts — Client-side cache keyed by system id; staleness flips on bridge.status events
+  - studio/client/src/panels/library/tokens/TokenBrowser.tsx — Token section container (collapsible sections, persisted state)
+  - studio/client/src/panels/library/tokens/PaletteSwatches.tsx — Swatch grid with copy-in-place
+  - studio/client/src/panels/library/tokens/TypeScaleSpecimens.tsx — Real-size type specimens with case/tracking rules
+  - studio/client/src/panels/library/tokens/SpacingGrid.tsx — Grid unit and allowed-steps visualization
+  - studio/client/src/panels/library/tokens/BorderElevationRules.tsx — Radius corner examples and elevation rule rendering
+  - studio/client/src/panels/library/components/ComponentGallery.tsx — Gallery grid, tier grouping, progressive loading orchestration
+  - studio/client/src/panels/library/components/ComponentCard.tsx — Card with inline SVG, variant toggle, details-on-demand, per-card error state
+  - studio/client/src/panels/library/components/VariantToggle.tsx — Keyboard-operable variant switch
+  - studio/client/src/panels/library/layouts/LayoutBrowser.tsx — Thumbnail grid with expanded in-panel preview
+  - studio/client/src/panels/library/search/LibrarySearch.tsx — Search field and filtered-section rendering with match counts
+  - studio/client/src/panels/library/search/matchers.ts — Pure matching functions over the cached index (unit-tested)
+  - studio/client/src/panels/library/reference/referencePayload.ts — Builds LibraryReference values (type imported from @studio/contract) and encodes drag payloads
+  - studio/client/src/panels/library/reference/SendToChatAction.tsx — Explicit send affordance (keyboard parity for drag)
+  - studio/client/src/panels/library/hooks/useProgressiveLoad.ts — IntersectionObserver hook shared by gallery and layout browser
+  - studio/client/src/panels/library/hooks/useLibraryData.ts — Data fetching + cache + staleness hook per endpoint
+  - studio/client/src/panels/library/svg/sanitizeSvg.ts — SVG sanitization before inline rendering (strip script/foreignObject/event handlers)
+  - studio/client/src/panels/library/__tests__/ — vitest + Testing Library component tests; matchers and sanitizer unit tests
+  - studio/packages/contract/src/library.ts — LibraryReference type (OWNED by library-panel; chat-panel imports it from @studio/contract)
+  - studio/packages/contract/src/ — Wire payload types for /api/library/* (owned by studio-api, READ-ONLY here)
+
+implementation_steps:
+  - Define the LibraryReference union in packages/contract/src/library.ts (owned here; chat-panel imports it from @studio/contract) and the view models in model/types.ts against the contract package's wire types
+  - Implement libraryClient.ts (typed fetch wrappers, structured error results, no thrown exceptions across the seam)
+  - Implement libraryCache.ts (per-system cache, fetchedAt stamping, stale flip on bridge.status)
+  - Build LibraryPanel.tsx and register it with the docking-shell panel registry; wire active-system context
+  - Build SystemSwitcher.tsx (list from /api/library/systems, status badges, keyboard operation, selection persistence via preferences)
+  - Build useLibraryData.ts and wire inline loading/error/stale states
+  - Build TokenBrowser sections — PaletteSwatches (copy-in-place), TypeScaleSpecimens (real px sizes, case/tracking), SpacingGrid, BorderElevationRules (borders-only vs. elevation_note branch)
+  - Implement sanitizeSvg.ts and the inline SVG rendering path shared by gallery, layouts, and previews
+  - Build useProgressiveLoad.ts (IntersectionObserver, placeholder lifecycle)
+  - Build ComponentGallery, ComponentCard, VariantToggle (per-card fetch, variant swap in place, details on demand, per-card errors)
+  - Build LayoutBrowser (thumbnails via the progressive-load hook, in-panel expanded preview)
+  - Build search matchers.ts (pure functions) and LibrarySearch.tsx (live filtering, match counts, empty state with clear affordance)
+  - Implement referencePayload.ts and SendToChatAction.tsx; wire drag sources on cards, swatches, and thumbnails; integrate with the chat composer's reference intake
+  - Persist section expand/collapse and last-viewed system through the preferences endpoints (silent, debounced)
+  - Write component tests (Testing Library) for switcher, token sections, gallery progressive loading, search, and reference flows; unit tests for matchers and sanitizer
+  - Run axe/WCAG AA validation across all panel states (swatches, specimens, gallery, search, reference affordances)
+
+error_handling: |
+  - Library endpoint returns a structured error (bridge down) → serve cached
+    data with the stale indicator rendered in place on the affected section;
+    if no cache exists, the section shows an inline explanation (bridge
+    status + what will restore it), never a blank panel or toast
+  - bridge.status reports restarting/failed over WebSocket → all cached
+    payloads flip to stale; indicator appears per section; auto-refetch on
+    bridge recovery clears staleness without user action
+  - System with missing/unparsable spec (ds_list_systems degrades to
+    name=id, empty tagline, status draft) → rendered in the switcher with a
+    draft badge; selecting it shows whatever sections resolve, each failure
+    inline
+  - Per-component SVG fetch failure (wf_read_component error for one id) →
+    that card renders an inline error with the component id and reason;
+    remaining cards load normally
+  - Token payload missing optional fields (no mono stack, empty
+    usage_constraint, non-borders elevation) → sections render what exists;
+    elevation section renders the elevationNote verbatim instead of drawn
+    strokes
+  - SVG sanitization strips content (script/foreignObject found) → sanitized
+    SVG renders; the strip is logged client-side and the card shows a
+    subtle integrity note rather than failing
+  - Reference sent while chat panel is collapsed → chat panel restores or
+    its icon strip indicates receipt; the reference is never silently
+    dropped
+  - Preferences write fails → panel keeps working with in-memory state;
+    retry on next change; failure surfaced inline in panel settings only
+    if persistent
+  - Search over an unloaded index (tokens/components not yet fetched) →
+    search input disabled with an inline reason until the index is cached,
+    not an after-the-fact error
+
+edge_cases: |
+  - System with radius 0 everywhere (Swiss no_radius_anywhere) → border
+    section draws square corner examples labeled "0", not an empty section
+  - Elevation strategy is not borders_only (Swiss "typographic") →
+    drawingRules has no strokeBorder; the elevation section renders the
+    strategy name and elevationNote, plus any rule weights present
+  - 40px display specimen in a narrow collapsed-rail panel → specimen
+    renders at true size and wraps/scrolls horizontally; size is never
+    scaled down to fit (real-size is the contract)
+  - Component with a single variant → no variant toggle rendered
+  - Variant list without an "default" id → first variant preselected
+    (mirrors the MCP server's resolution order)
+  - Component id with multi-segment variant (card-gray-surface) → canonical
+    id resolution handled server-side; the panel always requests the
+    spec key + variant id pair it got from the index
+  - Empty search query → full unfiltered library; clearing restores scroll
+    position
+  - Search matches a token but no components → token section shows matches,
+    component section shows its zero-count state, neither disappears
+  - Switching systems mid-scroll → gallery resets to top for the new
+    system; previous system's cache retained for instant switch-back
+  - Rapid system switching → in-flight fetches for the abandoned system are
+    cancelled/ignored (stale-response guard keyed by system id)
+  - Panel collapsed to icon strip while a fetch is in flight → fetch
+    completes into cache; expanded panel renders instantly from cache
+  - Drag started but dropped outside any valid target → no-op, no error
+  - Duplicate reference of the same item → composer receives it; chat-panel
+    decides dedup (single chip) — the panel does not block the action
+  - Zero registered systems → switcher shows an inline empty state pointing
+    at ds_register_system / the registry, panel does not error
+
+integration_points:
+  - "docking-shell: LibraryPanel registers in the panel registry; swap/stack/collapse and layout persistence come from the shell, not reimplemented here"
+  - "studio-api: all data via /api/library/* (systems, tokens, components, component detail, layouts); preferences via GET/PUT /api/preferences; staleness driven by the bridge.status WebSocket event"
+  - "chat-panel: the composer's reference intake accepts LibraryReference payloads (drag drop target + programmatic intake for the explicit send action); the composer renders them as removable reference chips on the draft and attaches them to chat.send as ChatSendPayload's references?: LibraryReference[]"
+  - "agent-orchestration: consumes references off chat.send to ground generation/substitution on the exact component/token/layout (indirect — no direct coupling)"
+  - "packages/contract: wire types for library payloads are declared once there and imported; LibraryReference lives in src/library.ts (owned by library-panel) and ChatSendPayload (ws-messages.ts, owned by studio-api) carries references?: LibraryReference[] (no stringly-typed messages)"
+  - "design-systems MCP server: indirect, read-only — result shapes documented in data_contracts flow through studio-api unchanged in substance"
+
+verification_criteria:
+  - Panel registers with the docking shell and supports swap, stack, collapse, restore like any other panel
+  - Switcher lists every registered system with name, tagline, and status; draft systems badged
+  - Selecting a system scopes tokens, components, layouts, and search to it; last-viewed system restores on next session without a save action
+  - Palette section renders one swatch per palette entry with chip, name, hex, role, and usage constraint; clicking a swatch copies the hex and confirms inline
+  - Type-scale specimens render at their true pixel sizes in the system's structural stack (verified against wf_get_tokens scale values, e.g. Swiss 9/11/13/14/22/32/40)
+  - Case and tracking rules display with the specimens they govern
+  - Spacing visualization shows grid unit and every allowed step proportionally, with margins and gaps labeled
+  - Borders-only systems render drawn stroke examples from strokeBorder/strokeBorderStrong; non-borders systems render the elevation note (Swiss typographic verified)
+  - Gallery shows one card per component from the index, grouped/badged by tier, on a single scrollable surface with no pagination
+  - Card SVGs load only as they scroll into view; placeholders never block the panel; loaded SVGs are the real library SVGs rendered inline at viewBox proportions
+  - Variant toggle swaps the rendered SVG in place; rendering notes, anatomy, states, and constraints reveal on demand
+  - A failed component fetch shows an inline error on that card only
+  - Layout browser shows a thumbnail per template with id and description; activation expands an in-panel preview
+  - Search filters components and tokens live as the user types with per-section match counts; empty state offers clear-filter; Escape clears
+  - Dragging a card, swatch, or thumbnail onto the composer delivers a typed LibraryReference; the explicit send action delivers the identical payload via keyboard
+  - A referenced item appears as a removable chip in the composer and rides the next chat.send
+  - With the bridge down, previously browsed data stays visible with staleness indicated in place; recovery refetches and clears the indicator without user action
+  - Keyless mode (no ANTHROPIC_API_KEY): the entire panel browses normally
+  - sanitizeSvg passes the shared adversarial fixture set (script injection, event handlers, external references) that also exercises artifact-pipeline's server-side sanitizer — library content has no server-side sanitization layer
+  - axe/WCAG AA audit passes across switcher, token sections, gallery, layout browser, search, and reference affordances; full keyboard parity for every interaction
+
+performance: |
+  - Library payloads are cached per system; switching back to a previously
+    viewed system renders from cache with no network round trip
+  - Gallery and layout SVGs load progressively on scroll (IntersectionObserver);
+    initial panel render fetches only the system list, token payload, and
+    component index — never every SVG
+  - Search filters client-side over the cached index; zero network requests
+    per keystroke; filtering stays within a single animation frame for
+    realistic library sizes (tens of components, single-digit token sections)
+  - SVGs render natively (no rasterization); thumbnails are the same SVG
+    scaled via viewBox, so no duplicate asset fetches
+  - In-flight fetches for an abandoned system are cancelled (AbortController)
+    so rapid switching never queues wasted work
+  - Preference writes (section state, last system) are debounced and
+    non-blocking; the UI never waits on persistence
+
+security: |
+  - Single-user, local-only deployment (architecture contract): the panel
+    talks only to the localhost studio-api; no third-party requests
+  - Library SVGs originate from local registered specs but are still
+    sanitized before inline rendering — script elements, foreignObject, and
+    on* event-handler attributes are stripped (defense in depth for
+    user-registered systems)
+  - Binding sanitization contract (architecture.md): library SVGs flow
+    wf_read_component → studio-api → panel and never pass through
+    artifact-pipeline's server-side sanitizer — this client-side sanitizer
+    is the only sanitization layer for library content; both sanitizers
+    are tested against the same shared adversarial fixture set (script
+    injection, event handlers, external references)
+  - Token and component data are not secrets; no credentials ever appear in
+    library payloads, references, or preferences
+  - LibraryReference payloads carry only identifiers and labels — no file
+    paths; path resolution stays server-side behind studio-api
+  - Drag payloads use a dedicated MIME type; drops from outside the app are
+    ignored (no parsing of foreign drag data)
+  - The panel never writes outside the preferences endpoint; specs and
+    registry are read-only through the API
+  - TypeScript strict mode and the typed contract package prevent
+    stringly-typed message construction at the seam

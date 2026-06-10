@@ -1,0 +1,350 @@
+# Capability Spec — agent-orchestration
+# 13-section architectural design
+# Layer: domain | Wave: 3
+
+capability: agent-orchestration
+status: implemented
+
+context: |
+  The agent-orchestration capability is the conversational core of the
+  Studio: it turns chat messages into wireframe artifacts. It is built on
+  the Claude Agent SDK (TypeScript, @anthropic-ai/claude-agent-sdk) —
+  decided in product.yaml architecture_decisions. The SDK manages the
+  model loop and owns its OWN stdio connection to the design-systems MCP
+  server (launch command per repo-root .mcp.json); mcp-bridge serves
+  direct calls (library, compliance) over a second, independent
+  connection. The MCP server is stateless per call, so dual connections
+  are safe (architecture.md, binding).
+
+  The agent drives five tools over its connection: wf_generate (brief →
+  routing_request → layout_id → full 7-step run emitting SVG +
+  spec.yaml), wf_select_layout (layout selection/routing — the agent may
+  call it during intent routing to pick a pattern),
+  wf_build_substitution_request + wf_apply_substitutions
+  (two-pass content substitution with per-system grammar validation),
+  and wf_assemble_from_blueprint (agent-authored LayoutBlueprint →
+  validated, composited SVG). These signatures come from
+  design-systems/mcp-server/server.py and the wireframe-skill SKILL.md
+  (v3.0) — the two-pass flows exist precisely so the calling model
+  supplies judgment while the skill stays deterministic.
+
+  UX stance (binding philosophy): anticipate, don't ask. The agent picks
+  system, layout archetype, and platform itself and surfaces the choices
+  as editable decision chips; changing a chip re-runs the affected step.
+  Per-artifact conversation context means "swap the header copy" needs
+  no restatement. Everything streams as typed events consumed by
+  studio-api (Wave 4), and every turn persists through workspace-store
+  repositories (Wave 1).
+
+problem_statement: |
+  The Studio has no conversational path from intent to artifact:
+  - Generation today happens through CLI skills and raw MCP tool calls;
+    there is no agent loop that routes a chat message to the right flow
+  - The two-pass flows (substitution, blueprint composition) require a
+    judging model in the loop — without orchestration they are unusable
+    from a UI
+  - No per-artifact conversation context exists; every refinement would
+    force the user to restate the brief, system, and platform
+  - The agent's parameter choices (system, layout, platform) have no
+    surface — asking up front violates the UX philosophy; deciding
+    silently removes user control. Editable decision chips need a model
+    and re-run semantics
+  - No event contract exists for studio-api to stream assistant output,
+    tool progress, and artifact production to the client
+  - No API key handling exists — resolution, redaction, status
+    reporting, and graceful keyless degradation are all unbuilt
+  - An in-flight generation cannot be cancelled
+
+scope:
+  in:
+    - Agent loop on the Claude Agent SDK (TypeScript) — query() per turn, SDK-owned MCP connection to design-systems/mcp-server configured from studio-server config
+    - One AgentSession per workspace (SessionManager registry, lazy create, dispose on close/shutdown)
+    - Intent routing — new generation, substitution refinement, blueprint composition, plain conversation (no tools)
+    - Generate flow (wf_generate routing_request handling, layout_id selection — directly or via wf_select_layout — full run)
+    - Two-pass substitution orchestration (wf_build_substitution_request → agent judgment → wf_apply_substitutions)
+    - Compose flow (decomposition request → agent-authored LayoutBlueprint JSON → wf_assemble_from_blueprint, validation-failure recovery)
+    - Default selection (system, layout archetype, platform) surfaced as editable decision chips; chip change re-runs the affected step
+    - Per-workspace, per-artifact conversation context windows (refinements need no restatement)
+    - AgentEvent stream contract (assistant deltas, tool started/finished, chips updated, artifact produced, message lifecycle, errors) in studio/packages/contract/src/agent-events.ts
+    - Transcript persistence through workspace-store repositories (messages, tool-call records, chip sets, routing results)
+    - ANTHROPIC_API_KEY resolution (process env → studio/.env), injection into the SDK subprocess env, pino redaction, auth status (configured/missing/invalid)
+    - Graceful keyless degradation (generation refused with reason + fix in place; nothing crashes)
+    - Cancellation (chat.cancel aborts the in-flight SDK query; transcript and artifact state stay consistent)
+  out:
+    - Direct-call MCP invocations outside the agent loop — ds_list_systems, wf_get_tokens, wf_read_component, ds_check_compliance run over mcp-bridge's connection (see mcp-bridge)
+    - Artifact versioning, version graph, and compliance runs (see artifact-pipeline — it ingests this capability's artifact_produced events)
+    - WebSocket delivery and message envelopes (see studio-api — it maps AgentEvents onto chat.*, chips.updated, auth.status)
+    - Chat rendering and chip UI (see chat-panel)
+    - Storage mechanics — file layout, atomic writes (see workspace-store; this capability consumes its repositories)
+    - claude.ai subscription login — Anthropic policy prohibits it for embedded SDK apps; ANTHROPIC_API_KEY is the only auth path (decided)
+    - Multi-system comparison fan-out (see system-comparison, deferred)
+    - MCP server implementation (design-systems/mcp-server, read-only dependency)
+
+dependencies:
+  upstream:
+    - "workspace-store — TranscriptRepository and workspace/artifact metadata access (IoC-injected repositories)"
+    - "studio-server — configuration (MCP launch command, paths), pino logger factory, health surface"
+    - "design-systems/mcp-server — wf_generate, wf_select_layout, wf_build_substitution_request, wf_apply_substitutions, wf_assemble_from_blueprint over the SDK's own MCP connection (external read-only dependency)"
+    - "@anthropic-ai/claude-agent-sdk — query() API, MCP servers via options, streaming events, ANTHROPIC_API_KEY from subprocess env"
+    - "@studio/contract (studio/packages/contract) — already-scaffolded shared type package (skeleton created Wave 1 by studio-server slice 1); agent-orchestration contributes the agent-events.ts module"
+  downstream:
+    - "artifact-pipeline — consumes artifact_produced events (ArtifactSource — paths or text — plus provenance) to create immutable versions and run compliance"
+    - "studio-api — consumes the AgentEvent stream and maps it onto the WS envelope (chat.message_started, chat.assistant_delta, chat.tool_started, chat.tool_finished, chat.message_completed, chat.error, chips.updated, auth.status); routes chat.send, chat.cancel, chip.update into sessions"
+  external:
+    - "Anthropic API — model access via ANTHROPIC_API_KEY (env → studio/.env, gitignored)"
+    - "repo-root .mcp.json — canonical launch command for design-systems/mcp-server"
+
+data_contracts: |
+  ## Agent Session API
+
+  ```typescript
+  // studio/server/src/agent/session.ts
+  export interface AgentSessionOptions {
+    workspaceId: string;
+    transcripts: TranscriptRepository;   // injected (IoC) from workspace-store
+    config: AgentConfig;                 // MCP launch command, model, output staging dir
+    auth: AuthState;
+    logger: Logger;                      // pino child; ANTHROPIC_API_KEY redacted
+  }
+
+  export interface AgentSession {
+    readonly workspaceId: string;
+    send(request: ChatSendRequest): AsyncIterable<AgentEvent>;
+    updateChip(update: ChipUpdate): AsyncIterable<AgentEvent>;
+    cancel(requestId: string): Promise<CancelResult>;
+    dispose(): Promise<void>;
+  }
+
+  export interface ChatSendRequest {
+    requestId: string;                   // echoed on every emitted event
+    text: string;
+    artifactId?: string;                 // explicit refinement target; omitted → active artifact or new
+  }
+
+  export type CancelResult =
+    | { ok: true; cancelled: true }
+    | { ok: true; cancelled: false; reason: "not_running" | "already_completed" };
+
+  export interface SessionManager {
+    acquire(workspaceId: string): Promise<AgentSession>;  // lazy create
+    release(workspaceId: string): Promise<void>;          // dispose
+    disposeAll(): Promise<void>;                          // server shutdown
+  }
+  ```
+
+  ## Intent Routing Result
+
+  ```typescript
+  // studio/packages/contract/src/agent-events.ts
+  export type Intent = "generate" | "substitute" | "compose" | "converse";
+
+  export interface RoutingResult {
+    intent: Intent;
+    rationale: string;                   // why this route, persisted as TranscriptRecord kind "routing_result"
+    artifactId: string | null;           // existing artifact targeted; null for new/converse
+    defaults: DecisionDefaults | null;   // populated for tool-bearing intents
+  }
+
+  export interface DecisionDefaults {
+    system: string;                      // registered system id (e.g. "swiss")
+    layoutId: string | null;             // pattern id; null while the compose flow assembles
+    platform: "mobile" | "desktop";
+  }
+  ```
+
+  ## Decision Chips Model
+
+  ```typescript
+  // studio/packages/contract/src/agent-events.ts
+  export type ChipKind = "system" | "layout" | "platform";
+
+  export interface DecisionChip {
+    kind: ChipKind;
+    value: string;
+    options: string[];                   // real vocabularies: registry systems, routing_request patterns, ["mobile","desktop"]
+    rerunStep: "generate" | "substitute" | "compose";  // which step a change re-runs
+  }
+
+  export interface ChipSet {
+    artifactId: string;
+    messageId: string;                   // agent turn that produced these chips
+    chips: DecisionChip[];
+  }
+
+  // Domain shape. The wire payload is ChipUpdatePayload { messageId, kind: ChipKind, value }
+  // (studio-api, ws-messages.ts); the studio-api relay resolves artifactId by looking up the
+  // ChipSet emitted for that messageId, then hands the session this domain ChipUpdate.
+  export interface ChipUpdate {
+    requestId: string;
+    artifactId: string;
+    kind: ChipKind;
+    value: string;                       // must be one of the chip's options (validated at the boundary)
+  }
+  ```
+
+  ## Emitted Event Stream
+
+  ```typescript
+  // studio/packages/contract/src/agent-events.ts — agent-orchestration's contributed module in the
+  // already-scaffolded @studio/contract package; studio-api maps these onto the WS envelope
+  export type AgentEvent =
+    | { type: "message_started";   requestId: string; messageId: string }
+    | { type: "assistant_delta";   requestId: string; messageId: string; text: string }
+    | { type: "tool_started";      requestId: string; toolUseId: string; toolName: AgentToolName; summary: string }
+    | { type: "tool_finished";     requestId: string; toolUseId: string; ok: boolean; summary: string }
+    | { type: "chips_updated";     requestId: string; chipSet: ChipSet }
+    | { type: "artifact_produced"; requestId: string; artifactId: string; source: ArtifactSource; provenance: Provenance }
+    | { type: "message_completed"; requestId: string; messageId: string; routing: RoutingResult }
+    | { type: "error";             requestId: string; code: AgentErrorCode; message: string; fix: string };
+
+  // ArtifactSource is imported from artifact.ts (owned by artifact-pipeline), never redeclared:
+  //   { kind: "paths", svgPath, specPath }   — wf_generate and wf_apply_substitutions emit files to disk
+  //   { kind: "text",  svgText, specYaml? }  — wf_assemble_from_blueprint returns SVG text
+  // artifact-pipeline ingestion accepts both.
+
+  export type AgentToolName =
+    | "wf_generate"
+    | "wf_select_layout"
+    | "wf_build_substitution_request"
+    | "wf_apply_substitutions"
+    | "wf_assemble_from_blueprint";
+
+  export interface Provenance {
+    brief: string;
+    tool: AgentToolName;
+    parameters: Record<string, unknown>;     // layout_id, system, platform, substitutions or blueprint
+    parentArtifactVersion: number | null;    // null for a brand-new artifact
+  }
+
+  export type AgentErrorCode =
+    | "auth_missing" | "auth_invalid"
+    | "session_busy" | "cancelled"
+    | "mcp_unavailable" | "tool_failed"
+    | "blueprint_invalid" | "agent_failed";
+  ```
+
+  ## Auth State
+
+  ```typescript
+  // studio/server/src/agent/auth.ts
+  export type AuthStatus = "configured" | "missing" | "invalid";
+
+  export interface AuthState {
+    status: AuthStatus;
+    source: "env" | "dotenv" | null;     // where the key was found; never the key itself
+  }
+  ```
+
+file_locations:
+  - studio/server/src/agent/index.ts — Named exports for the capability (createSessionManager, resolveAuth, types re-export)
+  - studio/server/src/agent/session.ts — AgentSession over @anthropic-ai/claude-agent-sdk query()
+  - studio/server/src/agent/session-manager.ts — Per-workspace session registry (lazy create, dispose)
+  - studio/server/src/agent/auth.ts — ANTHROPIC_API_KEY resolution (env → studio/.env), AuthState, redaction config
+  - studio/server/src/agent/system-prompt.ts — Routing system prompt (intents, default-selection rules, chip emission, grammar respect)
+  - studio/server/src/agent/events.ts — SDK stream → AgentEvent translation
+  - studio/server/src/agent/flows/generate.ts — wf_generate routing_request handling and full-run flow
+  - studio/server/src/agent/flows/substitution.ts — Two-pass substitution flow orchestration
+  - studio/server/src/agent/flows/blueprint.ts — Compose flow (decomposition request, LayoutBlueprint, assembly, validation recovery)
+  - studio/server/src/agent/chips.ts — DecisionChip model, option vocabularies, chip-change → re-run mapping
+  - studio/server/src/agent/context.ts — Per-artifact context window assembly from transcript slices
+  - studio/server/src/agent/transcript.ts — Persistence adapter over the injected TranscriptRepository
+  - studio/server/src/agent/cancellation.ts — AbortController wiring and CancelResult semantics
+  - studio/packages/contract/src/agent-events.ts — AgentEvent union, AgentToolName, Intent, RoutingResult, DecisionDefaults, chip models, Provenance, AgentErrorCode — agent-orchestration's contributed module in the already-scaffolded @studio/contract package (skeleton created Wave 1 by studio-server slice 1)
+  - "studio/server/test/agent/ — vitest suites (unit: auth, chips, context; integration: real MCP server flows)"
+  - studio/.env — ANTHROPIC_API_KEY local config (gitignored, READ-ONLY from code)
+  - design-systems/mcp-server/server.py — tool signatures (READ-ONLY dependency)
+
+implementation_steps:
+  - Resolve ANTHROPIC_API_KEY (process env first, then studio/.env) into AuthState; configure pino redaction paths
+  - Wire auth status into studio-server health reporting and the auth.status event path
+  - Build AgentConfig from studio-server configuration (MCP launch command per repo-root .mcp.json, model, output staging directory)
+  - Declare AgentEvent, RoutingResult, chip models, and Provenance in studio/packages/contract/src/agent-events.ts (agent-orchestration's module in the Wave-1-scaffolded @studio/contract package); import ArtifactSource from artifact.ts (artifact-pipeline-owned), never redeclare it
+  - Implement SessionManager (per-workspace acquire/release, disposeAll on shutdown)
+  - Implement AgentSession.send over query() with the design-systems MCP server in options and the key injected into the subprocess environment
+  - Author the routing system prompt (four intents, default-selection rules, chip emission instructions, per-system grammar respect)
+  - Implement SDK stream → AgentEvent translation with the ordering guarantee (message_started first, message_completed or error last)
+  - 'Implement the generate flow (routing_request → layout_id selection, directly or via wf_select_layout → full run → artifact_produced handing off ArtifactSource { kind: "paths", svgPath, specPath })'
+  - Implement the decision-chip model (vocabularies from registry/routing_request/platform set) and chips_updated emission
+  - Implement updateChip (chip.update → re-run the affected step with the changed parameter)
+  - Implement per-artifact context windows (transcript slices keyed by artifactId, active-artifact tracking, bounded assembly)
+  - Implement transcript persistence (messages, tool-call records minus secrets, chip sets, routing results written as TranscriptRecord kind "routing_result") and restore-on-create
+  - 'Implement the substitution flow (wf_build_substitution_request → agent judgment substitutions → wf_apply_substitutions; surface unapplied_finds and grammar_warnings; artifact_produced hands off ArtifactSource { kind: "paths" })'
+  - 'Implement the compose flow (decomposition request → LayoutBlueprint authoring → wf_assemble_from_blueprint; bounded validation-failure recovery; artifact_produced hands off ArtifactSource { kind: "text", svgText, specYaml? })'
+  - Implement cancellation (AbortController into query(), cancelled error event, transcript marked, no partial artifact)
+  - Implement keyless degradation (typed auth_missing error with the fix in place; no SDK spawn)
+  - Write vitest unit tests (auth resolution, redaction, chip mapping, context assembly) and integration tests against the real design-systems MCP server (generate, refine, compose, cancel, keyless)
+
+error_handling: |
+  - Missing API key → chat.send yields a single error event (code auth_missing, message naming ANTHROPIC_API_KEY, fix pointing at env or studio/.env); no SDK process spawns; session stays usable once the key appears
+  - Invalid API key → SDK auth failure maps to error code auth_invalid; AuthState flips to invalid and is pushed via auth.status; transcript records the failed turn
+  - Second chat.send while a run is in flight → error code session_busy with the active requestId; the in-flight run is unaffected (single in-flight per workspace)
+  - wf_generate returns ok:false (unknown system, invalid platform, no patterns) → error code tool_failed carrying the tool's own error messages; the agent surfaces available systems when the tool lists them
+  - wf_apply_substitutions returns unapplied_finds → not an error; warnings flow into tool_finished summary and the transcript; artifact still produced
+  - Grammar warnings (Revolt case rules, Editorial title case, Terminal snake case) → surfaced alongside the artifact, never silently dropped
+  - wf_assemble_from_blueprint returns validation_errors → the agent revises the blueprint and retries (bounded); exhaustion yields error code blueprint_invalid listing the unresolved validation errors
+  - MCP connection failure mid-run (server crash, transport close) → error code mcp_unavailable; the SDK connection re-establishes on the next turn; mcp-bridge's independent connection is unaffected
+  - SDK/model failure (overloaded, network) → error code agent_failed with the upstream message; partial assistant text persists in the transcript
+  - Cancellation → error code cancelled terminates the event stream; no partial artifact version is emitted; the prior head is untouched
+  - chip.update with a value outside the chip's options → rejected at the boundary as a typed error before any re-run starts
+  - TranscriptRepository write failure → the turn still completes for the client; the persistence failure logs structured and surfaces as a degraded-state warning on health (never a thrown exception across the seam)
+
+edge_cases: |
+  - First message in a brand-new workspace is a refinement ("make the header bigger") with no artifact → routed as converse; the agent explains there is nothing to refine yet and invites a brief
+  - Plain conversation turn ("what systems are available?") → no tool calls from this capability's flows; the agent answers from context (library browsing is mcp-bridge's surface)
+  - Brief names a system explicitly ("a login screen in Terminal") → default selection honors it; the system chip still renders as editable
+  - Brief matches no authored pattern → the agent prefers the compose flow over a poor pattern fit; the routing rationale records why
+  - routing_request returns zero available patterns and zero components → tool_failed with the gap stated; no silent fallback to the neutral library when a system was requested (explicit system invocation is a contract, per SKILL.md)
+  - Chip change on a historical (non-head) turn → re-run uses that turn's context; the result lands as a new artifact_produced event (artifact-pipeline owns version graph semantics)
+  - Platform chip change after substitutions were applied → re-run generates at the new platform, then replays the recorded substitutions where finds still match; unapplied finds reported
+  - Two artifacts in one workspace → refinement with artifactId targets it explicitly; untargeted refinement goes to the active artifact; contexts never bleed across artifacts
+  - Workspace reopened after server restart → session recreated lazily; transcript restore seeds context; the user continues without restating anything
+  - Cancel raced with natural completion → CancelResult { cancelled: false, reason: "already_completed" }; the completed events stand
+  - Cancel with an unknown requestId → CancelResult { cancelled: false, reason: "not_running" }; never an exception
+  - Very long conversation on one artifact → context assembly truncates/summarizes oldest refinement turns; the brief and current defaults always survive truncation
+  - studio/.env present but missing the key line → AuthState missing (not invalid); fix message names the expected variable
+
+integration_points:
+  - "studio-api: routes chat.send / chat.cancel / chip.update into SessionManager; maps AgentEvents onto chat.message_started, chat.assistant_delta, chat.tool_started, chat.tool_finished, chat.message_completed, chat.error, chips.updated; pushes auth.status. Translation seam for chip.update: the wire payload is ChipUpdatePayload { messageId, kind: ChipKind, value } (ws-messages.ts, studio-api-owned); the relay resolves artifactId by looking up the ChipSet emitted for that messageId, then hands this capability its domain ChipUpdate { requestId, artifactId, kind, value }"
+  - "artifact-pipeline: ingests artifact_produced (ArtifactSource — { kind: 'paths', svgPath, specPath } or { kind: 'text', svgText, specYaml? } — plus provenance) to create immutable versions, run ds_check_compliance, and emit artifact.version_created / artifact.compliance_completed"
+  - "workspace-store: TranscriptRepository persists messages, tool-call records, chip sets, and routing results (written as TranscriptRecord kind 'routing_result' — included in the workspace-store union); workspace metadata supplies the active artifact"
+  - "studio-server: configuration source (MCP launch command, paths), pino logger factory with redaction, /api/health includes auth and session status"
+  - "design-systems/mcp-server: the SDK's own stdio connection drives wf_generate, wf_select_layout, wf_build_substitution_request, wf_apply_substitutions, wf_assemble_from_blueprint (external read-only dependency, never mocked in integration tests)"
+  - "mcp-bridge: no runtime coupling — independent connections by design; bridge status never gates the agent loop"
+  - "chat-panel (Phase 2): renders the streamed events and editable chips this capability emits; chip edits round-trip through chip.update"
+
+verification_criteria:
+  - Plain conversation message streams assistant deltas and completes with intent converse and zero tool calls
+  - 'A fresh brief produces an artifact through wf_generate — routing_request handled, layout_id selected by the agent (directly or via wf_select_layout), artifact_produced carries ArtifactSource { kind: "paths", svgPath, specPath } and provenance'
+  - Decision chips emitted on the generation turn carry real vocabularies (registry systems, routing_request patterns, mobile/desktop) and the agent never asked the user to choose
+  - Changing the platform chip re-runs generation at the new platform and produces a new artifact result; system and layout chips re-run their steps likewise
+  - '"Swap the header copy" on an existing artifact routes to the two-pass substitution flow with no brief restatement; substitutions respect grammar caveats; unapplied_finds and grammar_warnings surface'
+  - A novel-layout brief routes to the compose flow; the agent-authored LayoutBlueprint assembles via wf_assemble_from_blueprint; an intentionally invalid blueprint recovers through revision
+  - Event ordering holds on every turn — message_started first, message_completed or error last, deltas and tool events ordered between
+  - Every turn persists through workspace-store; reopening the workspace restores the transcript and a refinement continues in context
+  - Refinements to artifact A never alter the context of artifact B in the same workspace
+  - With no ANTHROPIC_API_KEY, chat.send returns auth_missing with the fix named; no SDK process spawns; health reports auth missing
+  - With an invalid key, the turn fails as auth_invalid and auth status updates to invalid
+  - The key never appears in any log line (redaction verified) and never in any workspace file
+  - chat.cancel mid-generation terminates the stream with code cancelled, persists the turn as cancelled, produces no partial artifact, and the next turn runs normally
+  - Concurrent chat.send on a busy session is rejected as session_busy without disturbing the in-flight run
+  - Integration suite runs against the real design-systems MCP server (never mocked) and a real temp workspace directory
+
+performance: |
+  - Streaming, not buffering — assistant deltas and tool events forward to the consumer as the SDK yields them; no turn-level buffering before emission
+  - artifact_produced hands artifact-pipeline an ArtifactSource — file paths when the tool already wrote to disk (wf_generate, wf_apply_substitutions), in-memory text for wf_assemble_from_blueprint; no double disk round-trip inside the turn
+  - Per-artifact context windows are bounded — assembly truncates/summarizes oldest refinement turns so context size does not grow with conversation length
+  - One in-flight run per workspace bounds concurrent SDK processes and MCP load; sessions are reused across turns rather than recreated
+  - Transcript writes append per turn through workspace-store; persistence never blocks event delivery to the consumer
+  - Chip re-runs re-execute only the affected step (one tool flow), not the whole conversation
+  - Session disposal releases the SDK subprocess and MCP connection; disposeAll bounds shutdown work to active workspaces
+
+security: |
+  - ANTHROPIC_API_KEY resolves from process env then studio/.env (gitignored); it is injected only into the SDK subprocess environment
+  - The key is never logged (pino redaction paths cover every agent logger), never serialized into AgentEvents, transcripts, provenance parameters, or any workspace file
+  - claude.ai subscription login is prohibited for embedded SDK apps by Anthropic policy — not implemented, not offered as a fallback
+  - AuthState exposes status and source only, never key material
+  - Single-user, local-only deployment (binding) — no multi-tenant isolation claims; the session boundary is per-workspace context hygiene, not a security boundary
+  - Tool-call records persisted to transcripts exclude environment and credentials; parameters are limited to tool inputs (brief, layout_id, substitutions, blueprint)
+  - The agent writes artifacts only via MCP tool output_dir staging governed by server config; workspace files are written exclusively through workspace-store repositories
+  - Errors cross the capability seam as typed results — no thrown exceptions leaking stack internals to the API surface
+  - The MCP subprocess launch command comes from repo-root .mcp.json via server config, not from user input

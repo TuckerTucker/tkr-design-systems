@@ -1,0 +1,98 @@
+# Slices — artifact-pipeline
+# Layer: domain | Wave: 3
+
+capability: artifact-pipeline
+
+slices:
+
+  # ── version-ingestion ───────────────────────────────────────────
+
+  - title: "Version ingestion with provenance"
+    number: 1
+    layer: domain
+    delivers:
+      - "Ingest contract accepting the ArtifactSource discriminated union — { kind: 'paths', svgPath, specPath } from wf_generate / wf_apply_substitutions, { kind: 'text', svgText, specYaml? } from wf_assemble_from_blueprint — the artifact_produced payload, declared in studio/packages/contract/src/artifact.ts; both branches first-class"
+      - "Generated SVG and spec.yaml content read from the output paths (paths branch) or taken directly from svgText/specYaml (text branch)"
+      - "Provenance capture (brief, tool, parameters as issued, created ISO 8601 UTC)"
+      - "Version landing through workspace-store repositories (versions/<NNNN>/ with wireframe.svg, wireframe.spec.yaml, version.yaml)"
+      - "version.yaml provenance shape (parent version, brief, tool, parameters, created)"
+      - "artifact.yaml creation on first version (id, name, system, platform, headVersion pointer)"
+      - "All-or-nothing landing (a version directory is complete or absent — store atomic writes, ordered emission)"
+      - "artifact.version_created event emission into the API event stream (workspaceId, artifactId, version number, provenance summary)"
+      - "Typed failure results for unreadable generation output (missing svgPath, unreadable file, empty svgText, tool returned ok: false)"
+    depends_on: []
+    story_ids:
+      - agent-result-lands-as-version
+
+  # ── version-graph ───────────────────────────────────────────────
+
+  - title: "Version graph and restore-as-new-head"
+    number: 2
+    layer: domain
+    delivers:
+      - "Parent links in version.yaml (parent version number; null for the first version)"
+      - "Head pointer (headVersion: number | null) in artifact.yaml updated atomically as each version lands"
+      - "Version listing (number, provenance summary, compliance summary) ordered for the history scrubber"
+      - "Restore-as-new-head (new version whose content copies the restored version; provenance tool 'restore' with restored_from in parameters)"
+      - "Undo-by-restore (restoring the pre-restore head is just another restore — no confirmation dialogs anywhere)"
+      - "Immutability guarantee (landed version directories never modified; restores copy, never move)"
+      - "Graph integrity validation on read (parents resolve, headVersion exists; corruption reported as typed errors)"
+      - "artifact.version_created emitted for restores identically to generations"
+    depends_on: [1]
+    story_ids:
+      - user-restores-prior-version-as-new-head
+
+  # ── spec-metadata ───────────────────────────────────────────────
+
+  - title: "spec.yaml parsing into typed artifact metadata"
+    number: 3
+    layer: domain
+    delivers:
+      - "ParsedSpecMetadata type in studio/packages/contract/src/artifact.ts (wireframe, design_system, notes blocks)"
+      - "wireframe block parse (brief, platform, dimensions, generated_at, generator_version, svg filename)"
+      - "design_system block parse (id, spec_version, system_version, layout_template_used, base_pattern, pattern_source_svg, selection_rationale, selection_was_fallback)"
+      - "components_used parse (id, region, x, y, type library|custom, svg_length for custom entries)"
+      - "rulebook_compliance summary parse (checked, mechanical_passed, mechanical_failed, advisory_warnings, failed_rules, ruleset, scope)"
+      - "Neutral-library shape (design_system.id null + note) parsed without error"
+      - "yaml package for all parsing (architecture contract)"
+      - "Typed validation errors naming the missing/malformed field (typed results, never thrown)"
+      - "Forward-compatible parsing (unknown keys preserved)"
+    depends_on: [1]
+    story_ids:
+      - client-reads-typed-version-metadata
+
+  # ── compliance-pipeline ─────────────────────────────────────────
+
+  - title: "Compliance execution per version via mcp-bridge"
+    number: 4
+    layer: domain
+    delivers:
+      - "ds_check_compliance call through the mcp-bridge typed wrapper against the persisted versions/<NNNN>/wireframe.svg path (the bridge maps its internal RawComplianceResult onto the canonical ComplianceReport from studio/packages/contract/src/artifact.ts)"
+      - "compliance.yaml persisted per version via workspace-store (system_id, artifact_path, scope, passed, failed, advisory, results with rule_id/status/detail, ruleset, mechanical_only)"
+      - "Reported-state semantics (mechanical failures and advisories are version data; the version lands regardless)"
+      - "Compliance state machine (pending → completed | unavailable) carried on the version"
+      - "Bridge-unavailable handling (state unavailable + reason recorded; re-run path when the bridge recovers)"
+      - "Unruled-system handling (empty mechanical ruleset with note recorded as completed)"
+      - "Trigger on every landed version (generation, substitution, assembly, restore)"
+      - "artifact.compliance_completed event emission (workspaceId, artifactId, version number, passed/failed/advisory counts)"
+    depends_on: [1, 3]
+    story_ids:
+      - compliance-attaches-to-every-version
+
+  # ── svg-serving + violation mapping ─────────────────────────────
+
+  - title: "SVG sanitization and violation-to-node mapping"
+    number: 5
+    layer: domain
+    delivers:
+      - "SVG sanitizer for artifact version SVGs (strips script elements, on* event-handler attributes, external href/src references, foreignObject; stored file untouched; tested against the shared adversarial fixture set also used by library-panel's client-side sanitizer)"
+      - "Stable node-id guarantee (id attributes byte-identical through sanitization — assembled group ids like region__component_index survive)"
+      - "Well-formedness verification before serving (malformed SVG returns a typed error)"
+      - "Deterministic sanitized output (identical input → identical output, client-cacheable)"
+      - "Violation-to-node mapper (failed rule detail evidence — offending font sizes, colors, radii, filter refs — matched against SVG elements, resolved to element ids)"
+      - "ViolationNodeMapping contract (ruleId, nodeIds, matchedBy, evidence) in studio/packages/contract/src/artifact.ts"
+      - "Document-scope fallback for unmappable violations (e.g. xml-well-formed applies to the whole artifact)"
+      - "Mapping computed against the sanitized document the client actually renders (highlight targets always resolve)"
+    depends_on: [3, 4]
+    story_ids:
+      - violation-highlights-svg-node

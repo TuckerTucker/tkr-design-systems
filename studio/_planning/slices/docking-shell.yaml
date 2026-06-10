@@ -1,0 +1,116 @@
+# Slices — docking-shell
+# Layer: ui | Wave: 5
+
+capability: docking-shell
+
+slices:
+
+  # ── spa-scaffold ────────────────────────────────────────────────
+
+  - title: "SPA scaffold and shell frame"
+    number: 1
+    layer: ui
+    delivers:
+      - "studio/client workspace package (Vite + React 19 + TypeScript strict, ES modules, named exports)"
+      - "packages/contract dependency wiring (envelope and payload types imported by the client, never redeclared)"
+      - "ShellFrame layout — center canvas slot, left rail, right rail, full-height flex"
+      - "Application error boundary (render failures surfaced in place, never console-only)"
+      - "useReducedMotion hook (prefers-reduced-motion media query, shared by all shell animations)"
+      - "Base styles and shell-level tokens (rail widths, header heights, focus ring)"
+      - "vitest + Testing Library setup with a first ShellFrame render test"
+      - "Production build output servable by studio-server static hosting"
+    depends_on: []
+    story_ids:
+      - user-opens-studio-shell
+
+  # ── panel-registry-and-rails ────────────────────────────────────
+
+  - title: "Panel registry and rail docking model"
+    number: 2
+    layer: ui
+    delivers:
+      - "PanelDefinition contract (id, title, icon, lazy component, defaultPlacement, minWidth)"
+      - "Panel registry (register, get, list; duplicate id fails at startup)"
+      - "Chat and library registered as lazy placeholders (contents arrive in Wave 6 capabilities)"
+      - "Dock state reducer — placements (panelId, rail, order, collapsed), per-rail active tab, rail widths"
+      - "PanelHost chrome (header with title + drag handle + collapse control, content mount, loading state)"
+      - "Tab strip when 2+ panels share a rail (click and keyboard activation, one visible panel per rail)"
+      - "Both-panels-on-one-rail arrangement (empty rail collapses to zero width; canvas absorbs the space)"
+      - "Rail width clamping to the widest hosted panel minWidth"
+      - "Reducer unit tests covering every DockAction"
+    depends_on: [1]
+    story_ids:
+      - developer-registers-new-panel
+      - user-stacks-panels-on-one-rail
+
+  # ── panel-movement-and-collapse ─────────────────────────────────
+
+  - title: "Drag-to-swap with drop indicators and settings fallback"
+    number: 3
+    layer: ui
+    delivers:
+      - "Drag controller on the panel header (pointer events — mouse and touch; Escape cancels with no state change)"
+      - "Drop indicators showing target rail and stack position while dragging"
+      - "Same-rail drop reorders within the stack instead of swapping rails"
+      - "Per-panel settings toggle (Move to left rail / Move to right rail) as the drag fallback"
+      - "Keyboard panel movement (move focused panel to the other rail without a pointer)"
+      - "Focus follows the moved panel after every move (drag, toggle, keyboard)"
+      - "Reduced-motion respect for the drag ghost (instant placement when prefers-reduced-motion is set)"
+    depends_on: [2]
+    story_ids:
+      - user-drags-panel-to-other-rail
+      - keyboard-user-moves-panel
+
+  - title: "Collapse to icon strip and keyboard parity"
+    number: 4
+    layer: ui
+    delivers:
+      - "Collapse-to-icon-strip per panel (icon + accessible name on the rail edge)"
+      - "One-click restore from the icon strip (panel returns to its prior rail, order, and tab state)"
+      - "Keyboard parity for collapse, restore, panel-focus cycling, and tab activation"
+      - "Focus management (collapse moves focus to the icon strip entry; restore returns focus into the panel)"
+      - "Reduced-motion respect for collapse/expand transitions (instant when prefers-reduced-motion is set)"
+      - "All-panels-collapsed arrangement (two icon strips, canvas at maximum width)"
+      - "WCAG AA pass on shell chrome (focus ring, ARIA roles/labels on tabs, icon strip, settings menu)"
+    depends_on: [2, 3]
+    story_ids:
+      - user-collapses-and-restores-panel
+
+  # ── silent-layout-persistence ───────────────────────────────────
+
+  - title: "Silent layout persistence through the preferences endpoint"
+    number: 5
+    layer: ui
+    delivers:
+      - "LayoutPreference type in studio/packages/contract/src/preferences.ts (schemaVersion, placements, activeTab, railWidths, lastWorkspaceId) — owned by docking-shell, contributed to the already-scaffolded @studio/contract package"
+      - "Hydrate on load — GET /api/preferences resolves before first rail paint (no layout flash)"
+      - "Debounced PUT /api/preferences on every dock change (move, reorder, collapse, tab switch, rail resize) — no save action"
+      - "First-run defaults (chat left, library right, nothing collapsed) when no preference exists"
+      - "Unknown-panel tolerance (placement for an unregistered panel id dropped, remainder hydrates)"
+      - "PUT failure handling (local state authoritative, background retry, sync status inline in panel settings — not a toast)"
+      - "schemaVersion gate (unrecognized version falls back to defaults, never crashes)"
+      - "Integration test over real HTTP against the preferences endpoints"
+    depends_on: [2, 3, 4]
+    story_ids:
+      - user-layout-persists-across-sessions
+
+  # ── workspace-routing-and-connection ────────────────────────────
+
+  - title: "Workspace routing and WebSocket client with reconnect/resume"
+    number: 6
+    layer: ui
+    delivers:
+      - "WebSocket client over the packages/contract envelope (typed send, typed per-event subscription, single /ws connection)"
+      - "workspace.attach on connect and automatically after every reconnect (resume without user action)"
+      - "Capped exponential backoff reconnect; sends while disconnected held or rejected as typed results, never silently dropped"
+      - "Inline connection state in shell chrome (connected / reconnecting / offline with what the client is doing) — never a toast"
+      - "bridge.status and auth.status events distributed to subscribed panels"
+      - "Workspace switcher in shell chrome (list from GET /api/workspaces, create affordance, active workspace shown)"
+      - "URL ↔ active workspace routing (/w/<workspace-id>; deep links open the workspace; back/forward traverse history)"
+      - "Unknown workspace id handled in place (switcher opens with the available list and the unresolved id named)"
+      - "Last-workspace restore from preferences when the URL names no workspace"
+      - "Integration test over a real WS connection (attach, drop, reconnect, re-attach)"
+    depends_on: [1, 5]
+    story_ids:
+      - user-switches-workspace-via-url
+      - user-sees-connection-state-inline
