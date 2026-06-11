@@ -52,7 +52,7 @@ export function registerStudioPanels(registry: PanelRegistry): void {
     id: "library",
     title: "Library",
     icon: LibraryIcon,
-    component: lazy(() => import("../panels/libraryPlaceholder.jsx")),
+    component: lazy(() => import("../panels/library/LibraryPanel.jsx")),
     defaultPlacement: { rail: "right", order: 0 },
     minWidth: 300,
   });

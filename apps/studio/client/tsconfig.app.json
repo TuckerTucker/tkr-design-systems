@@ -15,5 +15,5 @@
     "skipLibCheck": true,
     "types": ["vite/client"]
   },
-  "include": ["src", "test/setup.ts", "test/unit", "test/canvas"]
+  "include": ["src", "test/setup.ts", "test/unit", "test/canvas", "test/panels"]
 }

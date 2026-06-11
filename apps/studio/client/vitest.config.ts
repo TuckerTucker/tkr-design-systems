@@ -21,6 +21,7 @@ export default defineConfig({
           include: [
             "test/unit/**/*.test.{ts,tsx}",
             "test/canvas/**/*.test.{ts,tsx}",
+            "test/panels/**/*.test.{ts,tsx}",
           ],
         },
       },
