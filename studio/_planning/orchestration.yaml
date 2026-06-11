@@ -43,10 +43,10 @@ orchestration:
   total_slices: 34
   phase_2:
     name: studio-ui
-    status: deferred           # waves 5-6, planned after Phase 1 exit criterion passes
+    status: planned            # waves 5-6, detailed below — Phase 1 implemented (keyless exit criterion green)
     strategy: shell-first-then-mvp-triangle
     waves: 2
-    agents: 4                  # w5-docking-shell; w6-chat-panel, w6-canvas, w6-library-panel
+    agents: 4                  # w5-docking-shell; w6-canvas, w6-library-panel, w6-chat-panel
     new_slices: 26             # docking-shell 6, chat-panel 7, canvas 7, library-panel 6
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -664,6 +664,286 @@ waves:
       exit criterion is met: the studio is a complete, verified
       headless product. Phase 2 (docking-shell, then the MVP triangle)
       builds a thin client over this protocol.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# WAVE 5 — SHELL (Phase 2)
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Single agent. The Vite + React SPA scaffold and the docking system —
+# rails, panel registry, drag-to-swap, stack, collapse, silent layout
+# persistence, workspace routing, and the StudioSocket WS client. Panel
+# CONTENTS arrive in Wave 6; the shell ships with placeholder panel
+# registrations proving the registry seam.
+
+  - number: 5
+    name: Shell
+    status: planned
+    agents_count: 1
+    parallel: false
+
+    agents:
+
+      - id: w5-docking-shell
+        capability: docking-shell
+        status: planned
+        description: >
+          React 19 + Vite + TS strict SPA at studio/client (built dist
+          served by studio-server's static hosting). Docking shell:
+          canvas slot always center, two rails, panel registry
+          (PanelDefinition), drag-to-swap with drop indicators +
+          settings fallback, stack/tab within a rail, collapse to icon
+          strip, silent LayoutPreference persistence via GET/PUT
+          /api/preferences, workspace switcher with URL routing,
+          StudioSocket (typed WS client over @studio/contract with
+          reconnect/resume via lastSeq), inline connection state,
+          keyboard parity, reduced-motion respect.
+        territory:
+          root:
+            - studio/package.json            # additive: add "client" workspace
+          client:
+            - studio/client/                 # everything except src/panels/chat/, src/panels/library/, src/canvas/
+        slices:
+          - docking-shell/1   # SPA scaffold and shell frame
+          - docking-shell/2   # Panel registry and rail docking model
+          - docking-shell/3   # Drag-to-swap with drop indicators and settings fallback
+          - docking-shell/4   # Collapse to icon strip and keyboard parity
+          - docking-shell/5   # Silent layout persistence through the preferences endpoint
+          - docking-shell/6   # Workspace routing and WebSocket client with reconnect/resume
+        contracts_produced:
+          - name: client-scaffold
+            type: file_location
+            description: >
+              studio/client Vite app — npm run build emits
+              studio/client/dist consumed by studio-server static
+              hosting; vitest + Testing Library configured.
+          - name: panel-registry
+            type: type
+            description: >
+              PanelDefinition + registerPanel/usePanel APIs — Wave 6
+              panels plug in without shell changes; placeholder
+              registrations prove the seam.
+          - name: studio-socket
+            type: type
+            description: >
+              StudioSocket — typed send/on over @studio/contract
+              envelopes, workspace.attach on connect, lastSeq resume,
+              reconnect backoff, ConnectionState surfaced inline.
+          - name: shell-state
+            type: type
+            description: >
+              Shared shell state seam — active workspace, attached
+              artifact focus (chat→canvas references), panel
+              arrangement; the cross-panel communication mechanism.
+          - name: layout-persistence
+            type: type
+            description: >
+              LayoutPreference load/apply/save (debounced, silent) via
+              /api/preferences; defaults when null.
+        dependencies:
+          consumes_from_wave:
+            - wave: 4
+              contracts: [protocol-modules, ws-channel, http-surface]
+          cross_agent_this_wave: []
+        verification:
+          - npm run build --workspace @studio/client emits dist; studio-server serves it (no more placeholder page)
+          - Panel registry renders two placeholder panels on opposite rails; drag-to-swap, stack, collapse all work via mouse AND keyboard (Testing Library)
+          - Layout round-trips through real /api/preferences against a running server; reload restores arrangement with no save action
+          - StudioSocket attaches, receives ordered events, resumes with lastSeq after a dropped socket (tested against the real server with the scripted runtime)
+          - Connection state renders inline (no toast); reduced-motion honored
+          - npm run typecheck/lint/test green across workspaces
+
+    gates:
+      - level: L1
+        name: File existence
+        check: studio/client scaffold, shell/docking modules, StudioSocket, and placeholder panel registrations exist.
+      - level: L3
+        name: Type safety and lint
+        check: npm run typecheck and npm run lint pass with zero errors; no WS type strings outside @studio/contract imports.
+      - level: L4
+        name: Shell integration
+        check: >
+          Client test suite green (Testing Library + jsdom for
+          components; socket/preferences suites against the real
+          server). Built dist serves through studio-server.
+
+    wave_completion_criteria: >
+      Agent reports success, gates pass. The shell runs against the
+      Phase 1 server: workspaces switchable, panels dockable, layout
+      persisting silently, socket resuming. Wave 6 fills the panels.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# WAVE 6 — MVP TRIANGLE (Phase 2)
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Three agents — canvas, library-panel, chat-panel — sharing the Wave 5
+# seams. Execution is serialized in this order: canvas (no cross-panel
+# deps) → library-panel (owns contract library.ts / LibraryReference)
+# → chat-panel (imports LibraryReference for composer intake; focuses
+# canvas via shell-state).
+
+  - number: 6
+    name: MVP Triangle
+    status: planned
+    agents_count: 3
+    parallel: false            # serialized: shared client package.json and panel registration composition
+
+    agents:
+
+      - id: w6-canvas
+        capability: canvas
+        status: planned
+        description: >
+          The center stage: native SVG rendering of artifact versions,
+          platform frames at true dims (375×812 / 1280×800) with
+          side-by-side mode, zoom/pan with fit-to-frame and keyboard
+          controls, inspect-on-hover overlay from artifact metadata,
+          history filmstrip with restore-as-new-head (undo, no
+          confirmation), persistent compliance bar with
+          click-to-highlight via ViolationNodeMapping nodeIds, live
+          artifact.version_created / compliance_completed updates,
+          empty and progressive loading states.
+        territory:
+          client:
+            - studio/client/src/canvas/
+            - studio/client/test/canvas/
+            - one additive panel/stage registration in the shell composition file
+        slices:
+          - canvas/1   # Canvas panel and native SVG stage
+          - canvas/2   # Platform frames and side-by-side mode
+          - canvas/3   # Zoom/pan with fit-to-frame default and keyboard controls
+          - canvas/4   # Inspect-on-hover overlay
+          - canvas/5   # Generation-history filmstrip
+          - canvas/6   # Compliance bar with violation highlighting
+          - canvas/7   # Live artifact events and progressive generation loading
+        contracts_produced:
+          - name: canvas-stage
+            type: type
+            description: Center-stage component registered with the shell; consumes shell-state artifact focus (chat references land here).
+        dependencies:
+          consumes_from_wave:
+            - wave: 5
+              contracts: [client-scaffold, panel-registry, studio-socket, shell-state]
+          cross_agent_this_wave: []
+        verification:
+          - Renders the Phase 1 test fixtures (swiss-dashboard, violating SVG) natively with frames, zoom, inspect
+          - Filmstrip scrubs versions; restore calls POST restore and appends the new head from the WS event
+          - Compliance bar maps violations to highlighted nodes on the violating fixture
+          - Keyboard parity for stage navigation; reduced-motion honored; Testing Library suites green
+
+      - id: w6-library-panel
+        capability: library-panel
+        status: planned
+        description: >
+          Visual browser over the registered systems via /api/library/*:
+          system switcher, token browser (palette swatches, type
+          specimens at real sizes, spacing grid, border/elevation
+          rules), component gallery rendering real library SVGs with
+          variant toggles and progressive loading, layout-template
+          browser, search/filter, reference-into-chat emitting
+          LibraryReference through the shell seam, client-side
+          sanitizer passing the shared adversarial fixture set,
+          bridge-down staleness shown in place.
+        territory:
+          contract:
+            - studio/packages/contract/src/library.ts   # LibraryReference — owned here
+          client:
+            - studio/client/src/panels/library/
+            - studio/client/test/panels/library/
+            - one additive panel registration in the shell composition file
+        slices:
+          - library-panel/1   # Library panel scaffold and system switcher
+          - library-panel/2   # Token browser with real-size specimens
+          - library-panel/3   # Component gallery with progressive SVG loading
+          - library-panel/4   # Layout-template browser
+          - library-panel/5   # Library search and filter
+          - library-panel/6   # Reference-into-chat
+        contracts_produced:
+          - name: library-reference
+            type: type
+            description: LibraryReference union in studio/packages/contract/src/library.ts (+ barrel export) — chat-panel imports it for composer intake.
+          - name: library-sanitizer
+            type: type
+            description: Client-side sanitizeSvg passing the shared adversarial fixture set from server/test/artifact-pipeline/fixtures/adversarial/.
+        dependencies:
+          consumes_from_wave:
+            - wave: 5
+              contracts: [client-scaffold, panel-registry, studio-socket, shell-state]
+          cross_agent_this_wave: []
+        verification:
+          - All 9 systems browse through real /api/library data shapes (token/component fixtures captured from the live endpoints)
+          - Gallery loads progressively; sanitizer passes the shared adversarial set; staleness renders in place when the API returns 503/stale
+          - Reference action emits a typed LibraryReference into the shell seam
+          - Search filters tokens and components; Testing Library suites green
+
+      - id: w6-chat-panel
+        capability: chat-panel
+        status: planned
+        description: >
+          The agentic chat surface: streaming assistant rendering with
+          aria-live, multiline composer with disabled-with-reason
+          (busy / auth missing with studio/.env guidance in place),
+          decision chips as editable selects sending chip.update,
+          inline tool progress, structured error display in place,
+          artifact references focusing the canvas via shell-state,
+          LibraryReference composer intake (removable chips riding
+          chat.send references), cancel during generation, transcript
+          restore on attach, keyboard and screen-reader support.
+        territory:
+          client:
+            - studio/client/src/panels/chat/
+            - studio/client/test/panels/chat/
+            - one additive panel registration in the shell composition file
+        slices:
+          - chat-panel/1   # Chat panel scaffold and transcript restore
+          - chat-panel/2   # Streaming assistant rendering with aria-live region
+          - chat-panel/3   # Composer with disabled-with-reason, auth guidance, and cancel
+          - chat-panel/4   # Inline tool progress and structured error display
+          - chat-panel/5   # Decision chips with re-run on change
+          - chat-panel/6   # Artifact references with canvas focus
+          - chat-panel/7   # Keyboard and screen-reader pass (WCAG AA)
+        contracts_produced:
+          - name: chat-panel-registration
+            type: type
+            description: Chat panel registered with the shell; composer accepts LibraryReference intake from the shell seam.
+        dependencies:
+          consumes_from_wave:
+            - wave: 5
+              contracts: [client-scaffold, panel-registry, studio-socket, shell-state]
+          cross_agent_this_wave:
+            - w6-library-panel: [library-reference]
+            - w6-canvas: [canvas-stage]
+        verification:
+          - Streaming render against recorded AgentEvent streams; chips edit → chip.update with { messageId, kind, value }
+          - Keyless state shows the studio/.env guidance in place, composer disabled-with-reason; no toasts anywhere
+          - Reference chips ride chat.send references; artifact reference click focuses the canvas version via shell-state
+          - Transcript restores on attach; aria-live + keyboard pass; Testing Library suites green
+
+    gates:
+      - level: L1
+        name: File existence
+        check: canvas/, panels/library/, panels/chat/ modules and contract library.ts exist; all three registered with the shell.
+      - level: L3
+        name: Type safety and lint
+        check: npm run typecheck and npm run lint pass with zero errors.
+      - level: L4
+        name: Client integration
+        check: full client suite green; built dist serves through studio-server; library data verified against the real /api/library endpoints.
+      - level: L5
+        name: Composed studio smoke (Phase 2 exit)
+        check: >
+          npm run build; boot the composed server; the served SPA
+          loads with all three panels docked around the canvas;
+          /api/health green (auth missing acceptable keyless); a
+          scripted-runtime generation drives an artifact onto the
+          canvas through the real protocol path.
+
+    wave_completion_criteria: >
+      All three agents report success, gates pass including the
+      composed-studio smoke. The MVP triangle is live: brief in chat,
+      artifact on canvas with compliance bar, library browsable,
+      panels swappable with persistent layout.
 
 
 # ═══════════════════════════════════════════════════════════════════════
