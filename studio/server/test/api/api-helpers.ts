@@ -151,7 +151,7 @@ export function makeTempRegistry(): string {
   const registryPath = path.join(dir, "registry.yaml");
   const realRegistry = path.join(
     realBridgeConfig().cwd,
-    "design-systems",
+    "systems",
     "registry.yaml",
   );
   copyFileSync(realRegistry, registryPath);

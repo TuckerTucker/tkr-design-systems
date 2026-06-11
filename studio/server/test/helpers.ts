@@ -56,11 +56,11 @@ export function makeTempDir(prefix: string): string {
  */
 export function makeFixtureRepoRoot(): string {
   const root = makeTempDir("studio-repo");
-  mkdirSync(path.join(root, "design-systems", "mcp-server"), {
+  mkdirSync(path.join(root, "tools", "mcp-server"), {
     recursive: true,
   });
   writeFileSync(
-    path.join(root, "design-systems", "mcp-server", "server.py"),
+    path.join(root, "tools", "mcp-server", "server.py"),
     "# fixture MCP server entry\n",
   );
   writeFileSync(
@@ -70,7 +70,7 @@ export function makeFixtureRepoRoot(): string {
         mcpServers: {
           "tkr-design-systems": {
             command: "/usr/bin/env",
-            args: ["design-systems/mcp-server/server.py"],
+            args: ["tools/mcp-server/server.py"],
           },
         },
       },
@@ -92,7 +92,7 @@ export function testConfig(overrides: Partial<StudioConfig> = {}): StudioConfig 
     repoRoot,
     mcpLaunch: {
       command: "/usr/bin/env",
-      args: ["design-systems/mcp-server/server.py"],
+      args: ["tools/mcp-server/server.py"],
       cwd: repoRoot,
     },
     workspacesDir: path.join(repoRoot, "studio", "workspaces"),

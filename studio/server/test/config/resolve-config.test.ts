@@ -58,7 +58,7 @@ describe("resolveConfig defaults", () => {
     if (!result.ok) return;
     expect(result.config.mcpLaunch).toEqual({
       command: "/usr/bin/env",
-      args: ["design-systems/mcp-server/server.py"],
+      args: ["tools/mcp-server/server.py"],
       cwd: fixtureRoot,
     });
   });
@@ -194,7 +194,7 @@ describe("resolveConfig validation failures", () => {
 
   it("rejects an MCP entry script that does not exist (caught at startup, not first spawn)", () => {
     const moved = makeFixtureRepoRoot();
-    rmSync(path.join(moved, "design-systems", "mcp-server", "server.py"));
+    rmSync(path.join(moved, "tools", "mcp-server", "server.py"));
     const result = resolveConfig({ STUDIO_REPO_ROOT: moved });
     expect(result.ok).toBe(false);
     if (result.ok) return;

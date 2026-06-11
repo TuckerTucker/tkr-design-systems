@@ -131,7 +131,7 @@ async function main(): Promise<void> {
     bridge,
     sessions,
     auth,
-    registryPath: path.join(config.repoRoot, "design-systems", "registry.yaml"),
+    registryPath: path.join(config.repoRoot, "systems", "registry.yaml"),
     logger,
   });
 

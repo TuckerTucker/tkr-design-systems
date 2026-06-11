@@ -28,8 +28,8 @@ const KNOWN_SYSTEMS = [
 const repoRoot = realStudioConfig().repoRoot;
 const realSvgPath = path.join(
   repoRoot,
-  "design-systems",
-  "swiss-library",
+  "systems",
+  "swiss",
   "components",
   "toggle-off.svg",
 );

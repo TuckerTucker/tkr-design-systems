@@ -28,7 +28,7 @@ FIXTURES_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$FIXTURES_DIR/../../../../.." && pwd)"
 PYTHON="${PYTHON:-/usr/local/bin/python3}"
 
-export PYTHONPATH="$REPO_ROOT/design-systems/wireframe-skill:$REPO_ROOT/design-systems/design-system-skill"
+export PYTHONPATH="$REPO_ROOT/tools/wireframe-skill:$REPO_ROOT/tools/design-system-skill"
 
 "$PYTHON" - "$FIXTURES_DIR" <<'PYEOF'
 import sys

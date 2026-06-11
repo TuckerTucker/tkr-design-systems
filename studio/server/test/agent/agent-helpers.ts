@@ -265,7 +265,7 @@ export function makeSessionFixture(
   const config: AgentConfig = {
     mcpLaunch: {
       command: "/usr/bin/env",
-      args: ["design-systems/mcp-server/server.py"],
+      args: ["tools/mcp-server/server.py"],
       cwd: repoRoot,
     },
     stagingDir,

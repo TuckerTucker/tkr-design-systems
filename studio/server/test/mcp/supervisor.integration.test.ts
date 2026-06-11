@@ -132,7 +132,7 @@ describe("crash recovery (slice 5)", () => {
     const launcherPath = path.join(fixtureDir, "launcher.py");
     const serverPath = path.join(
       studioConfig.repoRoot,
-      "design-systems",
+      "tools",
       "mcp-server",
       "server.py",
     );

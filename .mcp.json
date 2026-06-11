@@ -2,7 +2,9 @@
   "mcpServers": {
     "tkr-design-systems": {
       "command": "/usr/local/bin/python3",
-      "args": ["design-systems/mcp-server/server.py"]
+      "args": [
+        "tools/mcp-server/server.py"
+      ]
     }
   }
 }
