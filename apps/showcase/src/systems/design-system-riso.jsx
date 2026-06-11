@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useContext, createContext, useId } from "react";
-import portrait1 from "./images/portraits/pexels-isabel-ponce-2161054782-37185454.jpg";
-import portrait2 from "./images/portraits/pexels-esrakorkmaz-17191688.jpg";
-import portrait3 from "./images/portraits/pexels-matvalina-16059612.jpg";
-import portrait4 from "./images/portraits/pexels-enesbeydilli-26733191.jpg";
+import portrait1 from "../../images/portraits/pexels-isabel-ponce-2161054782-37185454.jpg";
+import portrait2 from "../../images/portraits/pexels-esrakorkmaz-17191688.jpg";
+import portrait3 from "../../images/portraits/pexels-matvalina-16059612.jpg";
+import portrait4 from "../../images/portraits/pexels-enesbeydilli-26733191.jpg";
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — RISO

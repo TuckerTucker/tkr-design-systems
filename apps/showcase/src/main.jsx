@@ -2,14 +2,14 @@ import { StrictMode, useState, useEffect, useCallback, lazy, Suspense } from "re
 import { createRoot } from "react-dom/client";
 import Home from "./Home.jsx";
 
-const SketchSystem = lazy(() => import("../design-system-sketch.jsx"));
-const PrismSystem = lazy(() => import("../design-system-prism.jsx"));
-const RevoltSystem = lazy(() => import("../design-system-revolt.jsx"));
-const TerminalSystem = lazy(() => import("../design-system-terminal.jsx"));
-const EditorialSystem = lazy(() => import("../design-system-editorial.jsx"));
-const SwissSystem = lazy(() => import("../design-system-swiss.jsx"));
-const RisoSystem = lazy(() => import("../design-system-riso.jsx"));
-const NeutralSystem = lazy(() => import("../design-system-neutral.jsx"));
+const SketchSystem = lazy(() => import("./systems/design-system-sketch.jsx"));
+const PrismSystem = lazy(() => import("./systems/design-system-prism.jsx"));
+const RevoltSystem = lazy(() => import("./systems/design-system-revolt.jsx"));
+const TerminalSystem = lazy(() => import("./systems/design-system-terminal.jsx"));
+const EditorialSystem = lazy(() => import("./systems/design-system-editorial.jsx"));
+const SwissSystem = lazy(() => import("./systems/design-system-swiss.jsx"));
+const RisoSystem = lazy(() => import("./systems/design-system-riso.jsx"));
+const NeutralSystem = lazy(() => import("./systems/design-system-neutral.jsx"));
 
 const systems = {
   neutral: NeutralSystem,
