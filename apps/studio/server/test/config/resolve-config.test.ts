@@ -38,17 +38,17 @@ describe("resolveConfig defaults", () => {
     expect(result.config.port).toBe(4400);
     expect(result.config.logLevel).toBe("info");
     expect(result.config.workspacesDir).toBe(
-      path.join(fixtureRoot, "studio", "workspaces"),
+      path.join(fixtureRoot, "apps", "studio", "workspaces"),
     );
     expect(result.config.clientDistDir).toBe(
-      path.join(fixtureRoot, "studio", "client", "dist"),
+      path.join(fixtureRoot, "apps", "studio", "client", "dist"),
     );
     expect(result.config.repoRoot).toBe(fixtureRoot);
   });
 
   it("derives the default repo root from the module location (the real checkout)", () => {
     expect(defaultRepoRoot()).toBe(
-      path.resolve(import.meta.dirname, "..", "..", "..", ".."),
+      path.resolve(import.meta.dirname, "..", "..", "..", "..", ".."),
     );
   });
 
@@ -96,7 +96,7 @@ describe("resolveConfig env overrides", () => {
     if (!result.ok) return;
     expect(result.config.workspacesDir).toBe("/tmp/studio-ws");
     expect(result.config.clientDistDir).toBe(
-      path.join(fixtureRoot, "studio", "client", "dist"),
+      path.join(fixtureRoot, "apps", "studio", "client", "dist"),
     );
   });
 

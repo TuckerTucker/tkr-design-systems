@@ -31,9 +31,10 @@ const HAS_KEY =
 
 const TURN_TIMEOUT_MS = 300_000;
 
-/** The actual tkr-design-systems checkout (four levels up from this file). */
+/** The actual tkr-design-systems checkout (five levels up from this file). */
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
+  "..",
   "..",
   "..",
   "..",

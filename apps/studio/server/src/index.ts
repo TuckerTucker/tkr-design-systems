@@ -1,7 +1,7 @@
 /**
  * Composition root — the only file with import-time side effects.
  *
- * Sequence: load studio/.env → resolveConfig → createLogger →
+ * Sequence: load apps/studio/.env → resolveConfig → createLogger →
  * createStatusRegistry → compose capabilities (store → bridge → pipeline →
  * auth → agent runtime/sessions → studio-api) → buildServer → register the
  * API plugin and status providers → install process handlers → start the
@@ -46,7 +46,7 @@ import { installProcessHandlers } from "./server/lifecycle.js";
 import { createWorkspaceStore } from "./store/index.js";
 
 /**
- * Load <repoRoot>/studio/.env (gitignored; carries ANTHROPIC_API_KEY and
+ * Load <repoRoot>/apps/studio/.env (gitignored; carries ANTHROPIC_API_KEY and
  * optional STUDIO_* overrides) before config resolution. Resolved against
  * the repo root, never the process working directory. Shell environment
  * wins: loadEnvFile does not overwrite existing variables.
@@ -57,7 +57,7 @@ function loadDotEnv(): void {
     process.env.STUDIO_REPO_ROOT !== ""
       ? path.resolve(process.env.STUDIO_REPO_ROOT)
       : defaultRepoRoot();
-  const envPath = path.join(repoRoot, "studio", ".env");
+  const envPath = path.join(repoRoot, "apps", "studio", ".env");
   if (existsSync(envPath)) {
     process.loadEnvFile(envPath);
   }

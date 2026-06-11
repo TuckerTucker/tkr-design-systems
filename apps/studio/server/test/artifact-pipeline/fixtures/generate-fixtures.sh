@@ -2,7 +2,7 @@
 # Regenerate the artifact-pipeline test fixtures from the REAL wireframe
 # skill (no hand-authored generation output). Run from anywhere:
 #
-#   bash studio/server/test/artifact-pipeline/fixtures/generate-fixtures.sh
+#   bash apps/studio/server/test/artifact-pipeline/fixtures/generate-fixtures.sh
 #
 # Produces (committed; tests read them without needing python):
 #   swiss-dashboard/  — wireframe.svg + wireframe.spec.yaml via
@@ -25,7 +25,7 @@
 set -euo pipefail
 
 FIXTURES_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$FIXTURES_DIR/../../../../.." && pwd)"
+REPO_ROOT="$(cd "$FIXTURES_DIR/../../../../../.." && pwd)"
 PYTHON="${PYTHON:-/usr/local/bin/python3}"
 
 export PYTHONPATH="$REPO_ROOT/tools/wireframe-skill:$REPO_ROOT/tools/design-system-skill"

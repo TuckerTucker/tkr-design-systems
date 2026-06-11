@@ -26,12 +26,12 @@ const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Default repo root, derived from this module's location: the module lives
- * at <repoRoot>/studio/server/{src|dist}/config, so the root is four
+ * at <repoRoot>/apps/studio/server/{src|dist}/config, so the root is five
  * directories up — identical depth from source (tsx, vitest) and from the
  * compiled output.
  */
 export function defaultRepoRoot(): string {
-  return path.resolve(moduleDir, "..", "..", "..", "..");
+  return path.resolve(moduleDir, "..", "..", "..", "..", "..");
 }
 
 interface McpJsonShape {
@@ -187,12 +187,12 @@ export function resolveConfig(env: NodeJS.ProcessEnv): ConfigResult {
   const workspacesDir =
     env.STUDIO_WORKSPACES_DIR !== undefined && env.STUDIO_WORKSPACES_DIR !== ""
       ? path.resolve(env.STUDIO_WORKSPACES_DIR)
-      : path.join(repoRoot, "studio", "workspaces");
+      : path.join(repoRoot, "apps", "studio", "workspaces");
 
   const clientDistDir =
     env.STUDIO_CLIENT_DIST !== undefined && env.STUDIO_CLIENT_DIST !== ""
       ? path.resolve(env.STUDIO_CLIENT_DIST)
-      : path.join(repoRoot, "studio", "client", "dist");
+      : path.join(repoRoot, "apps", "studio", "client", "dist");
 
   const port = resolvePort(env.STUDIO_PORT, errors);
   const logLevel = resolveLogLevel(env.STUDIO_LOG_LEVEL, errors);

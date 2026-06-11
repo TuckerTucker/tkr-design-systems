@@ -2,7 +2,7 @@
  * ANTHROPIC_API_KEY resolution and auth status — the only auth path.
  *
  * Resolution order (architecture.md, binding): process environment first,
- * then `<repoRoot>/studio/.env` (gitignored). The dotenv file is parsed
+ * then `<repoRoot>/apps/studio/.env` (gitignored). The dotenv file is parsed
  * directly — never loaded into the global process environment — so the key
  * stays inside this module and the SDK subprocess env injection.
  *
@@ -44,13 +44,13 @@ export interface AuthState {
 
 /** The actionable keyless-degradation guidance, shown in place. */
 export const KEYLESS_FIX =
-  "Set ANTHROPIC_API_KEY in the process environment or in studio/.env " +
+  "Set ANTHROPIC_API_KEY in the process environment or in apps/studio/.env " +
   "(gitignored), then send the message again. Library browsing, canvas " +
   "review, and compliance display keep working without a key.";
 
 export const INVALID_KEY_FIX =
   "The configured ANTHROPIC_API_KEY was rejected by the Anthropic API. " +
-  "Replace it in the process environment or in studio/.env, then retry.";
+  "Replace it in the process environment or in apps/studio/.env, then retry.";
 
 export interface AuthManagerOptions {
   /** Absolute path to the tkr-design-systems checkout (StudioConfig.repoRoot). */
@@ -62,11 +62,11 @@ export interface AuthManagerOptions {
 
 /**
  * Auth seam injected into sessions and registered on the health surface.
- * resolve() re-reads the environment and studio/.env on every call, so a
+ * resolve() re-reads the environment and apps/studio/.env on every call, so a
  * key added while the server runs is picked up on the next message.
  */
 export interface AuthManager {
-  /** Re-resolve from env then studio/.env; updates and returns the state. */
+  /** Re-resolve from env then apps/studio/.env; updates and returns the state. */
   resolve(): Promise<AuthState>;
   /** Last resolved state (resolve() must have run at least once). */
   state(): AuthState;
@@ -121,9 +121,9 @@ export function parseDotEnv(text: string): Map<string, string> {
   return values;
 }
 
-/** Absolute path of the dotenv file: `<repoRoot>/studio/.env`. */
+/** Absolute path of the dotenv file: `<repoRoot>/apps/studio/.env`. */
 export function dotEnvPath(repoRoot: string): string {
-  return path.join(repoRoot, "studio", ".env");
+  return path.join(repoRoot, "apps", "studio", ".env");
 }
 
 export function createAuthManager(options: AuthManagerOptions): AuthManager {
