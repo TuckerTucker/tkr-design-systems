@@ -8,10 +8,10 @@ status: implemented
 context: |
   studio-server is the Wave 1 foundation of the Studio product: the single
   Fastify 5 process every other server-side capability mounts into. The
-  architecture contract (studio/_planning/architecture.md) fixes the stack —
+  architecture contract (apps/studio/_planning/architecture.md) fixes the stack —
   Node >= 22, TypeScript strict, ES modules, named exports, Fastify 5 with
   native pino, @fastify/websocket, vitest with real-seam integration tests —
-  and the monorepo layout (studio/server/ inside an npm-workspaces root).
+  and the monorepo layout (apps/studio/server/ inside an npm-workspaces root).
 
   The studio is single-user and local-only by decision: the server binds
   127.0.0.1, there is no authentication layer, and the localhost binding is
@@ -41,8 +41,8 @@ problem_statement: |
 
 scope:
   in:
-    - Monorepo scaffolding — the studio/ npm-workspaces root (studio/package.json) and the @studio/contract package skeleton (studio/packages/contract with package.json + empty src/), delivered in Wave 1 slice 1
-    - studio/server package scaffold (TypeScript strict, ES modules, named exports, vitest)
+    - Monorepo scaffolding — the apps/studio/ npm-workspaces root (apps/studio/package.json) and the @studio/contract package skeleton (apps/studio/packages/contract with package.json + empty src/), delivered in Wave 1 slice 1
+    - apps/studio/server package scaffold (TypeScript strict, ES modules, named exports, vitest)
     - Typed config resolution (repo root, MCP launch command from .mcp.json, workspace path, client dist path, port, log level) with env overrides and typed validation errors
     - Fastify 5 bootstrap via buildServer(deps) — dependencies injected, never constructed (IoC)
     - pino structured logging with requestId/connectionId correlation and secret redaction
@@ -63,7 +63,7 @@ scope:
 
 dependencies:
   upstream:
-    - "Architecture contract (studio/_planning/architecture.md) — stack, layout, routes, envelope, logging, testing policy"
+    - "Architecture contract (apps/studio/_planning/architecture.md) — stack, layout, routes, envelope, logging, testing policy"
     - "Repo-root .mcp.json — source of truth for the design-systems MCP launch command (command + args, repo-root-relative)"
     - "Node >= 22, Fastify 5, @fastify/websocket, @fastify/static, pino, vitest"
   downstream:
@@ -73,17 +73,17 @@ dependencies:
     - "studio-api — mounts routes on the Fastify instance and registers the WsConnectionHandler"
     - "docking-shell — its build output is served from config.clientDistDir"
   external:
-    - "design-systems/mcp-server (Python) — referenced by the launch command only; never spawned by studio-server"
-    - "studio/.env (gitignored) — environment file the composition root loads before config resolution"
+    - "tools/mcp-server (Python) — referenced by the launch command only; never spawned by studio-server"
+    - "apps/studio/.env (gitignored) — environment file the composition root loads before config resolution"
 
 data_contracts: |
   ## Config Contract
 
   ```typescript
-  // studio/server/src/config/types.ts
+  // apps/studio/server/src/config/types.ts
   export interface McpLaunchConfig {
     command: string;   // e.g. "/usr/local/bin/python3" (from .mcp.json)
-    args: string[];    // e.g. ["design-systems/mcp-server/server.py"]
+    args: string[];    // e.g. ["tools/mcp-server/server.py"]
     cwd: string;       // repo root — args are repo-root-relative
   }
 
@@ -92,8 +92,8 @@ data_contracts: |
   export interface StudioConfig {
     repoRoot: string;        // absolute path to the tkr-design-systems checkout
     mcpLaunch: McpLaunchConfig;
-    workspacesDir: string;   // default <repoRoot>/studio/workspaces
-    clientDistDir: string;   // default <repoRoot>/studio/client/dist
+    workspacesDir: string;   // default <repoRoot>/apps/studio/workspaces
+    clientDistDir: string;   // default <repoRoot>/apps/studio/client/dist
     port: number;            // default 4400; STUDIO_PORT override
     host: "127.0.0.1";       // literal type — binding is not configurable
     logLevel: LogLevel;      // default "info"; STUDIO_LOG_LEVEL override
@@ -115,7 +115,7 @@ data_contracts: |
   ## Health Contract (canonical types in the shared contract package)
 
   ```typescript
-  // studio/packages/contract/src/health.ts — owned by studio-server.
+  // apps/studio/packages/contract/src/health.ts — owned by studio-server.
   // The canonical home for HealthResponse and StatusReport, so the client
   // and scripted clients import them from the contract package instead of
   // redeclaring server-internal shapes.
@@ -138,7 +138,7 @@ data_contracts: |
   ## Status Registry Contract (server-internal; health values supplied by other capabilities)
 
   ```typescript
-  // studio/server/src/health/status-registry.ts
+  // apps/studio/server/src/health/status-registry.ts
   import type { StatusReport } from "@studio/contract";
 
   export type StatusComponent = "bridge" | "store" | "auth";
@@ -152,7 +152,7 @@ data_contracts: |
   ## Server Lifecycle Contract
 
   ```typescript
-  // studio/server/src/server/create-server.ts
+  // apps/studio/server/src/server/create-server.ts
   export interface ServerDependencies {
     config: StudioConfig;
     logger: Logger;                        // pino instance from createLogger(config)
@@ -173,7 +173,7 @@ data_contracts: |
   ## WebSocket Plumbing Contract (semantics belong to studio-api)
 
   ```typescript
-  // studio/server/src/ws/connection-gateway.ts
+  // apps/studio/server/src/ws/connection-gateway.ts
   export interface WsConnection {
     connectionId: string;                    // UUID, bound into logs
     send(raw: string): void;
@@ -188,31 +188,31 @@ data_contracts: |
   ```
 
 file_locations:
-  - studio/server/package.json — server workspace package (ES modules, scripts, deps)
-  - studio/server/tsconfig.json — TypeScript strict configuration
-  - studio/server/src/index.ts — composition root (env load → resolveConfig → createLogger → registry → buildServer → start; only file with import-time side effects)
-  - studio/server/src/config/types.ts — StudioConfig, McpLaunchConfig, ConfigResult, ConfigError
-  - studio/server/src/config/resolve-config.ts — resolution (defaults → .mcp.json → env overrides) and validation
-  - studio/server/src/logging/create-logger.ts — pino factory with redaction and child-logger convention
-  - studio/server/src/server/create-server.ts — buildServer factory (Fastify 5 instance, route/plugin registration)
-  - studio/server/src/server/lifecycle.ts — start/shutdown, signal handlers, shutdown hooks, fatal capture
-  - studio/server/src/health/status-registry.ts — StatusRegistry implementation (provider isolation, per-provider timeout)
-  - studio/server/src/health/health-route.ts — GET /api/health handler and HealthResponse assembly
-  - studio/server/src/static/client-hosting.ts — @fastify/static registration, SPA fallback, missing-build page
-  - studio/server/src/ws/connection-gateway.ts — /ws upgrade, WsConnection wrapper, heartbeat, not-ready envelope
-  - studio/server/test/config/resolve-config.test.ts — unit tests for resolution and validation
-  - studio/server/test/health/status-registry.test.ts — unit tests for provider isolation and timeout
-  - studio/server/test/integration/server-lifecycle.test.ts — real HTTP start/answer/shutdown, hook ordering
-  - studio/server/test/integration/health-endpoint.test.ts — stub providers (ok, throwing, hanging, unregistered)
-  - studio/server/test/integration/static-hosting.test.ts — asset, SPA fallback, missing dist, /api precedence
-  - studio/server/test/integration/ws-gateway.test.ts — real WebSocket connect, not-ready envelope, heartbeat, close 1001
-  - studio/package.json — npm-workspaces monorepo root (scaffolded here in Wave 1, slice 1)
-  - studio/packages/contract/package.json — @studio/contract package skeleton (package.json + empty src/, scaffolded here in Wave 1; the npm name @studio/contract resolves to the path studio/packages/contract via npm workspaces; each capability contributes its own modules in its own wave)
-  - studio/packages/contract/src/health.ts — HealthResponse and StatusReport (canonical, owned by studio-server; imported by the client and scripted clients, never redeclared)
+  - apps/studio/server/package.json — server workspace package (ES modules, scripts, deps)
+  - apps/studio/server/tsconfig.json — TypeScript strict configuration
+  - apps/studio/server/src/index.ts — composition root (env load → resolveConfig → createLogger → registry → buildServer → start; only file with import-time side effects)
+  - apps/studio/server/src/config/types.ts — StudioConfig, McpLaunchConfig, ConfigResult, ConfigError
+  - apps/studio/server/src/config/resolve-config.ts — resolution (defaults → .mcp.json → env overrides) and validation
+  - apps/studio/server/src/logging/create-logger.ts — pino factory with redaction and child-logger convention
+  - apps/studio/server/src/server/create-server.ts — buildServer factory (Fastify 5 instance, route/plugin registration)
+  - apps/studio/server/src/server/lifecycle.ts — start/shutdown, signal handlers, shutdown hooks, fatal capture
+  - apps/studio/server/src/health/status-registry.ts — StatusRegistry implementation (provider isolation, per-provider timeout)
+  - apps/studio/server/src/health/health-route.ts — GET /api/health handler and HealthResponse assembly
+  - apps/studio/server/src/static/client-hosting.ts — @fastify/static registration, SPA fallback, missing-build page
+  - apps/studio/server/src/ws/connection-gateway.ts — /ws upgrade, WsConnection wrapper, heartbeat, not-ready envelope
+  - apps/studio/server/test/config/resolve-config.test.ts — unit tests for resolution and validation
+  - apps/studio/server/test/health/status-registry.test.ts — unit tests for provider isolation and timeout
+  - apps/studio/server/test/integration/server-lifecycle.test.ts — real HTTP start/answer/shutdown, hook ordering
+  - apps/studio/server/test/integration/health-endpoint.test.ts — stub providers (ok, throwing, hanging, unregistered)
+  - apps/studio/server/test/integration/static-hosting.test.ts — asset, SPA fallback, missing dist, /api precedence
+  - apps/studio/server/test/integration/ws-gateway.test.ts — real WebSocket connect, not-ready envelope, heartbeat, close 1001
+  - apps/studio/package.json — npm-workspaces monorepo root (scaffolded here in Wave 1, slice 1)
+  - apps/studio/packages/contract/package.json — @studio/contract package skeleton (package.json + empty src/, scaffolded here in Wave 1; the npm name @studio/contract resolves to the path apps/studio/packages/contract via npm workspaces; each capability contributes its own modules in its own wave)
+  - apps/studio/packages/contract/src/health.ts — HealthResponse and StatusReport (canonical, owned by studio-server; imported by the client and scripted clients, never redeclared)
   - .mcp.json — repo-root MCP launch definition (READ-ONLY source for config.mcpLaunch)
 
 implementation_steps:
-  - Scaffold the studio/ npm-workspaces monorepo root (studio/package.json), the @studio/contract package skeleton (studio/packages/contract — package.json + empty src/; each capability contributes its own modules in its own wave), and the studio/server package (TypeScript strict, ES modules, vitest)
+  - Scaffold the apps/studio/ npm-workspaces monorepo root (apps/studio/package.json), the @studio/contract package skeleton (apps/studio/packages/contract — package.json + empty src/; each capability contributes its own modules in its own wave), and the apps/studio/server package (TypeScript strict, ES modules, vitest)
   - Define StudioConfig, ConfigError, ConfigResult types
   - Implement resolveConfig — defaults, .mcp.json parsing for mcpLaunch (cwd pinned to repo root), env overrides, validation as typed result
   - Unit-test every resolution default, override, and validation failure path
@@ -220,12 +220,12 @@ implementation_steps:
   - Implement StatusRegistry — register/snapshot with provider isolation and per-provider timeout; "unregistered" placeholders
   - Implement buildServer — Fastify 5 with the injected pino instance, requestId generation, route registration
   - Implement lifecycle — start (listen 127.0.0.1, EADDRINUSE messaging), shutdown (idempotent, WS close 1001, reverse-order hooks, deadline force-exit), signal handlers, unhandledRejection/uncaughtException capture
-  - Declare HealthResponse and StatusReport in studio/packages/contract/src/health.ts (studio-server-owned contract module), then implement GET /api/health assembling HealthResponse from process info plus the registry snapshot
+  - Declare HealthResponse and StatusReport in apps/studio/packages/contract/src/health.ts (studio-server-owned contract module), then implement GET /api/health assembling HealthResponse from process info plus the registry snapshot
   - Implement static client hosting — @fastify/static, SPA fallback excluding /api and /ws, missing-build page, cache headers
   - Implement the /ws connection gateway — @fastify/websocket, WsConnection wrapper, heartbeat ping/pong, not-ready error envelope when no handler is registered
   - Write the composition root index.ts wiring config → logger → registry → server → start
   - Write integration tests over real HTTP and WebSocket connections per the testing policy
-  - Document env overrides and the run commands in studio/server (package scripts)
+  - Document env overrides and the run commands in apps/studio/server (package scripts)
 
 error_handling: |
   - Invalid config (missing repo root, unparseable .mcp.json, missing MCP entry
@@ -282,7 +282,7 @@ integration_points:
   - "workspace-store: receives config.workspacesDir; registers the store status provider; registers a shutdown hook to flush pending writes"
   - "agent-orchestration: receives config and a child logger; registers the auth status provider (configured/missing/invalid); the Agent SDK connection reuses config.mcpLaunch"
   - "studio-api: mounts /api routes on StudioServer.app and registers the WsConnectionHandler that owns message semantics over the /ws plumbing"
-  - "docking-shell: built client lands in studio/client/dist and is served by the static hosting with SPA fallback"
+  - "docking-shell: built client lands in apps/studio/client/dist and is served by the static hosting with SPA fallback"
   - ".mcp.json: read-only source for the MCP launch command; studio-server never writes it"
   - "packages/contract: studio-server scaffolds the @studio/contract package skeleton in Wave 1 and owns its src/health.ts module (HealthResponse, StatusReport); each capability contributes its own modules in its own wave — the server.not_ready error envelope shape lands in studio-api's errors.ts module when studio-api arrives (Wave 4)"
 

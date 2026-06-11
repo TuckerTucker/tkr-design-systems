@@ -22,7 +22,7 @@ features:
       paths directly. Emits artifact.version_created into the API event
       stream once the version is durable.
     scope:
-      - 'Ingest contract accepting the ArtifactSource discriminated union from studio/packages/contract/src/artifact.ts ({ kind: "paths", svgPath, specPath } for wf_generate / wf_apply_substitutions; { kind: "text", svgText, specYaml? } for wf_assemble_from_blueprint — both first-class branches)'
+      - 'Ingest contract accepting the ArtifactSource discriminated union from apps/studio/packages/contract/src/artifact.ts ({ kind: "paths", svgPath, specPath } for wf_generate / wf_apply_substitutions; { kind: "text", svgText, specYaml? } for wf_assemble_from_blueprint — both first-class branches)'
       - Reading generated SVG and spec.yaml content from the output paths (paths branch) or directly from svgText/specYaml (text branch)
       - Provenance capture (brief, tool name, parameters as issued, created timestamp)
       - version.yaml emission via workspace-store (parent version, brief, tool, parameters, created)

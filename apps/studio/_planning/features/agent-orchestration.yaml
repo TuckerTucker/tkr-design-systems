@@ -19,7 +19,7 @@ features:
     scope:
       - "SessionManager registry: one AgentSession per workspace, lazy create, dispose on close/shutdown"
       - AgentSession built on @anthropic-ai/claude-agent-sdk query() (TypeScript)
-      - SDK MCP server configuration from studio-server config (design-systems/mcp-server launch command per repo-root .mcp.json)
+      - SDK MCP server configuration from studio-server config (tools/mcp-server launch command per repo-root .mcp.json)
       - ANTHROPIC_API_KEY injected into the SDK subprocess environment (resolved by auth-and-cancellation feature)
       - Routing system prompt authored once and injected per session (intents, default-selection rules, chip emission, grammar respect)
       - Plain conversation path — no tool invocation for messages that are questions/discussion
@@ -87,7 +87,7 @@ features:
       - Per-artifact context windows — transcript slices keyed by artifactId assembled into the session context for refinement turns
       - Active-artifact tracking — refinements without an explicit target apply to the workspace's active artifact
       - Context assembly bounds — oldest refinement turns summarized/truncated before the window grows unbounded
-      - AgentEvent union (message_started, assistant_delta, tool_started, tool_finished, chips_updated, artifact_produced, message_completed, error) declared in studio/packages/contract/src/agent-events.ts (this capability's contributed module in the already-scaffolded @studio/contract package) and consumed by studio-api
+      - AgentEvent union (message_started, assistant_delta, tool_started, tool_finished, chips_updated, artifact_produced, message_completed, error) declared in apps/studio/packages/contract/src/agent-events.ts (this capability's contributed module in the already-scaffolded @studio/contract package) and consumed by studio-api
       - Event ordering guarantee — message_started first, message_completed or error last, deltas and tool events strictly ordered between
       - Transcript persistence through the injected TranscriptRepository (IoC — the session receives the repository, never constructs paths)
       - Tool-call records persisted (tool name, parameters minus secrets, result summary, ok/failed)
@@ -96,7 +96,7 @@ features:
   - name: auth-and-cancellation
     description: |
       ANTHROPIC_API_KEY resolution and run cancellation. The key resolves
-      from the process environment first, then studio/.env (gitignored);
+      from the process environment first, then apps/studio/.env (gitignored);
       it is injected into the Agent SDK subprocess environment, never
       logged (pino redaction), and never written into workspace files.
       Auth status (configured / missing / invalid) is reported for
@@ -107,7 +107,7 @@ features:
       consistent. claude.ai subscription login is explicitly out —
       Anthropic policy prohibits it for embedded SDK apps.
     scope:
-      - Key resolution order — process environment, then studio/.env (parsed with the yaml/dotenv conventions of the server config loader)
+      - Key resolution order — process environment, then apps/studio/.env (parsed with the yaml/dotenv conventions of the server config loader)
       - Key injection into the SDK subprocess environment only; never into workspace files or logs
       - pino redaction paths covering the key in all session and config loggers
       - "AuthState (status: configured | missing | invalid; source: env | dotenv | null) exposed to studio-server health and pushed as auth.status"

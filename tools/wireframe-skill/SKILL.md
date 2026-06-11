@@ -87,7 +87,7 @@ python3 wireframe-skill substitution-prompt \
 
 # Pass 2: apply the response with grammar validation
 python3 wireframe-skill apply-substitutions \
-  --pattern swiss-library/layouts/dashboard.svg \
+  --pattern systems/swiss/layouts/dashboard.svg \
   --substitutions /tmp/resp.json \
   --out /tmp/wireframe.svg
 ```

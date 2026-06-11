@@ -33,14 +33,14 @@ features:
       affordance with Enter-to-send / Shift+Enter-newline. Disabled with a
       visible reason — never silently — while the agent is busy or while
       auth is missing (auth.status drives in-place guidance: "Add
-      ANTHROPIC_API_KEY to studio/.env"). While a generation streams, the
+      ANTHROPIC_API_KEY to apps/studio/.env"). While a generation streams, the
       submit affordance becomes a cancel control that sends chat.cancel.
       Draft text is never lost to state transitions.
     scope:
       - Multiline textarea composer with auto-grow and Enter-to-send, Shift+Enter for newline
       - Submit affordance (button + keyboard) sending chat.send with the workspace context
       - Disabled-with-reason while the agent is busy ("Agent is working — cancel to send a new message")
-      - Disabled-with-reason while auth is missing or invalid, driven by auth.status ("Add ANTHROPIC_API_KEY to studio/.env") — guidance in place, never a console-only error
+      - Disabled-with-reason while auth is missing or invalid, driven by auth.status ("Add ANTHROPIC_API_KEY to apps/studio/.env") — guidance in place, never a console-only error
       - Re-enable on auth.status configured and on chat.message_completed/chat.error
       - Cancel control during generation sending chat.cancel; composer re-enables on the resulting completion event
       - Draft preservation across busy/disabled transitions and panel collapse/restore

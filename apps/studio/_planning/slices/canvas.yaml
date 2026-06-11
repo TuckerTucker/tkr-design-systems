@@ -17,7 +17,7 @@ slices:
       - "Single device frame at true platform dimensions (375×812 mobile or 1280×800 desktop per artifact platform)"
       - "Empty state when the workspace has no artifact (points at the chat panel)"
       - "Inline error display on SVG fetch failure (what failed, how to fix, in place)"
-      - "CanvasViewState model in studio/client/src/canvas/ (artifact, version, platform mode, viewport, inspect, highlight)"
+      - "CanvasViewState model in apps/studio/client/src/canvas/ (artifact, version, platform mode, viewport, inspect, highlight)"
       - "TypeScript strict, named exports, contract types imported from packages/contract"
     depends_on: []
     story_ids:

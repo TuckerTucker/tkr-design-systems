@@ -80,15 +80,15 @@ dependencies:
 
 data_contracts: |
   View models live in the panel's view-model layer. Wire payload shapes
-  are owned by studio-api's contract package (studio/packages/contract)
+  are owned by studio-api's contract package (apps/studio/packages/contract)
   and consumed read-only; these view models are the panel-side projection
   of those payloads. One contract module is owned by this capability:
-  studio/packages/contract/src/library.ts holds LibraryReference, which
+  apps/studio/packages/contract/src/library.ts holds LibraryReference, which
   both panels import from @studio/contract — chat-panel never redeclares
   it.
 
   ```typescript
-  // studio/client/src/panels/library/model/types.ts
+  // apps/studio/client/src/panels/library/model/types.ts
 
   // GET /api/library/systems → ds_list_systems
   export interface SystemSummaryView {
@@ -191,7 +191,7 @@ data_contracts: |
   }
 
   // Reference-into-chat payload delivered to the chat composer.
-  // Declared in studio/packages/contract/src/library.ts (owned by
+  // Declared in apps/studio/packages/contract/src/library.ts (owned by
   // library-panel); both panels import it from @studio/contract. The
   // panel's reference/referencePayload.ts builds and drag-encodes these
   // values; chat-panel's composer renders them as removable chips and
@@ -228,30 +228,30 @@ data_contracts: |
   ```
 
 file_locations:
-  - studio/client/src/panels/library/LibraryPanel.tsx — Panel root; registers with the docking-shell panel registry, owns active-system context
-  - studio/client/src/panels/library/SystemSwitcher.tsx — System switcher (list, status badges, selection)
-  - studio/client/src/panels/library/model/types.ts — View models (SystemSummaryView, TokenBrowserView, ComponentIndexView, ComponentDetailView, LayoutTemplateView, CachedLibraryData)
-  - studio/client/src/panels/library/model/libraryClient.ts — Typed HTTP client over /api/library/* (named exports, explicit return types)
-  - studio/client/src/panels/library/model/libraryCache.ts — Client-side cache keyed by system id; staleness flips on bridge.status events
-  - studio/client/src/panels/library/tokens/TokenBrowser.tsx — Token section container (collapsible sections, persisted state)
-  - studio/client/src/panels/library/tokens/PaletteSwatches.tsx — Swatch grid with copy-in-place
-  - studio/client/src/panels/library/tokens/TypeScaleSpecimens.tsx — Real-size type specimens with case/tracking rules
-  - studio/client/src/panels/library/tokens/SpacingGrid.tsx — Grid unit and allowed-steps visualization
-  - studio/client/src/panels/library/tokens/BorderElevationRules.tsx — Radius corner examples and elevation rule rendering
-  - studio/client/src/panels/library/components/ComponentGallery.tsx — Gallery grid, tier grouping, progressive loading orchestration
-  - studio/client/src/panels/library/components/ComponentCard.tsx — Card with inline SVG, variant toggle, details-on-demand, per-card error state
-  - studio/client/src/panels/library/components/VariantToggle.tsx — Keyboard-operable variant switch
-  - studio/client/src/panels/library/layouts/LayoutBrowser.tsx — Thumbnail grid with expanded in-panel preview
-  - studio/client/src/panels/library/search/LibrarySearch.tsx — Search field and filtered-section rendering with match counts
-  - studio/client/src/panels/library/search/matchers.ts — Pure matching functions over the cached index (unit-tested)
-  - studio/client/src/panels/library/reference/referencePayload.ts — Builds LibraryReference values (type imported from @studio/contract) and encodes drag payloads
-  - studio/client/src/panels/library/reference/SendToChatAction.tsx — Explicit send affordance (keyboard parity for drag)
-  - studio/client/src/panels/library/hooks/useProgressiveLoad.ts — IntersectionObserver hook shared by gallery and layout browser
-  - studio/client/src/panels/library/hooks/useLibraryData.ts — Data fetching + cache + staleness hook per endpoint
-  - studio/client/src/panels/library/svg/sanitizeSvg.ts — SVG sanitization before inline rendering (strip script/foreignObject/event handlers)
-  - studio/client/src/panels/library/__tests__/ — vitest + Testing Library component tests; matchers and sanitizer unit tests
-  - studio/packages/contract/src/library.ts — LibraryReference type (OWNED by library-panel; chat-panel imports it from @studio/contract)
-  - studio/packages/contract/src/ — Wire payload types for /api/library/* (owned by studio-api, READ-ONLY here)
+  - apps/studio/client/src/panels/library/LibraryPanel.tsx — Panel root; registers with the docking-shell panel registry, owns active-system context
+  - apps/studio/client/src/panels/library/SystemSwitcher.tsx — System switcher (list, status badges, selection)
+  - apps/studio/client/src/panels/library/model/types.ts — View models (SystemSummaryView, TokenBrowserView, ComponentIndexView, ComponentDetailView, LayoutTemplateView, CachedLibraryData)
+  - apps/studio/client/src/panels/library/model/libraryClient.ts — Typed HTTP client over /api/library/* (named exports, explicit return types)
+  - apps/studio/client/src/panels/library/model/libraryCache.ts — Client-side cache keyed by system id; staleness flips on bridge.status events
+  - apps/studio/client/src/panels/library/tokens/TokenBrowser.tsx — Token section container (collapsible sections, persisted state)
+  - apps/studio/client/src/panels/library/tokens/PaletteSwatches.tsx — Swatch grid with copy-in-place
+  - apps/studio/client/src/panels/library/tokens/TypeScaleSpecimens.tsx — Real-size type specimens with case/tracking rules
+  - apps/studio/client/src/panels/library/tokens/SpacingGrid.tsx — Grid unit and allowed-steps visualization
+  - apps/studio/client/src/panels/library/tokens/BorderElevationRules.tsx — Radius corner examples and elevation rule rendering
+  - apps/studio/client/src/panels/library/components/ComponentGallery.tsx — Gallery grid, tier grouping, progressive loading orchestration
+  - apps/studio/client/src/panels/library/components/ComponentCard.tsx — Card with inline SVG, variant toggle, details-on-demand, per-card error state
+  - apps/studio/client/src/panels/library/components/VariantToggle.tsx — Keyboard-operable variant switch
+  - apps/studio/client/src/panels/library/layouts/LayoutBrowser.tsx — Thumbnail grid with expanded in-panel preview
+  - apps/studio/client/src/panels/library/search/LibrarySearch.tsx — Search field and filtered-section rendering with match counts
+  - apps/studio/client/src/panels/library/search/matchers.ts — Pure matching functions over the cached index (unit-tested)
+  - apps/studio/client/src/panels/library/reference/referencePayload.ts — Builds LibraryReference values (type imported from @studio/contract) and encodes drag payloads
+  - apps/studio/client/src/panels/library/reference/SendToChatAction.tsx — Explicit send affordance (keyboard parity for drag)
+  - apps/studio/client/src/panels/library/hooks/useProgressiveLoad.ts — IntersectionObserver hook shared by gallery and layout browser
+  - apps/studio/client/src/panels/library/hooks/useLibraryData.ts — Data fetching + cache + staleness hook per endpoint
+  - apps/studio/client/src/panels/library/svg/sanitizeSvg.ts — SVG sanitization before inline rendering (strip script/foreignObject/event handlers)
+  - apps/studio/client/src/panels/library/__tests__/ — vitest + Testing Library component tests; matchers and sanitizer unit tests
+  - apps/studio/packages/contract/src/library.ts — LibraryReference type (OWNED by library-panel; chat-panel imports it from @studio/contract)
+  - apps/studio/packages/contract/src/ — Wire payload types for /api/library/* (owned by studio-api, READ-ONLY here)
 
 implementation_steps:
   - Define the LibraryReference union in packages/contract/src/library.ts (owned here; chat-panel imports it from @studio/contract) and the view models in model/types.ts against the contract package's wire types

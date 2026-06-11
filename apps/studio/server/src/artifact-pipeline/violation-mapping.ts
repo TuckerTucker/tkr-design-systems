@@ -1,7 +1,7 @@
 /**
  * Violation-to-SVG-node mapping — rule detail carries offending VALUES
  * (font sizes, colors, radii, filter refs — see
- * design-systems/tooling/rulebook_check.py), never node references. The
+ * tools/builders/rulebook_check.py), never node references. The
  * mapper scans the SANITIZED document (the one the client actually
  * renders, so highlight targets always resolve) for elements matching
  * that evidence and resolves stable element ids — assembled artifacts

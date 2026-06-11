@@ -11,7 +11,7 @@ slices:
     number: 1
     layer: ui
     delivers:
-      - "studio/client workspace package (Vite + React 19 + TypeScript strict, ES modules, named exports)"
+      - "apps/studio/client workspace package (Vite + React 19 + TypeScript strict, ES modules, named exports)"
       - "packages/contract dependency wiring (envelope and payload types imported by the client, never redeclared)"
       - "ShellFrame layout — center canvas slot, left rail, right rail, full-height flex"
       - "Application error boundary (render failures surfaced in place, never console-only)"
@@ -82,7 +82,7 @@ slices:
     number: 5
     layer: ui
     delivers:
-      - "LayoutPreference type in studio/packages/contract/src/preferences.ts (schemaVersion, placements, activeTab, railWidths, lastWorkspaceId) — owned by docking-shell, contributed to the already-scaffolded @studio/contract package"
+      - "LayoutPreference type in apps/studio/packages/contract/src/preferences.ts (schemaVersion, placements, activeTab, railWidths, lastWorkspaceId) — owned by docking-shell, contributed to the already-scaffolded @studio/contract package"
       - "Hydrate on load — GET /api/preferences resolves before first rail paint (no layout flash)"
       - "Debounced PUT /api/preferences on every dock change (move, reorder, collapse, tab switch, rail resize) — no save action"
       - "First-run defaults (chat left, library right, nothing collapsed) when no preference exists"

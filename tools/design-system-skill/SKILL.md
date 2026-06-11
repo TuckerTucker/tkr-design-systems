@@ -32,15 +32,15 @@ Invoke this skill when the work involves design systems as first-class objects:
 Do NOT invoke this skill for:
 
 - Generating the artifact itself. That's the consumer skill's job. design-system-skill provides the system definition; consumers do the rendering.
-- Editing the React source files in `tkr-design-systems/*.jsx`. Those are the design intent; this skill manages the *extracted* spec that consumers use. When the React source changes, the spec needs to be re-extracted (a workflow this skill supports), but the React source itself is owned by the design team.
+- Editing the React source files in `apps/showcase/src/systems/*.jsx`. Those are the design intent; this skill manages the *extracted* spec that consumers use. When the React source changes, the spec needs to be re-extracted (a workflow this skill supports), but the React source itself is owned by the design team.
 
 ## Mental Model
 
 Three concepts, kept separate:
 
-**The system source** lives in `tkr-design-systems/design-system-{id}.jsx`. This is the React implementation — the canonical statement of what the system *is*. Authored by designers, evolves with the design.
+**The system source** lives in `apps/showcase/src/systems/design-system-{id}.jsx`. This is the React implementation — the canonical statement of what the system *is*. Authored by designers, evolves with the design.
 
-**The system spec** lives in `tkr-design-systems/specs/{id}/spec.yaml` plus the per-system library directory (components/, layouts/, references/). This is the *consumer-facing* form of the system: structured tokens, component SVG references, rulebook entries, grammar extensions. Derived from the source but stable enough that consumers can rely on its shape.
+**The system spec** lives in `systems/{id}/spec.yaml` plus the per-system library directory (components/, layouts/, references/). This is the *consumer-facing* form of the system: structured tokens, component SVG references, rulebook entries, grammar extensions. Derived from the source but stable enough that consumers can rely on its shape.
 
 **The registry** is the index of which systems exist, where their specs live, what versions they're at. design-system-skill owns this index and is the only skill that should write to it. Consumers query it; humans rebuild it when systems are added or removed.
 
@@ -112,8 +112,10 @@ The skill expects this directory structure on disk:
 
 ```
 tkr-design-systems/
-  design-system-{id}.jsx        # the React source (existing)
-  specs/                        # NEW: spec extracts
+  apps/showcase/src/systems/
+    design-system-{id}.jsx      # the React source
+  systems/
+    registry.yaml               # the index of available systems
     {id}/
       spec.yaml                 # the schema instance
       components/               # SVG files referenced from spec
@@ -126,20 +128,17 @@ tkr-design-systems/
         ...
       references/
         jsx_extract.md          # human-readable distillation of source
-  registry.yaml                 # the index of available systems
-  schema/
-    spec-schema-v0.1.json       # JSON Schema for spec validation
-    spec-schema-v0.2.json       # ...
-    CHANGELOG.md                # version history
+  tools/
+    design-system-skill/        # this skill
 ```
 
-The `specs/` subdirectory is new — currently the design systems repo only has the .jsx files at top level. This skill's `register_system` operation handles the workflow of authoring the spec extract for an existing .jsx file, including scaffolding the directory structure.
+This skill's `register_system` operation handles the workflow of authoring the spec extract for an existing .jsx file, including scaffolding the directory structure.
 
 ## Schema Versioning
 
 The schema evolves. design-system-skill handles version compatibility so individual system specs don't all have to migrate in lockstep.
 
-Each spec.yaml declares its `spec_version`. The skill maintains a JSON Schema file per version in `tkr-design-systems/schema/`. When loading a system, the skill picks the matching schema, validates against it, and returns the spec in a normalized form that consumers can rely on (i.e. an internal "current" representation).
+Each spec.yaml declares its `spec_version`. The skill maintains a JSON Schema file per version. When loading a system, the skill picks the matching schema, validates against it, and returns the spec in a normalized form that consumers can rely on (i.e. an internal "current" representation).
 
 When the schema bumps from v0.1 to v0.2, two things happen:
 
@@ -231,7 +230,7 @@ Naming these explicitly because they've come up in conversation and the boundary
 
 The expected flow when adding a new design system to the registry:
 
-First, the design team authors the React implementation in `tkr-design-systems/design-system-{newid}.jsx`. This is the design intent.
+First, the design team authors the React implementation in `apps/showcase/src/systems/design-system-{newid}.jsx`. This is the design intent.
 
 Second, a designer or engineer runs the spec extraction workflow (this is a sub-workflow this skill exposes, currently invoked by humans rather than automated): the workflow reads the .jsx, generates a draft spec.yaml plus skeleton component SVGs and layout templates, and places them in `specs/{newid}/`. The draft is opinionated — it makes its best guesses about tokens, component anatomy, rulebook entries — and is meant to be edited.
 
@@ -282,7 +281,7 @@ Expected: JSON `{"ok": true, "data": <full normalized spec>}`. The data includes
 ### Example 3: check artifact compliance
 
 ```bash
-python3 design-system-skill check --id swiss --artifact swiss-library/components/list-item-default.svg
+python3 design-system-skill check --id swiss --artifact systems/swiss/components/list-item-default.svg
 ```
 
 Expected: JSON `{"ok": true, "data": { passed: 6, failed: 0, advisory: 1, results: [...] }}`. Scope auto-detects to `component` because the artifact path contains `/components/`.
@@ -304,7 +303,7 @@ The Python implementation lives at `design_system_skill/` (package) with these m
 | `loader.py` | `load_system()`; checksum-cached spec loading + SVG path resolution |
 | `registry.py` | `Registry` class wrapping `registry.yaml`; `list_systems()`, `register_system()`, `unregister_system()` |
 | `validation.py` | `validate_spec()`; hand-rolled schema checks against v0.1 + v0.2 |
-| `rulebook.py` | `get_rulebook()`, `check_compliance()`; delegates mechanical checks to `tooling/rulebook_check.py` |
+| `rulebook.py` | `get_rulebook()`, `check_compliance()`; delegates mechanical checks to `tools/builders/rulebook_check.py` |
 | `errors.py` | `Result` + `Error` dataclasses; `ERROR_CODES` enumeration |
 | `paths.py` | Project-root + registry-path resolution; honors `$DESIGN_SYSTEM_SKILL_REGISTRY` for tests |
 

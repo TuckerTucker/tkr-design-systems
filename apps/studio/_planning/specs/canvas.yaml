@@ -81,7 +81,7 @@ data_contracts: |
   ## Canvas View State
 
   ```typescript
-  // studio/client/src/canvas/state.ts
+  // apps/studio/client/src/canvas/state.ts
   export type PlatformMode = "mobile" | "desktop" | "side-by-side";
 
   export interface Viewport {
@@ -105,7 +105,7 @@ data_contracts: |
   ## Inspect Overlay Model
 
   ```typescript
-  // studio/client/src/canvas/inspect.ts
+  // apps/studio/client/src/canvas/inspect.ts
   export interface TokenRef {
     category: "color" | "typography" | "spacing" | "radius" | "elevation";
     name: string;            // token name from the system spec
@@ -131,7 +131,7 @@ data_contracts: |
   ## Filmstrip Model
 
   ```typescript
-  // studio/client/src/canvas/filmstrip.ts
+  // apps/studio/client/src/canvas/filmstrip.ts
   export interface FilmstripEntry {
     version: number;          // zero-padded sequential on disk; numeric here
     parentVersion: number | null;
@@ -163,7 +163,7 @@ data_contracts: |
   ## Compliance Bar Model
 
   ```typescript
-  // studio/client/src/canvas/compliance.ts
+  // apps/studio/client/src/canvas/compliance.ts
   export type RuleStatus = "pass" | "warn" | "fail";
 
   export interface ComplianceViolation {
@@ -190,22 +190,22 @@ data_contracts: |
   ```
 
 file_locations:
-  - studio/client/src/canvas/CanvasPanel.tsx — Panel root; registry entry, view-state owner, layout (stage + filmstrip + compliance bar)
-  - studio/client/src/canvas/SvgStage.tsx — Native inline SVG rendering of the rendered version
-  - studio/client/src/canvas/DeviceFrame.tsx — Platform frame chrome at true dimensions; side-by-side composition
-  - studio/client/src/canvas/EmptyState.tsx — No-artifact state pointing at chat
-  - studio/client/src/canvas/state.ts — CanvasViewState model and reducers
-  - studio/client/src/canvas/useViewport.ts — Zoom/pan/fit-to-frame logic, input handlers, keyboard controls
-  - studio/client/src/canvas/inspect.ts — InspectModel, spec-metadata → node-map builder
-  - studio/client/src/canvas/InspectOverlay.tsx — Outline + popover rendering, hover/keyboard targeting
-  - studio/client/src/canvas/filmstrip.ts — FilmstripModel and restore/undo actions
-  - studio/client/src/canvas/HistoryFilmstrip.tsx — Thumbnail strip, scrub, restore, undo affordance
-  - studio/client/src/canvas/compliance.ts — ComplianceBarModel mapping from API payloads
-  - studio/client/src/canvas/ComplianceBar.tsx — Persistent bar, rule chips, violation list, highlight dispatch
-  - studio/client/src/canvas/useArtifactEvents.ts — WS subscription (artifact.version_created, artifact.compliance_completed), reconnect resync
-  - studio/client/src/canvas/api.ts — Typed fetchers for artifact/version/spec/compliance/restore routes (restore returns RestoreResponse — the new head's VersionSummary)
-  - studio/client/src/canvas/index.ts — Named exports; panel registration
-  - studio/packages/contract/ — WS and HTTP payload types (consumed, READ-ONLY from this capability)
+  - apps/studio/client/src/canvas/CanvasPanel.tsx — Panel root; registry entry, view-state owner, layout (stage + filmstrip + compliance bar)
+  - apps/studio/client/src/canvas/SvgStage.tsx — Native inline SVG rendering of the rendered version
+  - apps/studio/client/src/canvas/DeviceFrame.tsx — Platform frame chrome at true dimensions; side-by-side composition
+  - apps/studio/client/src/canvas/EmptyState.tsx — No-artifact state pointing at chat
+  - apps/studio/client/src/canvas/state.ts — CanvasViewState model and reducers
+  - apps/studio/client/src/canvas/useViewport.ts — Zoom/pan/fit-to-frame logic, input handlers, keyboard controls
+  - apps/studio/client/src/canvas/inspect.ts — InspectModel, spec-metadata → node-map builder
+  - apps/studio/client/src/canvas/InspectOverlay.tsx — Outline + popover rendering, hover/keyboard targeting
+  - apps/studio/client/src/canvas/filmstrip.ts — FilmstripModel and restore/undo actions
+  - apps/studio/client/src/canvas/HistoryFilmstrip.tsx — Thumbnail strip, scrub, restore, undo affordance
+  - apps/studio/client/src/canvas/compliance.ts — ComplianceBarModel mapping from API payloads
+  - apps/studio/client/src/canvas/ComplianceBar.tsx — Persistent bar, rule chips, violation list, highlight dispatch
+  - apps/studio/client/src/canvas/useArtifactEvents.ts — WS subscription (artifact.version_created, artifact.compliance_completed), reconnect resync
+  - apps/studio/client/src/canvas/api.ts — Typed fetchers for artifact/version/spec/compliance/restore routes (restore returns RestoreResponse — the new head's VersionSummary)
+  - apps/studio/client/src/canvas/index.ts — Named exports; panel registration
+  - apps/studio/packages/contract/ — WS and HTTP payload types (consumed, READ-ONLY from this capability)
 
 implementation_steps:
   - Register the canvas panel in the docking-shell registry as the fixed center stage

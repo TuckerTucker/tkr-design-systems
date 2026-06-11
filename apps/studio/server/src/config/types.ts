@@ -11,7 +11,7 @@
 export interface McpLaunchConfig {
   /** Executable, e.g. "/usr/local/bin/python3" (from .mcp.json). */
   command: string;
-  /** Arguments, e.g. ["design-systems/mcp-server/server.py"]. */
+  /** Arguments, e.g. ["tools/mcp-server/server.py"]. */
   args: string[];
   /** Repo root — args are repo-root-relative, so spawns pin cwd here. */
   cwd: string;

@@ -11,7 +11,7 @@ slices:
     number: 1
     layer: domain
     delivers:
-      - "Ingest contract accepting the ArtifactSource discriminated union — { kind: 'paths', svgPath, specPath } from wf_generate / wf_apply_substitutions, { kind: 'text', svgText, specYaml? } from wf_assemble_from_blueprint — the artifact_produced payload, declared in studio/packages/contract/src/artifact.ts; both branches first-class"
+      - "Ingest contract accepting the ArtifactSource discriminated union — { kind: 'paths', svgPath, specPath } from wf_generate / wf_apply_substitutions, { kind: 'text', svgText, specYaml? } from wf_assemble_from_blueprint — the artifact_produced payload, declared in apps/studio/packages/contract/src/artifact.ts; both branches first-class"
       - "Generated SVG and spec.yaml content read from the output paths (paths branch) or taken directly from svgText/specYaml (text branch)"
       - "Provenance capture (brief, tool, parameters as issued, created ISO 8601 UTC)"
       - "Version landing through workspace-store repositories (versions/<NNNN>/ with wireframe.svg, wireframe.spec.yaml, version.yaml)"
@@ -48,7 +48,7 @@ slices:
     number: 3
     layer: domain
     delivers:
-      - "ParsedSpecMetadata type in studio/packages/contract/src/artifact.ts (wireframe, design_system, notes blocks)"
+      - "ParsedSpecMetadata type in apps/studio/packages/contract/src/artifact.ts (wireframe, design_system, notes blocks)"
       - "wireframe block parse (brief, platform, dimensions, generated_at, generator_version, svg filename)"
       - "design_system block parse (id, spec_version, system_version, layout_template_used, base_pattern, pattern_source_svg, selection_rationale, selection_was_fallback)"
       - "components_used parse (id, region, x, y, type library|custom, svg_length for custom entries)"
@@ -67,7 +67,7 @@ slices:
     number: 4
     layer: domain
     delivers:
-      - "ds_check_compliance call through the mcp-bridge typed wrapper against the persisted versions/<NNNN>/wireframe.svg path (the bridge maps its internal RawComplianceResult onto the canonical ComplianceReport from studio/packages/contract/src/artifact.ts)"
+      - "ds_check_compliance call through the mcp-bridge typed wrapper against the persisted versions/<NNNN>/wireframe.svg path (the bridge maps its internal RawComplianceResult onto the canonical ComplianceReport from apps/studio/packages/contract/src/artifact.ts)"
       - "compliance.yaml persisted per version via workspace-store (system_id, artifact_path, scope, passed, failed, advisory, results with rule_id/status/detail, ruleset, mechanical_only)"
       - "Reported-state semantics (mechanical failures and advisories are version data; the version lands regardless)"
       - "Compliance state machine (pending → completed | unavailable) carried on the version"
@@ -90,7 +90,7 @@ slices:
       - "Well-formedness verification before serving (malformed SVG returns a typed error)"
       - "Deterministic sanitized output (identical input → identical output, client-cacheable)"
       - "Violation-to-node mapper (failed rule detail evidence — offending font sizes, colors, radii, filter refs — matched against SVG elements, resolved to element ids)"
-      - "ViolationNodeMapping contract (ruleId, nodeIds, matchedBy, evidence) in studio/packages/contract/src/artifact.ts"
+      - "ViolationNodeMapping contract (ruleId, nodeIds, matchedBy, evidence) in apps/studio/packages/contract/src/artifact.ts"
       - "Document-scope fallback for unmappable violations (e.g. xml-well-formed applies to the whole artifact)"
       - "Mapping computed against the sanitized document the client actually renders (highlight targets always resolve)"
     depends_on: [3, 4]

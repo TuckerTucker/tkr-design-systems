@@ -233,7 +233,7 @@ components:
 The svg paths live in the per-system library directory:
 
 ```
-design-systems/
+systems/
   terminal/
     spec.yaml                   # the schema instance
     components/

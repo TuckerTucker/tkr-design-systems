@@ -11,7 +11,7 @@ slices:
     number: 1
     layer: api
     delivers:
-      - "studio-api's protocol modules (envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts) contributed to @studio/contract — the package skeleton (TypeScript strict, ES modules, named exports, zero runtime dependencies) is scaffolded in Wave 1 by studio-server slice 1; npm name @studio/contract ↔ path studio/packages/contract"
+      - "studio-api's protocol modules (envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts) contributed to @studio/contract — the package skeleton (TypeScript strict, ES modules, named exports, zero runtime dependencies) is scaffolded in Wave 1 by studio-server slice 1; npm name @studio/contract ↔ path apps/studio/packages/contract"
       - "ClientEnvelope ({ type, requestId?, payload }, no seq) and ServerEnvelope ({ type, requestId?, seq, payload }) per architecture.md"
       - "Client→server payload types (workspace.attach, chat.send with optional references as LibraryReference[] from library.ts, chat.cancel, chip.update with kind field)"
       - "Server→client payload types (chat.message_started, chat.assistant_delta, chat.tool_started, chat.tool_finished, chat.message_completed, chat.error, chips.updated, artifact.version_created, artifact.compliance_completed, bridge.status, auth.status)"
@@ -94,7 +94,7 @@ slices:
       - "GET /api/library/:systemId/components/:componentId (wf_read_component → ComponentDetail with SVG)"
       - "GET /api/library/:systemId/layouts (LayoutTemplate[] from the loaded spec)"
       - "In-memory response cache keyed by route + systemId"
-      - "Cache invalidation on registry change — fs.watch on design-systems/registry.yaml directly (path from studio-server config); full flush, repopulate on next request"
+      - "Cache invalidation on registry change — fs.watch on systems/registry.yaml directly (path from studio-server config); full flush, repopulate on next request"
       - "Bridge-down degradation (cached entries served; uncached requests 503 with ApiError referencing bridge status)"
       - "Unknown systemId → 404 with ApiError pointing at GET /api/library/systems"
     depends_on: [1]

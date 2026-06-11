@@ -15,7 +15,7 @@ stories:
     preconditions:
       - "server/src/store/ module is built with named exports"
       - "createWorkspaceStore(config, logger) factory exists"
-      - "Repository interfaces are declared and shared payload types live in studio/packages/contract/src/store.ts"
+      - "Repository interfaces are declared and shared payload types live in apps/studio/packages/contract/src/store.ts"
     trigger_action: "Call createWorkspaceStore with a rootDir pointing at a fresh temp directory and use the returned repositories"
     steps:
       - actor: Server Engineer
@@ -235,7 +235,7 @@ stories:
     steps:
       - actor: Studio User
         action: "Rearranges panels in the docking shell"
-        system_response: "The shell PUTs the LayoutPreference document; preferences.put() replaces studio/workspaces/preferences.yaml atomically — persisted opaquely, silent persistence, no save action"
+        system_response: "The shell PUTs the LayoutPreference document; preferences.put() replaces apps/studio/workspaces/preferences.yaml atomically — persisted opaquely, silent persistence, no save action"
       - actor: Studio User
         action: "Restarts the studio"
         system_response: "preferences.get() returns the document; the shell restores placements, rail widths, active tab, and lastWorkspaceId exactly"

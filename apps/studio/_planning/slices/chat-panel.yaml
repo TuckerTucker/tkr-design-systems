@@ -47,7 +47,7 @@ slices:
       - "Multiline auto-grow composer (Enter to send, Shift+Enter for newline)"
       - "chat.send dispatch with optimistic user-message append (rolled back in place on send failure)"
       - "Disabled-with-reason while the agent is busy (reason text adjacent to the input, not a tooltip-only state)"
-      - "Disabled-with-reason on auth.status missing/invalid — in-place guidance: 'Add ANTHROPIC_API_KEY to studio/.env'"
+      - "Disabled-with-reason on auth.status missing/invalid — in-place guidance: 'Add ANTHROPIC_API_KEY to apps/studio/.env'"
       - "Re-enable on auth.status configured, chat.message_completed, and chat.error"
       - "Cancel control replacing submit during generation, sending chat.cancel"
       - "Draft text preserved across every busy/disabled transition"

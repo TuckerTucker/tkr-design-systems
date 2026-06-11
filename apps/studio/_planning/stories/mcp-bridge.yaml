@@ -13,9 +13,9 @@ stories:
     actor: Server Engineer
     intent: "Start the bridge from studio-server configuration and verify it spawns, handshakes with, and cleanly shuts down the real design-systems MCP server."
     preconditions:
-      - "studio-server config resolves the launch command (command /usr/local/bin/python3, args design-systems/mcp-server/server.py, cwd = repo root, per .mcp.json)"
+      - "studio-server config resolves the launch command (command /usr/local/bin/python3, args tools/mcp-server/server.py, cwd = repo root, per .mcp.json)"
       - "The design-systems MCP server runs from the repo (the same setup Claude Code uses via .mcp.json)"
-      - "@modelcontextprotocol/sdk is installed in studio/server"
+      - "@modelcontextprotocol/sdk is installed in apps/studio/server"
     trigger_action: "Call createMcpBridge(config, logger) and await bridge.start() in an integration test"
     steps:
       - actor: Server Engineer
@@ -126,7 +126,7 @@ stories:
     intent: "Branch on a typed BridgeResult for every failure mode instead of catching exceptions or parsing strings."
     preconditions:
       - "Bridge is up against the real MCP server"
-      - "BridgeResult/BridgeError types are declared in the bridge-owned contract bridge.ts module (@studio/contract) and re-exported from studio/server/src/mcp"
+      - "BridgeResult/BridgeError types are declared in the bridge-owned contract bridge.ts module (@studio/contract) and re-exported from apps/studio/server/src/mcp"
       - "Skill error codes (SYSTEM_NOT_FOUND, INVALID_PATH, …) pass through as BridgeError.code"
     trigger_action: "Call bridge.loadSystem({ systemId: 'no-such-system' }) from a consumer"
     steps:

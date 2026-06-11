@@ -11,7 +11,7 @@ slices:
     number: 1
     layer: domain
     delivers:
-      - "Key resolution module (process environment first, then studio/.env gitignored local config)"
+      - "Key resolution module (process environment first, then apps/studio/.env gitignored local config)"
       - "AuthState model (status: configured | missing | invalid; source: env | dotenv | null)"
       - "pino redaction configuration covering ANTHROPIC_API_KEY in every agent logger"
       - "Auth status surface for studio-server /api/health and the auth.status event stream"
@@ -29,7 +29,7 @@ slices:
     number: 2
     layer: domain
     delivers:
-      - "@anthropic-ai/claude-agent-sdk dependency in studio/server (TypeScript, ES modules)"
+      - "@anthropic-ai/claude-agent-sdk dependency in apps/studio/server (TypeScript, ES modules)"
       - "AgentSession wrapping query() with the design-systems MCP server configured via options (SDK-owned connection, independent of mcp-bridge)"
       - "MCP launch configuration sourced from studio-server config (command per repo-root .mcp.json)"
       - "ANTHROPIC_API_KEY injection into the SDK subprocess environment (from slice 1 resolution)"
@@ -38,7 +38,7 @@ slices:
       - "Plain conversation path — discussion messages stream assistant deltas with zero tool calls"
       - "SDK stream → AgentEvent translation (message_started, assistant_delta, tool_started, tool_finished, message_completed, error)"
       - "Single in-flight run per workspace with typed busy rejection"
-      - "AgentEvent union declared in studio/packages/contract/src/agent-events.ts — agent-orchestration's contributed module in the already-scaffolded @studio/contract package (skeleton created Wave 1 by studio-server slice 1; shared with studio-api)"
+      - "AgentEvent union declared in apps/studio/packages/contract/src/agent-events.ts — agent-orchestration's contributed module in the already-scaffolded @studio/contract package (skeleton created Wave 1 by studio-server slice 1; shared with studio-api)"
       - "pino child loggers with workspaceId/requestId correlation"
       - "vitest integration test driving a plain-conversation turn programmatically"
     depends_on: [1]

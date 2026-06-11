@@ -9,7 +9,7 @@ features:
   - name: spa-scaffold
     description: |
       The Vite + React 19 + TypeScript strict application scaffold in
-      studio/client (npm workspace member). Shell frame with the canvas
+      apps/studio/client (npm workspace member). Shell frame with the canvas
       slot always center and two rails flanking it. Consumes typed
       messages and payloads from packages/contract — no stringly-typed
       messages. Application error boundary surfacing failures in place,
@@ -17,7 +17,7 @@ features:
       (chat, canvas, library) belong to their own capabilities; the
       shell renders registered placeholders until those land.
     scope:
-      - studio/client workspace package (Vite, React 19, TypeScript strict, ES modules, named exports)
+      - apps/studio/client workspace package (Vite, React 19, TypeScript strict, ES modules, named exports)
       - packages/contract dependency wiring (WS envelope types, HTTP payload types imported, never redeclared)
       - ShellFrame layout — center canvas slot, left rail, right rail, full-height flex
       - Application error boundary (render failures shown in place with what failed and how to recover — never console-only)
@@ -76,7 +76,7 @@ features:
       degrade to defaults silently — persistence failures never block
       interaction.
     scope:
-      - LayoutPreference wire shape (schemaVersion, placements, activeTab, railWidths, lastWorkspaceId) declared in studio/packages/contract/src/preferences.ts — owned by docking-shell, contributed to the already-scaffolded contract package
+      - LayoutPreference wire shape (schemaVersion, placements, activeTab, railWidths, lastWorkspaceId) declared in apps/studio/packages/contract/src/preferences.ts — owned by docking-shell, contributed to the already-scaffolded contract package
       - Hydrate on load — GET /api/preferences before first rail paint (no default-then-jump layout flash)
       - Debounced PUT /api/preferences on every dock state change (no save action anywhere)
       - First-run defaults (chat left, library right, nothing collapsed) when no preference exists

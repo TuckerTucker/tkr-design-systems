@@ -38,7 +38,7 @@ export interface StudioApiDeps {
   bridge: McpBridge;
   sessions: SessionManager;
   auth: AuthManager;
-  /** Absolute path to design-systems/registry.yaml (cache invalidation). */
+  /** Absolute path to systems/registry.yaml (cache invalidation). */
   registryPath: string;
   logger: Logger;
   /** Journal retention per workspace; tests shrink this. */

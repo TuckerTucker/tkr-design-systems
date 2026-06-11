@@ -9,7 +9,7 @@ features:
   - name: contract-package
     description: |
       studio-api's protocol modules in the shared @studio/contract
-      package (npm name @studio/contract ↔ path studio/packages/contract;
+      package (npm name @studio/contract ↔ path apps/studio/packages/contract;
       the package skeleton is scaffolded in Wave 1 by studio-server
       slice 1) — every WebSocket message and HTTP payload declared once
       as TypeScript types, imported by both server and client. The
@@ -111,7 +111,7 @@ features:
       - GET /api/library/:systemId/components/:componentId — wf_read_component mapped to ComponentDetail (SVG content included)
       - GET /api/library/:systemId/layouts — LayoutTemplate[] from the loaded spec's layout definitions
       - In-memory response cache keyed by route + systemId
-      - Cache invalidation on registry change — studio-api watches design-systems/registry.yaml directly via fs.watch (path from studio-server config; the bridge exposes no registry-change signal) — full library cache flush, next request repopulates
+      - Cache invalidation on registry change — studio-api watches systems/registry.yaml directly via fs.watch (path from studio-server config; the bridge exposes no registry-change signal) — full library cache flush, next request repopulates
       - Bridge-down behavior — cached entries still served; uncached requests answered 503 with structured ApiError pointing at bridge status
       - Unknown systemId → 404 with ApiError listing how to discover valid systems (GET /api/library/systems)
 

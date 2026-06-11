@@ -23,7 +23,7 @@ TRACKER files.
 ## Monorepo layout
 
 ```
-studio/
+apps/studio/
   package.json            # npm workspaces root
   _planning/              # this planning tree
   packages/contract/      # shared TS types: WS messages, HTTP payloads, domain models
@@ -36,7 +36,7 @@ studio/
 ## Data on disk (owned by workspace-store; plain files only)
 
 ```
-studio/workspaces/
+apps/studio/workspaces/
   preferences.yaml                  # panel layout, collapsed state, last workspace
   <workspace-id>/
     workspace.yaml                  # id, name, created, updated, active artifact, settings
@@ -55,7 +55,7 @@ studio/workspaces/
 - `workspace-id` and `artifact-id`: kebab-case slugs, unique within their parent
 - Writes are atomic: write to a temp file in the same directory, then rename
 - Soft delete: rename the workspace directory with a `.trash-` prefix (recoverable)
-- Nothing outside `studio/workspaces/` is ever written by the store
+- Nothing outside `apps/studio/workspaces/` is ever written by the store
 
 ## Server surface
 
@@ -89,7 +89,7 @@ generation. The `/api/health` route is owned by studio-server; studio-api
 owns every other route.
 
 Library endpoint caching is invalidated by studio-api watching
-`design-systems/registry.yaml` directly (`fs.watch`, path from config) — the
+`systems/registry.yaml` directly (`fs.watch`, path from config) — the
 bridge exposes no registry-change signal.
 
 ## WebSocket envelope
@@ -133,7 +133,7 @@ Wire shapes for the two seams that cross capability boundaries mid-message:
 ## Contract package ownership
 
 The package's npm name is `@studio/contract`; its filesystem path is
-`studio/packages/contract` — `import { ... } from '@studio/contract'`
+`apps/studio/packages/contract` — `import { ... } from '@studio/contract'`
 resolves there via npm workspaces. The monorepo root and the contract
 package skeleton are scaffolded in Wave 1 (studio-server slice 1); each
 capability adds its own modules in its own wave. One module has exactly one
@@ -166,7 +166,7 @@ spec:
   The HTTP endpoint serves `ComplianceResponse` (studio-api,
   `http-payloads.ts`), a projection with violation `nodeIds` resolved via
   artifact-pipeline's violation-to-node mapping. The raw MCP result shape is
-  bridge-internal: `RawComplianceResult` in `studio/server/src/mcp/types.ts`,
+  bridge-internal: `RawComplianceResult` in `apps/studio/server/src/mcp/types.ts`,
   not in the contract package.
 - Compliance rule `detail` is `Record<string, unknown>` everywhere above the
   bridge; the bridge parses JSON-string details from the wire into the
@@ -200,7 +200,7 @@ artifact versions; the library guarantee covers library content.
 
 ## MCP topology (decided)
 
-Two independent stdio connections to `design-systems/mcp-server` (launch
+Two independent stdio connections to `tools/mcp-server` (launch
 command per repo-root `.mcp.json`):
 
 1. **Agent SDK's own connection** (agent-orchestration): `wf_generate`,
@@ -217,7 +217,7 @@ The MCP server is stateless per call; dual connections are safe.
 
 `ANTHROPIC_API_KEY` only — Anthropic policy prohibits embedded SDK apps from
 offering claude.ai subscription login. Resolution order: process environment,
-then `studio/.env` (gitignored). `studio/.env` means `<repoRoot>/studio/.env`
+then `apps/studio/.env` (gitignored). `apps/studio/.env` means `<repoRoot>/apps/studio/.env`
 — never resolved relative to the process working directory. The key is injected into the Agent SDK
 subprocess environment, never logged (pino redaction), and never written into
 workspace files. Auth state (`configured` / `missing` / `invalid`) is reported

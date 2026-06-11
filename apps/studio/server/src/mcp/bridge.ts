@@ -29,7 +29,7 @@ import type { Logger } from "../logging/create-logger.js";
 export interface BridgeConfig {
   /** Executable, e.g. "/usr/local/bin/python3" (from .mcp.json). */
   command: string;
-  /** Arguments, e.g. ["design-systems/mcp-server/server.py"]. */
+  /** Arguments, e.g. ["tools/mcp-server/server.py"]. */
   args: string[];
   /** Repo root — the server.py path in .mcp.json is repo-root-relative. */
   cwd: string;

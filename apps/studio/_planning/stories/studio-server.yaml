@@ -13,13 +13,13 @@ stories:
     actor: Studio Developer
     intent: "Start the server against a non-default port and workspace path; verify config resolution, env overrides, and validation errors behave as typed contracts."
     preconditions:
-      - "studio/server package is installed (npm workspaces)"
+      - "apps/studio/server package is installed (npm workspaces)"
       - "Repo-root .mcp.json contains the tkr-design-systems entry (command + args)"
     trigger_action: "Run the server entry point with and without STUDIO_* environment overrides"
     steps:
       - actor: Studio Developer
         action: "Starts the server with no STUDIO_* variables set"
-        system_response: "resolveConfig returns defaults — port 4400, workspacesDir <repoRoot>/studio/workspaces, clientDistDir <repoRoot>/studio/client/dist, logLevel info — and mcpLaunch is read from .mcp.json with cwd pinned to the repo root"
+        system_response: "resolveConfig returns defaults — port 4400, workspacesDir <repoRoot>/apps/studio/workspaces, clientDistDir <repoRoot>/apps/studio/client/dist, logLevel info — and mcpLaunch is read from .mcp.json with cwd pinned to the repo root"
       - actor: Studio Developer
         action: "Restarts with STUDIO_PORT=4500 and STUDIO_WORKSPACES_DIR=/tmp/studio-ws"
         system_response: "Resolved config reflects both overrides; the startup log line records the resolved paths and port (never env contents or secrets)"
@@ -178,7 +178,7 @@ stories:
     trigger_action: "Navigate to http://127.0.0.1:4400/ with and without a client build present"
     steps:
       - actor: Studio User
-        action: "Opens / with a built client in studio/client/dist"
+        action: "Opens / with a built client in apps/studio/client/dist"
         system_response: "index.html is served; hashed assets load with immutable cache headers; index.html itself is served no-cache so new builds appear on reload"
       - actor: Studio User
         action: "Refreshes the browser on a client-side route like /workspace/my-project"

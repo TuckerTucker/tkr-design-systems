@@ -7,7 +7,7 @@ status: implemented
 
 context: |
   The mcp-bridge capability is the studio server's direct-call MCP client
-  for the tkr-design-systems MCP server (design-systems/mcp-server/server.py,
+  for the tkr-design-systems MCP server (tools/mcp-server/server.py,
   Python FastMCP over stdio). The studio runs a dual-connection topology
   (decided in architecture.md): the Claude Agent SDK owns its own MCP
   connection for agent-driven tool use (wf_generate, substitution,
@@ -22,7 +22,7 @@ context: |
   (@modelcontextprotocol/sdk) — Client + StdioClientTransport — where the
   transport spawns and owns the server subprocess from the launch command
   declared in repo-root .mcp.json (/usr/local/bin/python3
-  design-systems/mcp-server/server.py, relative path resolved against the
+  tools/mcp-server/server.py, relative path resolved against the
   repo root as cwd). The bridge supervises that subprocess, serializes
   calls over the single transport, enforces per-call timeout and
   cancellation, and translates every failure mode into a typed
@@ -67,15 +67,15 @@ scope:
     - Registry mutation tools (ds_register_system, ds_unregister_system, ds_validate_spec) — system-authoring is deferred; not wrapped
     - Deciding which tool to call for an intent (see agent-orchestration)
     - Persisting generation or compliance results (see artifact-pipeline, workspace-store)
-    - Caching of library responses (see studio-api library endpoints); the bridge exposes NO registry-change signal — studio-api watches design-systems/registry.yaml directly for cache invalidation
+    - Caching of library responses (see studio-api library endpoints); the bridge exposes NO registry-change signal — studio-api watches systems/registry.yaml directly for cache invalidation
     - HTTP/WS delivery of bridge data and events (see studio-api)
-    - MCP server implementation itself (design-systems/mcp-server, read-only dependency)
+    - MCP server implementation itself (tools/mcp-server, read-only dependency)
 
 dependencies:
   upstream:
     - "studio-server — configuration (launch command, repo root, timeout/backoff settings), pino logger, health registry, WS event emission seam"
-    - "design-systems/mcp-server/server.py — the MCP server (read-only; tool signatures are the source of truth)"
-    - ".mcp.json (repo root) — launch command for the server subprocess (/usr/local/bin/python3 design-systems/mcp-server/server.py)"
+    - "tools/mcp-server/server.py — the MCP server (read-only; tool signatures are the source of truth)"
+    - ".mcp.json (repo root) — launch command for the server subprocess (/usr/local/bin/python3 tools/mcp-server/server.py)"
     - "@modelcontextprotocol/sdk — official MCP TypeScript SDK (Client, StdioClientTransport)"
   downstream:
     - "artifact-pipeline — runs ds_check_compliance per artifact version through the injected bridge"
@@ -90,10 +90,10 @@ data_contracts: |
   Declared in the contract package (architecture.md module ownership:
   bridge.ts is owned by mcp-bridge; consumers import, never redeclare).
   Translation functions from MCP/skill error shapes into these types are
-  bridge-internal in studio/server/src/mcp/errors.ts.
+  bridge-internal in apps/studio/server/src/mcp/errors.ts.
 
   ```typescript
-  // studio/packages/contract/src/bridge.ts (@studio/contract)
+  // apps/studio/packages/contract/src/bridge.ts (@studio/contract)
   export type BridgeErrorKind =
     | "protocol"     // transport/JSON-RPC failure, isError response, unparseable content
     | "tool"         // tool executed and returned ok: false (skill-level failure)
@@ -126,7 +126,7 @@ data_contracts: |
   ## Bridge Interface (IoC — consumers receive it, never construct it)
 
   ```typescript
-  // studio/server/src/mcp/bridge.ts
+  // apps/studio/server/src/mcp/bridge.ts
   export interface CallOptions {
     timeoutMs?: number;     // overrides the configured default per call
     signal?: AbortSignal;   // cancellation
@@ -169,7 +169,7 @@ data_contracts: |
 
   export interface BridgeConfig {
     command: string;          // "/usr/local/bin/python3" (from .mcp.json)
-    args: string[];           // ["design-systems/mcp-server/server.py"]
+    args: string[];           // ["tools/mcp-server/server.py"]
     cwd: string;              // repo root — server.py path in .mcp.json is repo-relative
     defaultTimeoutMs: number;
     restart: { maxAttempts: number; initialDelayMs: number; maxDelayMs: number };
@@ -179,7 +179,7 @@ data_contracts: |
   ## Tool Payload Types (mirror server.py and skill result shapes exactly)
 
   ```typescript
-  // studio/server/src/mcp/types.ts (bridge-internal — NOT in the contract package)
+  // apps/studio/server/src/mcp/types.ts (bridge-internal — NOT in the contract package)
 
   // ds_list_systems — Result envelope, data = descriptor list.
   // Unreadable specs degrade to a stub descriptor plus a warning
@@ -284,7 +284,7 @@ data_contracts: |
   carries BridgeResult/BridgeError/BridgeWarning (declared above).
 
   ```typescript
-  // studio/packages/contract/src/bridge.ts (continued)
+  // apps/studio/packages/contract/src/bridge.ts (continued)
   export type BridgeState = "starting" | "up" | "restarting" | "failed" | "stopped";
 
   export interface BridgeStatus {
@@ -321,20 +321,20 @@ data_contracts: |
     "protocol".
 
 file_locations:
-  - studio/server/src/mcp/bridge.ts — McpBridge interface + createMcpBridge factory (composition of transport, supervisor, queue, tools)
-  - studio/server/src/mcp/transport.ts — launch-command resolution, SDK Client + StdioClientTransport wiring, handshake, stderr→pino piping
-  - studio/server/src/mcp/supervisor.ts — crash detection, exponential backoff restart, restart budget, bridge state machine
-  - studio/server/src/mcp/queue.ts — FIFO call serialization, per-call timeout, AbortSignal cancellation, drain semantics
-  - studio/server/src/mcp/errors.ts — translation from MCP and skill error shapes into BridgeResult (type declarations live in packages/contract/src/bridge.ts)
-  - studio/server/src/mcp/tools.ts — the six typed wrappers (camelCase params → snake_case arguments → envelope unwrap)
-  - studio/server/src/mcp/types.ts — SystemDescriptor, LoadedSystemSpec, RulebookEntry, RawComplianceResult, AuthoringTokens, ComponentRead (bridge-internal payload types, not in the contract package)
-  - studio/server/src/mcp/index.ts — named re-exports (no default exports)
-  - studio/packages/contract/src/bridge.ts — BridgeResult/BridgeError/BridgeWarning/BridgeState/BridgeStatus + bridge.status WS payload type (module contributed by mcp-bridge to the already-scaffolded @studio/contract package; shared with client)
-  - studio/server/test/mcp/bridge.integration.test.ts — lifecycle + wrapper tests against the REAL MCP server (vitest)
-  - studio/server/test/mcp/supervisor.integration.test.ts — kill/restart/backoff/status tests against the real subprocess
-  - studio/server/test/mcp/errors.test.ts — unit tests for every translation path (pure logic)
+  - apps/studio/server/src/mcp/bridge.ts — McpBridge interface + createMcpBridge factory (composition of transport, supervisor, queue, tools)
+  - apps/studio/server/src/mcp/transport.ts — launch-command resolution, SDK Client + StdioClientTransport wiring, handshake, stderr→pino piping
+  - apps/studio/server/src/mcp/supervisor.ts — crash detection, exponential backoff restart, restart budget, bridge state machine
+  - apps/studio/server/src/mcp/queue.ts — FIFO call serialization, per-call timeout, AbortSignal cancellation, drain semantics
+  - apps/studio/server/src/mcp/errors.ts — translation from MCP and skill error shapes into BridgeResult (type declarations live in packages/contract/src/bridge.ts)
+  - apps/studio/server/src/mcp/tools.ts — the six typed wrappers (camelCase params → snake_case arguments → envelope unwrap)
+  - apps/studio/server/src/mcp/types.ts — SystemDescriptor, LoadedSystemSpec, RulebookEntry, RawComplianceResult, AuthoringTokens, ComponentRead (bridge-internal payload types, not in the contract package)
+  - apps/studio/server/src/mcp/index.ts — named re-exports (no default exports)
+  - apps/studio/packages/contract/src/bridge.ts — BridgeResult/BridgeError/BridgeWarning/BridgeState/BridgeStatus + bridge.status WS payload type (module contributed by mcp-bridge to the already-scaffolded @studio/contract package; shared with client)
+  - apps/studio/server/test/mcp/bridge.integration.test.ts — lifecycle + wrapper tests against the REAL MCP server (vitest)
+  - apps/studio/server/test/mcp/supervisor.integration.test.ts — kill/restart/backoff/status tests against the real subprocess
+  - apps/studio/server/test/mcp/errors.test.ts — unit tests for every translation path (pure logic)
   - .mcp.json — launch command source of truth (READ-ONLY)
-  - design-systems/mcp-server/server.py — MCP server tool definitions (READ-ONLY)
+  - tools/mcp-server/server.py — MCP server tool definitions (READ-ONLY)
 
 implementation_steps:
   - Declare BridgeResult, BridgeError, BridgeWarning in the contract bridge.ts module (contributed to the already-scaffolded @studio/contract package), then implement translation functions for the skill Result envelope, flat-dict shapes, and string-vs-object error lists (errors.ts, unit-tested first)
@@ -383,10 +383,10 @@ edge_cases: |
 integration_points:
   - "studio-server: provides BridgeConfig (command/args/cwd from .mcp.json semantics, timeout and backoff settings), the pino logger, the health registry the bridge registers into, and the WS emission seam for bridge.status"
   - "artifact-pipeline: receives the injected McpBridge and calls checkCompliance(systemId, artifactPath) for every artifact version; branches on BridgeResult and on RawComplianceResult.ruleset === null; consumes the structured rule detail (Record<string, unknown>) in its violation-to-node mapper and projects the raw result into its own ComplianceReport domain model (contract artifact.ts)"
-  - "studio-api: receives the injected McpBridge for the library endpoints — /api/library/systems (listSystems), /api/library/:systemId/tokens (getTokens), /api/library/:systemId/components/:componentId (readComponent), rulebook/spec data (getRulebook, loadSystem); caches at the API layer, not in the bridge — the bridge exposes no registry-change signal; studio-api watches design-systems/registry.yaml directly"
+  - "studio-api: receives the injected McpBridge for the library endpoints — /api/library/systems (listSystems), /api/library/:systemId/tokens (getTokens), /api/library/:systemId/components/:componentId (readComponent), rulebook/spec data (getRulebook, loadSystem); caches at the API layer, not in the bridge — the bridge exposes no registry-change signal; studio-api watches systems/registry.yaml directly"
   - "packages/contract: mcp-bridge contributes the bridge.ts module (BridgeResult, BridgeError, BridgeWarning, BridgeState, BridgeStatus, bridge.status event payload) to the already-scaffolded @studio/contract package (skeleton created in Wave 1 by studio-server slice 1); declared once, imported by server and client — never redeclared"
   - "agent-orchestration: NO integration — the Agent SDK owns its own MCP connection; the bridge and the SDK never share a transport"
-  - "design-systems/mcp-server: read-only upstream; tool signatures in server.py are the source of truth for wrapper types"
+  - "tools/mcp-server: read-only upstream; tool signatures in server.py are the source of truth for wrapper types"
 
 verification_criteria:
   - start() spawns the real MCP server from the .mcp.json command with cwd = repo root and completes the MCP handshake

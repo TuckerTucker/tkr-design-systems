@@ -66,7 +66,7 @@ capabilities:
       - Agent-driven tool calls — wf_generate, substitution, blueprint assembly run over the Agent SDK's own MCP connection (see agent-orchestration)
       - Deciding which tool to call for an intent (see agent-orchestration)
       - Persisting generation results (see artifact-pipeline)
-      - MCP server implementation itself (lives in design-systems/mcp-server, read-only dependency)
+      - MCP server implementation itself (lives in tools/mcp-server, read-only dependency)
     depends_on:
       - studio-server
     provides_to:
@@ -88,7 +88,7 @@ capabilities:
       layout. The interface is repository-shaped so consumers never
       touch paths directly.
     scope_in:
-      - Workspace root at studio/workspaces/, gitignored (personal working state, not repo history)
+      - Workspace root at apps/studio/workspaces/, gitignored (personal working state, not repo history)
       - Workspace model (id, name, created/updated, active artifact, settings)
       - Chat transcript persistence (messages, tool-call records, decision chips)
       - Artifact version storage (SVG content, spec.yaml metadata, compliance report, parent version)
@@ -228,7 +228,7 @@ capabilities:
       connection state surfaced inline, and the panel registry future
       panels (compliance detail, history, blueprint tree) plug into.
     scope_in:
-      - Vite + React + TypeScript strict application scaffold in studio/
+      - Vite + React + TypeScript strict application scaffold in apps/studio/
       - Rail/panel docking model (panel registry, slot assignment, z-order within rail)
       - Drag-to-swap between rails with drop indicators; settings toggle as fallback
       - Stack/tab behavior when multiple panels share a rail

@@ -30,7 +30,7 @@ and any MCP-compatible client.
 ## Running Standalone
 
 ```bash
-/usr/local/bin/python3 design-systems/mcp-server/server.py
+/usr/local/bin/python3 tools/mcp-server/server.py
 ```
 
 ## Claude Code Setup
@@ -42,7 +42,7 @@ To register manually instead:
 
 ```bash
 claude mcp add tkr-design-systems /usr/local/bin/python3 \
-  -- /path/to/design-systems/mcp-server/server.py
+  -- /path/to/tools/mcp-server/server.py
 ```
 
 ## Claude Desktop Setup
@@ -54,7 +54,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "tkr-design-systems": {
       "command": "/usr/local/bin/python3",
-      "args": ["/path/to/design-systems/mcp-server/server.py"]
+      "args": ["/path/to/tools/mcp-server/server.py"]
     }
   }
 }
@@ -71,7 +71,7 @@ Restart Claude Desktop after adding.
 ## Testing
 
 ```bash
-/usr/local/bin/python3 design-systems/mcp-server/test_mcp_server.py
+/usr/local/bin/python3 tools/mcp-server/test_mcp_server.py
 ```
 
 ## Dependencies

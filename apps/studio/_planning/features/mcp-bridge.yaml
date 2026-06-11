@@ -12,7 +12,7 @@ features:
       the official MCP TypeScript SDK (@modelcontextprotocol/sdk). The
       StdioClientTransport spawns the server subprocess from the launch
       command declared in repo-root .mcp.json (/usr/local/bin/python3
-      design-systems/mcp-server/server.py, cwd = repo root), performs the
+      tools/mcp-server/server.py, cwd = repo root), performs the
       MCP initialize handshake, and owns the connection lifecycle.
       Supervision detects subprocess exit/transport close, restarts with
       exponential backoff up to a configured budget, and reports bridge

@@ -59,14 +59,14 @@ stories:
     steps:
       - actor: Designer
         action: "Opens the studio with no API key configured"
-        system_response: "Transcript (if any) renders normally; the composer is disabled with in-place guidance: 'Add ANTHROPIC_API_KEY to studio/.env'"
+        system_response: "Transcript (if any) renders normally; the composer is disabled with in-place guidance: 'Add ANTHROPIC_API_KEY to apps/studio/.env'"
       - actor: Designer
-        action: "Adds the key to studio/.env and the server detects it"
+        action: "Adds the key to apps/studio/.env and the server detects it"
         system_response: "auth.status configured is pushed; the composer enables in place without a reload and receives focus"
     acceptance_criteria:
       - given: "auth.status reports missing"
         when: "The designer views the chat panel"
-        then: "The composer is disabled with the visible reason 'Add ANTHROPIC_API_KEY to studio/.env' — no toast, no console-only error"
+        then: "The composer is disabled with the visible reason 'Add ANTHROPIC_API_KEY to apps/studio/.env' — no toast, no console-only error"
       - given: "Keyless mode"
         when: "The designer reads the existing transcript"
         then: "All prior messages, chips, and references render read-only and intact"

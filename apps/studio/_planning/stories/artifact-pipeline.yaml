@@ -137,7 +137,7 @@ stories:
     actor: System (compliance runner)
     intent: "Run ds_check_compliance through the mcp-bridge on every landed version and attach the full rule-level report as a reported state — failures included."
     preconditions:
-      - "mcp-bridge is up with its stdio connection to design-systems/mcp-server"
+      - "mcp-bridge is up with its stdio connection to tools/mcp-server"
       - "A version has landed (any producing tool, including restore)"
     trigger_action: "artifact.version_created fires; the compliance runner picks up the version with state pending"
     steps:

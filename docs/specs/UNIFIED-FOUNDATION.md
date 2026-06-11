@@ -291,7 +291,7 @@ This means consumers (wireframe-skill, future mockup-skill, etc.) have ONE inter
 The unified foundation gives us a clear next step:
 
 **Author the wireframe library's spec.yaml + per-component SVGs first.** This is the most foundational work because:
-- It establishes the new schema's wireframe-library entry, which everything else falls back to
+- It establishes the new schema's systems/wireframe entry, which everything else falls back to
 - It refactors the existing mature mega-SVG into per-component files
 - It's the model the per-system libraries will follow when they get expanded beyond their current single-component coverage
 - It produces the wireframe-skill's working default

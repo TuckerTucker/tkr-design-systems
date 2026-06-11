@@ -11,8 +11,8 @@ slices:
     number: 1
     layer: infrastructure
     delivers:
-      - studio/server/src/mcp/ module with SDK Client + StdioClientTransport wiring
-      - Launch command resolution from studio-server config (command /usr/local/bin/python3, args design-systems/mcp-server/server.py, cwd = repo root, per .mcp.json semantics)
+      - apps/studio/server/src/mcp/ module with SDK Client + StdioClientTransport wiring
+      - Launch command resolution from studio-server config (command /usr/local/bin/python3, args tools/mcp-server/server.py, cwd = repo root, per .mcp.json semantics)
       - Subprocess spawn owned by StdioClientTransport (stderr piped into pino logs)
       - MCP initialize handshake and capability exchange
       - Startup verification (listTools contains ds_list_systems, ds_load_system, ds_get_rulebook, ds_check_compliance, wf_get_tokens, wf_read_component)
@@ -69,7 +69,7 @@ slices:
       - "listSystems() → BridgeResult<SystemDescriptor[]>"
       - "loadSystem({ systemId, validate? }) → BridgeResult<LoadedSystemSpec>"
       - "getRulebook({ systemId }) → BridgeResult<RulebookEntry[]>"
-      - "checkCompliance({ systemId, artifactPath, scope? }) → BridgeResult<RawComplianceResult> (bridge-internal raw shape in studio/server/src/mcp/types.ts; per-rule detail parsed from the wire's JSON string into Record<string, unknown>)"
+      - "checkCompliance({ systemId, artifactPath, scope? }) → BridgeResult<RawComplianceResult> (bridge-internal raw shape in apps/studio/server/src/mcp/types.ts; per-rule detail parsed from the wire's JSON string into Record<string, unknown>)"
       - "getTokens({ systemId }) → BridgeResult<AuthoringTokens>"
       - "readComponent({ systemId, componentId }) → BridgeResult<ComponentRead>; readComponents({ systemId, componentIds }) → BridgeResult<ComponentRead[]>"
       - camelCase params mapped to snake_case tool arguments (system_id, artifact_path, component_id, component_ids)

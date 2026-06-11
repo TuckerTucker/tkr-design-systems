@@ -1,6 +1,6 @@
 /**
  * Bridge-internal tool payload types — faithful mirrors of the result shapes
- * produced by design-systems/mcp-server/server.py and the Python skill
+ * produced by tools/mcp-server/server.py and the Python skill
  * packages behind it (design_system_skill, wireframe_skill).
  *
  * These types are deliberately NOT in @studio/contract: the raw MCP shapes

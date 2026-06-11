@@ -18,7 +18,7 @@ features:
       typed `corrupt` result — it never throws and never takes down the
       rest of the store.
     scope:
-      - Store root resolution (studio/workspaces/ from studio-server config; created on first use; nothing outside it is ever written)
+      - Store root resolution (apps/studio/workspaces/ from studio-server config; created on first use; nothing outside it is ever written)
       - Atomic write primitive (temp file + rename in the same directory; applies to every YAML and SVG write)
       - YAML serialization/deserialization via the `yaml` package (never hand-rolled parsing)
       - Kebab-case slug ID generation from display names, uniqueness enforced within the parent (workspace IDs within the root, artifact IDs within a workspace), collision suffixing (-2, -3, …)
@@ -89,7 +89,7 @@ features:
   - name: preferences-store
     description: |
       The single-user preference file at the store root:
-      studio/workspaces/preferences.yaml holding docking-shell's
+      apps/studio/workspaces/preferences.yaml holding docking-shell's
       LayoutPreference document (placements, active tab, rail widths,
       last-open workspace). Read on startup, written
       whole on every change — silent persistence with no save action.
@@ -101,6 +101,6 @@ features:
       - preferences.yaml at the store root (sibling of workspace directories, not inside any workspace)
       - Read operation (absent file → null result so first launch needs no setup; docking-shell applies its defaults)
       - Whole-document write with atomic rename (last write wins; single-user, no merge logic)
-      - "Document typed as LayoutPreference (owned by docking-shell, studio/packages/contract/src/preferences.ts); the store persists it opaquely — round-trip without interpreting fields, unknown keys preserved for forward compatibility"
+      - "Document typed as LayoutPreference (owned by docking-shell, apps/studio/packages/contract/src/preferences.ts); the store persists it opaquely — round-trip without interpreting fields, unknown keys preserved for forward compatibility"
       - Corrupt preferences tolerance (parse failure → corrupt result; callers fall back to defaults and the next write repairs the file)
       - No preference semantics (what a panel arrangement means belongs to docking-shell; the store persists and returns the document)

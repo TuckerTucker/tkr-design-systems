@@ -14,7 +14,7 @@ This document is a complete brief for picking up the work in a fresh session. Re
 
 **Related repositories:**
 - `/Users/tucker/@tucker/tkr-product-surface-2/tkr-kit/.claude/skills/wireframe-skill/` — the existing wireframe-skill v2.0 (the system we're extending)
-- `/Users/tucker/@tucker/tkr-design-systems/` — the React design system implementations (canonical source for each system's grammar)
+- `apps/showcase/src/systems/` — the React design system implementations (canonical source for each system's grammar)
 
 ---
 
@@ -53,26 +53,26 @@ All 8 system specs are at v0.2 (the v0.1 → v0.2 migration completed in Phase 1
 
 | File | spec_version | Notes |
 |------|--------------|-------|
-| `wireframe-library/spec.yaml` | **0.2** | The neutral default; 42-component vocabulary fully declared. `check_method` + `check_scope` on every rule. |
-| `swiss-library/spec.yaml` | **0.2** | Full system definition; SVG references aligned with on-disk library (Phase 3.x item 9.4). |
-| `terminal-library/spec.yaml` | **0.2** | Unicode blocks (Box Drawing, Block Elements), border `style: dashed`, `selection_signal: prompt_character`. |
-| `riso-library/spec.yaml` | **0.2** | Full v0.2 demonstration: `filter_library`, `artifact_treatments`, `system_state`, em-based offsets. (Older `riso-library/spec-fragment.yaml` retained for historical comparison.) |
-| `editorial-library/spec.yaml` | **0.2** | `avatar_strategy: monogram` (Change 13); `selection_signal: surface_fill`; full check_method/check_scope coverage. |
-| `sketch-library/spec.yaml` | **0.2** | `avatar_strategy: monogram` (Change 13); structured anatomy with `yields_to` on list_item; `selection_signal: surface_fill`. |
-| `prism-library/spec.yaml` | **0.2** | `format_fitness` block (svg=approximation, html_css=native); `avatar_strategy: monogram` (Change 13); `selection_signal: surface_fill`. |
-| `revolt-library/spec.yaml` | **0.2** | `avatar_strategy: abbreviation` (Change 13); structured anatomy; `selection_signal: hard_offset`. |
+| `systems/wireframe/spec.yaml` | **0.2** | The neutral default; 42-component vocabulary fully declared. `check_method` + `check_scope` on every rule. |
+| `systems/swiss/spec.yaml` | **0.2** | Full system definition; SVG references aligned with on-disk library (Phase 3.x item 9.4). |
+| `systems/terminal/spec.yaml` | **0.2** | Unicode blocks (Box Drawing, Block Elements), border `style: dashed`, `selection_signal: prompt_character`. |
+| `systems/riso/spec.yaml` | **0.2** | Full v0.2 demonstration: `filter_library`, `artifact_treatments`, `system_state`, em-based offsets. (Older `systems/riso/spec-fragment.yaml` retained for historical comparison.) |
+| `systems/editorial/spec.yaml` | **0.2** | `avatar_strategy: monogram` (Change 13); `selection_signal: surface_fill`; full check_method/check_scope coverage. |
+| `systems/sketch/spec.yaml` | **0.2** | `avatar_strategy: monogram` (Change 13); structured anatomy with `yields_to` on list_item; `selection_signal: surface_fill`. |
+| `systems/prism/spec.yaml` | **0.2** | `format_fitness` block (svg=approximation, html_css=native); `avatar_strategy: monogram` (Change 13); `selection_signal: surface_fill`. |
+| `systems/revolt/spec.yaml` | **0.2** | `avatar_strategy: abbreviation` (Change 13); structured anatomy; `selection_signal: hard_offset`. |
 
 ### Component libraries (SVG + PNG previews)
 
 **Wireframe library** (the neutral default — `grammar_family: wireframe`):
-- `wireframe-library/components/` — 100 SVG files (12 Primitives + 18 Composites with full variants), each with PNG preview
-- `wireframe-library/layouts/` — 53 SVG files (12 Patterns: desktop variants from Phase 0 + 12 mobile-suffixed variants added in Phase 2 item 5)
-- `wireframe-library/contact-sheet.svg/png` — visual reference of all components, now including the Patterns tier (Phase 2 item 6)
+- `systems/wireframe/components/` — 100 SVG files (12 Primitives + 18 Composites with full variants), each with PNG preview
+- `systems/wireframe/layouts/` — 53 SVG files (12 Patterns: desktop variants from Phase 0 + 12 mobile-suffixed variants added in Phase 2 item 5)
+- `systems/wireframe/contact-sheet.svg/png` — visual reference of all components, now including the Patterns tier (Phase 2 item 6)
 - **Status: 153/153 files rulebook-clean**
 
 **Swiss library** (full LIBRARY-SPEC vocabulary coverage; Phase 2 item 3):
-- `swiss-library/components/` — 71 SVG files covering all 12 Primitives + all 18 Composites in Swiss's grammar
-- `swiss-library/layouts/` — 12 SVG files: dashboard, sidebar, header (default + with-actions), modal, drawer-right, settings-layout-default, form-single-column, data-table-default, auth-sign-in, empty-state-default, empty-state-no-results
+- `systems/swiss/components/` — 71 SVG files covering all 12 Primitives + all 18 Composites in Swiss's grammar
+- `systems/swiss/layouts/` — 12 SVG files: dashboard, sidebar, header (default + with-actions), modal, drawer-right, settings-layout-default, form-single-column, data-table-default, auth-sign-in, empty-state-default, empty-state-no-results
 - **Status: 83/83 files rulebook-clean (0 failures, 68 advisory — all are pre-existing `swiss-grid-alignment` text-baseline flags carried from v0.1)**
 
 ### Per-system full libraries (Editorial, Sketch, Prism, Revolt, Terminal, Riso)
@@ -81,35 +81,35 @@ Each system has its own library folder following the same `components/` + `layou
 
 | Library | Components | Layouts | Status |
 |---------|-----------|---------|--------|
-| `editorial-library/` | 73 SVG | 5 SVG | 78/78 rulebook-clean |
-| `sketch-library/` | 65 SVG | 4 SVG | 69/69 rulebook-clean |
-| `prism-library/` | 56 SVG | 4 SVG | 60/60 rulebook-clean |
-| `revolt-library/` | 57 SVG | 3 SVG | 60/60 rulebook-clean |
-| `terminal-library/` | 53 SVG | 4 SVG | 57/57 rulebook-clean |
-| `riso-library/` | 1 SVG (signature only) | _(none yet)_ | n/a |
+| `systems/editorial/` | 73 SVG | 5 SVG | 78/78 rulebook-clean |
+| `systems/sketch/` | 65 SVG | 4 SVG | 69/69 rulebook-clean |
+| `systems/prism/` | 56 SVG | 4 SVG | 60/60 rulebook-clean |
+| `systems/revolt/` | 57 SVG | 3 SVG | 60/60 rulebook-clean |
+| `systems/terminal/` | 53 SVG | 4 SVG | 57/57 rulebook-clean |
+| `systems/riso/` | 1 SVG (signature only) | _(none yet)_ | n/a |
 
 The original Phase 0 neutral reference SVGs (the pre-grammar generic versions) are archived under `neutral-signature-archive/` for historical comparison.
 
 ### Tooling
 
-All scripts live under `tooling/` and are invoked from the project root, e.g. `python3 tooling/rulebook_check.py --batch swiss-library/components --ruleset swiss`. Build scripts use `Path(__file__).resolve().parent.parent` to locate output directories at the project root regardless of where they're invoked from.
+All scripts live under `tools/builders/` and are invoked from the project root, e.g. `python3 tools/builders/rulebook_check.py --batch systems/swiss/components --ruleset swiss`. Build scripts use `Path(__file__).resolve().parents[2] / "systems"` to locate output directories under `systems/` regardless of where they're invoked from.
 
 | File | Purpose |
 |------|---------|
-| `tooling/render_preview.py` | The canonical SVG-to-PNG renderer (CairoSVG; matches Chrome rendering closely). **Always use this for previews.** |
-| `tooling/rulebook_check.py` | Mechanical compliance verification. Supports `--ruleset wireframe\|swiss`, `--scope component\|artifact\|all`, and `--batch <directory>` modes |
-| `tooling/tracking_conversion.py` | em-to-SVG-letter-spacing converter with per-typeface calibration (Inter verified for Chrome) |
-| `tooling/calibration/calibrate_tracking.py` / `calibrate_tracking_v2.py` | Calibration test generators (per-typeface verification helpers) |
-| `tooling/build_wireframe_library.py` | Generator for wireframe library Primitives + Composites → `wireframe-library/components/` |
-| `tooling/build_wireframe_patterns.py` | Generator for wireframe library Patterns (desktop + mobile) → `wireframe-library/layouts/` |
-| `tooling/build_swiss_library.py` | Generator for Swiss components → `swiss-library/components/` |
-| `tooling/build_swiss_patterns.py` | Generator for Swiss patterns → `swiss-library/layouts/` |
-| `tooling/build_editorial_library.py` / `build_editorial_patterns.py` | Generators for Editorial components + layouts (Phase 4) |
-| `tooling/build_sketch_library.py` / `build_sketch_patterns.py` | Generators for Sketch components + layouts (Phase 4) |
-| `tooling/build_prism_library.py` / `build_prism_patterns.py` | Generators for Prism components + layouts (Phase 4) |
-| `tooling/build_revolt_library.py` / `build_revolt_patterns.py` | Generators for Revolt components + layouts (Phase 4) |
-| `tooling/build_terminal_library.py` / `build_terminal_patterns.py` | Generators for Terminal components + layouts (Phase 4) |
-| `tooling/build_contact_sheet.py` | Generates the wireframe library's contact sheet (Primitives + Composites + Patterns) → `wireframe-library/contact-sheet.svg` |
+| `tools/builders/render_preview.py` | The canonical SVG-to-PNG renderer (CairoSVG; matches Chrome rendering closely). **Always use this for previews.** |
+| `tools/builders/rulebook_check.py` | Mechanical compliance verification. Supports `--ruleset wireframe\|swiss`, `--scope component\|artifact\|all`, and `--batch <directory>` modes |
+| `tools/builders/tracking_conversion.py` | em-to-SVG-letter-spacing converter with per-typeface calibration (Inter verified for Chrome) |
+| `tools/builders/calibration/calibrate_tracking.py` / `calibrate_tracking_v2.py` | Calibration test generators (per-typeface verification helpers) |
+| `tools/builders/build_wireframe_library.py` | Generator for wireframe library Primitives + Composites → `systems/wireframe/components/` |
+| `tools/builders/build_wireframe_patterns.py` | Generator for wireframe library Patterns (desktop + mobile) → `systems/wireframe/layouts/` |
+| `tools/builders/build_swiss_library.py` | Generator for Swiss components → `systems/swiss/components/` |
+| `tools/builders/build_swiss_patterns.py` | Generator for Swiss patterns → `systems/swiss/layouts/` |
+| `tools/builders/build_editorial_library.py` / `build_editorial_patterns.py` | Generators for Editorial components + layouts (Phase 4) |
+| `tools/builders/build_sketch_library.py` / `build_sketch_patterns.py` | Generators for Sketch components + layouts (Phase 4) |
+| `tools/builders/build_prism_library.py` / `build_prism_patterns.py` | Generators for Prism components + layouts (Phase 4) |
+| `tools/builders/build_revolt_library.py` / `build_revolt_patterns.py` | Generators for Revolt components + layouts (Phase 4) |
+| `tools/builders/build_terminal_library.py` / `build_terminal_patterns.py` | Generators for Terminal components + layouts (Phase 4) |
+| `tools/builders/build_contact_sheet.py` | Generates the wireframe library's contact sheet (Primitives + Composites + Patterns) → `systems/wireframe/contact-sheet.svg` |
 
 ### Directory layout
 
@@ -122,7 +122,7 @@ design-system-skill-draft/
 ├── docs/                         # design docs (8 files): SCHEMA, SCHEMA-V0.2,
 │                                 # LIBRARY-SPEC, V0.2-MIGRATIONS, UNIFIED-FOUNDATION,
 │                                 # WIREFRAME-CONSUMPTION, RISO-FINDINGS, REMAINING-SYSTEMS-FINDINGS
-├── tooling/                      # 8 Python scripts + calibration/ subfolder
+├── tools/builders/                      # 8 Python scripts + calibration/ subfolder
 │                                 # (system spec yamls now live inside each
 │                                 # `<system>-library/spec.yaml`)
 ├── design-system-skill/          # SKILL.md + Python package + CLI + tests
@@ -135,14 +135,14 @@ design-system-skill-draft/
 │   ├── __main__.py               # CLI shim
 │   ├── wireframe_skill/          # Python package
 │   └── test_wireframe_skill.py   # 38/38 passing
-├── wireframe-library/            # 100 components + 53 layouts + contact-sheet
-├── swiss-library/                # 71 components + 12 layouts (full coverage)
-├── editorial-library/            # 73 components + 5 layouts (full coverage)
-├── sketch-library/               # 65 components + 4 layouts (full coverage)
-├── prism-library/                # 56 components + 4 layouts (full coverage)
-├── revolt-library/               # 57 components + 3 layouts (full coverage)
-├── terminal-library/             # 53 components + 4 layouts (full coverage)
-└── riso-library/                 # signature components only (default list-item only)
+├── systems/wireframe/            # 100 components + 53 layouts + contact-sheet
+├── systems/swiss/                # 71 components + 12 layouts (full coverage)
+├── systems/editorial/            # 73 components + 5 layouts (full coverage)
+├── systems/sketch/               # 65 components + 4 layouts (full coverage)
+├── systems/prism/                # 56 components + 4 layouts (full coverage)
+├── systems/revolt/               # 57 components + 3 layouts (full coverage)
+├── systems/terminal/             # 53 components + 4 layouts (full coverage)
+└── systems/riso/                 # signature components only (default list-item only)
 └── neutral-signature-archive/    # original Phase 0 reference SVGs (frozen)
 ```
 
@@ -179,7 +179,7 @@ wireframe-skill v3.0:
 ✅ All 8 system specs on v0.2 (wireframe, swiss, terminal, editorial, sketch, prism, revolt, riso)
 ✅ Wireframe library complete: 100 components + 53 layouts (incl. 12 mobile variants), 153/153 rulebook-clean
 ✅ Swiss library full LIBRARY-SPEC vocabulary coverage: 71 components + 12 patterns, 83/83 rulebook-clean
-✅ Tooling under `tooling/`: render_preview, rulebook_check, tracking_conversion, all build_* scripts
+✅ Tooling under `tools/builders/`: render_preview, rulebook_check, tracking_conversion, all build_* scripts
 ✅ Per-system signature libraries (editorial/sketch/prism/revolt/terminal/riso) with list-item + dashboard
 ✅ Contact sheet extended to render the full Patterns tier alongside Primitives + Composites
 ✅ design-system-skill **implemented in Python** (`design-system-skill/design_system_skill/`); 94/94 tests pass
@@ -188,7 +188,7 @@ wireframe-skill v3.0:
 ✅ Initial `registry.yaml` indexes all 8 systems
 ✅ **Phase 3.5 conformance pass** — both SKILL.md docs adopt the project's L1/L2/L3 frontmatter + Composition table + explicit Output Contract sections; all 12 Python modules use `structlog` + Google-style docstrings; HANDOFF + docs swept of time estimates per the No-Time-Estimates Policy
 ✅ **Project-wide no-emoji policy** (Schema v0.2 Change 13) — `avatar_strategy` declared per system replacing `emoji_substitutions`; all 12 signature SVGs across editorial/sketch/prism/revolt re-authored with monograms or abbreviations; `check_no_emoji()` registered in every system's mechanical ruleset; HANDOFF Known Issue #3 (emoji substitution) resolved at the source rather than runtime
-✅ Repo organized: `docs/`, `tooling/`, per-system `*-library/` folders, scripts auto-locate project root
+✅ Repo organized: `docs/`, `tools/builders/`, per-system `*-library/` folders, scripts auto-locate project root
 
 ---
 
@@ -200,9 +200,9 @@ wireframe-skill v3.0:
 
 **Resolved.** Schema v0.2 Change 12 (`check_scope` + `applies_when`) added; Swiss and Terminal specs annotated; `rulebook_check.py` updated. Status:
 
-- `rulebook_check.py --batch swiss-library/components --ruleset swiss` → **41/41 clean, 0 failures, 38 advisory** (all advisory are the existing `swiss-grid-alignment` text-baseline flags, which were already advisory in single-file mode — now also advisory in batch).
-- `rulebook_check.py --batch swiss-library/layouts --ruleset swiss` → **0/4 clean, 5 real violations surfaced** (4 patterns missing red accent + auth-sign-in.svg uses 18px text outside the type scale). These are genuine grammar violations to address as part of item 2 below.
-- `rulebook_check.py --batch wireframe-library/{components,layouts} --ruleset wireframe` → **141/141 clean** (backwards compatible).
+- `rulebook_check.py --batch systems/swiss/components --ruleset swiss` → **41/41 clean, 0 failures, 38 advisory** (all advisory are the existing `swiss-grid-alignment` text-baseline flags, which were already advisory in single-file mode — now also advisory in batch).
+- `rulebook_check.py --batch systems/swiss/layouts --ruleset swiss` → **0/4 clean, 5 real violations surfaced** (4 patterns missing red accent + auth-sign-in.svg uses 18px text outside the type scale). These are genuine grammar violations to address as part of item 2 below.
+- `rulebook_check.py --batch systems/wireframe/{components,layouts} --ruleset wireframe` → **141/141 clean** (backwards compatible).
 
 **What changed:**
 - `docs/SCHEMA-V0.2.md` — added Change 12; updated block order, migration table, changelog
@@ -215,7 +215,7 @@ wireframe-skill v3.0:
 
 #### 2. Verify Swiss library renders match Swiss grammar
 
-**What to do:** Look at each of the 41 Swiss component PNGs and the 4 pattern PNGs. Compare against the Swiss design system's React source (`/Users/tucker/@tucker/tkr-design-systems/design-system-swiss.jsx`). Identify components that don't quite land Swiss's voice and revise.
+**What to do:** Look at each of the 41 Swiss component PNGs and the 4 pattern PNGs. Compare against the Swiss design system's React source (`apps/showcase/src/systems/design-system-swiss.jsx`). Identify components that don't quite land Swiss's voice and revise.
 
 **Components most worth scrutinizing:**
 - `list-item-selected.png` — does the 2px red bar + gray surface + zero-padded index treatment read as Swiss?
@@ -280,7 +280,7 @@ One bug shaken out during build: `settings-layout-mobile.svg` initially used 20p
 
 **Resolved.** `build_contact_sheet.py` extended with a third tier rendering all 53 wireframe pattern SVGs grouped by base pattern (12 groups). Each pattern is downscaled to fit (max dimension 240px, max width 720px) with the native dimensions and scale factor displayed in the label, framed by a hairline white surface. Mobile variants appear first per the established convention.
 
-The contact sheet now reads as a single document showing the full library: 12 primitives + 18 composites + 12 patterns × variants = 153 variants total. Output: `wireframe-library/contact-sheet.svg` (190 KB) + `contact-sheet.png` (1016 × 20266 px, 766 KB).
+The contact sheet now reads as a single document showing the full library: 12 primitives + 18 composites + 12 patterns × variants = 153 variants total. Output: `systems/wireframe/contact-sheet.svg` (190 KB) + `contact-sheet.png` (1016 × 20266 px, 766 KB).
 
 ### IMPORTANT — Should do early (deferred from earlier; mostly addressed by Phase 2)
 
@@ -336,7 +336,7 @@ After Swiss is complete and proven, the remaining 5 systems (Editorial, Sketch, 
 - `register_system(spec_dir, replace=...)` — validates then adds; supports versioned backup on replace (`registry.py`)
 - `unregister_system(id)` — removes from registry; files on disk untouched (`registry.py`)
 - `get_rulebook(id)` — flattened rulebook with check_method/check_scope/applies_when surfaced (`rulebook.py`)
-- `check_compliance(id, artifact, scope=...)` — delegates to `tooling/rulebook_check.py` via an import-cached module spec, returns structured pass/fail/advisory results (`rulebook.py`)
+- `check_compliance(id, artifact, scope=...)` — delegates to `tools/builders/rulebook_check.py` via an import-cached module spec, returns structured pass/fail/advisory results (`rulebook.py`)
 
 **Other infrastructure:**
 - `errors.py` — `Result` type with `to_dict()` for CLI/JSON serialization; documented `ERROR_CODES` set
@@ -411,7 +411,7 @@ Implemented as a two-pass CLI: `wireframe-skill substitution-prompt` emits a str
 Same two-pass shape as 9.1: `wireframe-skill decompose-prompt` emits a JSON request listing all components in the system catalog (with viewBox dimensions + tier + anatomy) plus canvas size and grammar caveats; the calling Claude returns a `LayoutBlueprint` JSON describing regions and component placements; `wireframe-skill apply-decomposition` reads the blueprint, deduplicates `<defs>` ids across composed components, wraps each in a `<g transform="translate(x,y)">`, runs `compose.apply_artifact_treatments` for systems that need it (Riso), and emits a single composited SVG. Validation enforces every referenced component_id exists, no out-of-bounds placements, canvas fits the platform. Modules: `wireframe_skill/decomposition.py` (request emission + validation) and `wireframe_skill/assembler.py` (string-based SVG composition with id rename collision handling). Tests: 5 new (component enumeration, unknown-component rejection, oversized-component rejection, minimal Swiss assembly produces valid XML, filter-id deduplication). Verified end-to-end: Swiss request enumerates 71 components with viewBox dims; minimal blueprint with two cards composes to valid XML at the correct viewBox.
 
 #### 9.3 Riso/Spatial artifact-treatment assembly — **DONE**
-Implemented `compose.apply_artifact_treatments()` end-to-end. Per layer: `bottom` treatments insert page-background rects (with `ref:tokens.colors.page_bg` resolution); `per_component` treatments are documented as a comment inside the root SVG (registration_offset is `optional: true`, off by default); `top` treatments append filter-overlay rects. Filter library defs are injected into `<defs>` (creating one if absent), deduped by id. `tooling/render_preview.py` emits a stderr warning when the system declares `format_fitness.svg != native`. 2 new tests cover the assembly path and the no-op path. Verified: Riso load 0 warnings, all 8 systems load clean, 23/23 tests pass, Riso XML well-formed, Swiss output unchanged (no spurious filter defs).
+Implemented `compose.apply_artifact_treatments()` end-to-end. Per layer: `bottom` treatments insert page-background rects (with `ref:tokens.colors.page_bg` resolution); `per_component` treatments are documented as a comment inside the root SVG (registration_offset is `optional: true`, off by default); `top` treatments append filter-overlay rects. Filter library defs are injected into `<defs>` (creating one if absent), deduped by id. `tools/builders/render_preview.py` emits a stderr warning when the system declares `format_fitness.svg != native`. 2 new tests cover the assembly path and the no-op path. Verified: Riso load 0 warnings, all 8 systems load clean, 23/23 tests pass, Riso XML well-formed, Swiss output unchanged (no spurious filter defs).
 
 #### 9.4 Spec gap fix-up: Swiss spec.yaml SVG references — **DONE**
 Aligned Swiss spec entries with on-disk library. `card-gray` renamed to `card-gray-surface`; `nav.sidebar` redirected to `layouts/sidebar-default.svg`; `section_header.metadata` redirected to `label-metadata.svg`; `separator.*` variants redirected to `divider-*.svg`; layout_templates renamed to match authored patterns (`auth`, `settings_layout`, `data_table`, `form`, `empty_state`) plus added entries for the patterns Phase 2 item 3 introduced (`modal`, `drawer`, `header`, `sidebar`). `python3 design-system-skill load --id swiss` now produces 0 REFERENCED_FILE_MISSING warnings. 132/132 tests still pass.
@@ -435,7 +435,7 @@ Both skills moved out of `design-system-skill-draft/` and into `tkr-kit/.claude/
 - `scripts/test_design_system_skill.py` (11/11 passing)
 - `libraries/registry.yaml` + `libraries/<8 systems>-library/`
 - `references/SCHEMA-V0.2.md`, `LIBRARY-SPEC.md`, `V0.2-MIGRATIONS.md`, `UNIFIED-FOUNDATION.md`, `WIREFRAME-CONSUMPTION.md`, `RISO-FINDINGS.md`, `REMAINING-SYSTEMS-FINDINGS.md`, `SCHEMA.md`
-- `tooling/rulebook_check.py` + library builders + calibration
+- `tools/builders/rulebook_check.py` + library builders + calibration
 
 **Layout of `.claude/skills/wireframe-skill/`:**
 - `SKILL.md` (frontmatter + instructions, replaces v2.0 in place)
@@ -446,7 +446,7 @@ Both skills moved out of `design-system-skill-draft/` and into `tkr-kit/.claude/
 
 **Code changes required for the move:**
 1. `paths.py` (design-system-skill) — also probes `<X>/libraries/registry.yaml` so the registry lookup works under either the legacy draft layout or the Anthropic skill layout.
-2. `rulebook.py` (design-system-skill) — also probes `<project_root>.parent/tooling/rulebook_check.py` so rulebook checks work when registry lives in `libraries/` and tooling is its sibling.
+2. `rulebook.py` (design-system-skill) — resolves `rulebook_check.py` relative to its own module (`tools/builders/rulebook_check.py`), so rulebook checks work regardless of where the registry lives.
 3. `generator.py` (wireframe-skill) — auto-discovers the `design_system_skill` package under either the Anthropic skill layout or the legacy draft layout; honors `$DESIGN_SYSTEM_SKILL_DIR` override.
 4. `test_register_unregister_roundtrip` — generalized to find the registry under either layout.
 
@@ -474,11 +474,11 @@ rm -rf tkr-kit/design-system-skill-draft/   # superseded; this HANDOFF.md is the
 Five systems (Editorial, Sketch, Prism, Revolt, Terminal) brought from signature-only (~3 SVGs each) to full LIBRARY-SPEC coverage in their respective grammars. Authored in parallel via 5 subagents.
 
 **New build scripts (10 total):**
-- `tooling/build_editorial_library.py` + `build_editorial_patterns.py`
-- `tooling/build_sketch_library.py` + `build_sketch_patterns.py`
-- `tooling/build_prism_library.py` + `build_prism_patterns.py`
-- `tooling/build_revolt_library.py` + `build_revolt_patterns.py`
-- `tooling/build_terminal_library.py` + `build_terminal_patterns.py`
+- `tools/builders/build_editorial_library.py` + `build_editorial_patterns.py`
+- `tools/builders/build_sketch_library.py` + `build_sketch_patterns.py`
+- `tools/builders/build_prism_library.py` + `build_prism_patterns.py`
+- `tools/builders/build_revolt_library.py` + `build_revolt_patterns.py`
+- `tools/builders/build_terminal_library.py` + `build_terminal_patterns.py`
 
 **Library deltas:**
 
@@ -528,19 +528,19 @@ fc-cache -f ~/.local/share/fonts/
 
 ### 2. CairoSVG has fidelity gaps for filter-heavy systems
 
-Riso and (eventually) Spatial systems will not render their filter pipelines accurately in CairoSVG. The v0.2 `format_fitness` field documents this. For high-fidelity Riso previews, switch to headless Chromium (Phase 3.x item 9.3 + companion renderer routing in `tooling/render_preview.py`; both are pending).
+Riso and (eventually) Spatial systems will not render their filter pipelines accurately in CairoSVG. The v0.2 `format_fitness` field documents this. For high-fidelity Riso previews, switch to headless Chromium (Phase 3.x item 9.3 + companion renderer routing in `tools/builders/render_preview.py`; both are pending).
 
 ### 3. The em-tracking calibration is only verified for Inter
 
-Other typefaces in the systems (JetBrains Mono, Fraunces, Space Mono, Space Grotesk, IBM Plex Sans, Outfit, Caveat) are using DEFAULT_FACTOR (1.0) without verification. See `tooling/tracking_conversion.py`'s `report_calibration_status()` — it surfaces this. To verify each: run `tooling/calibration/calibrate_tracking_v2.py`, open in Chrome, identify visual match, update `CALIBRATION` table.
+Other typefaces in the systems (JetBrains Mono, Fraunces, Space Mono, Space Grotesk, IBM Plex Sans, Outfit, Caveat) are using DEFAULT_FACTOR (1.0) without verification. See `tools/builders/tracking_conversion.py`'s `report_calibration_status()` — it surfaces this. To verify each: run `tools/builders/calibration/calibrate_tracking_v2.py`, open in Chrome, identify visual match, update `CALIBRATION` table.
 
 ### Resolved (formerly listed here, retained as historical context)
 
-- Swiss rulebook check false positives — resolved Phase 1 item 1 (added `check_scope` to schema; updated `tooling/rulebook_check.py`; CSS-class fill resolution added to red-finite-resource and metadata-uppercase checks)
+- Swiss rulebook check false positives — resolved Phase 1 item 1 (added `check_scope` to schema; updated `tools/builders/rulebook_check.py`; CSS-class fill resolution added to red-finite-resource and metadata-uppercase checks)
 - Wireframe library Patterns missing mobile variants — resolved Phase 2 item 5 (12 mobile variants authored, one per base pattern)
-- Contact sheet missing Patterns tier — resolved Phase 2 item 6 (`tooling/build_contact_sheet.py` now renders all 53 layout SVGs grouped by base pattern)
+- Contact sheet missing Patterns tier — resolved Phase 2 item 6 (`tools/builders/build_contact_sheet.py` now renders all 53 layout SVGs grouped by base pattern)
 - Swiss spec.yaml referenced nonexistent SVGs — resolved Phase 3.x item 9.4 (spec entries aligned with on-disk library; `python3 design-system-skill load --id swiss` now produces 0 warnings)
-- Emoji substitution logic was declarative-only — resolved by Schema v0.2 Change 13 (project-wide no-emoji policy). All 12 signature SVGs across editorial/sketch/prism/revolt re-authored with the system's `avatar_strategy` (monogram or abbreviation). `check_no_emoji()` added to `tooling/rulebook_check.py` and registered in every system's ruleset. Substitution at render time is no longer needed because emoji codepoints have been removed at the source.
+- Emoji substitution logic was declarative-only — resolved by Schema v0.2 Change 13 (project-wide no-emoji policy). All 12 signature SVGs across editorial/sketch/prism/revolt re-authored with the system's `avatar_strategy` (monogram or abbreviation). `check_no_emoji()` added to `tools/builders/rulebook_check.py` and registered in every system's ruleset. Substitution at render time is no longer needed because emoji codepoints have been removed at the source.
 
 ---
 
@@ -564,7 +564,7 @@ python3 -c "import cairosvg; print(cairosvg.__version__)"
 # If missing: pip install --break-system-packages cairosvg
 
 # Verify the rulebook check works
-python3 tooling/rulebook_check.py --help
+python3 tools/builders/rulebook_check.py --help
 ```
 
 ### Step 3: Pick the highest-priority work
@@ -573,11 +573,11 @@ Phase 1 + Phase 2 are complete. Next up: **Phase 3 implementation** — items 8 
 
 ### Step 4: Use the existing patterns
 
-- Add new components to `tooling/build_swiss_library.py` (or the relevant generator)
-- Add new patterns to `tooling/build_swiss_patterns.py`
-- Re-run the generator to produce SVGs (it writes to the project root, not tooling/)
-- Render via `tooling/render_preview.py`
-- Verify via `tooling/rulebook_check.py --batch`
+- Add new components to `tools/builders/build_swiss_library.py` (or the relevant generator)
+- Add new patterns to `tools/builders/build_swiss_patterns.py`
+- Re-run the generator to produce SVGs (it writes to the project root, not tools/builders/)
+- Render via `tools/builders/render_preview.py`
+- Verify via `tools/builders/rulebook_check.py --batch`
 - Copy to workspace folder
 
 This pattern was established in the wireframe library work and has proven reliable.
@@ -588,13 +588,13 @@ This pattern was established in the wireframe library work and has proven reliab
 
 **If you want to understand the architecture:** `docs/UNIFIED-FOUNDATION.md`, `docs/SCHEMA-V0.2.md`, `docs/LIBRARY-SPEC.md`
 
-**If you want to author a new component:** look at `tooling/build_wireframe_library.py` for the pattern, then add to `tooling/build_swiss_library.py` (or create `tooling/build_<system>_library.py`)
+**If you want to author a new component:** look at `tools/builders/build_wireframe_library.py` for the pattern, then add to `tools/builders/build_swiss_library.py` (or create `tools/builders/build_<system>_library.py`)
 
-**If you want to author a new pattern:** look at `tooling/build_wireframe_patterns.py` for the pattern, then add to `tooling/build_swiss_patterns.py`
+**If you want to author a new pattern:** look at `tools/builders/build_wireframe_patterns.py` for the pattern, then add to `tools/builders/build_swiss_patterns.py`
 
-**If you want to verify compliance:** `python3 tooling/rulebook_check.py --batch <dir> --ruleset wireframe|swiss`
+**If you want to verify compliance:** `python3 tools/builders/rulebook_check.py --batch <dir> --ruleset wireframe|swiss`
 
-**If you want to render a preview:** `python3 tooling/render_preview.py <svg>` or `python3 tooling/render_preview.py --all <dir>`
+**If you want to render a preview:** `python3 tools/builders/render_preview.py <svg>` or `python3 tools/builders/render_preview.py --all <dir>`
 
 **If you want to add a new system spec:** copy `swiss-spec.yaml` as a template, follow the v0.2 conventions documented in `docs/SCHEMA-V0.2.md`
 

@@ -30,7 +30,7 @@ product:
     and an always-on compliance bar. The library panel renders tokens,
     components, and layouts from the real system specs. Panel layout
     and workspace state persist silently. The studio is a fresh
-    client+server pair in the studio/ workspace — a TypeScript strict
+    client+server pair in the apps/studio/ workspace — a TypeScript strict
     React SPA over a Node server that bridges WebSocket chat to the
     tkr-design-systems MCP server over stdio.
 
@@ -68,12 +68,12 @@ product:
     persistence: plain files on disk (YAML metadata, raw SVG, readable transcripts) — everything reviewable without tooling; no database
     agent_runtime: Claude Agent SDK (TypeScript) — the SDK owns its own MCP connection to the design-systems server; mcp-bridge serves direct calls outside the agent loop over a second, independent connection
     agent_auth: ANTHROPIC_API_KEY, resolved from environment or a gitignored local config file — Anthropic policy prohibits embedded SDK apps from offering claude.ai subscription login, so the API key is the documented path, not a fallback
-    workspace_git_policy: studio/workspaces/ is gitignored — personal working state, not repo history
+    workspace_git_policy: apps/studio/workspaces/ is gitignored — personal working state, not repo history
     project_board: reads the wireframe-batch TRACKER files as its source of truth (does not supersede them)
 
   context:
-    repo: tkr-design-systems (studio/ workspace — fresh start, no code reuse from the showcase SPA)
-    consumes: design-systems/mcp-server (11 tools over stdio), registry.yaml, per-system spec.yaml + component/layout SVG libraries
+    repo: tkr-design-systems (apps/studio/ workspace — fresh start, no code reuse from the showcase SPA)
+    consumes: tools/mcp-server (11 tools over stdio), registry.yaml, per-system spec.yaml + component/layout SVG libraries
     showcase_spa: src/ + design-system-*.jsx remain as-is — public gallery, not migrated or extended
     stack_client: React + Vite + TypeScript strict, ES modules, named exports
     stack_server: Node + TypeScript strict, pino structured logging, WebSocket + HTTP

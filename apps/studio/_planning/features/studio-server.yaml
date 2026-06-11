@@ -18,12 +18,12 @@ features:
       produces a typed error list naming each field and its fix, never
       a stack trace.
     scope:
-      - Monorepo scaffolding delivered with this feature's slice — the studio/package.json npm-workspaces root and the @studio/contract package skeleton (studio/packages/contract with package.json + empty src/), scaffolded in Wave 1; each capability contributes its own contract modules in its own wave
+      - Monorepo scaffolding delivered with this feature's slice — the apps/studio/package.json npm-workspaces root and the @studio/contract package skeleton (apps/studio/packages/contract with package.json + empty src/), scaffolded in Wave 1; each capability contributes its own contract modules in its own wave
       - StudioConfig type (repoRoot, mcpLaunch, workspacesDir, clientDistDir, port, host, logLevel)
-      - Repo root detection (default: ancestor of studio/server; STUDIO_REPO_ROOT override)
+      - Repo root detection (default: ancestor of apps/studio/server; STUDIO_REPO_ROOT override)
       - MCP launch command parsed from <repoRoot>/.mcp.json (mcpServers["tkr-design-systems"].command + args, cwd pinned to repo root because args are repo-root-relative)
-      - Workspace path default <repoRoot>/studio/workspaces (STUDIO_WORKSPACES_DIR override)
-      - Client dist default <repoRoot>/studio/client/dist (STUDIO_CLIENT_DIST override)
+      - Workspace path default <repoRoot>/apps/studio/workspaces (STUDIO_WORKSPACES_DIR override)
+      - Client dist default <repoRoot>/apps/studio/client/dist (STUDIO_CLIENT_DIST override)
       - Port default 4400 (STUDIO_PORT override); host hard-coded to 127.0.0.1 (not configurable)
       - Log level default info (STUDIO_LOG_LEVEL override)
       - Validation as typed result (ok/errors), each error carrying field, message, and fix
@@ -82,7 +82,7 @@ features:
       truthful from the first request of Wave 1 onward.
     scope:
       - StatusRegistry interface (register(component, provider), snapshot()) injected into buildServer
-      - HealthResponse and StatusReport declared in studio/packages/contract/src/health.ts (canonical contract module, owned by studio-server) so the client and scripted clients import them
+      - HealthResponse and StatusReport declared in apps/studio/packages/contract/src/health.ts (canonical contract module, owned by studio-server) so the client and scripted clients import them
       - GET /api/health route returning { status, process, bridge, store, auth }
       - process field owned by studio-server — pid, uptimeSeconds, version (server package.json)
       - bridge/store/auth fields resolved through registered providers; "unregistered" placeholder when absent

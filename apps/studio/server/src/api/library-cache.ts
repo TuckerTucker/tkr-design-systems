@@ -1,6 +1,6 @@
 /**
  * Library response cache — in-memory, keyed by route + systemId, fully
- * flushed when design-systems/registry.yaml changes.
+ * flushed when systems/registry.yaml changes.
  *
  * The bridge exposes no registry-change signal, so studio-api watches the
  * registry file directly (fs.watch, path from studio-server config). The
@@ -25,7 +25,7 @@ export interface LibraryCache {
 }
 
 export interface LibraryCacheOptions {
-  /** Absolute path to design-systems/registry.yaml (from config.repoRoot). */
+  /** Absolute path to systems/registry.yaml (from config.repoRoot). */
   registryPath: string;
   logger: Logger;
 }

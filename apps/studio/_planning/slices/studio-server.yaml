@@ -11,9 +11,9 @@ slices:
     number: 1
     layer: infrastructure
     delivers:
-      - "studio/package.json — npm-workspaces monorepo root, scaffolded here in Wave 1"
-      - "@studio/contract package skeleton — studio/packages/contract with package.json + empty src/ (the npm name @studio/contract resolves to studio/packages/contract via npm workspaces); each capability contributes its own modules in its own wave"
-      - "studio/server workspace package (package.json, tsconfig strict, ES modules, vitest)"
+      - "apps/studio/package.json — npm-workspaces monorepo root, scaffolded here in Wave 1"
+      - "@studio/contract package skeleton — apps/studio/packages/contract with package.json + empty src/ (the npm name @studio/contract resolves to apps/studio/packages/contract via npm workspaces); each capability contributes its own modules in its own wave"
+      - "apps/studio/server workspace package (package.json, tsconfig strict, ES modules, vitest)"
       - "StudioConfig type (repoRoot, mcpLaunch, workspacesDir, clientDistDir, port, host, logLevel)"
       - "resolveConfig() — defaults, then <repoRoot>/.mcp.json for the MCP launch command, then env overrides (STUDIO_REPO_ROOT, STUDIO_WORKSPACES_DIR, STUDIO_CLIENT_DIST, STUDIO_PORT, STUDIO_LOG_LEVEL)"
       - "MCP launch parsing — mcpServers[\"tkr-design-systems\"].command + args from .mcp.json, cwd pinned to repo root (args are repo-root-relative)"
@@ -53,7 +53,7 @@ slices:
     layer: infrastructure
     delivers:
       - "StatusRegistry interface (register(component, provider), snapshot()) injected into buildServer"
-      - "HealthResponse and StatusReport declared in studio/packages/contract/src/health.ts (canonical, owned by studio-server; client and scripted clients import them, never redeclare)"
+      - "HealthResponse and StatusReport declared in apps/studio/packages/contract/src/health.ts (canonical, owned by studio-server; client and scripted clients import them, never redeclare)"
       - "GET /api/health → { status, process, bridge, store, auth }"
       - "process field (pid, uptimeSeconds, version) owned by studio-server"
       - "bridge/store/auth resolved through registered providers; \"unregistered\" placeholder when no provider exists yet"

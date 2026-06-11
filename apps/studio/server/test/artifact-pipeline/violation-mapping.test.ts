@@ -1,6 +1,6 @@
 /**
  * Violation-to-node mapping — rule detail shapes mirror
- * design-systems/tooling/rulebook_check.py exactly (the wire truth);
+ * tools/builders/rulebook_check.py exactly (the wire truth);
  * the real-seam end-to-end run (real bridge → real checker → mapping)
  * lives in compliance.test.ts.
  */

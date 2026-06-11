@@ -14,7 +14,7 @@ stories:
     intent: "Open the studio with no ANTHROPIC_API_KEY configured; browsing works, generation is refused with the fix shown in place."
     preconditions:
       - "Studio server is running"
-      - "ANTHROPIC_API_KEY is absent from the process environment and studio/.env"
+      - "ANTHROPIC_API_KEY is absent from the process environment and apps/studio/.env"
       - "Auth resolution and keyless degradation are implemented"
     trigger_action: "Send a chat message asking for a wireframe with no key configured"
     steps:
@@ -26,23 +26,23 @@ stories:
         system_response: "Library browsing, canvas review, and compliance display work — keyless mode degrades only generation, nothing else"
       - actor: Studio User
         action: "Sends a chat message: 'wireframe a login screen in Swiss'"
-        system_response: "Session emits a single error event (code auth_missing) naming ANTHROPIC_API_KEY and stating the fix: set it in the environment or studio/.env; no SDK process spawns"
+        system_response: "Session emits a single error event (code auth_missing) naming ANTHROPIC_API_KEY and stating the fix: set it in the environment or apps/studio/.env; no SDK process spawns"
       - actor: Studio User
-        action: "Adds ANTHROPIC_API_KEY to studio/.env and retries the message"
+        action: "Adds ANTHROPIC_API_KEY to apps/studio/.env and retries the message"
         system_response: "Key resolves (source dotenv), auth status flips to configured, and the generation turn proceeds normally"
       - actor: System
         action: "Logs the resolution and the failed turn via pino"
         system_response: "No log line anywhere contains the key value (redaction paths cover all agent loggers)"
     acceptance_criteria:
-      - given: "No key in the environment or studio/.env"
+      - given: "No key in the environment or apps/studio/.env"
         when: "A chat message requests generation"
         then: "An auth_missing error event is returned with the fix in place; no SDK subprocess is spawned; the server does not crash"
       - given: "No key configured"
         when: "/api/health is queried"
         then: "Auth status reports missing; library and artifact read paths remain functional"
-      - given: "A key is added to studio/.env while the server runs"
+      - given: "A key is added to apps/studio/.env while the server runs"
         when: "The next chat message arrives"
-        then: "Resolution order (env, then studio/.env) finds the key, auth status becomes configured, and generation proceeds"
+        then: "Resolution order (env, then apps/studio/.env) finds the key, auth status becomes configured, and generation proceeds"
       - given: "Any agent log output"
         when: "Logs are inspected"
         then: "The key value appears nowhere (pino redaction verified); AuthState exposes only status and source"

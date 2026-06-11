@@ -14,14 +14,14 @@ context: |
   workspace-store (plain-file persistence). mcp-bridge supplies the
   direct-call MCP tool set the library endpoints proxy.
 
-  The architecture contract (studio/_planning/architecture.md) is binding:
+  The architecture contract (apps/studio/_planning/architecture.md) is binding:
   the HTTP route table under /api, the single /ws endpoint with
   message-based workspace attachment, the ClientEnvelope/ServerEnvelope
   split ({ type, requestId, payload }, seq on server→client only), the
   four client→server message types, and the eleven server→client event
   types are reproduced here exactly. Every message and payload type is
   declared once in the @studio/contract package (npm name @studio/contract
-  ↔ filesystem path studio/packages/contract, resolved via npm workspaces)
+  ↔ filesystem path apps/studio/packages/contract, resolved via npm workspaces)
   and imported by both server and client — no stringly-typed messages.
 
   Single-user, local-only by decision: no authentication, no
@@ -53,7 +53,7 @@ scope:
     - WebSocket session management on /ws — workspace.attach binding, per-workspace event journal with monotonic seq, reconnect with resume (missed-event replay or state re-sync)
     - Chat streaming relay — chat.send/chat.cancel/chip.update into agent-orchestration; assistant deltas, tool progress, chips, and artifact events out as contract envelopes
     - HTTP endpoints per the architecture route table — workspaces CRUD, artifact metadata/SVG/spec/compliance serving, POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore (restore-as-new-head, delegated to artifact-pipeline), preferences get/put
-    - Library endpoints proxying mcp-bridge (ds_list_systems, wf_get_tokens, wf_read_component, layouts from loaded specs) with caching, invalidated by watching design-systems/registry.yaml directly via fs.watch (path from studio-server config)
+    - Library endpoints proxying mcp-bridge (ds_list_systems, wf_get_tokens, wf_read_component, layouts from loaded specs) with caching, invalidated by watching systems/registry.yaml directly via fs.watch (path from studio-server config)
     - Input validation at the boundary — every HTTP body/param and WS message validated against the contract before domain code; invalid states rejected with structured errors (what failed, how to fix)
     - Typed-result error seam — domain failures mapped to HTTP status + ApiError / chat.error, never thrown across the boundary
     - Integration tests over real HTTP/WS per the testing policy, including the headless conversational loop (Phase 1 exit criterion)
@@ -73,7 +73,7 @@ dependencies:
     - "artifact-pipeline — artifact/version/compliance read models and event emissions (version created, compliance completed)"
     - "workspace-store — workspace CRUD, transcript reads for re-sync, artifact version content (SVG, spec, compliance), preference store"
     - "mcp-bridge — typed direct-call wrappers (ds_list_systems, ds_load_system, wf_get_tokens, wf_read_component) and bridge status for library endpoints"
-    - "Architecture contract (studio/_planning/architecture.md) — binding route table, envelope, and event vocabulary"
+    - "Architecture contract (apps/studio/_planning/architecture.md) — binding route table, envelope, and event vocabulary"
   downstream:
     - "docking-shell — WebSocket client with reconnect/resume, preferences endpoints, contract types"
     - "chat-panel — chat message vocabulary, decision chips, streaming events"
@@ -84,10 +84,10 @@ dependencies:
     - "Fastify 5 + @fastify/websocket (server framework, decided in architecture)"
     - "yaml package — spec.yaml parsing for the /spec endpoint (never hand-rolled)"
     - "vitest — integration test runner"
-    - "design-systems/mcp-server — real MCP server exercised (via mcp-bridge) in integration tests; never mocked"
+    - "tools/mcp-server — real MCP server exercised (via mcp-bridge) in integration tests; never mocked"
 
 data_contracts: |
-  All types live in studio/packages/contract/src and are the single
+  All types live in apps/studio/packages/contract/src and are the single
   declaration imported by server and client. Names below are the
   contract; the WS type strings reproduce architecture.md exactly.
   Per the contract ownership table in architecture.md, studio-api owns
@@ -245,7 +245,7 @@ data_contracts: |
   export type AuthState = "configured" | "missing" | "invalid";
   export interface AuthStatusPayload {
     state: AuthState;
-    /** how to fix, e.g. "set ANTHROPIC_API_KEY in studio/.env" */
+    /** how to fix, e.g. "set ANTHROPIC_API_KEY in apps/studio/.env" */
     fix?: string;
   }
 
@@ -403,33 +403,33 @@ data_contracts: |
     path, identical to generation
 
 file_locations:
-  - studio/packages/contract/src/envelope.ts — ClientEnvelope and ServerEnvelope types
-  - studio/packages/contract/src/ws-messages.ts — client/server WS payloads and unions
-  - studio/packages/contract/src/http-payloads.ts — HTTP payload types
-  - studio/packages/contract/src/errors.ts — ApiError, ErrorResponse, error code union
-  - studio/packages/contract/src/index.ts — named re-exports (no default exports)
-  - studio/packages/contract/package.json — npm workspace package metadata
-  - studio/packages/contract/test/contract.test-d.ts — type-level tests against the architecture message list
-  - studio/server/src/api/plugin.ts — Fastify plugin mounting all routes and /ws handling
-  - studio/server/src/api/ws/connection.ts — connection registry, workspace.attach binding
-  - studio/server/src/api/ws/journal.ts — per-workspace event journal, seq stamping, replay
-  - studio/server/src/api/ws/resync.ts — full state re-sync via existing event types
-  - studio/server/src/api/ws/chat-relay.ts — agent event stream → contract envelopes; cancel forwarding; chip-update resolution (messageId → ChipSet lookup → domain ChipUpdate)
-  - studio/server/src/api/routes/workspaces.ts — workspaces CRUD handlers
-  - studio/server/src/api/routes/artifacts.ts — artifact metadata, SVG, spec, compliance, and restore handlers
-  - studio/server/src/api/routes/preferences.ts — preferences get/put handlers
-  - studio/server/src/api/routes/library.ts — library proxy handlers
-  - studio/server/src/api/library-cache.ts — response cache with registry-change invalidation
-  - studio/server/src/api/validation.ts — boundary schemas derived from the contract
-  - studio/server/src/api/errors.ts — typed-result → HTTP status/ApiError mapping
-  - studio/server/test/api/ws-session.test.ts — attach, resume, re-sync integration tests
-  - studio/server/test/api/chat-relay.test.ts — streaming, cancel, chips, busy rejection
-  - studio/server/test/api/workspaces.test.ts — CRUD and preferences over real HTTP
-  - studio/server/test/api/artifacts.test.ts — SVG/spec/compliance serving
-  - studio/server/test/api/library.test.ts — proxy, cache, invalidation, bridge-down
-  - studio/server/test/api/validation.test.ts — rejection matrix with structured errors
-  - studio/server/test/api/headless-loop.test.ts — Phase 1 exit criterion end-to-end
-  - studio/_planning/architecture.md — binding contract (READ-ONLY)
+  - apps/studio/packages/contract/src/envelope.ts — ClientEnvelope and ServerEnvelope types
+  - apps/studio/packages/contract/src/ws-messages.ts — client/server WS payloads and unions
+  - apps/studio/packages/contract/src/http-payloads.ts — HTTP payload types
+  - apps/studio/packages/contract/src/errors.ts — ApiError, ErrorResponse, error code union
+  - apps/studio/packages/contract/src/index.ts — named re-exports (no default exports)
+  - apps/studio/packages/contract/package.json — npm workspace package metadata
+  - apps/studio/packages/contract/test/contract.test-d.ts — type-level tests against the architecture message list
+  - apps/studio/server/src/api/plugin.ts — Fastify plugin mounting all routes and /ws handling
+  - apps/studio/server/src/api/ws/connection.ts — connection registry, workspace.attach binding
+  - apps/studio/server/src/api/ws/journal.ts — per-workspace event journal, seq stamping, replay
+  - apps/studio/server/src/api/ws/resync.ts — full state re-sync via existing event types
+  - apps/studio/server/src/api/ws/chat-relay.ts — agent event stream → contract envelopes; cancel forwarding; chip-update resolution (messageId → ChipSet lookup → domain ChipUpdate)
+  - apps/studio/server/src/api/routes/workspaces.ts — workspaces CRUD handlers
+  - apps/studio/server/src/api/routes/artifacts.ts — artifact metadata, SVG, spec, compliance, and restore handlers
+  - apps/studio/server/src/api/routes/preferences.ts — preferences get/put handlers
+  - apps/studio/server/src/api/routes/library.ts — library proxy handlers
+  - apps/studio/server/src/api/library-cache.ts — response cache with registry-change invalidation
+  - apps/studio/server/src/api/validation.ts — boundary schemas derived from the contract
+  - apps/studio/server/src/api/errors.ts — typed-result → HTTP status/ApiError mapping
+  - apps/studio/server/test/api/ws-session.test.ts — attach, resume, re-sync integration tests
+  - apps/studio/server/test/api/chat-relay.test.ts — streaming, cancel, chips, busy rejection
+  - apps/studio/server/test/api/workspaces.test.ts — CRUD and preferences over real HTTP
+  - apps/studio/server/test/api/artifacts.test.ts — SVG/spec/compliance serving
+  - apps/studio/server/test/api/library.test.ts — proxy, cache, invalidation, bridge-down
+  - apps/studio/server/test/api/validation.test.ts — rejection matrix with structured errors
+  - apps/studio/server/test/api/headless-loop.test.ts — Phase 1 exit criterion end-to-end
+  - apps/studio/_planning/architecture.md — binding contract (READ-ONLY)
 
 implementation_steps:
   - Contribute studio-api's protocol modules (envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts) to @studio/contract — the package skeleton is scaffolded in Wave 1 by studio-server slice 1 (strict tsconfig, ES modules, named exports, zero runtime dependencies)
@@ -439,8 +439,8 @@ implementation_steps:
   - Define ApiError/ErrorResponse and the error-code literal union
   - Define HTTP payload types (workspaces, artifacts, versions, RestoreResponse, ComplianceResponse, library); import HealthResponse from health.ts and LayoutPreference from preferences.ts rather than redeclaring
   - Add type-level tests asserting the unions cover the architecture message list exactly
-  - Build validation schemas in studio/server/src/api/validation.ts derived from the contract (bodies, params, WS messages)
-  - Build the typed-result → HTTP status/ApiError mapper in studio/server/src/api/errors.ts
+  - Build validation schemas in apps/studio/server/src/api/validation.ts derived from the contract (bodies, params, WS messages)
+  - Build the typed-result → HTTP status/ApiError mapper in apps/studio/server/src/api/errors.ts
   - Mount the API plugin on the studio-server Fastify instance
   - Implement the WS connection registry and workspace.attach handling with pino correlation
   - Implement the per-workspace event journal (monotonic seq, bounded retention) and seq stamping
@@ -453,7 +453,7 @@ implementation_steps:
   - Implement artifact routes (metadata, version list, raw SVG, spec-as-JSON, compliance as ComplianceResponse)
   - Implement the restore route (POST …/versions/:n/restore) delegating to artifact-pipeline's restore-as-new-head, returning RestoreResponse; artifact.version_created flows through the normal pipeline path
   - Implement preferences get/put routes (LayoutPreference shape from preferences.ts)
-  - Implement library routes over mcp-bridge with the response cache, invalidated by an fs.watch on design-systems/registry.yaml (path from studio-server config)
+  - Implement library routes over mcp-bridge with the response cache, invalidated by an fs.watch on systems/registry.yaml (path from studio-server config)
   - Write the integration test suite over real HTTP/WS (real store temp dir, real MCP server) — sessions, relay, CRUD, serving, library, validation matrix
   - Write the headless conversational loop test: attach → brief → generation stream → refinement → compliance fetch → version lineage assertions
   - Write reconnect-resume, cancellation, and keyless-mode integration tests
@@ -472,7 +472,7 @@ error_handling: |
     the turn closes (no dangling message_started)
   - chat.send with auth missing/invalid → chat.error "auth_missing" /
     "auth_invalid" with the documented fix (ANTHROPIC_API_KEY via
-    environment or studio/.env); auth.status pushed alongside
+    environment or apps/studio/.env); auth.status pushed alongside
   - HTTP validation failure → 400 ErrorResponse with code, message, fix,
     and the offending field; domain code never runs
   - Unknown workspace/artifact/version on HTTP → 404 ErrorResponse with a
@@ -533,7 +533,7 @@ integration_points:
   - "workspace-store: workspaces CRUD, transcript reads for re-sync, artifact version content (SVG/spec/compliance files), preferences persistence"
   - "mcp-bridge: library endpoints call ds_list_systems, ds_load_system, wf_get_tokens, wf_read_component; bridge status drives bridge.status pushes and 503 degradation"
   - "studio-server: API mounted as a Fastify plugin; WS upgrade, heartbeat, localhost binding, /api/health route, and the error boundary owned there"
-  - "packages/contract: imported by studio/server and (Phase 2) studio/client; the only message/payload declaration point"
+  - "packages/contract: imported by apps/studio/server and (Phase 2) apps/studio/client; the only message/payload declaration point"
   - "docking-shell / chat-panel / canvas / library-panel (Phase 2): consume this protocol unchanged — the headless verification is their contract guarantee"
 
 verification_criteria:

@@ -2,7 +2,7 @@
  * Two-pass substitution flow — prompt instructions plus the staging step
  * that turns wf_apply_substitutions' svg_text into on-disk files.
  *
- * Wire truth (design-systems/mcp-server/server.py): wf_apply_substitutions
+ * Wire truth (tools/mcp-server/server.py): wf_apply_substitutions
  * returns { ok, svg_text, unapplied_finds, grammar_warnings } — it does NOT
  * write files. The session stages the substituted SVG (plus the parent
  * version's spec, byte-identical) into the agent staging directory so the

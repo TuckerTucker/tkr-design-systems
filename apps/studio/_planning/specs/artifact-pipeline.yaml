@@ -19,7 +19,7 @@ context: |
   ArtifactSource discriminated union ({ kind: "paths" } | { kind:
   "text" }), the payload of agent-orchestration's artifact_produced
   event. The pipeline ingests those outputs into immutable versions under
-  studio/workspaces/<ws>/artifacts/<art>/versions/<NNNN>/ (architecture
+  apps/studio/workspaces/<ws>/artifacts/<art>/versions/<NNNN>/ (architecture
   contract), each holding wireframe.svg, wireframe.spec.yaml,
   compliance.yaml, and version.yaml provenance.
 
@@ -30,7 +30,7 @@ context: |
   failed, advisory, results: [{rule_id, status, detail}], ruleset,
   mechanical_only} inside the design-system-skill Result envelope
   {ok, data | errors}. Rule detail carries offending values (font sizes,
-  colors, radii, filter refs — see tooling/rulebook_check.py), not node
+  colors, radii, filter refs — see tools/builders/rulebook_check.py), not node
   references, so this capability derives the violation-to-SVG-node
   mapping by scanning the artifact. Assembled artifacts carry structured
   group ids ({region_id}__{comp_id}_{comp_idx} per the wireframe-skill
@@ -72,7 +72,7 @@ scope:
     - Deciding when to generate or which tool to call (agent-orchestration)
     - Rendering the SVG, the history filmstrip, or the compliance bar (canvas)
     - WebSocket delivery of events to clients (studio-api owns the transport; the pipeline emits domain events)
-    - Rulebook definitions and check implementations (live in system specs and design-systems/tooling/rulebook_check.py, read-only)
+    - Rulebook definitions and check implementations (live in system specs and tools/builders/rulebook_check.py, read-only)
     - PNG export, download bundles, token export (export-surface, deferred)
 
 dependencies:
@@ -85,7 +85,7 @@ dependencies:
     - "agent-orchestration — hands generation tool results to the pipeline for ingestion after each producing tool call"
     - "canvas (Phase 2) — consumes typed metadata for inspect-on-hover, version list for the filmstrip, violation node ids for highlighting"
   external:
-    - "design-systems/mcp-server — ds_check_compliance tool (read-only dependency; result shape per design_system_skill/rulebook.py)"
+    - "tools/mcp-server — ds_check_compliance tool (read-only dependency; result shape per design_system_skill/rulebook.py)"
     - "wireframe-skill emit.py — wireframe.spec.yaml schema (read-only contract; design_system block, components_used, rulebook_compliance)"
     - "yaml package — all YAML parsing (architecture contract; never hand-rolled)"
 
@@ -93,7 +93,7 @@ data_contracts: |
   ## Generation tool results (as ingested — shapes per mcp-server/server.py)
 
   ```typescript
-  // studio/packages/contract/src/generation.ts
+  // apps/studio/packages/contract/src/generation.ts
   // GenerationResult.to_dict() from wf_generate / wf_apply_substitutions
   export interface GenerationToolResult {
     ok: boolean;
@@ -126,7 +126,7 @@ data_contracts: |
   ## Ingestion source — artifact_produced payload (agent-orchestration → ingest)
 
   ```typescript
-  // studio/packages/contract/src/artifact.ts (owned by artifact-pipeline)
+  // apps/studio/packages/contract/src/artifact.ts (owned by artifact-pipeline)
   // The payload of agent-orchestration's artifact_produced event. The
   // ingest interface accepts this union directly; both branches are
   // first-class: wf_generate / wf_apply_substitutions emit files
@@ -139,7 +139,7 @@ data_contracts: |
   ## Version and provenance
 
   ```typescript
-  // studio/packages/contract/src/artifact.ts
+  // apps/studio/packages/contract/src/artifact.ts
   export type GenerationTool =
     | "wf_generate"
     | "wf_apply_substitutions"
@@ -238,7 +238,7 @@ data_contracts: |
 
   ```typescript
   // The raw MCP wire shape is bridge-internal: RawComplianceResult in
-  // studio/server/src/mcp/types.ts (not in the contract package). The
+  // apps/studio/server/src/mcp/types.ts (not in the contract package). The
   // bridge unwraps the design-system-skill Result envelope
   // ({ok, data} | {ok, errors: [{code, message, detail}]}) and maps it
   // onto the canonical domain ComplianceReport below. The HTTP layer
@@ -253,7 +253,7 @@ data_contracts: |
   }
 
   // versions/<NNNN>/compliance.yaml — report + derived mapping
-  // THE canonical compliance type (studio/packages/contract/src/artifact.ts)
+  // THE canonical compliance type (apps/studio/packages/contract/src/artifact.ts)
   export interface ComplianceReport {
     system_id: string;
     artifact_path: string;        // the persisted version SVG path that was checked
@@ -290,7 +290,7 @@ data_contracts: |
   ## Domain events (relayed by studio-api per the WS envelope)
 
   ```typescript
-  // studio/packages/contract/src/events.ts
+  // apps/studio/packages/contract/src/events.ts
   export interface ArtifactVersionCreatedPayload {
     workspaceId: string;
     artifactId: string;
@@ -312,23 +312,23 @@ data_contracts: |
   ```
 
 file_locations:
-  - studio/server/src/artifact-pipeline/index.ts — Named exports for the capability (createArtifactPipeline factory, IoC — receives repositories, bridge, logger, event emitter)
-  - studio/server/src/artifact-pipeline/ingest.ts — Generation result ingestion (accepts the ArtifactSource union — paths or text — captures provenance, lands version via store)
-  - studio/server/src/artifact-pipeline/version-graph.ts — Parent links, head pointer updates, version listing, restore-as-new-head
-  - studio/server/src/artifact-pipeline/spec-metadata.ts — wireframe.spec.yaml → ParsedSpecMetadata parser (yaml package)
-  - studio/server/src/artifact-pipeline/compliance.ts — ds_check_compliance orchestration per version, compliance state machine, compliance.yaml persistence
-  - studio/server/src/artifact-pipeline/violation-mapping.ts — Rule detail evidence → SVG element id resolution
-  - studio/server/src/artifact-pipeline/sanitize.ts — Serving-side SVG sanitizer (id-preserving)
-  - studio/server/src/artifact-pipeline/events.ts — Typed domain event emitter (version_created, compliance_completed)
-  - studio/packages/contract/src/artifact.ts — ArtifactSource, ArtifactRecord, ArtifactVersion, VersionProvenance, VersionSummary, ParsedSpecMetadata, ComplianceReport (canonical), ComplianceState, ViolationNodeMapping (module contributed by artifact-pipeline to the @studio/contract package whose skeleton was scaffolded in Wave 1 by studio-server slice 1; shared with client)
-  - studio/packages/contract/src/generation.ts — GenerationToolResult, AssemblyToolResult ingest shapes
-  - studio/packages/contract/src/events.ts — Artifact event payload types
-  - studio/server/test/artifact-pipeline/ingest.test.ts — Ingestion against a real temp workspace directory
-  - studio/server/test/artifact-pipeline/compliance.test.ts — Real-seam test against the actual design-systems MCP server (never mocked)
-  - studio/server/test/artifact-pipeline/sanitize.test.ts — Sanitizer and node-id stability unit tests
+  - apps/studio/server/src/artifact-pipeline/index.ts — Named exports for the capability (createArtifactPipeline factory, IoC — receives repositories, bridge, logger, event emitter)
+  - apps/studio/server/src/artifact-pipeline/ingest.ts — Generation result ingestion (accepts the ArtifactSource union — paths or text — captures provenance, lands version via store)
+  - apps/studio/server/src/artifact-pipeline/version-graph.ts — Parent links, head pointer updates, version listing, restore-as-new-head
+  - apps/studio/server/src/artifact-pipeline/spec-metadata.ts — wireframe.spec.yaml → ParsedSpecMetadata parser (yaml package)
+  - apps/studio/server/src/artifact-pipeline/compliance.ts — ds_check_compliance orchestration per version, compliance state machine, compliance.yaml persistence
+  - apps/studio/server/src/artifact-pipeline/violation-mapping.ts — Rule detail evidence → SVG element id resolution
+  - apps/studio/server/src/artifact-pipeline/sanitize.ts — Serving-side SVG sanitizer (id-preserving)
+  - apps/studio/server/src/artifact-pipeline/events.ts — Typed domain event emitter (version_created, compliance_completed)
+  - apps/studio/packages/contract/src/artifact.ts — ArtifactSource, ArtifactRecord, ArtifactVersion, VersionProvenance, VersionSummary, ParsedSpecMetadata, ComplianceReport (canonical), ComplianceState, ViolationNodeMapping (module contributed by artifact-pipeline to the @studio/contract package whose skeleton was scaffolded in Wave 1 by studio-server slice 1; shared with client)
+  - apps/studio/packages/contract/src/generation.ts — GenerationToolResult, AssemblyToolResult ingest shapes
+  - apps/studio/packages/contract/src/events.ts — Artifact event payload types
+  - apps/studio/server/test/artifact-pipeline/ingest.test.ts — Ingestion against a real temp workspace directory
+  - apps/studio/server/test/artifact-pipeline/compliance.test.ts — Real-seam test against the actual design-systems MCP server (never mocked)
+  - apps/studio/server/test/artifact-pipeline/sanitize.test.ts — Sanitizer and node-id stability unit tests
 
 implementation_steps:
-  - Define contract types in studio/packages/contract (artifact, generation, events modules — contributed to the @studio/contract skeleton scaffolded in Wave 1) mirroring the verified Python shapes; declare ArtifactSource in artifact.ts
+  - Define contract types in apps/studio/packages/contract (artifact, generation, events modules — contributed to the @studio/contract skeleton scaffolded in Wave 1) mirroring the verified Python shapes; declare ArtifactSource in artifact.ts
   - Build spec-metadata parser (yaml package; typed results for malformed input; neutral-library null-id shape; forward-compatible unknown keys)
   - 'Build ingest flow — accept the ArtifactSource union ({ kind: "paths" }: read SVG + spec content from the emitted files; { kind: "text" }: take svgText/specYaml directly — both first-class branches), parse metadata, capture provenance, land version through workspace-store repositories'
   - Wire artifact.yaml creation on first version (id slug, name, system from metadata, platform, headVersion = 1)
@@ -378,7 +378,7 @@ integration_points:
   - "workspace-store: artifact and version repositories — all reads and writes; the pipeline never constructs filesystem paths"
   - "studio-api: GET versions/:n/svg serves sanitized content; /spec serves ParsedSpecMetadata; /compliance serves ComplianceState; WS relays artifact.version_created and artifact.compliance_completed"
   - "canvas (Phase 2): filmstrip from VersionSummary list; inspect-on-hover from ParsedSpecMetadata; click-to-highlight from ViolationNodeMapping.nodeIds"
-  - "@studio/contract (studio/packages/contract): every type above declared once, imported by server and client; artifact-pipeline contributes its artifact.ts, generation.ts, and events.ts modules to the package skeleton scaffolded in Wave 1 (studio-server slice 1)"
+  - "@studio/contract (apps/studio/packages/contract): every type above declared once, imported by server and client; artifact-pipeline contributes its artifact.ts, generation.ts, and events.ts modules to the package skeleton scaffolded in Wave 1 (studio-server slice 1)"
 
 verification_criteria:
   - Ingesting a real wf_generate result lands versions/0001/ with wireframe.svg, wireframe.spec.yaml, version.yaml; artifact.yaml headVersion = 1
@@ -414,7 +414,7 @@ security: |
   - Served artifact version SVGs are sanitized server-side, with node IDs preserved: script elements, on* event handlers, foreignObject, and external resource references stripped — generated SVG is treated as untrusted content even though it comes from our own pipeline (defense in depth for custom blueprint components carrying arbitrary SVG)
   - Sanitization scope: this guarantee covers artifact version SVGs only. Library component/layout SVGs never pass through this pipeline — they flow wf_read_component → studio-api → panel and are sanitized client-side by library-panel. Both sanitizers are tested against one shared adversarial fixture set (script injection, event handlers, external references)
   - Stored files are never executed or interpreted server-side beyond XML parsing
-  - The pipeline writes only through workspace-store repositories, which confine all writes to studio/workspaces/ (gitignored) — no path traversal surface; version paths are store-derived, never client-supplied
+  - The pipeline writes only through workspace-store repositories, which confine all writes to apps/studio/workspaces/ (gitignored) — no path traversal surface; version paths are store-derived, never client-supplied
   - artifact_path sent to ds_check_compliance is always a store-resolved path to a persisted version, never a client-provided string
   - Provenance parameters are recorded verbatim but contain no secrets by construction (briefs, system ids, layout ids, blueprints); ANTHROPIC_API_KEY never reaches the pipeline (agent-orchestration owns it, pino redaction applies)
   - Single-user local-only deployment (architecture contract): no auth inside the pipeline; the server binds localhost

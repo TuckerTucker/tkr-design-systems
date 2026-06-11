@@ -51,7 +51,7 @@ scope:
     - aria-live region for streamed assistant text and tool progress
     - Multiline composer with submit affordance (Enter to send, Shift+Enter newline) sending chat.send
     - Composer reference intake — incoming LibraryReference payloads from library-panel (drag or explicit send action) render as removable reference chips attached to the draft and ride chat.send as references
-    - Disabled-with-reason composer states — agent busy, auth missing/invalid (auth.status → "Add ANTHROPIC_API_KEY to studio/.env" in place)
+    - Disabled-with-reason composer states — agent busy, auth missing/invalid (auth.status → "Add ANTHROPIC_API_KEY to apps/studio/.env" in place)
     - Cancel control during generation sending chat.cancel
     - Decision chips on agent turns from chips.updated — editable selects for system/layout/platform; change sends chip.update and re-runs the affected step
     - Inline tool progress contextual to the message ("generating in Swiss…" from chat.tool_started/chat.tool_finished) — never a toast
@@ -86,7 +86,7 @@ data_contracts: |
   ## Message View Model (derived from packages/contract payload types)
 
   ```typescript
-  // studio/client/src/panels/chat/messageViewModel.ts
+  // apps/studio/client/src/panels/chat/messageViewModel.ts
   // Reducer state built exclusively from contract WS payloads —
   // ChatMessageStartedPayload, ChatAssistantDeltaPayload,
   // ChatToolStartedPayload, ChatToolFinishedPayload,
@@ -141,7 +141,7 @@ data_contracts: |
 
   export type ComposerDisabledReason =
     | { kind: "agent_busy"; message: string }                       // "Agent is working — cancel to send a new message"
-    | { kind: "auth_missing"; message: string }                     // "Add ANTHROPIC_API_KEY to studio/.env"
+    | { kind: "auth_missing"; message: string }                     // "Add ANTHROPIC_API_KEY to apps/studio/.env"
     | { kind: "auth_invalid"; message: string };
 
   export interface ChatPanelState {
@@ -220,22 +220,22 @@ data_contracts: |
   ```
 
 file_locations:
-  - studio/client/src/panels/chat/ChatPanel.tsx — Panel entry point registered with the docking-shell panel registry
-  - studio/client/src/panels/chat/MessageList.tsx — Transcript rendering with aria-live region and scroll pinning
-  - studio/client/src/panels/chat/Message.tsx — Single turn (text, tool progress, chips, references, error)
-  - studio/client/src/panels/chat/Composer.tsx — Multiline input, submit/cancel affordance, disabled-with-reason
-  - studio/client/src/panels/chat/DecisionChips.tsx — Editable system/layout/platform selects
-  - studio/client/src/panels/chat/ToolProgress.tsx — Inline tool progress marker
-  - studio/client/src/panels/chat/StructuredError.tsx — In-place error block (what failed, how to fix)
-  - studio/client/src/panels/chat/ArtifactReference.tsx — Message-to-canvas version link
-  - studio/client/src/panels/chat/messageViewModel.ts — ChatPanelState reducer over contract events (pure logic)
-  - studio/client/src/panels/chat/progressLabels.ts — Tool name/parameters → human-readable progress label
-  - studio/client/src/panels/chat/useChatPanel.ts — Hook wiring the shared WS client to the reducer and dispatchers
-  - studio/client/src/panels/chat/index.ts — Named exports + panel registration
-  - studio/client/src/panels/chat/__tests__/messageViewModel.test.ts — Reducer unit tests (every event type)
-  - studio/client/src/panels/chat/__tests__/Composer.test.tsx — Disabled-with-reason, cancel, draft preservation
-  - studio/client/src/panels/chat/__tests__/ChatPanel.test.tsx — Streaming, chips, references, restore, a11y assertions
-  - studio/packages/contract/ — WS message and payload types (READ-ONLY import)
+  - apps/studio/client/src/panels/chat/ChatPanel.tsx — Panel entry point registered with the docking-shell panel registry
+  - apps/studio/client/src/panels/chat/MessageList.tsx — Transcript rendering with aria-live region and scroll pinning
+  - apps/studio/client/src/panels/chat/Message.tsx — Single turn (text, tool progress, chips, references, error)
+  - apps/studio/client/src/panels/chat/Composer.tsx — Multiline input, submit/cancel affordance, disabled-with-reason
+  - apps/studio/client/src/panels/chat/DecisionChips.tsx — Editable system/layout/platform selects
+  - apps/studio/client/src/panels/chat/ToolProgress.tsx — Inline tool progress marker
+  - apps/studio/client/src/panels/chat/StructuredError.tsx — In-place error block (what failed, how to fix)
+  - apps/studio/client/src/panels/chat/ArtifactReference.tsx — Message-to-canvas version link
+  - apps/studio/client/src/panels/chat/messageViewModel.ts — ChatPanelState reducer over contract events (pure logic)
+  - apps/studio/client/src/panels/chat/progressLabels.ts — Tool name/parameters → human-readable progress label
+  - apps/studio/client/src/panels/chat/useChatPanel.ts — Hook wiring the shared WS client to the reducer and dispatchers
+  - apps/studio/client/src/panels/chat/index.ts — Named exports + panel registration
+  - apps/studio/client/src/panels/chat/__tests__/messageViewModel.test.ts — Reducer unit tests (every event type)
+  - apps/studio/client/src/panels/chat/__tests__/Composer.test.tsx — Disabled-with-reason, cancel, draft preservation
+  - apps/studio/client/src/panels/chat/__tests__/ChatPanel.test.tsx — Streaming, chips, references, restore, a11y assertions
+  - apps/studio/packages/contract/ — WS message and payload types (READ-ONLY import)
 
 implementation_steps:
   - Define the message view model and reducer over packages/contract event types (pure, fully unit-testable)
@@ -259,8 +259,8 @@ implementation_steps:
 
 error_handling: |
   - chat.error during a turn → structured error block in place on that turn (what failed, how to fix); composer re-enables; never a toast or console-only error
-  - auth.status missing → composer disabled with in-place guidance "Add ANTHROPIC_API_KEY to studio/.env"; existing transcript remains readable
-  - auth.status invalid → composer disabled with reason naming the invalid key and the fix (replace the key in studio/.env)
+  - auth.status missing → composer disabled with in-place guidance "Add ANTHROPIC_API_KEY to apps/studio/.env"; existing transcript remains readable
+  - auth.status invalid → composer disabled with reason naming the invalid key and the fix (replace the key in apps/studio/.env)
   - chat.send dispatch failure (socket down) → optimistic user message marked failed in place with a retry affordance; draft recoverable
   - WebSocket disconnect mid-stream → streaming message marked interrupted in place; reconnect/resume (shell-owned) replays state; no partial text silently lost
   - chip.update fails → chip reverts to the confirmed value with the error shown at the chip row, not elsewhere
@@ -298,7 +298,7 @@ verification_criteria:
   - chat.assistant_delta events accumulate into a single streaming assistant message keyed by requestId
   - Streamed text is announced through the aria-live region without stealing focus
   - Composer disables with visible reason text while the agent is busy; draft text survives the transition
-  - With auth.status missing, the composer shows "Add ANTHROPIC_API_KEY to studio/.env" in place and re-enables when auth.status reports configured
+  - With auth.status missing, the composer shows "Add ANTHROPIC_API_KEY to apps/studio/.env" in place and re-enables when auth.status reports configured
   - Cancel control appears during generation; activating it sends chat.cancel and the composer re-enables on the resulting completion
   - chat.tool_started renders "generating in Swiss…" inline within the owning message; chat.tool_finished resolves it — no toast anywhere
   - chat.error renders what failed and how to fix it in place on the failed turn

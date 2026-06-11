@@ -124,7 +124,7 @@ It does not produce wireframes. It does not call wireframe-skill. It exposes des
 Adding a new system involves authoring the directory structure described in the schema:
 
 ```
-design-systems/swiss/
+systems/swiss/
   spec.yaml                       # the schema instance
   components/                     # SVG files referenced by spec.components.*.variants[*].svg
     button-primary.svg

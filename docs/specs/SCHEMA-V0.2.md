@@ -604,7 +604,7 @@ v0.1 anatomy lists without spatial declarations continue to work — they're tre
 
 ## Change 12: Rule check scope declaration
 
-**Finding 12 (Swiss library work)**: rulebook rules vary in what they apply to. `swiss-red-finite-resource` is meaningful only for a complete screen — "exactly 4 red usages per artifact" is correct for a composed wireframe and incorrect for an individual component fragment (which legitimately has 0 red usages). When `rulebook_check.py --batch` ran every rule against every component SVG in `swiss-library/components/`, it produced 91 false-positive failures on 41 files: artifact-level rules firing on component fragments, plus rules that vacuously fail when their target element type isn't present in the fragment.
+**Finding 12 (Swiss library work)**: rulebook rules vary in what they apply to. `swiss-red-finite-resource` is meaningful only for a complete screen — "exactly 4 red usages per artifact" is correct for a composed wireframe and incorrect for an individual component fragment (which legitimately has 0 red usages). When `rulebook_check.py --batch` ran every rule against every component SVG in `systems/swiss/components/`, it produced 91 false-positive failures on 41 files: artifact-level rules firing on component fragments, plus rules that vacuously fail when their target element type isn't present in the fragment.
 
 The v0.2 schema's `check_method` says *how* to check (mechanical vs semantic). `check_scope` says *what to check it against*.
 
@@ -739,7 +739,7 @@ The four systems that previously used emoji avatars (editorial, sketch, prism, r
 
 A spec without `avatar_strategy` defaults to `mode: numeric_index` — the most conservative interpretation that doesn't require any visual element. Specs still using `emoji_substitutions` continue to validate but the policy ban means every spec eventually needs Change 13.
 
-The mechanical no-emoji check is now in `tooling/rulebook_check.py` as `check_no_emoji()`, registered in every per-system `CHECKS_BY_RULESET` entry. `design-system-skill check` against any system's artifact runs this check.
+The mechanical no-emoji check is now in `tools/builders/rulebook_check.py` as `check_no_emoji()`, registered in every per-system `CHECKS_BY_RULESET` entry. `design-system-skill check` against any system's artifact runs this check.
 
 ### Migration recommendation
 

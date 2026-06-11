@@ -7,13 +7,13 @@
 ## Context
 
 The project has a project-wide no-emoji policy, already enforced mechanically for
-wireframe SVG artifacts (`design-systems/design-system-skill/design_system_skill/rulebook.py`
+wireframe SVG artifacts (`tools/design-system-skill/design_system_skill/rulebook.py`
 scans Unicode emoji blocks) and already designed into every system spec: each
 `*-library/spec.yaml` declares `requires_emoji: false` plus a per-system
 `avatar_strategy` (Editorial: Fraunces monograms; Prism: glass-tier monograms;
 Riso: index numbers; Swiss: no avatars at all — typography only).
 
-The rationale recorded in `editorial-library/spec.yaml` is the binding
+The rationale recorded in `systems/editorial/spec.yaml` is the binding
 constraint: emoji glyphs depend on system fonts and degrade silently in
 CairoSVG, so generated wireframes must be self-contained — no font-dependent
 glyphs, no external references.

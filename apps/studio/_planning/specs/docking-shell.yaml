@@ -20,8 +20,8 @@ context: |
   WebSocket client, and the persistence plumbing. Panel CONTENTS are
   explicitly out of scope: chat-panel, canvas, and library-panel
   (Wave 6) own what renders inside the slots the shell provides. The
-  architecture contract (studio/_planning/architecture.md) is binding:
-  React 19 + Vite + TypeScript strict in studio/client, typed messages
+  architecture contract (apps/studio/_planning/architecture.md) is binding:
+  React 19 + Vite + TypeScript strict in apps/studio/client, typed messages
   from packages/contract, layout persisted through GET/PUT
   /api/preferences, one WebSocket connection to /ws with workspace
   attachment by message.
@@ -29,7 +29,7 @@ context: |
 problem_statement: |
   The headless server can run brief → generate → refine → compliance
   with no UI, but there is no browser surface at all:
-  - No SPA exists in studio/client; nothing consumes the Wave 4 API
+  - No SPA exists in apps/studio/client; nothing consumes the Wave 4 API
   - Without a docking model, panel arrangement would be hard-coded and
     every future panel (compliance detail, history, blueprint tree)
     would require shell surgery
@@ -46,7 +46,7 @@ problem_statement: |
 
 scope:
   in:
-    - Vite + React 19 + TypeScript strict application scaffold in studio/client (npm workspace member)
+    - Vite + React 19 + TypeScript strict application scaffold in apps/studio/client (npm workspace member)
     - ShellFrame layout — canvas slot always center, two flanking rails
     - Panel registry (PanelDefinition contract; future panels register without shell changes)
     - Dock state model (placements, stack order, per-rail active tab, collapsed state, rail widths)
@@ -73,7 +73,7 @@ dependencies:
     - "studio-api — GET/PUT /api/preferences, GET /api/workspaces (+ create), /ws WebSocket endpoint with the documented envelope"
     - "packages/contract — typed WS envelopes (workspace.attach, chat.*, chips.updated, artifact.*, bridge.status, auth.status) and HTTP payload types; this capability contributes the src/preferences.ts module (LayoutPreference) to the package already scaffolded in Wave 1"
     - "studio-server — static hosting for the built client bundle"
-    - "Architecture contract (studio/_planning/architecture.md) — stack, monorepo layout, envelope, endpoints; binding"
+    - "Architecture contract (apps/studio/_planning/architecture.md) — stack, monorepo layout, envelope, endpoints; binding"
   downstream:
     - "chat-panel — registers in the panel registry, mounts in a rail slot, consumes the WS client subscription API"
     - "canvas — mounts in the always-center slot, consumes artifact events through the WS client"
@@ -87,7 +87,7 @@ data_contracts: |
   ## Panel Registry Contract
 
   ```typescript
-  // studio/client/src/shell/types.ts
+  // apps/studio/client/src/shell/types.ts
   import type { ComponentType, LazyExoticComponent } from "react";
 
   export type RailSide = "left" | "right";
@@ -136,7 +136,7 @@ data_contracts: |
   ## Layout Preference (wire shape, GET/PUT /api/preferences)
 
   ```typescript
-  // studio/packages/contract/src/preferences.ts — owned by docking-shell,
+  // apps/studio/packages/contract/src/preferences.ts — owned by docking-shell,
   // contributed to the already-scaffolded contract package (the shell never
   // creates the package). docking-shell is the semantic owner of this shape:
   // workspace-store persists the document opaquely (round-trips it without
@@ -186,37 +186,37 @@ data_contracts: |
   ```
 
 file_locations:
-  - studio/client/package.json — client workspace package (Vite, React 19, vitest)
-  - studio/client/vite.config.ts — Vite config (build output for studio-server static hosting)
-  - studio/client/tsconfig.json — TypeScript strict configuration
-  - studio/client/index.html — SPA entry document
-  - studio/client/src/main.tsx — application entry (registry bootstrap, hydrate, render)
-  - studio/client/src/App.tsx — shell composition (error boundary, router, ShellFrame)
-  - studio/client/src/shell/types.ts — PanelDefinition, DockState, DockAction, RailSide
-  - studio/client/src/shell/panelRegistry.ts — panel registry implementation
-  - studio/client/src/shell/dockReducer.ts — dock state reducer (single source of layout truth)
-  - studio/client/src/shell/ShellFrame.tsx — center canvas slot + two rails layout
-  - studio/client/src/shell/Rail.tsx — rail rendering (panel stack, tab strip, icon strip, width)
-  - studio/client/src/shell/PanelHost.tsx — panel chrome (header, drag handle, collapse control, content mount)
-  - studio/client/src/shell/TabStrip.tsx — tab strip for stacked panels
-  - studio/client/src/shell/IconStrip.tsx — collapsed-panel icon strip with restore
-  - studio/client/src/shell/PanelSettingsMenu.tsx — per-panel settings toggle (move fallback, sync status)
-  - studio/client/src/shell/dragController.ts — pointer-event drag with Escape cancel
-  - studio/client/src/shell/DropIndicator.tsx — drop target highlighting during drag
-  - studio/client/src/shell/useReducedMotion.ts — prefers-reduced-motion hook
-  - studio/client/src/shell/keyboardMap.ts — keyboard bindings for move/collapse/restore/focus/tab
-  - studio/client/src/preferences/layoutPersistence.ts — hydrate on load, debounced PUT, retry, schemaVersion gate
-  - studio/client/src/routing/workspaceRoutes.ts — URL ↔ active workspace mapping (/w/<workspace-id>)
-  - studio/client/src/routing/WorkspaceSwitcher.tsx — switcher in shell chrome (list, create, active)
-  - studio/client/src/ws/studioSocket.ts — WebSocket client (typed envelope, reconnect, re-attach resume)
-  - studio/client/src/ws/ConnectionStatus.tsx — inline connection state in shell chrome
-  - studio/client/src/panels/chatPlaceholder.tsx — lazy chat registration target until chat-panel lands
-  - studio/client/src/panels/libraryPlaceholder.tsx — lazy library registration target until library-panel lands
-  - studio/packages/contract/src/preferences.ts — LayoutPreference wire type (owned by docking-shell; module contributed to the already-scaffolded @studio/contract package)
-  - studio/client/src/shell/__tests__/ — reducer, registry, drag, persistence, socket tests
+  - apps/studio/client/package.json — client workspace package (Vite, React 19, vitest)
+  - apps/studio/client/vite.config.ts — Vite config (build output for studio-server static hosting)
+  - apps/studio/client/tsconfig.json — TypeScript strict configuration
+  - apps/studio/client/index.html — SPA entry document
+  - apps/studio/client/src/main.tsx — application entry (registry bootstrap, hydrate, render)
+  - apps/studio/client/src/App.tsx — shell composition (error boundary, router, ShellFrame)
+  - apps/studio/client/src/shell/types.ts — PanelDefinition, DockState, DockAction, RailSide
+  - apps/studio/client/src/shell/panelRegistry.ts — panel registry implementation
+  - apps/studio/client/src/shell/dockReducer.ts — dock state reducer (single source of layout truth)
+  - apps/studio/client/src/shell/ShellFrame.tsx — center canvas slot + two rails layout
+  - apps/studio/client/src/shell/Rail.tsx — rail rendering (panel stack, tab strip, icon strip, width)
+  - apps/studio/client/src/shell/PanelHost.tsx — panel chrome (header, drag handle, collapse control, content mount)
+  - apps/studio/client/src/shell/TabStrip.tsx — tab strip for stacked panels
+  - apps/studio/client/src/shell/IconStrip.tsx — collapsed-panel icon strip with restore
+  - apps/studio/client/src/shell/PanelSettingsMenu.tsx — per-panel settings toggle (move fallback, sync status)
+  - apps/studio/client/src/shell/dragController.ts — pointer-event drag with Escape cancel
+  - apps/studio/client/src/shell/DropIndicator.tsx — drop target highlighting during drag
+  - apps/studio/client/src/shell/useReducedMotion.ts — prefers-reduced-motion hook
+  - apps/studio/client/src/shell/keyboardMap.ts — keyboard bindings for move/collapse/restore/focus/tab
+  - apps/studio/client/src/preferences/layoutPersistence.ts — hydrate on load, debounced PUT, retry, schemaVersion gate
+  - apps/studio/client/src/routing/workspaceRoutes.ts — URL ↔ active workspace mapping (/w/<workspace-id>)
+  - apps/studio/client/src/routing/WorkspaceSwitcher.tsx — switcher in shell chrome (list, create, active)
+  - apps/studio/client/src/ws/studioSocket.ts — WebSocket client (typed envelope, reconnect, re-attach resume)
+  - apps/studio/client/src/ws/ConnectionStatus.tsx — inline connection state in shell chrome
+  - apps/studio/client/src/panels/chatPlaceholder.tsx — lazy chat registration target until chat-panel lands
+  - apps/studio/client/src/panels/libraryPlaceholder.tsx — lazy library registration target until library-panel lands
+  - apps/studio/packages/contract/src/preferences.ts — LayoutPreference wire type (owned by docking-shell; module contributed to the already-scaffolded @studio/contract package)
+  - apps/studio/client/src/shell/__tests__/ — reducer, registry, drag, persistence, socket tests
 
 implementation_steps:
-  - Scaffold studio/client (Vite + React 19 + TypeScript strict, ES modules, named exports) as an npm workspace member
+  - Scaffold apps/studio/client (Vite + React 19 + TypeScript strict, ES modules, named exports) as an npm workspace member
   - Wire packages/contract as a dependency; import envelope and payload types, never redeclare
   - Build ShellFrame (center canvas slot, left/right rails, full-height flex) with base styles and shell tokens
   - Add the application error boundary (failures rendered in place) and useReducedMotion hook
@@ -230,7 +230,7 @@ implementation_steps:
   - Implement IconStrip collapse/restore with focus management
   - Implement keyboardMap — keyboard paths for move, collapse, restore, panel-focus cycling, tab activation
   - Apply reduced-motion gating to the drag ghost and collapse/expand transitions
-  - Contribute the LayoutPreference module (studio/packages/contract/src/preferences.ts) to the already-scaffolded contract package; implement layoutPersistence (hydrate before first rail paint, debounced PUT, retry, schemaVersion gate, unknown-panel tolerance)
+  - Contribute the LayoutPreference module (apps/studio/packages/contract/src/preferences.ts) to the already-scaffolded contract package; implement layoutPersistence (hydrate before first rail paint, debounced PUT, retry, schemaVersion gate, unknown-panel tolerance)
   - Implement studioSocket (typed envelope, capped exponential backoff, automatic workspace.attach re-send on reconnect, typed SendResult while disconnected)
   - Build ConnectionStatus inline in shell chrome; distribute bridge.status and auth.status to subscribers
   - Implement workspaceRoutes (/w/<workspace-id> ↔ active workspace, back/forward, unknown-id in-place handling) and WorkspaceSwitcher with last-workspace restore
@@ -297,7 +297,7 @@ edge_cases: |
 
 integration_points:
   - "studio-api: GET/PUT /api/preferences (silent layout persistence), GET/POST /api/workspaces (switcher), /ws endpoint (single connection, workspace.attach by message per the architecture contract)"
-  - "packages/contract: every WS envelope and HTTP payload type imported from the contract package; this capability owns studio/packages/contract/src/preferences.ts (LayoutPreference) — workspace-store persists the preference document opaquely and studio-api's GET/PUT /api/preferences uses LayoutPreference directly, so docking-shell is the semantic owner"
+  - "packages/contract: every WS envelope and HTTP payload type imported from the contract package; this capability owns apps/studio/packages/contract/src/preferences.ts (LayoutPreference) — workspace-store persists the preference document opaquely and studio-api's GET/PUT /api/preferences uses LayoutPreference directly, so docking-shell is the semantic owner"
   - "chat-panel: registers via PanelDefinition, mounts in a rail slot, subscribes to chat.* events through StudioSocket"
   - "canvas: mounts in the always-center slot, subscribes to artifact.version_created / artifact.compliance_completed through StudioSocket"
   - "library-panel: registers via PanelDefinition, mounts in a rail slot"

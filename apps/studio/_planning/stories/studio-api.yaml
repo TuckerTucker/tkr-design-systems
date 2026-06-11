@@ -13,7 +13,7 @@ stories:
     actor: Studio Engineer
     intent: "Import @studio/contract on both sides of the wire so every message and payload is typed once and drift is a compile error."
     preconditions:
-      - "studio/packages/contract exists in the npm workspaces root (skeleton scaffolded in Wave 1 by studio-server slice 1; studio-api contributes envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts)"
+      - "apps/studio/packages/contract exists in the npm workspaces root (skeleton scaffolded in Wave 1 by studio-server slice 1; studio-api contributes envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts)"
       - "ClientEnvelope, ServerEnvelope, ClientMessage, ServerMessage, ApiError, and all HTTP payload types are exported (named exports)"
       - "TypeScript strict mode enabled in contract, server, and (later) client packages"
     trigger_action: "Import contract types in server relay code and in a scripted client, then construct messages"
@@ -126,7 +126,7 @@ stories:
         then: "It is rejected with chat.error code turn_in_progress and an actionable fix"
       - given: "ANTHROPIC_API_KEY is absent"
         when: "chat.send arrives"
-        then: "chat.error code auth_missing names the fix (set ANTHROPIC_API_KEY via environment or studio/.env) and auth.status is pushed; library and artifact endpoints keep working"
+        then: "chat.error code auth_missing names the fix (set ANTHROPIC_API_KEY via environment or apps/studio/.env) and auth.status is pushed; library and artifact endpoints keep working"
 
   # ── workspace-artifact-endpoints ────────────────────────────────
 

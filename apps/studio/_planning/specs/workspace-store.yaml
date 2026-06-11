@@ -8,7 +8,7 @@ status: implemented
 context: |
   The workspace-store capability is the data layer of the Studio server:
   plain-file persistence (decided — no database) for everything the studio
-  must remember. Workspaces live as directories under studio/workspaces/
+  must remember. Workspaces live as directories under apps/studio/workspaces/
   (gitignored — personal working state, not repo history) per the binding
   "Data on disk" layout in _planning/architecture.md: preferences.yaml at
   the root, then per-workspace workspace.yaml, transcript.yaml, and
@@ -34,7 +34,7 @@ problem_statement: |
   The studio promises "workspaces persist chat transcripts, artifacts,
   and history; reopening the studio resumes where the user left off" —
   and nothing provides it:
-  - No persistence exists in studio/; generation outputs land wherever
+  - No persistence exists in apps/studio/; generation outputs land wherever
     the CLI pipeline drops them, with no workspace grouping
   - Without a repository seam, agent-orchestration and artifact-pipeline
     would each invent their own file handling — divergent layouts,
@@ -50,7 +50,7 @@ problem_statement: |
 
 scope:
   in:
-    - Workspace root at studio/workspaces/, gitignored, created on first use; nothing outside it is ever written by the store
+    - Workspace root at apps/studio/workspaces/, gitignored, created on first use; nothing outside it is ever written by the store
     - Workspace model persistence (id, name, created, updated, active artifact, settings) in workspace.yaml
     - Chat transcript persistence (ordered records — messages, tool-call records, decision chips, routing results — as opaque payloads in transcript.yaml)
     - Artifact and version storage (artifact.yaml head pointer; versions/<NNNN>/ with wireframe.svg, wireframe.spec.yaml, compliance.yaml, version.yaml)
@@ -82,14 +82,14 @@ dependencies:
     - "artifact-pipeline — creates versions and attaches compliance results through ArtifactRepository"
     - "studio-api — workspace CRUD, artifact/version/SVG serving, and preferences endpoints delegate to the repositories"
   external:
-    - "studio/workspaces/ gitignore entry (workspace_git_policy, decided in product.yaml)"
-    - "@studio/contract (studio/packages/contract; skeleton scaffolded in Wave 1 by studio-server slice 1) — workspace-store contributes src/store.ts; preference shape imported from docking-shell's src/preferences.ts"
+    - "apps/studio/workspaces/ gitignore entry (workspace_git_policy, decided in product.yaml)"
+    - "@studio/contract (apps/studio/packages/contract; skeleton scaffolded in Wave 1 by studio-server slice 1) — workspace-store contributes src/store.ts; preference shape imported from docking-shell's src/preferences.ts"
 
 data_contracts: |
   ## Repository Contract
 
   ```typescript
-  // studio/packages/contract/src/store.ts — shared domain models
+  // apps/studio/packages/contract/src/store.ts — shared domain models
   // (workspace-store's owned module in the already-scaffolded @studio/contract package)
   export interface WorkspaceMeta {
     id: string;                  // kebab-case slug, unique in store root
@@ -127,7 +127,7 @@ data_contracts: |
   }
 
   // Preferences shape: the canonical type is LayoutPreference, owned by
-  // docking-shell in studio/packages/contract/src/preferences.ts. The store
+  // docking-shell in apps/studio/packages/contract/src/preferences.ts. The store
   // imports it and persists the document OPAQUELY — reads and writes
   // round-trip preferences.yaml without interpreting fields.
   import type { LayoutPreference } from "./preferences.js";
@@ -202,7 +202,7 @@ data_contracts: |
   ## On-Disk Contract (binding layout from architecture.md)
 
   ```yaml
-  # studio/workspaces/preferences.yaml — LayoutPreference document
+  # apps/studio/workspaces/preferences.yaml — LayoutPreference document
   # (shape owned by docking-shell; the store round-trips it opaquely)
   schemaVersion: 1
   placements: { library: left-rail, chat: right-rail }
@@ -210,7 +210,7 @@ data_contracts: |
   railWidths: { left: 280, right: 360 }
   lastWorkspaceId: checkout-flow
 
-  # studio/workspaces/<workspace-id>/workspace.yaml
+  # apps/studio/workspaces/<workspace-id>/workspace.yaml
   id: checkout-flow
   name: Checkout Flow
   created: 2026-06-10T17:04:00Z
@@ -218,7 +218,7 @@ data_contracts: |
   activeArtifactId: checkout-mobile
   settings: {}
 
-  # studio/workspaces/<workspace-id>/transcript.yaml
+  # apps/studio/workspaces/<workspace-id>/transcript.yaml
   records:
     - id: msg-0001
       kind: message
@@ -229,7 +229,7 @@ data_contracts: |
       timestamp: 2026-06-10T17:05:00Z
       payload: { tool: wf_generate, status: finished }
 
-  # studio/workspaces/<ws>/artifacts/<artifact-id>/artifact.yaml
+  # apps/studio/workspaces/<ws>/artifacts/<artifact-id>/artifact.yaml
   id: checkout-mobile
   name: Checkout (mobile)
   system: swiss
@@ -250,25 +250,25 @@ data_contracts: |
   ```
 
 file_locations:
-  - studio/server/src/store/index.ts — createWorkspaceStore factory, WorkspaceStore type, named re-exports
-  - studio/server/src/store/errors.ts — StoreResult, StoreError, result helpers
-  - studio/server/src/store/atomic-write.ts — temp-file + same-directory rename primitive
-  - studio/server/src/store/yaml-io.ts — read/write helpers over the `yaml` package with corrupt-result translation
-  - studio/server/src/store/slug.ts — kebab-case slug generation, grammar validation, collision suffixing
-  - studio/server/src/store/workspace-repository.ts — WorkspaceRepository implementation (workspace.yaml, .trash- soft delete)
-  - studio/server/src/store/transcript-repository.ts — TranscriptRepository implementation (transcript.yaml)
-  - studio/server/src/store/artifact-repository.ts — ArtifactRepository implementation (artifact.yaml, versions/<NNNN>/)
-  - studio/server/src/store/preferences-repository.ts — PreferencesRepository implementation (preferences.yaml)
-  - studio/server/test/store/atomic-write.test.ts — crash-window and rename-atomicity tests (real temp directory)
-  - studio/server/test/store/workspace-repository.test.ts — lifecycle, soft-delete/restore, corrupt-file degradation tests
-  - studio/server/test/store/transcript-repository.test.ts — append/read ordering and degradation tests
-  - studio/server/test/store/artifact-repository.test.ts — version numbering, unit-write, head-move, compliance-attach tests
-  - studio/server/test/store/preferences-repository.test.ts — defaults, round-trip, unknown-key preservation tests
-  - studio/packages/contract/src/store.ts — WorkspaceMeta, TranscriptRecord, ArtifactMeta, VersionMeta (shared payload types; module contributed to the already-scaffolded @studio/contract package — preference shape is docking-shell's LayoutPreference in src/preferences.ts)
-  - studio/workspaces/ — store root at runtime (gitignored; created on first use)
+  - apps/studio/server/src/store/index.ts — createWorkspaceStore factory, WorkspaceStore type, named re-exports
+  - apps/studio/server/src/store/errors.ts — StoreResult, StoreError, result helpers
+  - apps/studio/server/src/store/atomic-write.ts — temp-file + same-directory rename primitive
+  - apps/studio/server/src/store/yaml-io.ts — read/write helpers over the `yaml` package with corrupt-result translation
+  - apps/studio/server/src/store/slug.ts — kebab-case slug generation, grammar validation, collision suffixing
+  - apps/studio/server/src/store/workspace-repository.ts — WorkspaceRepository implementation (workspace.yaml, .trash- soft delete)
+  - apps/studio/server/src/store/transcript-repository.ts — TranscriptRepository implementation (transcript.yaml)
+  - apps/studio/server/src/store/artifact-repository.ts — ArtifactRepository implementation (artifact.yaml, versions/<NNNN>/)
+  - apps/studio/server/src/store/preferences-repository.ts — PreferencesRepository implementation (preferences.yaml)
+  - apps/studio/server/test/store/atomic-write.test.ts — crash-window and rename-atomicity tests (real temp directory)
+  - apps/studio/server/test/store/workspace-repository.test.ts — lifecycle, soft-delete/restore, corrupt-file degradation tests
+  - apps/studio/server/test/store/transcript-repository.test.ts — append/read ordering and degradation tests
+  - apps/studio/server/test/store/artifact-repository.test.ts — version numbering, unit-write, head-move, compliance-attach tests
+  - apps/studio/server/test/store/preferences-repository.test.ts — defaults, round-trip, unknown-key preservation tests
+  - apps/studio/packages/contract/src/store.ts — WorkspaceMeta, TranscriptRecord, ArtifactMeta, VersionMeta (shared payload types; module contributed to the already-scaffolded @studio/contract package — preference shape is docking-shell's LayoutPreference in src/preferences.ts)
+  - apps/studio/workspaces/ — store root at runtime (gitignored; created on first use)
 
 implementation_steps:
-  - Add store.ts to the already-scaffolded @studio/contract package at studio/packages/contract/src/store.ts (WorkspaceMeta, TranscriptRecord, ArtifactMeta, VersionMeta; package skeleton created in Wave 1 by studio-server slice 1)
+  - Add store.ts to the already-scaffolded @studio/contract package at apps/studio/packages/contract/src/store.ts (WorkspaceMeta, TranscriptRecord, ArtifactMeta, VersionMeta; package skeleton created in Wave 1 by studio-server slice 1)
   - Define StoreResult/StoreError in server/src/store/errors.ts with result helper constructors
   - Implement atomic-write primitive (write temp file in target directory, fsync, rename; clean up orphaned temp files on startup scan)
   - Implement yaml-io helpers (parse/stringify via the `yaml` package; parse failure → corrupt StoreError with path)
@@ -281,7 +281,7 @@ implementation_steps:
   - Implement createWorkspaceStore factory wiring config + pino child loggers into all four repositories
   - Wire store status (root path, accessible/failed) into the studio-server health surface
   - Write vitest suites against real temp directories for every repository (lifecycle round-trips, atomicity crash windows, corruption matrix, slug collisions, version numbering)
-  - Verify studio/workspaces/ is covered by .gitignore and document the layout in server README or module doc comment
+  - Verify apps/studio/workspaces/ is covered by .gitignore and document the layout in server README or module doc comment
 
 error_handling: |
   - YAML parse failure or schema mismatch in any file → StoreResult with code corrupt, message naming the file and the fix (restore from git is impossible — workspaces are gitignored — so the message points at the on-disk path for manual repair); only that item degrades
@@ -296,7 +296,7 @@ error_handling: |
   - Errors never thrown across the repository seam; every method resolves to a StoreResult, and all failures are logged structured via pino with workspaceId/path context
 
 edge_cases: |
-  - First launch: studio/workspaces/ absent → created on first use; preferences read returns null (docking-shell applies its defaults); workspace list is empty, not an error
+  - First launch: apps/studio/workspaces/ absent → created on first use; preferences read returns null (docking-shell applies its defaults); workspace list is empty, not an error
   - Two workspaces named "Checkout Flow" → slugs checkout-flow and checkout-flow-2
   - Workspace name that slugs to empty (emoji-only, punctuation-only) → fallback slug (workspace, workspace-2, …)
   - Soft delete of workspace whose slug is then reused by a new workspace → restore hits conflict; trash directory remains intact
@@ -315,8 +315,8 @@ integration_points:
   - "agent-orchestration: TranscriptRepository.append/read for per-workspace conversation persistence; record payloads opaque to the store"
   - "artifact-pipeline: ArtifactRepository.create/createVersion/writeCompliance/setHead — the pipeline owns when versions exist, the store owns how they land on disk"
   - "studio-api: WorkspaceRepository backs /api/workspaces CRUD; ArtifactRepository backs artifact/version/SVG/spec/compliance endpoints; PreferencesRepository backs GET/PUT /api/preferences (LayoutPreference on the wire and on disk)"
-  - "studio/packages/contract: store.ts payload types shared with the client so API responses and stored shapes never drift; LayoutPreference imported from docking-shell's preferences.ts"
-  - "git: studio/workspaces/ stays gitignored (workspace_git_policy); the store never writes outside it"
+  - "apps/studio/packages/contract: store.ts payload types shared with the client so API responses and stored shapes never drift; LayoutPreference imported from docking-shell's preferences.ts"
+  - "git: apps/studio/workspaces/ stays gitignored (workspace_git_policy); the store never writes outside it"
 
 verification_criteria:
   - createWorkspaceStore returns all four repositories from config alone; no consumer constructs paths (verified by grep — path composition exists only inside server/src/store/)
@@ -346,11 +346,11 @@ performance: |
   - Memory stays bounded by the largest single file handled, not by store size — repositories never load all workspaces' content at once
 
 security: |
-  - The store writes only inside studio/workspaces/ — enforced by validating every id against the slug grammar before path composition; traversal sequences cannot reach the filesystem
+  - The store writes only inside apps/studio/workspaces/ — enforced by validating every id against the slug grammar before path composition; traversal sequences cannot reach the filesystem
   - Slug validation (lowercase alphanumerics and hyphens only) doubles as injection defense for directory names
   - ANTHROPIC_API_KEY and other secrets are never persisted by the store — transcripts, provenance, and preferences carry no credential fields, and the auth contract (architecture.md) forbids key material in workspace files
   - Workspace content is the user's own local data on a single-user localhost tool — no tenancy boundary exists by design; the directory inherits the user's filesystem permissions
-  - studio/workspaces/ is gitignored, so personal briefs, transcripts, and artifacts cannot leak into repo history
+  - apps/studio/workspaces/ is gitignored, so personal briefs, transcripts, and artifacts cannot leak into repo history
   - Stored SVG is treated as opaque content; sanitization for browser delivery is artifact-pipeline/studio-api responsibility and is not silently altered at the storage layer
   - Soft delete preserves data (recoverable by design); the store never destroys user work — purging trash is an explicit manual act outside the store's API
   - pino logging redacts payload content where records may embed user text; logs record ids, paths, and outcomes, not transcript bodies
