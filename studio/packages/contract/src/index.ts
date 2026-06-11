@@ -87,6 +87,13 @@ export type {
   WorkspaceSettings,
   WorkspaceSummary,
 } from "./http-payloads.js";
+export { isLibraryReference, LIBRARY_REFERENCE_KINDS } from "./library.js";
+export type {
+  ComponentReference,
+  LayoutReference,
+  LibraryReference,
+  TokenReference,
+} from "./library.js";
 export type { LayoutPreference, PanelPlacement } from "./preferences.js";
 export { TRANSCRIPT_RECORD_KINDS } from "./store.js";
 export {

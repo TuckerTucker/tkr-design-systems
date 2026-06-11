@@ -23,6 +23,7 @@ import type {
   ApiError,
   AuthStatusPayload,
   BridgeStatusPayload,
+  LibraryReference,
   WorkspaceSummary,
 } from "@studio/contract";
 
@@ -48,6 +49,19 @@ export interface ShellState {
   /** Artifact focus seam: chat → canvas handoff (Wave 6). */
   focusedArtifactId: string | null;
   focusArtifact(artifactId: string | null): void;
+  /**
+   * Library → chat reference seam (Wave 6): the library panel appends
+   * typed references; the chat composer renders them as removable chips
+   * (pendingReferences/removeReference) and drains them into chat.send's
+   * references field (consumeReferences). References are never silently
+   * dropped — they stay pending until consumed or removed, regardless of
+   * the chat panel's collapsed state.
+   */
+  pendingReferences: readonly LibraryReference[];
+  addReference(reference: LibraryReference): void;
+  removeReference(index: number): void;
+  /** Returns every pending reference and clears the channel (sync). */
+  consumeReferences(): LibraryReference[];
 }
 
 const ShellStateContext = createContext<ShellState | null>(null);
@@ -92,6 +106,13 @@ export function ShellStateProvider(
   const [focusedArtifactId, setFocusedArtifactId] = useState<string | null>(
     null,
   );
+  const [pendingReferences, setPendingReferences] = useState<
+    readonly LibraryReference[]
+  >([]);
+  // Sync mirror so consumeReferences returns the latest pending set even
+  // when called inside the same event tick as an addReference (the
+  // callbacks below are the only writers).
+  const pendingReferencesRef = useRef<readonly LibraryReference[]>([]);
   const initialApplied = useRef(false);
 
   // Connection state and pushed statuses, distributed from the socket.
@@ -170,6 +191,27 @@ export function ShellStateProvider(
     return { ok: true };
   }, [api, refreshWorkspaces, selectWorkspace]);
 
+  const addReference = useCallback((reference: LibraryReference): void => {
+    const next = [...pendingReferencesRef.current, reference];
+    pendingReferencesRef.current = next;
+    setPendingReferences(next);
+  }, []);
+
+  const removeReference = useCallback((index: number): void => {
+    const next = pendingReferencesRef.current.filter(
+      (_, position) => position !== index,
+    );
+    pendingReferencesRef.current = next;
+    setPendingReferences(next);
+  }, []);
+
+  const consumeReferences = useCallback((): LibraryReference[] => {
+    const drained = [...pendingReferencesRef.current];
+    pendingReferencesRef.current = [];
+    setPendingReferences([]);
+    return drained;
+  }, []);
+
   const unknownWorkspaceId = useMemo((): string | null => {
     if (
       activeWorkspaceId === null ||
@@ -196,6 +238,10 @@ export function ShellStateProvider(
       bridgeStatus,
       focusedArtifactId,
       focusArtifact: setFocusedArtifactId,
+      pendingReferences,
+      addReference,
+      removeReference,
+      consumeReferences,
     }),
     [
       socket,
@@ -210,6 +256,10 @@ export function ShellStateProvider(
       authStatus,
       bridgeStatus,
       focusedArtifactId,
+      pendingReferences,
+      addReference,
+      removeReference,
+      consumeReferences,
     ],
   );
 
