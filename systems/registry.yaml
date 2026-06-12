@@ -1,0 +1,49 @@
+version: 1
+# Index of design systems available to consumers (wireframe-skill, future
+# mockup-skill, etc.). Maintained by design-system-skill — do not edit
+# the entry shape by hand; use `python -m design_system_skill register`.
+#
+# Each entry:
+#   id            — system identifier used in load_system() and consumer briefs
+#   spec          — path to spec.yaml relative to this registry's directory
+#                   (lives inside the system's directory)
+#   status        — available | draft | deprecated
+#   library_root  — path to the system's library (components/ + layouts/)
+#                   relative to this registry's directory
+systems:
+  - id: wireframe
+    spec: wireframe/spec.yaml
+    status: available
+    library_root: wireframe
+  - id: swiss
+    spec: swiss/spec.yaml
+    status: available
+    library_root: swiss
+  - id: terminal
+    spec: terminal/spec.yaml
+    status: available
+    library_root: terminal
+  - id: editorial
+    spec: editorial/spec.yaml
+    status: available
+    library_root: editorial
+  - id: sketch
+    spec: sketch/spec.yaml
+    status: available
+    library_root: sketch
+  - id: prism
+    spec: prism/spec.yaml
+    status: available
+    library_root: prism
+  - id: revolt
+    spec: revolt/spec.yaml
+    status: available
+    library_root: revolt
+  - id: riso
+    spec: riso/spec.yaml
+    status: available
+    library_root: riso
+  - id: neutral
+    spec: wireframe/spec.yaml
+    status: available
+    library_root: wireframe

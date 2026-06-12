@@ -1,0 +1,330 @@
+# Capability Spec — chat-panel
+# 13-section architectural design
+# Layer: ui | Wave: 6
+
+capability: chat-panel
+status: implemented
+
+context: |
+  The chat-panel capability delivers the agentic chat surface of the Studio
+  MVP triangle (chat panel + canvas with compliance bar) as a docked panel
+  inside the docking-shell. It is a thin client over the verified Wave 4
+  protocol: every behavior consumes or produces the WebSocket vocabulary
+  defined in _planning/architecture.md — client → server: workspace.attach,
+  chat.send, chat.cancel, chip.update; server → client: chat.message_started,
+  chat.assistant_delta, chat.tool_started, chat.tool_finished,
+  chat.message_completed, chat.error, chips.updated, artifact.version_created,
+  auth.status. All message and payload types come from packages/contract;
+  nothing is stringly-typed.
+
+  Boundaries are binding per capabilities.yaml: agent reasoning and tool
+  routing live server-side in agent-orchestration; panel docking mechanics
+  (rails, drag-to-swap, stack, collapse) live in docking-shell. This
+  capability renders the conversation: streaming assistant output in an
+  aria-live region, a multiline composer that disables with a visible reason,
+  the agent's choices as editable decision chips, inline tool progress
+  contextual to the message, structured errors in place, artifact references
+  that focus the canvas through shared shell state, and transcript restore
+  on workspace attach.
+
+problem_statement: |
+  The headless protocol (Wave 4) proves the conversational loop, but a
+  scripted WebSocket client is not a working surface:
+  - There is no place to type a brief; chat.send has no human entry point
+  - Streamed assistant output (chat.assistant_delta) has no rendering, no
+    live region, and no screen-reader path
+  - The agent's system/layout/platform decisions (chips.updated) are
+    invisible and uneditable; adjusting one requires re-stating the brief
+  - Tool progress and errors exist only as WS events; without inline
+    rendering a user cannot tell what is running or what failed and how to
+    fix it
+  - artifact.version_created has no message-side anchor; the conversation
+    and the canvas version it produced are disconnected
+  - Keyless operation (auth.status missing) has no in-place guidance — the
+    failure would surface as a dead composer or a console-only error,
+    violating the UX contract
+
+scope:
+  in:
+    - ChatPanel as a registered docking-shell panel (content only; docking mechanics are the shell's)
+    - Message list with streaming assistant rendering from chat.message_started / chat.assistant_delta / chat.message_completed
+    - aria-live region for streamed assistant text and tool progress
+    - Multiline composer with submit affordance (Enter to send, Shift+Enter newline) sending chat.send
+    - Composer reference intake — incoming LibraryReference payloads from library-panel (drag or explicit send action) render as removable reference chips attached to the draft and ride chat.send as references
+    - Disabled-with-reason composer states — agent busy, auth missing/invalid (auth.status → "Add ANTHROPIC_API_KEY to apps/studio/.env" in place)
+    - Cancel control during generation sending chat.cancel
+    - Decision chips on agent turns from chips.updated — editable selects for system/layout/platform; change sends chip.update and re-runs the affected step
+    - Inline tool progress contextual to the message ("generating in Swiss…" from chat.tool_started/chat.tool_finished) — never a toast
+    - Structured error display in place from chat.error (what failed, how to fix)
+    - Artifact references in messages correlated from artifact.version_created; click focuses that version on the canvas via shared shell state
+    - Transcript restore on workspace.attach (messages, tool records, chips, references, errors)
+    - Keyboard and screen-reader support — focus management, logical tab order, WCAG AA contrast
+    - Component tests (vitest + Testing Library) including accessibility assertions
+  out:
+    - Agent reasoning, intent routing, and MCP tool invocation (agent-orchestration, server side)
+    - Panel docking mechanics — rails, drag-to-swap, stack, collapse, layout persistence (docking-shell)
+    - WebSocket connection lifecycle, reconnect/resume, and the shared WS client (docking-shell provides it)
+    - Message schema definitions (packages/contract owns them; this capability imports, never declares)
+    - Canvas rendering of the focused artifact version (canvas capability consumes the shared shell state)
+    - Transcript storage format (workspace-store, server side)
+    - claude.ai subscription login — prohibited for embedded SDK apps; API key guidance is the only auth path
+
+dependencies:
+  upstream:
+    - "docking-shell — panel registry, shared WebSocket client with reconnect/resume, shared shell state (canvas focus), workspace routing"
+    - "studio-api — WS event vocabulary (chat.*, chips.updated, artifact.version_created, auth.status) and transcript delivery on workspace.attach"
+    - "packages/contract — typed message and payload definitions imported by every chat component (incl. LibraryReference from library.ts, owned by library-panel)"
+    - "library-panel — emits LibraryReference payloads into the composer's reference intake (drag or explicit send action)"
+    - "agent-orchestration (transitive, server side) — produces the event stream the panel renders"
+  downstream:
+    - "canvas — receives artifact-version focus through shared shell state when a message reference is activated"
+  external:
+    - "React 19 + Vite + TypeScript strict (architecture contract)"
+    - "vitest + Testing Library for component tests (architecture contract)"
+
+data_contracts: |
+  ## Message View Model (derived from packages/contract payload types)
+
+  ```typescript
+  // apps/studio/client/src/panels/chat/messageViewModel.ts
+  // Reducer state built exclusively from contract WS payloads —
+  // ChatMessageStartedPayload, ChatAssistantDeltaPayload,
+  // ChatToolStartedPayload, ChatToolFinishedPayload,
+  // ChatMessageCompletedPayload, ChatErrorPayload, ChipsUpdatedPayload,
+  // ArtifactVersionCreatedPayload, AuthStatusPayload.
+
+  export type MessageRole = "user" | "assistant";
+
+  export interface ToolProgressView {
+    toolName: string;                       // e.g. "wf_generate"
+    label: string;                          // "generating in Swiss…"
+    state: "running" | "finished" | "failed";
+  }
+
+  export interface DecisionChipsView {
+    system: string;
+    layout: string;
+    platform: "mobile" | "desktop";
+    options: {
+      systems: ReadonlyArray<string>;
+      layouts: ReadonlyArray<string>;
+      platforms: ReadonlyArray<"mobile" | "desktop">;
+    };
+    editable: boolean;                      // only the latest decision set
+    pending: boolean;                       // chip.update in flight
+  }
+
+  export interface ArtifactReferenceView {
+    artifactId: string;
+    version: number;
+    label: string;                          // "login-screen v4 — Swiss / mobile"
+  }
+
+  export interface StructuredErrorView {
+    what: string;                           // what failed
+    fix: string;                            // how to fix it, in place
+    detail?: string;                        // expandable diagnostic
+  }
+
+  export interface ChatMessageView {
+    id: string;
+    requestId: string;                      // correlation key for deltas, chips, artifacts
+    role: MessageRole;
+    text: string;                           // user text or accumulated assistant deltas
+    streaming: boolean;
+    toolProgress: ReadonlyArray<ToolProgressView>;
+    chips?: DecisionChipsView;
+    artifactRefs: ReadonlyArray<ArtifactReferenceView>;
+    error?: StructuredErrorView;
+    createdAt: string;                      // ISO 8601
+  }
+
+  export type ComposerDisabledReason =
+    | { kind: "agent_busy"; message: string }                       // "Agent is working — cancel to send a new message"
+    | { kind: "auth_missing"; message: string }                     // "Add ANTHROPIC_API_KEY to apps/studio/.env"
+    | { kind: "auth_invalid"; message: string };
+
+  export interface ChatPanelState {
+    messages: ReadonlyArray<ChatMessageView>;
+    activeRequestId: string | null;         // non-null while streaming
+    composerDisabled: ComposerDisabledReason | null;
+    draft: string;                          // never lost to state transitions
+    draftReferences: ReadonlyArray<LibraryReference>; // library references attached to the draft (imported from @studio/contract — library.ts, owned by library-panel)
+  }
+
+  export function reduceChatEvent(
+    state: ChatPanelState,
+    event: ServerMessage,                   // discriminated union from packages/contract
+  ): ChatPanelState;
+  ```
+
+  ## Component Props Contract
+
+  ```typescript
+  // ChatPanel — panel registry entry point
+  export interface ChatPanelProps {
+    workspaceId: string;
+  }
+
+  // MessageList
+  export interface MessageListProps {
+    messages: ReadonlyArray<ChatMessageView>;
+    onArtifactFocus: (ref: ArtifactReferenceView) => void;  // shared shell state
+  }
+
+  // Composer
+  // LibraryReference is imported from @studio/contract (library.ts, owned by
+  // library-panel). The composer is the receiving side of the seam: it accepts
+  // incoming LibraryReference payloads (library-panel drag drop target +
+  // programmatic intake for the explicit send action), renders them as
+  // removable reference chips attached to the draft, and includes them as
+  // `references` in the outgoing chat.send — ChatSendPayload is
+  // { text, artifactId?, references?: LibraryReference[] }.
+  export interface ComposerProps {
+    draft: string;
+    references: ReadonlyArray<LibraryReference>; // chips attached to the draft
+    onDraftChange: (text: string) => void;
+    onReferenceAdd: (ref: LibraryReference) => void;    // drop target + programmatic intake
+    onReferenceRemove: (ref: LibraryReference) => void; // chip removal before send
+    disabled: ComposerDisabledReason | null; // reason rendered adjacent, in place
+    busy: boolean;                           // true → cancel control replaces send
+    onSend: (text: string, references: ReadonlyArray<LibraryReference>) => void; // dispatches chat.send with references
+    onCancel: () => void;                    // dispatches chat.cancel
+  }
+
+  // DecisionChips
+  export interface DecisionChipsProps {
+    chips: DecisionChipsView;
+    onChange: (
+      chip: "system" | "layout" | "platform",
+      value: string,
+    ) => void;                               // dispatches chip.update
+  }
+
+  // ToolProgress
+  export interface ToolProgressProps {
+    progress: ToolProgressView;
+  }
+
+  // StructuredError
+  export interface StructuredErrorProps {
+    error: StructuredErrorView;
+  }
+
+  // ArtifactReference
+  export interface ArtifactReferenceProps {
+    reference: ArtifactReferenceView;
+    active: boolean;                         // currently focused on the canvas
+    onFocus: (ref: ArtifactReferenceView) => void;
+  }
+  ```
+
+file_locations:
+  - apps/studio/client/src/panels/chat/ChatPanel.tsx — Panel entry point registered with the docking-shell panel registry
+  - apps/studio/client/src/panels/chat/MessageList.tsx — Transcript rendering with aria-live region and scroll pinning
+  - apps/studio/client/src/panels/chat/Message.tsx — Single turn (text, tool progress, chips, references, error)
+  - apps/studio/client/src/panels/chat/Composer.tsx — Multiline input, submit/cancel affordance, disabled-with-reason
+  - apps/studio/client/src/panels/chat/DecisionChips.tsx — Editable system/layout/platform selects
+  - apps/studio/client/src/panels/chat/ToolProgress.tsx — Inline tool progress marker
+  - apps/studio/client/src/panels/chat/StructuredError.tsx — In-place error block (what failed, how to fix)
+  - apps/studio/client/src/panels/chat/ArtifactReference.tsx — Message-to-canvas version link
+  - apps/studio/client/src/panels/chat/messageViewModel.ts — ChatPanelState reducer over contract events (pure logic)
+  - apps/studio/client/src/panels/chat/progressLabels.ts — Tool name/parameters → human-readable progress label
+  - apps/studio/client/src/panels/chat/useChatPanel.ts — Hook wiring the shared WS client to the reducer and dispatchers
+  - apps/studio/client/src/panels/chat/index.ts — Named exports + panel registration
+  - apps/studio/client/src/panels/chat/__tests__/messageViewModel.test.ts — Reducer unit tests (every event type)
+  - apps/studio/client/src/panels/chat/__tests__/Composer.test.tsx — Disabled-with-reason, cancel, draft preservation
+  - apps/studio/client/src/panels/chat/__tests__/ChatPanel.test.tsx — Streaming, chips, references, restore, a11y assertions
+  - apps/studio/packages/contract/ — WS message and payload types (READ-ONLY import)
+
+implementation_steps:
+  - Define the message view model and reducer over packages/contract event types (pure, fully unit-testable)
+  - Implement progressLabels mapping tool names/parameters to human-readable inline labels
+  - Build MessageList and Message with transcript-order rendering and the aria-live region
+  - Wire chat.message_started / chat.assistant_delta / chat.message_completed into streaming accumulation keyed by requestId
+  - Implement scroll pinning (auto-scroll while at bottom, suspended when the user scrolls up)
+  - Build Composer (multiline auto-grow, Enter/Shift+Enter, optimistic user append, draft preservation)
+  - Implement composer reference intake — accept incoming LibraryReference payloads (drop target + programmatic intake), render removable reference chips on the draft, include them as references in chat.send (ChatSendPayload)
+  - Implement disabled-with-reason states from busy tracking and auth.status, with in-place guidance text
+  - Implement the cancel control dispatching chat.cancel and re-enable on completion events
+  - Build ToolProgress rendering chat.tool_started/chat.tool_finished inline within the owning message
+  - Build StructuredError rendering chat.error in place (what failed, how to fix, expandable detail)
+  - Build DecisionChips with editable selects, chip.update dispatch, in-flight disable, and read-only historical turns
+  - Build ArtifactReference with requestId correlation from artifact.version_created and canvas focus via shared shell state
+  - Implement transcript restore on workspace.attach (full view-model rehydration, scroll to latest, composer focused)
+  - Register ChatPanel in the docking-shell panel registry with collapse-safe draft/scroll preservation
+  - Keyboard and screen-reader pass — tab order, focus management, labels, contrast, reduced-motion
+  - Write reducer unit tests covering every contract event type and ordering edge cases
+  - Write component tests (Testing Library) for composer states, streaming, chips, references, restore, and axe assertions
+
+error_handling: |
+  - chat.error during a turn → structured error block in place on that turn (what failed, how to fix); composer re-enables; never a toast or console-only error
+  - auth.status missing → composer disabled with in-place guidance "Add ANTHROPIC_API_KEY to apps/studio/.env"; existing transcript remains readable
+  - auth.status invalid → composer disabled with reason naming the invalid key and the fix (replace the key in apps/studio/.env)
+  - chat.send dispatch failure (socket down) → optimistic user message marked failed in place with a retry affordance; draft recoverable
+  - WebSocket disconnect mid-stream → streaming message marked interrupted in place; reconnect/resume (shell-owned) replays state; no partial text silently lost
+  - chip.update fails → chip reverts to the confirmed value with the error shown at the chip row, not elsewhere
+  - artifact reference focus when the version no longer exists (workspace edited on disk) → reference renders unavailable-with-reason, not a dead click
+  - chat.assistant_delta for an unknown requestId → ignored and logged via the client logger; never crashes the reducer
+  - chat.tool_finished without a matching chat.tool_started → progress marker created in finished state (event-order tolerant)
+  - Transcript restore payload failing contract validation → panel renders an in-place load error with the failing workspace path; composer stays disabled-with-reason
+
+edge_cases: |
+  - Empty workspace (no transcript) → empty state inviting the first brief; composer enabled and focused
+  - User scrolls up during streaming → auto-scroll suspends; a jump-to-latest affordance appears; pinning resumes at bottom
+  - Multiple tool calls in one turn → progress markers stack inside the message in start order, each resolving independently
+  - chips.updated arriving more than once for a turn (re-run) → chip row updates in place; superseded values never duplicated
+  - Chip changed while another re-run is in flight → selects disabled-with-reason until the in-flight run completes (no double-fire)
+  - Message producing multiple artifacts (multi-platform turn) → all references render; each focuses its own version
+  - Cancel racing completion (chat.cancel sent as chat.message_completed arrives) → completion wins; cancel becomes a no-op without an error
+  - Very long transcript → list virtualization keeps rendering bounded; restore still lands on the latest message (no pagination — the transcript is one scroll)
+  - Draft present when the agent finishes (composer re-enables) → draft intact, caret position preserved
+  - Panel collapsed to icon strip during streaming → stream continues in the view model; restore shows the completed state, scroll pinned
+  - Shift+Enter on the last line → newline inserted, composer grows; Enter with an empty/whitespace-only draft → no send (affordance disabled)
+  - Reference chip removed before send → that reference is not included in the chat.send references
+  - Reference to a system different from the active chip → still sent unchanged (the agent decides how to reconcile)
+  - prefers-reduced-motion → streaming indicator is static; text still appends live
+
+integration_points:
+  - "docking-shell: ChatPanel registers in the panel registry; shell provides the shared WebSocket client, reconnect/resume, and the shared shell state used for canvas focus"
+  - "studio-api: the panel consumes chat.message_started/assistant_delta/tool_started/tool_finished/message_completed, chat.error, chips.updated, artifact.version_created, auth.status; it produces chat.send, chat.cancel, chip.update (workspace.attach is shell-driven)"
+  - "packages/contract: every payload type imported from the contract package; the reducer is typed against the ServerMessage discriminated union; LibraryReference is imported from library.ts (owned by library-panel), never redeclared"
+  - "library-panel: the composer's reference intake accepts LibraryReference payloads (drag drop target + programmatic intake for the explicit send action); chips render removable on the draft and ride chat.send as references?: LibraryReference[]"
+  - "canvas: artifact reference activation writes the focused artifact version into shared shell state; the canvas reacts — no direct coupling between the panels"
+  - "agent-orchestration (transitive): decision chips and tool progress mirror the agent's server-side choices; the panel never decides or routes intent"
+
+verification_criteria:
+  - Typing a brief and pressing Enter sends chat.send and appends the user message optimistically
+  - chat.assistant_delta events accumulate into a single streaming assistant message keyed by requestId
+  - Streamed text is announced through the aria-live region without stealing focus
+  - Composer disables with visible reason text while the agent is busy; draft text survives the transition
+  - With auth.status missing, the composer shows "Add ANTHROPIC_API_KEY to apps/studio/.env" in place and re-enables when auth.status reports configured
+  - Cancel control appears during generation; activating it sends chat.cancel and the composer re-enables on the resulting completion
+  - chat.tool_started renders "generating in Swiss…" inline within the owning message; chat.tool_finished resolves it — no toast anywhere
+  - chat.error renders what failed and how to fix it in place on the failed turn
+  - chips.updated renders editable selects for system, layout, platform on the latest agent turn; historical turns are read-only
+  - Changing a chip sends chip.update and the re-run streams into the conversation; chips disable while the re-run is in flight
+  - A message that produced an artifact shows a reference; clicking it focuses that version on the canvas via shared shell state without navigation
+  - Reopening a workspace restores the full transcript — messages, tool records, chips, references, errors — with scroll at the latest message and the composer focused
+  - Tab order is logical (messages → chips → references → composer → send/cancel); focus returns to the composer after send and cancel
+  - All interactive elements carry screen-reader labels; axe assertions pass in the component test suite
+  - All chat surfaces, including disabled-with-reason states, meet WCAG AA contrast
+  - Reducer unit tests cover every contract event type, out-of-order tool events, and unknown-requestId tolerance
+
+performance: |
+  - Delta application is O(1) against the active streaming message; the message list never fully re-renders per delta
+  - Scroll pinning uses a single bottom-anchor check per append; no layout thrash during streaming
+  - Long transcripts virtualize rendering so memory and DOM size stay bounded regardless of transcript length (no pagination — one continuous scroll)
+  - Optimistic user-message append makes send feel immediate; rollback happens in place on failure
+  - Transcript restore renders progressively (latest messages first) so the panel is usable while older history hydrates
+  - Draft input is uncontrolled-debounced into state; keystrokes never wait on the reducer
+  - The view-model reducer is pure and allocation-light; it runs on the WS message path without blocking paint
+
+security: |
+  - The panel never sees the ANTHROPIC_API_KEY — auth.status carries state (configured/missing/invalid) only; guidance text names the env var, never a value
+  - All inbound payloads are typed and validated at the studio-api boundary before reaching the panel; the reducer additionally tolerates unknown requestIds without crashing
+  - Assistant text and error detail render as text, never as injected HTML (no dangerouslySetInnerHTML in the chat surface)
+  - chat.send carries only the user's text and workspace context; no client-side secrets or paths are attached
+  - Artifact references carry IDs and version numbers; SVG content is fetched by the canvas through the authenticated-by-locality HTTP API, not embedded in chat payloads
+  - Single-user localhost deployment (architecture contract); the panel adds no remote origins, storage, or third-party calls
+  - TypeScript strict mode and named exports throughout; contract types prevent stringly-typed message handling

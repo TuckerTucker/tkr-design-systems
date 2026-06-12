@@ -1,0 +1,106 @@
+# Features — docking-shell
+# Capability: React SPA shell with rail/panel docking, silent layout persistence, workspace routing, and the WebSocket client
+# Layer: ui | Wave: 5
+
+capability: docking-shell
+
+features:
+
+  - name: spa-scaffold
+    description: |
+      The Vite + React 19 + TypeScript strict application scaffold in
+      apps/studio/client (npm workspace member). Shell frame with the canvas
+      slot always center and two rails flanking it. Consumes typed
+      messages and payloads from packages/contract — no stringly-typed
+      messages. Application error boundary surfacing failures in place,
+      reduced-motion detection plumbing, and base styles. Panel CONTENTS
+      (chat, canvas, library) belong to their own capabilities; the
+      shell renders registered placeholders until those land.
+    scope:
+      - apps/studio/client workspace package (Vite, React 19, TypeScript strict, ES modules, named exports)
+      - packages/contract dependency wiring (WS envelope types, HTTP payload types imported, never redeclared)
+      - ShellFrame layout — center canvas slot, left rail, right rail, full-height flex
+      - Application error boundary (render failures shown in place with what failed and how to recover — never console-only)
+      - prefers-reduced-motion detection hook shared by all shell animations
+      - Base styles and shell-level design tokens (rail widths, header heights, focus ring)
+      - vitest + Testing Library setup for client components
+      - Static build output consumable by studio-server static hosting
+
+  - name: panel-registry-and-rails
+    description: |
+      Panels as first-class citizens. A panel registry holds
+      PanelDefinition entries (id, title, icon, lazy component, default
+      placement, min width); future panels — compliance detail, history,
+      blueprint tree — plug in by registering, with zero shell changes.
+      The dock model owns placements: which rail a panel sits on, stack
+      order, collapsed state, active tab. When multiple panels share a
+      rail they stack as tabs; both panels on one rail is a supported
+      arrangement, with the empty rail yielding its width to the canvas.
+    scope:
+      - PanelDefinition contract (id, title, icon, lazy-loaded component, defaultPlacement, minWidth)
+      - Panel registry (register, get, list; duplicate-id registration fails at startup)
+      - Initial registrations — chat (left rail) and library (right rail) as lazy placeholders for the Wave 6 capabilities
+      - Dock state reducer (placements, per-rail active tab, rail widths) as the single source of layout truth
+      - PanelHost chrome — panel header (title, drag handle, collapse control), content mount, code-split loading state
+      - Tab strip when 2+ panels share a rail (click and keyboard tab activation, single visible panel per rail)
+      - Empty-rail handling (rail collapses to zero width; canvas absorbs the space)
+      - Rail width clamping to the widest hosted panel minWidth
+
+  - name: panel-movement-and-collapse
+    description: |
+      Every way a panel moves, with full input parity. Drag the panel
+      header to the other rail with live drop indicators showing the
+      target slot; a per-panel settings toggle ("Move to left/right
+      rail") is the always-available fallback. Panels collapse to an
+      icon strip on their rail edge and restore with one click. Every
+      operation — move, collapse, restore, focus — has a keyboard path,
+      and all drag/collapse animations respect prefers-reduced-motion.
+    scope:
+      - Drag controller on the panel header (pointer events — mouse and touch), Escape cancels mid-drag
+      - Drop indicators (target rail and stack position highlighted while dragging; invalid targets never highlight)
+      - Same-rail drop reorders the stack instead of swapping rails
+      - Settings toggle per panel ("Move to left rail" / "Move to right rail") as the drag fallback
+      - Collapse-to-icon-strip per panel (icon + accessible name on the rail edge), one-click restore
+      - Keyboard parity — move panel between rails, collapse, restore, cycle panel focus, activate tabs, all without a pointer
+      - Focus management (focus follows the moved/restored panel; collapse returns focus predictably)
+      - Reduced-motion respect (drag ghost and collapse/expand transitions become instant when prefers-reduced-motion is set)
+      - WCAG AA — visible focus ring on every control, ARIA roles/labels on tabs, icon strip buttons, and the settings menu
+
+  - name: silent-layout-persistence
+    description: |
+      The arrangement persists without a save button. Every dock change
+      (move, reorder, collapse, tab switch, rail resize) debounces into
+      a PUT to the preferences endpoint; on load the persisted layout
+      hydrates before the rails first paint, so the user always returns
+      to exactly the arrangement they left. Missing or stale preferences
+      degrade to defaults silently — persistence failures never block
+      interaction.
+    scope:
+      - LayoutPreference wire shape (schemaVersion, placements, activeTab, railWidths, lastWorkspaceId) declared in apps/studio/packages/contract/src/preferences.ts — owned by docking-shell, contributed to the already-scaffolded contract package
+      - Hydrate on load — GET /api/preferences before first rail paint (no default-then-jump layout flash)
+      - Debounced PUT /api/preferences on every dock state change (no save action anywhere)
+      - First-run defaults (chat left, library right, nothing collapsed) when no preference exists
+      - Unknown-panel tolerance (persisted placement for an unregistered panel id is dropped, the rest hydrates)
+      - PUT failure handling — local state kept authoritative, background retry, sync status visible inline in panel settings (not a toast)
+      - schemaVersion gate (future shape changes migrate or fall back to defaults, never crash)
+
+  - name: workspace-routing-and-connection
+    description: |
+      The shell's plumbing to the server. A workspace switcher in the
+      shell chrome lists workspaces from the API and keeps the URL and
+      the active workspace in lockstep — deep links open the workspace,
+      back/forward navigate workspace history, and the last active
+      workspace reopens by default. One WebSocket client (single /ws
+      connection) with automatic reconnect and resume: on reconnect it
+      re-attaches the active workspace and connection state is surfaced
+      inline in the shell chrome — never as a toast.
+    scope:
+      - Workspace switcher in shell chrome (list from GET /api/workspaces, create affordance, active workspace shown)
+      - URL ↔ active workspace routing (/w/<workspace-id>; deep link opens that workspace; back/forward traverse history)
+      - Unknown workspace id in URL handled in place (switcher opens with the available list and the unresolved id named)
+      - Last-workspace restore (lastWorkspaceId from preferences when the URL names no workspace)
+      - WebSocket client over the packages/contract envelope (typed send, typed subscription per server event type)
+      - workspace.attach on connect and automatically again after every reconnect (resume, no user action)
+      - Reconnect with capped exponential backoff; sends while disconnected are held or rejected with typed results, never silently dropped
+      - Inline connection state in shell chrome (connected / reconnecting / offline with what it means and what the client is doing)
+      - bridge.status and auth.status events distributed to subscribed panels through the same client

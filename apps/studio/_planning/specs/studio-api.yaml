@@ -1,0 +1,600 @@
+# Capability Spec — studio-api
+# 13-section architectural design
+# Layer: api | Wave: 4
+
+capability: studio-api
+status: implemented
+
+context: |
+  studio-api is the protocol surface between the studio server and any
+  client — the headless-first Phase 1 deliverable. It sits on top of
+  studio-server (Fastify 5 process, /ws upgrade handling, localhost-only
+  binding), agent-orchestration (the Claude Agent SDK loop and its event
+  stream), artifact-pipeline (versioning and compliance events), and
+  workspace-store (plain-file persistence). mcp-bridge supplies the
+  direct-call MCP tool set the library endpoints proxy.
+
+  The architecture contract (apps/studio/_planning/architecture.md) is binding:
+  the HTTP route table under /api, the single /ws endpoint with
+  message-based workspace attachment, the ClientEnvelope/ServerEnvelope
+  split ({ type, requestId, payload }, seq on server→client only), the
+  four client→server message types, and the eleven server→client event
+  types are reproduced here exactly. Every message and payload type is
+  declared once in the @studio/contract package (npm name @studio/contract
+  ↔ filesystem path apps/studio/packages/contract, resolved via npm workspaces)
+  and imported by both server and client — no stringly-typed messages.
+
+  Single-user, local-only by decision: no authentication, no
+  multi-tenancy, server bound to localhost. Business logic lives below
+  this capability — studio-api validates, routes, relays, and shapes
+  payloads; agent-orchestration and artifact-pipeline do the work.
+
+problem_statement: |
+  Waves 1–3 produce a working server stack with no way in:
+  - The agent loop, artifact pipeline, and stores are only reachable
+    programmatically inside the process; no client can drive them
+  - No shared message contract exists; without one, server and future
+    client would drift into stringly-typed, mutually inconsistent shapes
+  - Chat streaming has no delivery channel; agent events die in-process
+  - A dropped connection mid-generation would lose the stream with no
+    way to resume; reconnect semantics must exist before any UI does
+  - Library data (systems, tokens, components, layouts) is only
+    reachable through MCP tool calls; clients need cached HTTP access
+  - Nothing rejects invalid input before domain code; malformed requests
+    would surface as deep, unactionable failures
+  - The headless-first strategy requires the full conversational loop —
+    brief → generate → refine → compliance — to be provable by a
+    scripted client with no UI; without this capability Phase 1 has no
+    exit criterion
+
+scope:
+  in:
+    - Shared contract modules contributed to @studio/contract (package skeleton scaffolded in Wave 1 by studio-server slice 1) — envelope.ts (ClientEnvelope/ServerEnvelope), ws-messages.ts, http-payloads.ts, errors.ts: every WS message, every HTTP payload, structured error type, domain literal unions
+    - WebSocket session management on /ws — workspace.attach binding, per-workspace event journal with monotonic seq, reconnect with resume (missed-event replay or state re-sync)
+    - Chat streaming relay — chat.send/chat.cancel/chip.update into agent-orchestration; assistant deltas, tool progress, chips, and artifact events out as contract envelopes
+    - HTTP endpoints per the architecture route table — workspaces CRUD, artifact metadata/SVG/spec/compliance serving, POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore (restore-as-new-head, delegated to artifact-pipeline), preferences get/put
+    - Library endpoints proxying mcp-bridge (ds_list_systems, wf_get_tokens, wf_read_component, layouts from loaded specs) with caching, invalidated by watching systems/registry.yaml directly via fs.watch (path from studio-server config)
+    - Input validation at the boundary — every HTTP body/param and WS message validated against the contract before domain code; invalid states rejected with structured errors (what failed, how to fix)
+    - Typed-result error seam — domain failures mapped to HTTP status + ApiError / chat.error, never thrown across the boundary
+    - Integration tests over real HTTP/WS per the testing policy, including the headless conversational loop (Phase 1 exit criterion)
+  out:
+    - Business logic — intent routing, tool selection, blueprint authoring (agent-orchestration); versioning, compliance runs, violation mapping (artifact-pipeline)
+    - Authentication and multi-user concerns — single-user local tool by decision; a future capability if ever hosted
+    - MCP protocol communication and subprocess supervision (mcp-bridge)
+    - Storage mechanics and file layout (workspace-store)
+    - Process lifecycle, /api/health route, WS upgrade/heartbeat/close mechanics, static hosting (studio-server) — HealthResponse lives in contract module health.ts owned by studio-server; studio-api only references it
+    - UI rendering of any kind (docking-shell, chat-panel, canvas, library-panel)
+    - Export formats and rasterization (export-surface, deferred)
+
+dependencies:
+  upstream:
+    - "studio-server — Fastify instance, /ws upgrade handling, config, pino logger, localhost binding"
+    - "agent-orchestration — agent loop entry point and event stream (assistant tokens, tool progress, decision chips, errors), cancellation, chip re-run"
+    - "artifact-pipeline — artifact/version/compliance read models and event emissions (version created, compliance completed)"
+    - "workspace-store — workspace CRUD, transcript reads for re-sync, artifact version content (SVG, spec, compliance), preference store"
+    - "mcp-bridge — typed direct-call wrappers (ds_list_systems, ds_load_system, wf_get_tokens, wf_read_component) and bridge status for library endpoints"
+    - "Architecture contract (apps/studio/_planning/architecture.md) — binding route table, envelope, and event vocabulary"
+  downstream:
+    - "docking-shell — WebSocket client with reconnect/resume, preferences endpoints, contract types"
+    - "chat-panel — chat message vocabulary, decision chips, streaming events"
+    - "canvas — artifact SVG/metadata/compliance endpoints, artifact events"
+    - "library-panel — library endpoints and payload types"
+    - "export-surface (deferred) — artifact serving endpoints as its read path"
+  external:
+    - "Fastify 5 + @fastify/websocket (server framework, decided in architecture)"
+    - "yaml package — spec.yaml parsing for the /spec endpoint (never hand-rolled)"
+    - "vitest — integration test runner"
+    - "tools/mcp-server — real MCP server exercised (via mcp-bridge) in integration tests; never mocked"
+
+data_contracts: |
+  All types live in apps/studio/packages/contract/src and are the single
+  declaration imported by server and client. Names below are the
+  contract; the WS type strings reproduce architecture.md exactly.
+  Per the contract ownership table in architecture.md, studio-api owns
+  envelope.ts, ws-messages.ts, http-payloads.ts, and errors.ts; types
+  owned by other capabilities (BridgeState, HealthResponse, the domain
+  ComplianceReport, LayoutPreference, LibraryReference, ChipUpdate) are
+  imported, never redeclared.
+
+  ## Envelope
+
+  Two envelope types per architecture.md — client code cannot emit a
+  sequence number by construction:
+
+  ```typescript
+  // packages/contract/src/envelope.ts
+  export interface ClientEnvelope<TType extends string, TPayload> {
+    type: TType;
+    /** uuid — echoed back on the server's responses when applicable */
+    requestId?: string;
+    payload: TPayload;
+  }
+
+  export interface ServerEnvelope<TType extends string, TPayload> {
+    type: TType;
+    /** uuid — echoes the client request when applicable */
+    requestId?: string;
+    /** monotonic per-workspace sequence for reconnect-with-resume */
+    seq: number;
+    payload: TPayload;
+  }
+  ```
+
+  ## Client → server messages
+
+  ```typescript
+  // packages/contract/src/ws-messages.ts
+  import type { LibraryReference } from "./library.js"; // owned by library-panel
+
+  export interface WorkspaceAttachPayload {
+    workspaceId: string;
+    /** last seq the client saw; omit for first attach / full re-sync */
+    lastEventSeq?: number;
+  }
+
+  export interface ChatSendPayload {
+    text: string;
+    /** scope the turn to an artifact's conversation context */
+    artifactId?: string;
+    /** library references attached by the composer; the agent receives
+        them as grounding */
+    references?: LibraryReference[];
+  }
+
+  export interface ChatCancelPayload {
+    messageId: string;
+  }
+
+  export type ChipKind = "system" | "layout" | "platform";
+
+  export interface ChipUpdatePayload {
+    messageId: string;
+    kind: ChipKind;
+    value: string;
+  }
+
+  export type ClientMessage =
+    | ClientEnvelope<"workspace.attach", WorkspaceAttachPayload>
+    | ClientEnvelope<"chat.send", ChatSendPayload>
+    | ClientEnvelope<"chat.cancel", ChatCancelPayload>
+    | ClientEnvelope<"chip.update", ChipUpdatePayload>;
+  ```
+
+  chip.update carries no artifactId on the wire. The chat-relay performs
+  a named translation step — chip-update resolution: it resolves the
+  artifactId by looking up the ChipSet previously emitted for that
+  messageId (every ChipSet carries { artifactId, messageId }), then hands
+  agent-orchestration its domain ChipUpdate
+  { requestId, artifactId, kind, value }. The field is named kind on
+  both sides.
+
+  ## Server → client messages
+
+  ```typescript
+  export interface MessageStartedPayload {
+    messageId: string;
+    workspaceId: string;
+    artifactId?: string;
+  }
+
+  export interface AssistantDeltaPayload {
+    messageId: string;
+    delta: string;
+  }
+
+  export interface ToolStartedPayload {
+    messageId: string;
+    toolCallId: string;
+    tool: string;            // e.g. "wf_generate"
+    summary: string;         // human-readable, e.g. "generating in Swiss…"
+  }
+
+  export interface ToolFinishedPayload {
+    messageId: string;
+    toolCallId: string;
+    tool: string;
+    status: "ok" | "error";
+    detail?: string;
+  }
+
+  export interface ArtifactRef {
+    artifactId: string;
+    version: number;
+  }
+
+  export interface MessageCompletedPayload {
+    messageId: string;
+    artifactRefs: ArtifactRef[];
+    cancelled: boolean;
+  }
+
+  export interface ChatErrorPayload {
+    messageId?: string;      // absent for protocol-level rejections
+    error: ApiError;
+  }
+
+  // DecisionChip and ChipKind are imported from agent-events.ts (owned by
+  // agent-orchestration): { kind: ChipKind, value, options, rerunStep } —
+  // never redeclared here.
+
+  export interface ChipsUpdatedPayload {
+    messageId: string;
+    chips: DecisionChip[];
+  }
+
+  export interface VersionCreatedPayload {
+    artifactId: string;
+    version: VersionSummary;
+  }
+
+  export interface ComplianceCompletedPayload {
+    artifactId: string;
+    version: number;
+    compliance: ComplianceResponse;
+  }
+
+  // BridgeState is owned by mcp-bridge (contract module bridge.ts):
+  // "starting" | "up" | "restarting" | "failed" | "stopped" — studio-api
+  // imports it; consumers handle all five states.
+  import type { BridgeState } from "./bridge.js";
+  export interface BridgeStatusPayload {
+    state: BridgeState;
+    detail?: string;
+  }
+
+  export type AuthState = "configured" | "missing" | "invalid";
+  export interface AuthStatusPayload {
+    state: AuthState;
+    /** how to fix, e.g. "set ANTHROPIC_API_KEY in apps/studio/.env" */
+    fix?: string;
+  }
+
+  export type ServerMessage =
+    | ServerEnvelope<"chat.message_started", MessageStartedPayload>
+    | ServerEnvelope<"chat.assistant_delta", AssistantDeltaPayload>
+    | ServerEnvelope<"chat.tool_started", ToolStartedPayload>
+    | ServerEnvelope<"chat.tool_finished", ToolFinishedPayload>
+    | ServerEnvelope<"chat.message_completed", MessageCompletedPayload>
+    | ServerEnvelope<"chat.error", ChatErrorPayload>
+    | ServerEnvelope<"chips.updated", ChipsUpdatedPayload>
+    | ServerEnvelope<"artifact.version_created", VersionCreatedPayload>
+    | ServerEnvelope<"artifact.compliance_completed", ComplianceCompletedPayload>
+    | ServerEnvelope<"bridge.status", BridgeStatusPayload>
+    | ServerEnvelope<"auth.status", AuthStatusPayload>;
+  ```
+
+  ## Structured errors (HTTP and WS share one shape)
+
+  ```typescript
+  // packages/contract/src/errors.ts
+  export interface ApiError {
+    code: string;       // machine-readable, e.g. "workspace_not_found"
+    message: string;    // what failed
+    fix: string;        // how to fix it, in place
+    field?: string;     // offending input field when applicable
+  }
+
+  export interface ErrorResponse {
+    error: ApiError;
+  }
+  ```
+
+  ## Key HTTP payloads
+
+  ```typescript
+  // packages/contract/src/http-payloads.ts
+  // HealthResponse (GET /api/health) lives in health.ts, owned by
+  // studio-server — studio-api references it, never redeclares it.
+  export type Platform = "mobile" | "desktop";
+
+  export interface WorkspaceSummary {
+    id: string;              // kebab-case slug
+    name: string;
+    created: string;         // ISO 8601
+    updated: string;
+    activeArtifactId?: string;
+  }
+
+  export interface WorkspaceCreateRequest {
+    name?: string;           // auto-named when omitted
+  }
+
+  export interface WorkspaceSettings {
+    defaultSystem?: string;
+    defaultPlatform?: Platform;
+  }
+
+  export interface WorkspacePatchRequest {
+    name?: string;
+    settings?: WorkspaceSettings;
+  }
+
+  export interface ArtifactSummary {
+    id: string;
+    name: string;
+    system: string;
+    platform: Platform;
+    headVersion: number;
+  }
+
+  export interface ArtifactDetail extends ArtifactSummary {
+    versions: VersionSummary[];
+  }
+
+  export type ComplianceStatus = "pass" | "warn" | "fail";
+
+  export interface VersionSummary {
+    number: number;          // matches the zero-padded directory, as int
+    parent?: number;
+    brief: string;
+    tool: string;            // wf_generate | wf_apply_substitutions | wf_assemble_from_blueprint
+    parameters: Record<string, unknown>;
+    created: string;
+    complianceStatus?: ComplianceStatus;
+  }
+
+  /** POST …/versions/:n/restore — the new head's VersionSummary (the
+      canvas needs the new version number for its inline Undo) */
+  export type RestoreResponse = VersionSummary;
+
+  export interface RuleResult {
+    ruleId: string;
+    status: ComplianceStatus;
+    message?: string;
+    nodeIds: string[];       // SVG node references for highlighting
+  }
+
+  /** HTTP/WS projection of artifact-pipeline's domain ComplianceReport
+      (artifact.ts): violation nodeIds are resolved via the pipeline's
+      violation-to-node mapping before serving */
+  export interface ComplianceResponse {
+    status: ComplianceStatus;
+    rules: RuleResult[];
+  }
+
+  // GET/PUT /api/preferences uses LayoutPreference imported from
+  // preferences.ts (owned by docking-shell) — the single preferences
+  // shape on the wire and on disk; no studio-api preferences type.
+  import type { LayoutPreference } from "./preferences.js";
+
+  export interface LibrarySystem {
+    id: string;
+    name: string;
+    tagline?: string;
+    status: string;
+  }
+
+  export interface TokenSetResponse {
+    systemId: string;
+    tokens: Record<string, unknown>;   // shape as returned by wf_get_tokens
+  }
+
+  export interface ComponentIndexEntry {
+    id: string;
+    name: string;
+    variants: string[];
+  }
+
+  export interface ComponentDetail extends ComponentIndexEntry {
+    svg: string;
+  }
+
+  export interface LayoutTemplate {
+    id: string;
+    name: string;
+    archetype: string;
+    platforms: Platform[];
+  }
+  ```
+
+  ## Non-JSON responses
+
+  - GET …/versions/:n/svg returns raw SVG with Content-Type
+    image/svg+xml (not a JSON wrapper); stable node IDs preserved
+  - GET …/versions/:n/spec returns the parsed wireframe.spec.yaml as
+    application/json (yaml package on the server side)
+
+  ## Restore
+
+  - POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore
+    (undo semantics) delegates to artifact-pipeline's restore-as-new-head
+    and returns RestoreResponse — the new head's VersionSummary; the
+    restore emits artifact.version_created through the normal pipeline
+    path, identical to generation
+
+file_locations:
+  - apps/studio/packages/contract/src/envelope.ts — ClientEnvelope and ServerEnvelope types
+  - apps/studio/packages/contract/src/ws-messages.ts — client/server WS payloads and unions
+  - apps/studio/packages/contract/src/http-payloads.ts — HTTP payload types
+  - apps/studio/packages/contract/src/errors.ts — ApiError, ErrorResponse, error code union
+  - apps/studio/packages/contract/src/index.ts — named re-exports (no default exports)
+  - apps/studio/packages/contract/package.json — npm workspace package metadata
+  - apps/studio/packages/contract/test/contract.test-d.ts — type-level tests against the architecture message list
+  - apps/studio/server/src/api/plugin.ts — Fastify plugin mounting all routes and /ws handling
+  - apps/studio/server/src/api/ws/connection.ts — connection registry, workspace.attach binding
+  - apps/studio/server/src/api/ws/journal.ts — per-workspace event journal, seq stamping, replay
+  - apps/studio/server/src/api/ws/resync.ts — full state re-sync via existing event types
+  - apps/studio/server/src/api/ws/chat-relay.ts — agent event stream → contract envelopes; cancel forwarding; chip-update resolution (messageId → ChipSet lookup → domain ChipUpdate)
+  - apps/studio/server/src/api/routes/workspaces.ts — workspaces CRUD handlers
+  - apps/studio/server/src/api/routes/artifacts.ts — artifact metadata, SVG, spec, compliance, and restore handlers
+  - apps/studio/server/src/api/routes/preferences.ts — preferences get/put handlers
+  - apps/studio/server/src/api/routes/library.ts — library proxy handlers
+  - apps/studio/server/src/api/library-cache.ts — response cache with registry-change invalidation
+  - apps/studio/server/src/api/validation.ts — boundary schemas derived from the contract
+  - apps/studio/server/src/api/errors.ts — typed-result → HTTP status/ApiError mapping
+  - apps/studio/server/test/api/ws-session.test.ts — attach, resume, re-sync integration tests
+  - apps/studio/server/test/api/chat-relay.test.ts — streaming, cancel, chips, busy rejection
+  - apps/studio/server/test/api/workspaces.test.ts — CRUD and preferences over real HTTP
+  - apps/studio/server/test/api/artifacts.test.ts — SVG/spec/compliance serving
+  - apps/studio/server/test/api/library.test.ts — proxy, cache, invalidation, bridge-down
+  - apps/studio/server/test/api/validation.test.ts — rejection matrix with structured errors
+  - apps/studio/server/test/api/headless-loop.test.ts — Phase 1 exit criterion end-to-end
+  - apps/studio/_planning/architecture.md — binding contract (READ-ONLY)
+
+implementation_steps:
+  - Contribute studio-api's protocol modules (envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts) to @studio/contract — the package skeleton is scaffolded in Wave 1 by studio-server slice 1 (strict tsconfig, ES modules, named exports, zero runtime dependencies)
+  - Define ClientEnvelope (no seq) and ServerEnvelope (seq) with requestId echo
+  - Define client→server payloads and the ClientMessage union (workspace.attach, chat.send with optional LibraryReference[] from library.ts, chat.cancel, chip.update with kind field)
+  - Define server→client payloads and the ServerMessage union (all eleven event types from architecture.md); import BridgeState from bridge.ts (mcp-bridge)
+  - Define ApiError/ErrorResponse and the error-code literal union
+  - Define HTTP payload types (workspaces, artifacts, versions, RestoreResponse, ComplianceResponse, library); import HealthResponse from health.ts and LayoutPreference from preferences.ts rather than redeclaring
+  - Add type-level tests asserting the unions cover the architecture message list exactly
+  - Build validation schemas in apps/studio/server/src/api/validation.ts derived from the contract (bodies, params, WS messages)
+  - Build the typed-result → HTTP status/ApiError mapper in apps/studio/server/src/api/errors.ts
+  - Mount the API plugin on the studio-server Fastify instance
+  - Implement the WS connection registry and workspace.attach handling with pino correlation
+  - Implement the per-workspace event journal (monotonic seq, bounded retention) and seq stamping
+  - Implement resume replay (lastEventSeq inside window) and state re-sync (outside window or no cursor) via existing event types
+  - Implement the chat relay — chat.send into agent-orchestration, event mapping to contract envelopes, requestId echo
+  - Implement chat.cancel (turn always closes) and chip-update resolution — look up the ChipSet emitted for the messageId, resolve artifactId, hand agent-orchestration the domain ChipUpdate { requestId, artifactId, kind, value }
+  - Implement artifact event relay (artifact.version_created, artifact.compliance_completed) and bridge/auth status pushes
+  - Enforce single in-flight turn per workspace with structured busy rejection
+  - Implement workspaces CRUD routes against workspace-store (auto-naming, soft-delete)
+  - Implement artifact routes (metadata, version list, raw SVG, spec-as-JSON, compliance as ComplianceResponse)
+  - Implement the restore route (POST …/versions/:n/restore) delegating to artifact-pipeline's restore-as-new-head, returning RestoreResponse; artifact.version_created flows through the normal pipeline path
+  - Implement preferences get/put routes (LayoutPreference shape from preferences.ts)
+  - Implement library routes over mcp-bridge with the response cache, invalidated by an fs.watch on systems/registry.yaml (path from studio-server config)
+  - Write the integration test suite over real HTTP/WS (real store temp dir, real MCP server) — sessions, relay, CRUD, serving, library, validation matrix
+  - Write the headless conversational loop test: attach → brief → generation stream → refinement → compliance fetch → version lineage assertions
+  - Write reconnect-resume, cancellation, and keyless-mode integration tests
+
+error_handling: |
+  - Malformed JSON or unknown WS message type → chat.error envelope with
+    requestId echo (when parseable), code "invalid_message", message
+    naming what failed, fix naming the expected shape; connection stays open
+  - workspace.attach for unknown workspace → chat.error with code
+    "workspace_not_found" and fix listing GET /api/workspaces
+  - chat.send before any attach → chat.error "not_attached" with the fix
+    (send workspace.attach first)
+  - chat.send while a turn is in flight → chat.error "turn_in_progress"
+    with the fix (cancel or wait for chat.message_completed)
+  - Agent failure mid-turn → chat.error carrying the agent's typed failure;
+    the turn closes (no dangling message_started)
+  - chat.send with auth missing/invalid → chat.error "auth_missing" /
+    "auth_invalid" with the documented fix (ANTHROPIC_API_KEY via
+    environment or apps/studio/.env); auth.status pushed alongside
+  - HTTP validation failure → 400 ErrorResponse with code, message, fix,
+    and the offending field; domain code never runs
+  - Unknown workspace/artifact/version on HTTP → 404 ErrorResponse with a
+    discovery fix (the listing endpoint to call)
+  - Library request with bridge down and cache cold → 503 ErrorResponse
+    "bridge_unavailable" referencing bridge.status; warm cache entries
+    still served
+  - Store failure (disk error) → 500 ErrorResponse with code
+    "store_failure"; internals logged via pino, never sent to the client
+  - Domain results cross the seam as typed results; any uncaught exception
+    in a handler is a bug — caught by the studio-server error boundary,
+    logged, and returned as a generic 500 ErrorResponse without internals
+  - WS send failure to a dead socket → connection reaped; journal retained
+    for resume
+
+edge_cases: |
+  - Reconnect with lastEventSeq exactly at the journal head → empty replay,
+    no duplicates, stream continues live
+  - Reconnect with lastEventSeq older than the journal window → full state
+    re-sync (transcript as completed chat events, artifact heads,
+    bridge/auth status); client treats it as authoritative replacement
+  - Reconnect while a turn is still streaming → replay catches up, then
+    live deltas continue under the same messageId
+  - Attach to workspace B while attached to A → A's binding released
+    first; events for A stop, B's state syncs
+  - Two connections attached to the same workspace (two tabs) → both
+    receive the event stream; the single in-flight turn rule applies
+    workspace-wide
+  - chat.cancel after the turn already completed → no-op; chat.error
+    "turn_not_active" with requestId echo (nothing to undo)
+  - chip.update naming a messageId with no chips → chat.error
+    "chips_not_found" with fix
+  - DELETE on an already soft-deleted workspace → 404 (soft-deleted
+    workspaces are invisible to the API; recovery is a store-level
+    operation)
+  - PATCH rename to an empty string → 400 validation failure (field:
+    name) before the store is touched
+  - Version param "0007" vs 7 → route accepts the integer form; slugs and
+    version numbers validated by shape before any path resolution
+  - Artifact with a single version → versions/:n/spec and /compliance work
+    for n=1; parent absent in VersionSummary
+  - Compliance not yet completed for a fresh version → /compliance returns
+    404 "compliance_pending" with the fix (await
+    artifact.compliance_completed); the WS event announces readiness
+  - Registry change while a library request is in flight → in-flight
+    response completes from the pre-flush snapshot; next request
+    repopulates
+  - GET /api/library/:systemId/components for a system with zero authored
+    components → 200 with an empty index, not an error
+  - PUT /api/preferences with unknown panelIds → accepted and persisted
+    (forward compatibility for future panels); shape still validated
+  - Keyless mode (no ANTHROPIC_API_KEY) → all HTTP endpoints and WS attach
+    work; only chat.send is rejected, with the fix shown in place
+
+integration_points:
+  - "agent-orchestration: chat relay invokes the agent loop and subscribes to its event stream; cancellation and chip re-run forwarded; auth status consumed"
+  - "artifact-pipeline: version/compliance read models served over HTTP (compliance as ComplianceResponse, nodeIds resolved via the violation-to-node mapping); restore route delegates to restore-as-new-head; version-created and compliance-completed events relayed to attached clients"
+  - "workspace-store: workspaces CRUD, transcript reads for re-sync, artifact version content (SVG/spec/compliance files), preferences persistence"
+  - "mcp-bridge: library endpoints call ds_list_systems, ds_load_system, wf_get_tokens, wf_read_component; bridge status drives bridge.status pushes and 503 degradation"
+  - "studio-server: API mounted as a Fastify plugin; WS upgrade, heartbeat, localhost binding, /api/health route, and the error boundary owned there"
+  - "packages/contract: imported by apps/studio/server and (Phase 2) apps/studio/client; the only message/payload declaration point"
+  - "docking-shell / chat-panel / canvas / library-panel (Phase 2): consume this protocol unchanged — the headless verification is their contract guarantee"
+
+verification_criteria:
+  - packages/contract compiles under TypeScript strict; named exports only; zero runtime dependencies
+  - ClientMessage and ServerMessage unions contain exactly the architecture.md message types — type-level test fails on any extra or missing member
+  - A scripted WebSocket client completes the full headless conversational loop with no UI — attach → brief via chat.send → chat.message_started, chat.assistant_delta stream, chat.tool_started/finished, chips.updated, artifact.version_created, artifact.compliance_completed, chat.message_completed → follow-up refinement chat.send (two-pass substitution) without restating the brief → new version with parent link → SVG, spec, and compliance fetched over HTTP (Phase 1 exit criterion)
+  - workspace.attach binds the connection; events for that workspace arrive with monotonic seq
+  - Reconnect with lastEventSeq inside the journal window replays exactly the missed events — none lost, none duplicated (asserted by dropping the socket mid-stream)
+  - Reconnect outside the window re-syncs full state using only existing event types
+  - chat.cancel mid-generation closes the turn (message_completed with cancelled true, or chat.error) — never silence
+  - Second chat.send during an in-flight turn is rejected with code turn_in_progress
+  - chip.update re-runs the affected step and yields chips.updated plus a new artifact version
+  - Workspaces CRUD works over real HTTP — create (auto-named when name omitted), list, read, rename, soft-delete; deleted workspaces return 404
+  - Artifact endpoints serve metadata with full version lineage, raw SVG as image/svg+xml with stable node IDs, spec.yaml as JSON, and the ComplianceResponse
+  - POST …/versions/:n/restore creates a new head via artifact-pipeline's restore-as-new-head, returns RestoreResponse (the new head's VersionSummary), and emits artifact.version_created through the normal pipeline path — observed by an attached WS client
+  - Preferences round-trip through GET/PUT (LayoutPreference shape) and persist across server restart
+  - Library endpoints return systems, tokens, component index, component SVG, and layouts matching the registered design systems
+  - Repeated library request is served from cache (asserted by bridge call count); registry change invalidates and the next request repopulates
+  - With the bridge down, cached library entries still serve; cold requests return 503 with a structured error
+  - Every malformed input in the validation matrix (bad body, bad slug, unknown WS type, out-of-range version) is rejected with ApiError carrying code, message, fix, and field — before any domain code runs
+  - No stack trace or internal path ever appears in a client-facing error body
+  - Keyless mode: library, artifact serving, and attach all work; chat.send fails with the auth fix in place
+  - All integration tests run against a real server instance, a real temp-directory store, and the real design-systems MCP server — no mocks at the seams
+
+performance: |
+  - WS event relay adds no buffering beyond the journal append — assistant
+    deltas are forwarded as they arrive from the agent stream, target
+    < 10ms added latency per envelope
+  - Event journal is in-memory with bounded retention (configurable cap
+    per workspace, oldest-evicted); memory stays flat across long sessions
+  - Resume replay streams from the journal without blocking live events;
+    re-sync reads transcript and artifact heads once
+  - Library cache turns repeat token/component reads into in-memory hits —
+    target < 5ms server-side; only cold requests pay bridge round-trips
+  - SVG serving streams file content (no full-buffer JSON wrapping);
+    spec parsing uses the yaml package once per request, cacheable later
+    if profiling justifies it
+  - Validation schemas are compiled once at startup, not per request
+  - Single-user local deployment: concurrency target is a handful of
+    connections (multiple tabs), not horizontal scale — correctness of
+    the journal and turn-serialization over throughput
+
+security: |
+  - Single-user, local-only by decision: server binds localhost; no
+    authentication or session tokens by design — the boundary is the
+    machine, not a login
+  - ANTHROPIC_API_KEY never crosses this API: not in any payload, any
+    error body, or any log line (pino redaction configured upstream);
+    auth.status carries state and fix text only
+  - Path-traversal hardening: wsId/artId validated as kebab-case slugs
+    and version as a bounded integer before any store call; client input
+    is never concatenated into filesystem paths — the store resolves
+    paths from validated identifiers
+  - SVG served as prepared by artifact-pipeline (sanitized, stable node
+    IDs); the API sets explicit Content-Type and does not transform content
+  - Structured errors expose what failed and how to fix it — never stack
+    traces, internal paths, or dependency internals
+  - WS origin checking is unnecessary for localhost-only binding but the
+    upgrade path rejects non-local origins as defense in depth
+  - Library endpoints are read-only proxies; no MCP tool with write or
+    registration semantics (ds_register_system, ds_unregister_system) is
+    exposed over HTTP
+  - Validation rejects unknown fields on write payloads (workspaces,
+    preferences) so the store never persists unvetted shapes

@@ -1,0 +1,80 @@
+# Product — tkr-design-systems Studio
+# Schema: planning-skill product entity
+# Status: draft — pending capability review and sequencing
+
+product:
+  name: Studio
+  status: planned
+
+  problem: |
+    tkr-design-systems has eight registered design systems, a seven-step
+    wireframe generation pipeline, rulebook compliance checking, and an
+    MCP server exposing all of it — but no working surface. Generation
+    happens through CLI skills and MCP tool calls; outputs land as files
+    on disk. The existing React SPA is a static showcase: it displays
+    the systems but cannot generate, inspect, or validate anything.
+    Tokens and components are only visible by reading spec.yaml and SVG
+    sources. Compliance results live in terminal output. There is no
+    place where a brief becomes an artifact conversationally, no
+    generation history, and no way to compare systems against the same
+    brief without manual file juggling.
+
+  target_state: |
+    A conversational design studio: a docking shell with the artifact
+    canvas always center and two rails hosting swappable, stackable,
+    collapsible panels — agent chat and library first, more panels
+    later. The chat agent translates intent into MCP tool calls
+    (generate, two-pass substitution, blueprint composition) and lands
+    every result on the canvas as a live, versioned SVG artifact with
+    inspect-on-hover, platform frames, a generation-history scrubber,
+    and an always-on compliance bar. The library panel renders tokens,
+    components, and layouts from the real system specs. Panel layout
+    and workspace state persist silently. The studio is a fresh
+    client+server pair in the apps/studio/ workspace — a TypeScript strict
+    React SPA over a Node server that bridges WebSocket chat to the
+    tkr-design-systems MCP server over stdio.
+
+  success_criteria:
+    - A user types a brief in chat and a wireframe SVG appears on the canvas, generated through wf_generate with system/layout/platform chosen by the agent and shown as editable decision chips
+    - Follow-up messages refine the artifact in context ("swap the header copy") via the two-pass substitution flow without restating the brief
+    - Novel layouts route through the compose/blueprint flow and assemble via wf_assemble_from_blueprint
+    - Every generation is versioned; a history scrubber restores any prior version without confirmation dialogs
+    - Rulebook compliance runs on every artifact and renders as a persistent bar; clicking a violation highlights the offending SVG node
+    - The library panel shows palette swatches, type specimens, spacing grids, and the component gallery for any registered system, sourced live through wf_get_tokens and wf_read_component
+    - Library and chat panels swap rails, stack on one rail, and collapse to icon strips; the arrangement persists across sessions without a save action
+    - Workspaces persist chat transcripts, artifacts, and history; reopening the studio resumes where the user left off
+    - The canvas renders artifacts at true platform dimensions (375×812 mobile, 1280×800 desktop) with zoom and device frames
+    - The browser never spawns processes or touches the filesystem; all generation flows through the server's MCP bridge
+
+  strategy: |
+    Headless-first, mirroring the compass_app approach: build the server
+    — process foundation, MCP bridge, workspace persistence, agent
+    orchestration, artifact pipeline, and the WebSocket/HTTP API —
+    before any browser code. Every capability is testable through the
+    API surface: a scripted WebSocket client can run brief → generate →
+    refine → compliance end-to-end with no UI. If the conversational
+    loop holds headlessly, the SPA becomes a thin client over a
+    verified protocol.
+
+    The UI phase then builds the docking shell first (panels as
+    first-class citizens, two rails, persistence) and proves the MVP
+    triangle — chat panel, canvas with compliance bar — before the
+    library panel. Comparison, blueprint editing, system authoring,
+    project board, and export are defined but deferred until the
+    triangle is verified end-to-end.
+
+  architecture_decisions:
+    deployment: single-user, local-only — server binds localhost, no authentication, no multi-tenancy
+    persistence: plain files on disk (YAML metadata, raw SVG, readable transcripts) — everything reviewable without tooling; no database
+    agent_runtime: Claude Agent SDK (TypeScript) — the SDK owns its own MCP connection to the design-systems server; mcp-bridge serves direct calls outside the agent loop over a second, independent connection
+    agent_auth: ANTHROPIC_API_KEY, resolved from environment or a gitignored local config file — Anthropic policy prohibits embedded SDK apps from offering claude.ai subscription login, so the API key is the documented path, not a fallback
+    workspace_git_policy: apps/studio/workspaces/ is gitignored — personal working state, not repo history
+    project_board: reads the wireframe-batch TRACKER files as its source of truth (does not supersede them)
+
+  context:
+    repo: tkr-design-systems (apps/studio/ workspace — fresh start, no code reuse from the showcase SPA)
+    consumes: tools/mcp-server (11 tools over stdio), registry.yaml, per-system spec.yaml + component/layout SVG libraries
+    showcase_spa: src/ + design-system-*.jsx remain as-is — public gallery, not migrated or extended
+    stack_client: React + Vite + TypeScript strict, ES modules, named exports
+    stack_server: Node + TypeScript strict, pino structured logging, WebSocket + HTTP
+    prior_discussion: three-pane studio concept, swappable rails, and feature shortlist agreed in planning conversation (June 10 2026)

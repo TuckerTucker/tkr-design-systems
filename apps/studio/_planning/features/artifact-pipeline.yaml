@@ -1,0 +1,121 @@
+# Features — artifact-pipeline
+# Capability: Artifact lifecycle from generation result to inspectable versioned object
+# Layer: domain | Wave: 3
+
+capability: artifact-pipeline
+
+features:
+
+  - name: version-ingestion
+    description: |
+      Turn a raw generation result into an immutable artifact version.
+      Ingests the ArtifactSource union carried by agent-orchestration's
+      artifact_produced event — wf_generate and wf_apply_substitutions
+      emit files ({ kind: "paths", svgPath, specPath }), while
+      wf_assemble_from_blueprint returns text
+      ({ kind: "text", svgText, specYaml? }); both branches are
+      first-class — and records provenance: the brief,
+      the tool that produced it, and the exact tool parameters. Content
+      is copied into the version directory through workspace-store
+      repositories (versions/<NNNN>/ with wireframe.svg,
+      wireframe.spec.yaml, version.yaml); the pipeline never touches
+      paths directly. Emits artifact.version_created into the API event
+      stream once the version is durable.
+    scope:
+      - 'Ingest contract accepting the ArtifactSource discriminated union from apps/studio/packages/contract/src/artifact.ts ({ kind: "paths", svgPath, specPath } for wf_generate / wf_apply_substitutions; { kind: "text", svgText, specYaml? } for wf_assemble_from_blueprint — both first-class branches)'
+      - Reading generated SVG and spec.yaml content from the output paths (paths branch) or directly from svgText/specYaml (text branch)
+      - Provenance capture (brief, tool name, parameters as issued, created timestamp)
+      - version.yaml emission via workspace-store (parent version, brief, tool, parameters, created)
+      - artifact.yaml creation on first version of a new artifact (name, system, platform, headVersion pointer)
+      - Sequential zero-padded version numbering (0001, 0002, …) delegated to the store
+      - All-or-nothing version landing (a version directory is complete or absent — no partial versions)
+      - artifact.version_created event emission with workspace, artifact, and version identifiers
+      - Typed failure results when generation output is unreadable (missing svgPath, unparseable file, empty svgText)
+
+  - name: version-graph
+    description: |
+      The immutable version history of an artifact. Every version links
+      to its parent; artifact.yaml carries a single head pointer
+      (headVersion: number | null; null = no versions yet) naming
+      the current version. Restoring a prior version creates a new
+      version at the head whose content is the restored version and
+      whose provenance records the restore source — never a destructive
+      rollback. Undo is another restore. No version is ever deleted or
+      rewritten.
+    scope:
+      - Parent links in version.yaml (parent version number, null for the first version)
+      - Head pointer (headVersion) in artifact.yaml updated atomically when a version lands
+      - Restore-as-new-head (new version with content copied from the restored version; provenance tool "restore" with source version in parameters)
+      - Version listing for an artifact (number, provenance summary, compliance summary) for the history scrubber
+      - Immutability guarantee (existing version directories are never modified after landing)
+      - Graph integrity validation on read (parent references resolve; headVersion points at an existing version)
+      - artifact.version_created emitted for restores exactly as for generations (the canvas treats them uniformly)
+
+  - name: spec-metadata
+    description: |
+      Parse wireframe.spec.yaml into typed artifact metadata. The
+      generation pipeline emits a wireframe block (brief, platform,
+      dimensions, generated_at, generator_version, svg filename), a
+      design_system block (id, spec_version, system_version,
+      layout_template_used, pattern_source_svg, components_used,
+      rulebook_compliance summary, artifact_treatments_applied), and
+      optional notes. The parser turns that YAML into the typed
+      ParsedSpecMetadata contract the API and canvas inspect-on-hover
+      consume — no consumer ever reads the YAML directly.
+    scope:
+      - Typed parse of the wireframe block (brief, platform, dimensions, generated_at, generator_version, svg)
+      - Typed parse of the design_system block (id, spec_version, system_version, layout_template_used, base_pattern, pattern_source_svg, selection_rationale, selection_was_fallback)
+      - components_used entries (id, region, x, y, type library|custom, svg_length for custom)
+      - rulebook_compliance summary (checked, mechanical_passed, mechanical_failed, advisory_warnings, failed_rules, ruleset, scope)
+      - Neutral-library shape handling (design_system.id null with explanatory note — no system applied)
+      - notes list pass-through (fallback selection notes, compliance failure notes)
+      - YAML parsing via the yaml package (architecture contract — never hand-rolled)
+      - Typed validation errors identifying the missing or malformed field (typed results, not thrown exceptions)
+      - Tolerant forward-compatibility (unknown keys preserved, not rejected)
+
+  - name: compliance-pipeline
+    description: |
+      Run ds_check_compliance through the mcp-bridge on every version
+      and attach the result as a reported state. The bridge call targets
+      the persisted versions/<NNNN>/wireframe.svg path; the full
+      rule-level result (results list with rule_id, status, detail)
+      lands as compliance.yaml beside the SVG. A failing rulebook is a
+      state the version reports — never an ingestion failure: the
+      version lands with its compliance.yaml regardless of pass/fail.
+      Violations are mapped to stable SVG node references so the canvas
+      can highlight the offending elements. Emits
+      artifact.compliance_completed when the report is durable.
+    scope:
+      - ds_check_compliance invocation via mcp-bridge typed wrapper (system_id, artifact_path = persisted version SVG path)
+      - compliance.yaml persistence per version via workspace-store (full report — system_id, artifact_path, scope, passed, failed, advisory, results, ruleset, mechanical_only)
+      - Reported-state semantics (mechanical failures and advisories are data on the version, never errors that block landing)
+      - Compliance state machine per version (pending → completed | unavailable)
+      - Bridge-unavailable handling (version lands with compliance state unavailable + reason; re-runnable when the bridge recovers)
+      - Neutral/unruled systems handling (empty mechanical ruleset result with note recorded as a completed report)
+      - Violation-to-node mapping (scan the version SVG for elements matching each failed rule's detail evidence — offending font sizes, colors, radii, filter references — and resolve to element ids)
+      - Document-scope fallback for unmappable violations (rule applies to the artifact as a whole, e.g. xml-well-formed)
+      - artifact.compliance_completed event emission with version reference and pass/fail/advisory counts
+
+  - name: svg-serving
+    description: |
+      Prepare version SVG content for safe serving to the client.
+      Sanitizes the stored wireframe.svg — strips script elements,
+      event-handler attributes, and external resource references —
+      while preserving every element id unchanged, because the
+      violation-to-node mapping and the canvas inspect-on-hover overlay
+      key on those ids (assembled artifacts carry structured group ids
+      like region__component_index; defs ids are collision-renamed at
+      assembly). The stored file is never modified; sanitization happens
+      at the serving seam. Scope: artifact version SVGs only — library
+      component/layout SVGs never pass through this pipeline (they flow
+      wf_read_component → studio-api → panel and are sanitized
+      client-side by library-panel); both sanitizers are tested against
+      one shared adversarial fixture set (script injection, event
+      handlers, external references).
+    scope:
+      - SVG sanitization (remove script elements, on* event-handler attributes, external href/src references, foreignObject)
+      - Stable node-id guarantee (id attributes pass through sanitization byte-identical)
+      - Stored-file immutability (sanitizer reads the version SVG, returns sanitized content; disk untouched)
+      - Sanitized content handoff to studio-api (versions/:n/svg endpoint serves the sanitized document)
+      - Well-formedness verification before serving (malformed SVG returns a typed error, not a broken document)
+      - Deterministic output (same input always yields the same sanitized document, enabling client caching)

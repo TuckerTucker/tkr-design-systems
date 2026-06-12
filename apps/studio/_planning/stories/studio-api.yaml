@@ -1,0 +1,303 @@
+# Interaction Stories — studio-api
+# Layer: api | Wave: 4
+
+capability: studio-api
+
+stories:
+
+  # ── contract-package ────────────────────────────────────────────
+
+  - name: engineer-imports-shared-contract
+    feature: contract-package
+    number: 1
+    actor: Studio Engineer
+    intent: "Import @studio/contract on both sides of the wire so every message and payload is typed once and drift is a compile error."
+    preconditions:
+      - "apps/studio/packages/contract exists in the npm workspaces root (skeleton scaffolded in Wave 1 by studio-server slice 1; studio-api contributes envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts)"
+      - "ClientEnvelope, ServerEnvelope, ClientMessage, ServerMessage, ApiError, and all HTTP payload types are exported (named exports)"
+      - "TypeScript strict mode enabled in contract, server, and (later) client packages"
+    trigger_action: "Import contract types in server relay code and in a scripted client, then construct messages"
+    steps:
+      - actor: Studio Engineer
+        action: "Imports types in server code — import { ServerMessage, VersionCreatedPayload } from '@studio/contract'"
+        system_response: "Server envelope construction is checked against the union; a typo like 'artifact.versionCreated' fails to compile"
+      - actor: Studio Engineer
+        action: "Imports ClientMessage in a scripted WS client and constructs a chat.send envelope"
+        system_response: "Payload shape (text, optional artifactId) enforced at compile time; no stringly-typed message construction anywhere"
+      - actor: Studio Engineer
+        action: "Adds a new field to ChipsUpdatedPayload in the contract package only"
+        system_response: "Both server and client pick up the change from the single declaration; nothing is redeclared on either side"
+      - actor: System
+        action: "Type-level test compares the unions against the architecture.md message list"
+        system_response: "Any extra, missing, or renamed message type fails the contract test before runtime"
+    acceptance_criteria:
+      - given: "Server code constructs a server→client envelope with a type string not in ServerMessage"
+        when: "The server package compiles"
+        then: "Compilation fails at the construction site"
+      - given: "The contract package"
+        when: "Its exports are inspected"
+        then: "Exactly the four client→server and eleven server→client message types from architecture.md are present — workspace.attach, chat.send, chat.cancel, chip.update; chat.message_started, chat.assistant_delta, chat.tool_started, chat.tool_finished, chat.message_completed, chat.error, chips.updated, artifact.version_created, artifact.compliance_completed, bridge.status, auth.status"
+      - given: "A payload type changes in packages/contract"
+        when: "Server and scripted client rebuild"
+        then: "Both consume the new shape from the single declaration; no duplicate type definitions exist in server or client source"
+
+  # ── ws-session-management ───────────────────────────────────────
+
+  - name: scripted-client-attaches-and-resumes
+    feature: ws-session-management
+    number: 2
+    actor: Scripted WebSocket Client
+    intent: "Attach to a workspace by message, lose the connection mid-stream, and reconnect without missing or duplicating a single event."
+    preconditions:
+      - "Server running with a workspace containing transcript and artifact history"
+      - "/ws endpoint mounted; per-workspace event journal active"
+      - "@studio/contract types in use by the scripted client"
+    trigger_action: "Open /ws and send a workspace.attach envelope with a requestId"
+    steps:
+      - actor: Scripted WebSocket Client
+        action: "Connects to /ws and sends workspace.attach { workspaceId } with no lastEventSeq"
+        system_response: "Connection binds to the workspace; current state re-syncs through existing event types (transcript as completed chat events, artifact heads via artifact.version_created and artifact.compliance_completed, then bridge.status and auth.status); first envelope echoes the attach requestId"
+      - actor: Scripted WebSocket Client
+        action: "Records the seq on each received envelope while a generation streams"
+        system_response: "Every server→client envelope carries a monotonic per-workspace seq"
+      - actor: Scripted WebSocket Client
+        action: "Drops the socket mid-stream, then reconnects and sends workspace.attach { workspaceId, lastEventSeq } with the last seq it saw"
+        system_response: "Server replays exactly the journaled events after lastEventSeq, in order, then continues live — no gap, no duplicate"
+      - actor: Scripted WebSocket Client
+        action: "Reconnects later with a lastEventSeq older than the journal window"
+        system_response: "Server falls back to full state re-sync via the same event vocabulary; the client treats it as an authoritative replacement"
+      - actor: Scripted WebSocket Client
+        action: "Sends workspace.attach for a workspace id that does not exist"
+        system_response: "chat.error envelope echoes the requestId with ApiError { code: workspace_not_found, message, fix: list workspaces via GET /api/workspaces }; the connection stays open"
+    acceptance_criteria:
+      - given: "An attached client that saw events up to seq N"
+        when: "It reconnects and attaches with lastEventSeq N"
+        then: "It receives every event with seq > N exactly once, in order, then the live stream continues"
+      - given: "A client attaching with no lastEventSeq"
+        when: "The attach is processed"
+        then: "Workspace state is re-synced using only the eleven contract event types — no invented message names"
+      - given: "An attach naming an unknown workspace"
+        when: "The server validates it"
+        then: "A chat.error with code workspace_not_found, a human message, and an actionable fix is returned with the requestId echoed; no domain code runs"
+
+  # ── chat-streaming-relay ────────────────────────────────────────
+
+  - name: scripted-client-streams-brief-to-artifact
+    feature: chat-streaming-relay
+    number: 3
+    actor: Scripted WebSocket Client
+    intent: "Send a brief over chat.send and watch the full generation stream — deltas, tool progress, decision chips, artifact events — arrive as typed envelopes."
+    preconditions:
+      - "Client attached to a workspace over /ws"
+      - "agent-orchestration operational with ANTHROPIC_API_KEY configured"
+      - "artifact-pipeline running compliance on every version"
+    trigger_action: "Send chat.send { text: 'a settings screen for a podcast app, mobile' } with a requestId"
+    steps:
+      - actor: Scripted WebSocket Client
+        action: "Sends the brief as chat.send"
+        system_response: "chat.message_started arrives with a messageId and the requestId echoed"
+      - actor: System
+        action: "Agent streams assistant tokens and decides system/layout/platform defaults"
+        system_response: "chat.assistant_delta envelopes stream the text; chips.updated carries the editable decisions (system, layout, platform) with their options"
+      - actor: System
+        action: "Agent invokes wf_generate over its own MCP connection"
+        system_response: "chat.tool_started { tool: wf_generate, summary } then chat.tool_finished { status: ok } relay the progress"
+      - actor: System
+        action: "artifact-pipeline ingests the result, creates version 1, and runs ds_check_compliance"
+        system_response: "artifact.version_created carries the VersionSummary; artifact.compliance_completed follows with the ComplianceResponse; chat.message_completed closes the turn with the artifact reference"
+      - actor: Scripted WebSocket Client
+        action: "Sends chip.update { messageId, kind: system, value } changing the system chip"
+        system_response: "The relay resolves the artifactId from the ChipSet previously emitted for that messageId and hands agent-orchestration the domain ChipUpdate; the affected step re-runs; chips.updated reflects the new value and a new artifact.version_created arrives"
+      - actor: Scripted WebSocket Client
+        action: "Sends chat.cancel { messageId } during a later in-flight turn"
+        system_response: "The agent turn aborts; the turn closes with chat.message_completed (cancelled) — never silence"
+      - actor: Scripted WebSocket Client
+        action: "Sends a second chat.send while a turn is still streaming"
+        system_response: "chat.error { code: turn_in_progress } with the fix (cancel or await completion); the in-flight turn is unaffected"
+    acceptance_criteria:
+      - given: "An attached client and a configured agent"
+        when: "chat.send carries a fresh brief"
+        then: "The stream arrives in order — chat.message_started, chat.assistant_delta(s), chat.tool_started/chat.tool_finished, chips.updated, artifact.version_created, artifact.compliance_completed, chat.message_completed — all as typed contract envelopes with the requestId echoed"
+      - given: "An in-flight generation"
+        when: "chat.cancel names its messageId"
+        then: "The turn closes with a terminal envelope (message_completed cancelled, or chat.error); no dangling message_started remains"
+      - given: "A turn already in flight for the workspace"
+        when: "A second chat.send arrives"
+        then: "It is rejected with chat.error code turn_in_progress and an actionable fix"
+      - given: "ANTHROPIC_API_KEY is absent"
+        when: "chat.send arrives"
+        then: "chat.error code auth_missing names the fix (set ANTHROPIC_API_KEY via environment or apps/studio/.env) and auth.status is pushed; library and artifact endpoints keep working"
+
+  # ── workspace-artifact-endpoints ────────────────────────────────
+
+  - name: scripted-client-manages-workspaces-and-artifacts
+    feature: workspace-artifact-endpoints
+    number: 4
+    actor: Scripted HTTP Client
+    intent: "Drive the full workspace lifecycle and fetch artifact SVG, spec, and compliance over plain HTTP."
+    preconditions:
+      - "Server running with the API plugin mounted under /api"
+      - "workspace-store operational on a real directory"
+      - "At least one artifact with versions exists (produced by a chat turn)"
+    trigger_action: "POST /api/workspaces with an empty body"
+    steps:
+      - actor: Scripted HTTP Client
+        action: "POSTs /api/workspaces with no name"
+        system_response: "201 with a WorkspaceSummary — auto-named (e.g. 'Untitled Workspace 2'), kebab-case id, created/updated timestamps"
+      - actor: Scripted HTTP Client
+        action: "GETs /api/workspaces, then PATCHes the new workspace with { name: 'Podcast App' }"
+        system_response: "List includes the new workspace; PATCH returns the updated summary with the new name and a fresh updated timestamp"
+      - actor: Scripted HTTP Client
+        action: "GETs /api/workspaces/:wsId/artifacts then /api/workspaces/:wsId/artifacts/:artId"
+        system_response: "Artifact summaries, then ArtifactDetail with the full version list — number, parent, brief, tool, parameters, created, complianceStatus"
+      - actor: Scripted HTTP Client
+        action: "GETs versions/:n/svg, versions/:n/spec, and versions/:n/compliance for the head version"
+        system_response: "Raw SVG as image/svg+xml with stable node IDs; spec.yaml as JSON; the ComplianceResponse with per-rule results and nodeIds"
+      - actor: Scripted HTTP Client
+        action: "PUTs /api/preferences with a panel arrangement, then GETs it after a server restart"
+        system_response: "Preferences round-trip identically — persisted through workspace-store, no save action beyond the PUT"
+      - actor: Scripted HTTP Client
+        action: "DELETEs the workspace, then GETs it"
+        system_response: "Soft-delete succeeds (directory trash-prefixed, recoverable at the store level); the follow-up GET returns 404 with a structured ApiError"
+    acceptance_criteria:
+      - given: "A create request without a name"
+        when: "POST /api/workspaces is handled"
+        then: "The workspace is auto-named and returned as a typed WorkspaceSummary — the user is never forced to invent a name"
+      - given: "An artifact version n"
+        when: "Its /svg, /spec, and /compliance routes are fetched"
+        then: "SVG arrives as image/svg+xml with node IDs intact, spec as JSON parsed by the yaml package, and compliance as a typed ComplianceResponse"
+      - given: "A soft-deleted workspace"
+        when: "Any of its routes are requested"
+        then: "404 with ApiError (code workspace_not_found, fix pointing at GET /api/workspaces); the data remains recoverable on disk"
+      - given: "Preferences written via PUT"
+        when: "The server restarts and GET /api/preferences runs"
+        then: "The same LayoutPreference payload returns — panel layout persistence survives the process"
+
+  # ── library-endpoints ───────────────────────────────────────────
+
+  - name: scripted-client-browses-library-with-cache
+    feature: library-endpoints
+    number: 5
+    actor: Scripted HTTP Client
+    intent: "Browse systems, tokens, components, and layouts through the API and verify caching pays off and invalidates on registry change."
+    preconditions:
+      - "mcp-bridge connected to the real design-systems MCP server"
+      - "Multiple design systems registered in registry.yaml"
+      - "Library cache empty (fresh server start)"
+    trigger_action: "GET /api/library/systems"
+    steps:
+      - actor: Scripted HTTP Client
+        action: "GETs /api/library/systems"
+        system_response: "ds_list_systems result mapped to LibrarySystem[] (id, name, tagline, status) for every registered system"
+      - actor: Scripted HTTP Client
+        action: "GETs /api/library/swiss/tokens twice"
+        system_response: "First call hits wf_get_tokens through the bridge; second call serves from cache with no bridge invocation (asserted by bridge call count)"
+      - actor: Scripted HTTP Client
+        action: "GETs /api/library/swiss/components, then /api/library/swiss/components/:componentId"
+        system_response: "Component index (id, name, variants) from the loaded spec; then ComponentDetail including the real component SVG via wf_read_component"
+      - actor: Scripted HTTP Client
+        action: "GETs /api/library/swiss/layouts"
+        system_response: "LayoutTemplate[] (id, name, archetype, platforms) from the loaded spec's layout definitions"
+      - actor: System
+        action: "registry.yaml changes (a system is registered or updated)"
+        system_response: "The library cache flushes; the next request repopulates from the bridge with fresh data"
+      - actor: Scripted HTTP Client
+        action: "Requests an uncached system's tokens while the bridge is down"
+        system_response: "503 with ApiError code bridge_unavailable referencing bridge status; previously cached entries still serve normally"
+    acceptance_criteria:
+      - given: "A cold cache"
+        when: "The same library route is requested twice"
+        then: "The bridge is called once; the second response is a cache hit with identical payload"
+      - given: "A registry change"
+        when: "The next library request arrives"
+        then: "The response reflects the new registry state (stale cache fully invalidated)"
+      - given: "The bridge is down"
+        when: "A cached route and an uncached route are requested"
+        then: "The cached route serves normally; the uncached route returns 503 with a structured error naming the bridge as the cause"
+      - given: "An unknown systemId"
+        when: "Any /api/library/:systemId/* route is requested"
+        then: "404 with ApiError whose fix points at GET /api/library/systems"
+
+  # ── boundary-validation-and-headless-verification ───────────────
+
+  - name: scripted-client-receives-structured-errors
+    feature: boundary-validation-and-headless-verification
+    number: 6
+    actor: Scripted Client
+    intent: "Probe the boundary with invalid input and receive, in every case, a structured error that says what failed and how to fix it — before any domain code runs."
+    preconditions:
+      - "Validation schemas derived from @studio/contract active on all routes and WS dispatch"
+      - "Typed-result error mapping in place"
+    trigger_action: "Send a matrix of malformed requests over HTTP and WS"
+    steps:
+      - actor: Scripted Client
+        action: "POSTs /api/workspaces with { name: 123 }"
+        system_response: "400 ErrorResponse — code invalid_field, field 'name', message naming the type mismatch, fix stating name must be a string"
+      - actor: Scripted Client
+        action: "GETs /api/workspaces/../../etc/passwd/artifacts"
+        system_response: "400 — wsId fails kebab-case slug validation before any store lookup; no filesystem path is ever built from the raw input"
+      - actor: Scripted Client
+        action: "GETs versions/banana/svg on a valid artifact"
+        system_response: "400 — version param fails integer-bounds validation with field and fix"
+      - actor: Scripted Client
+        action: "Sends a WS envelope with type 'chat.fire_missiles'"
+        system_response: "chat.error with code invalid_message, requestId echoed, fix listing the accepted client message types; the connection stays open"
+      - actor: Scripted Client
+        action: "Sends chat.send before any workspace.attach"
+        system_response: "chat.error code not_attached with the fix (attach first); the agent loop is never invoked"
+      - actor: Scripted Client
+        action: "Inspects every error body received"
+        system_response: "Each carries ApiError { code, message, fix, field? } — no stack traces, no internal paths, no dependency internals anywhere"
+    acceptance_criteria:
+      - given: "Any malformed HTTP body, query, or route param"
+        when: "The request hits the boundary"
+        then: "It is rejected with a typed ApiError naming what failed and how to fix it, and domain code does not run (asserted via store/agent call counts)"
+      - given: "Any unknown or malformed WS message"
+        when: "It is dispatched"
+        then: "A chat.error envelope echoes the requestId where parseable; the connection survives"
+      - given: "A wsId or artId containing path separators or traversal sequences"
+        when: "Validation runs"
+        then: "The request is rejected by slug-shape validation; no client input reaches filesystem path resolution"
+      - given: "Every error produced by the API"
+        when: "Its body is inspected"
+        then: "It is a contract ErrorResponse — structured, actionable, free of internals"
+
+  - name: scripted-client-completes-headless-loop
+    feature: boundary-validation-and-headless-verification
+    number: 7
+    actor: Scripted WebSocket Client
+    intent: "Prove the Phase 1 exit criterion: run brief → generate → refine → compliance end-to-end through the protocol alone, with no UI."
+    preconditions:
+      - "Full server stack running — studio-server, workspace-store, mcp-bridge, agent-orchestration, artifact-pipeline, studio-api"
+      - "Real design-systems MCP server available; ANTHROPIC_API_KEY configured"
+      - "No browser, no client bundle — only a scripted WS + HTTP client built on @studio/contract"
+    trigger_action: "Run the headless-loop integration script (vitest, real HTTP/WS connections)"
+    steps:
+      - actor: Scripted WebSocket Client
+        action: "POSTs /api/workspaces, opens /ws, and sends workspace.attach for the new workspace"
+        system_response: "Workspace created and bound; initial state sync arrives (empty transcript, no artifacts, bridge.status up, auth.status configured)"
+      - actor: Scripted WebSocket Client
+        action: "Sends chat.send with a fresh brief ('a login screen for a banking app, mobile')"
+        system_response: "Generation streams in full — message_started, assistant deltas, chips.updated with the agent's system/layout/platform choices, wf_generate tool progress, artifact.version_created (version 1), artifact.compliance_completed, message_completed referencing the artifact"
+      - actor: Scripted WebSocket Client
+        action: "Sends a follow-up chat.send ('swap the header copy to Welcome back') scoped to the same artifact, without restating the brief"
+        system_response: "The two-pass substitution flow streams — tool progress for wf_build_substitution_request and wf_apply_substitutions, artifact.version_created (version 2, parent 1), artifact.compliance_completed for the new version, message_completed"
+      - actor: Scripted WebSocket Client
+        action: "GETs the artifact detail, version 2 SVG, spec, and compliance over HTTP"
+        system_response: "ArtifactDetail shows the lineage (version 2 parent is 1, head is 2); SVG serves as image/svg+xml; spec as JSON; ComplianceResponse carries per-rule results with SVG nodeIds"
+      - actor: Scripted WebSocket Client
+        action: "Asserts the complete event order and payload types against @studio/contract"
+        system_response: "Every envelope parsed and validated; the conversational loop held headlessly end-to-end"
+    acceptance_criteria:
+      - given: "The full Wave 1–4 server stack and no UI code"
+        when: "The scripted client runs brief → generate → refine → compliance"
+        then: "It completes end-to-end over real WS and HTTP — the Phase 1 exit criterion passes"
+      - given: "The refinement turn"
+        when: "It runs with only the follow-up text and artifact scope"
+        then: "The substitution flow produces version 2 with parent 1 — context carried by the server, never restated by the client"
+      - given: "Every version created during the loop"
+        when: "Compliance is fetched"
+        then: "A ComplianceResponse is served per version with rule statuses and violation nodeIds — compliance ran on every artifact, not on demand"
+      - given: "The integration suite"
+        when: "It executes"
+        then: "It runs against a real server instance, a real temp-directory store, and the real design-systems MCP server — no mocks at any seam, per the testing policy"

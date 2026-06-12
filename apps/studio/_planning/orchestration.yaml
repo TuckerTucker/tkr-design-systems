@@ -1,0 +1,1108 @@
+# Orchestration Plan — Studio (tkr-design-systems)
+# Phase 1 — Headless-First Build: 4 waves, 6 agents, 34 slices (planned)
+# Phase 2 — UI (waves 5-6, docking-shell + panels) is planned after the
+# Phase 1 exit criterion passes; it is not detailed in this file.
+#
+# Strategy: Build the complete server — process foundation, plain-file
+# persistence, MCP bridge, agent loop, artifact pipeline, and the
+# WebSocket/HTTP API — before any browser code. The Phase 1 exit
+# criterion is the scripted-client-completes-headless-loop story in
+# studio-api: brief → generate → refine → compliance over real WS/HTTP
+# with no UI.
+#
+# Binding context for every agent:
+#   apps/studio/_planning/architecture.md   — cross-capability contract
+#                                        (routes, WS events, contract
+#                                        package ownership, canonical
+#                                        types, MCP topology, auth)
+#   apps/studio/_planning/specs/<cap>.yaml  — the agent's 13-section spec
+#   apps/studio/_planning/slices/<cap>.yaml — slice-by-slice deliverables
+#
+# Testing strategy: real-seam integration tests are first-class
+# deliverables (architecture.md testing policy). Store tests run
+# against real temp directories; bridge tests against the real
+# design-systems MCP server (never mocked); API tests over real
+# HTTP/WS. Agent-orchestration integration tests that exercise the
+# Claude Agent SDK require a real ANTHROPIC_API_KEY in the test env
+# and incur API cost — keyless-degradation tests run without one.
+#
+# Agent execution constraints:
+#   max_concurrent_agents: 2
+#   wave_strategy: sequential (complete Wave N before Wave N+1)
+#
+# Monorepo root: /Users/tucker/@tucker/tkr-design-systems/apps/studio/
+# MCP server (read-only dependency): tools/mcp-server/
+#   launched per repo-root .mcp.json
+
+orchestration:
+  name: studio-headless-first
+  status: implemented          # Phase 1 (waves 1-4) — L5 keyed run pending ANTHROPIC_API_KEY
+  strategy: headless-first
+  total_waves: 4
+  total_agents: 6
+  total_slices: 34
+  phase_2:
+    name: studio-ui
+    status: implemented        # waves 5-6 complete — composed-studio smoke green (keyless)
+    strategy: shell-first-then-mvp-triangle
+    waves: 2
+    agents: 4                  # w5-docking-shell; w6-canvas, w6-library-panel, w6-chat-panel
+    new_slices: 26             # docking-shell 6, chat-panel 7, canvas 7, library-panel 6
+
+# ═══════════════════════════════════════════════════════════════════════
+# WAVE 1 — FOUNDATION
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Establishes: the npm-workspaces monorepo, the @studio/contract package
+# skeleton, the Fastify process (config, logging, health, static hosting,
+# WS upgrade plumbing), and the plain-file workspace store with all four
+# repositories.
+#
+# Upon completion the project has: a running localhost server with
+# health reporting, and a tested repository layer for workspaces,
+# transcripts, artifact versions, and preferences — everything Wave 3
+# persists through.
+
+waves:
+
+  - number: 1
+    name: Foundation
+    status: implemented
+    agents_count: 2
+    parallel: true
+
+    agents:
+
+      # ── Agent 1: Studio Server ────────────────────────────────────
+      - id: w1-studio-server
+        capability: studio-server
+        status: implemented
+        description: >
+          Fastify 5 process foundation: monorepo + contract-package
+          scaffolding, typed config resolution (repo root, MCP launch
+          command from .mcp.json, workspace path, port 4400 with
+          STUDIO_* overrides, localhost-only binding), pino structured
+          logging with correlation IDs, status registry + /api/health,
+          static hosting of the built client, WebSocket upgrade
+          plumbing, graceful shutdown.
+        territory:
+          root:
+            - apps/studio/package.json          # npm-workspaces monorepo root
+            - apps/studio/.gitignore            # workspaces/, .env
+          contract:
+            - apps/studio/packages/contract/package.json
+            - apps/studio/packages/contract/src/health.ts
+          server:
+            - apps/studio/server/package.json
+            - apps/studio/server/src/           # config, logging, status registry, bootstrap, static, ws-upgrade (everything except store/, mcp/, agent/, artifact-pipeline/, api/)
+            - apps/studio/server/test/          # server foundation tests
+        slices:
+          - studio-server/1    # Typed config resolution from repo, .mcp.json, and env
+          - studio-server/2    # Fastify 5 bootstrap, pino logging, and process lifecycle
+          - studio-server/3    # Health endpoint with pluggable status registry
+          - studio-server/4    # Static hosting of the built client
+          - studio-server/5    # WebSocket upgrade plumbing at /ws
+        contracts_produced:
+          - name: monorepo-root
+            type: file_location
+            description: >
+              apps/studio/package.json npm-workspaces root and the
+              @studio/contract package skeleton (package.json + empty
+              src/) — npm name @studio/contract resolves to
+              apps/studio/packages/contract. Every later module is
+              contributed into this skeleton.
+          - name: studio-config
+            type: type
+            description: >
+              StudioConfig type and resolveConfig() — repo root, MCP
+              launch command, workspaces dir, client dist path, port,
+              log level. Injected into every server-side capability.
+          - name: status-registry
+            type: type
+            description: >
+              StatusRegistry interface — register(component, provider).
+              mcp-bridge (Wave 2) and agent-orchestration (Wave 3)
+              register bridge/auth status providers here.
+          - name: health-contract
+            type: type
+            description: >
+              HealthResponse and StatusReport in
+              apps/studio/packages/contract/src/health.ts (canonical,
+              owned by studio-server).
+          - name: ws-upgrade
+            type: type
+            description: >
+              WsConnection abstraction at /ws — connection acceptance,
+              heartbeat, close semantics. Message semantics are
+              studio-api's (Wave 4).
+          - name: server-bootstrap
+            type: type
+            description: >
+              createStudioServer factory — IoC composition root that
+              receives store, bridge, agent, pipeline, and api plugins
+              from later waves.
+        dependencies:
+          consumes_from_wave: []
+          cross_agent_this_wave: []
+        verification:
+          - npm install succeeds at apps/studio/ (workspaces resolve, @studio/contract importable)
+          - resolveConfig() resolves defaults and honors STUDIO_* env overrides; invalid config fails fast with a structured error
+          - Server starts on 127.0.0.1:4400, GET /api/health returns HealthResponse with process block
+          - Static hosting serves a placeholder client dist; /ws upgrades and heartbeats
+          - SIGINT/SIGTERM drain connections and exit cleanly
+          - vitest passes for config, status registry, and lifecycle (real HTTP against an ephemeral port)
+
+      # ── Agent 2: Workspace Store ──────────────────────────────────
+      - id: w1-workspace-store
+        capability: workspace-store
+        status: implemented
+        description: >
+          Plain-file persistence under apps/studio/workspaces/ (gitignored):
+          atomic temp-file+rename writes, YAML I/O via the yaml package,
+          kebab-case slug IDs, four repository interfaces injected via
+          IoC, soft-delete with .trash- recovery, per-item corruption
+          tolerance. Stores the LayoutPreference document opaquely.
+        territory:
+          contract:
+            - apps/studio/packages/contract/src/store.ts
+          server:
+            - apps/studio/server/src/store/
+            - apps/studio/server/test/store/
+          data:
+            - apps/studio/workspaces/           # created at runtime, gitignored
+        slices:
+          - workspace-store/1   # Store foundation — atomic writes, YAML I/O, slug IDs, repository contracts
+          - workspace-store/2   # Workspace lifecycle — listing, creation, update, soft-delete with recovery
+          - workspace-store/3   # Transcript repository — append-ordered records in transcript.yaml
+          - workspace-store/4   # Artifact repository — immutable zero-padded versions with headVersion pointer
+          - workspace-store/5   # Preferences repository and store-wide corruption tolerance
+        contracts_produced:
+          - name: store-contract-module
+            type: type
+            description: >
+              apps/studio/packages/contract/src/store.ts — storage models,
+              TranscriptRecord (kinds message | tool_call |
+              decision_chips | routing_result), ArtifactMeta with
+              headVersion: number | null.
+          - name: store-repositories
+            type: type
+            description: >
+              WorkspaceRepository, TranscriptRepository,
+              ArtifactRepository, PreferencesRepository and the
+              createWorkspaceStore factory — typed StoreResult errors,
+              never thrown across the seam.
+          - name: workspace-disk-layout
+            type: file_location
+            description: >
+              The architecture.md on-disk layout — preferences.yaml,
+              <ws>/workspace.yaml, transcript.yaml,
+              artifacts/<id>/artifact.yaml +
+              versions/<NNNN>/{wireframe.svg, wireframe.spec.yaml,
+              compliance.yaml, version.yaml}.
+        dependencies:
+          consumes_from_wave: []
+          cross_agent_this_wave:
+            - w1-studio-server: [monorepo-root]
+        dependency_note: >
+          Only the monorepo + contract skeleton (w1-studio-server
+          slice 1) is needed before store.ts can be contributed.
+          Launch w1-studio-server first or give it a one-slice head
+          start; the store's own logic has no other server dependency
+          and proceeds fully in parallel after that.
+        verification:
+          - All repository operations pass vitest against a real temp directory (no mocks)
+          - Kill -9 during write leaves no partial file (atomic rename verified)
+          - Soft-deleted workspace is recoverable from .trash- prefix; listing hides it
+          - A corrupt YAML file degrades that item only — sibling items still load
+          - Version directories are immutable; headVersion moves only via setHead
+          - preferences.yaml round-trips a LayoutPreference document without interpreting fields
+
+    gates:
+      - level: L1
+        name: File existence
+        check: >
+          apps/studio/package.json, apps/studio/packages/contract/{package.json,
+          src/health.ts, src/store.ts}, apps/studio/server/src/ foundation
+          modules and store/ repositories all exist. apps/studio/.gitignore
+          covers workspaces/ and .env.
+      - level: L3
+        name: Type safety and lint
+        check: >
+          npm run typecheck passes with zero errors (strict mode).
+          npm run lint passes (ESLint, ES modules, named exports).
+      - level: L4
+        name: Real-seam integration
+        check: >
+          Server foundation tests pass over real HTTP on an ephemeral
+          port. Store tests pass against real temp directories,
+          including crash-atomicity and corruption-tolerance cases.
+
+    wave_completion_criteria: >
+      Both agents report success. All gates pass. The project has a
+      running localhost Fastify process with health reporting and a
+      fully tested plain-file repository layer. Wave 2 can register a
+      status provider and Wave 3 can persist transcripts and versions.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# WAVE 2 — BRIDGE
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Single agent. Connects the server to the design-systems MCP server
+# over stdio for the six direct-call tools. Integration tests run
+# against the REAL MCP server (python subprocess per .mcp.json) — this
+# wave also proves the dev environment can launch it.
+
+  - number: 2
+    name: Bridge
+    status: implemented
+    agents_count: 1
+    parallel: false
+
+    agents:
+
+      # ── Agent 3: MCP Bridge ───────────────────────────────────────
+      - id: w2-mcp-bridge
+        capability: mcp-bridge
+        status: implemented
+        description: >
+          Direct-call MCP client using @modelcontextprotocol/sdk:
+          subprocess spawn from the .mcp.json command, supervision with
+          restart backoff, call serialization over the single stdio
+          transport, per-call timeout and cancellation, typed wrappers
+          for the six direct-call tools, JSON-string rule detail parsed
+          to Record<string, unknown>, BridgeResult typed errors, and
+          bridge.status reporting into the status registry.
+        territory:
+          contract:
+            - apps/studio/packages/contract/src/bridge.ts
+          server:
+            - apps/studio/server/src/mcp/
+            - apps/studio/server/test/mcp/
+        slices:
+          - mcp-bridge/1   # Stdio transport and subprocess lifecycle
+          - mcp-bridge/2   # Call serialization, timeout, and cancellation
+          - mcp-bridge/3   # Typed result model and error translation
+          - mcp-bridge/4   # Typed wrappers for the six direct-call tools
+          - mcp-bridge/5   # Crash supervision, restart with backoff, and status reporting
+        contracts_produced:
+          - name: bridge-contract-module
+            type: type
+            description: >
+              apps/studio/packages/contract/src/bridge.ts — BridgeResult<T>,
+              BridgeError (kinds protocol | tool | timeout | cancelled |
+              bridge_down), BridgeState (starting | up | restarting |
+              failed | stopped), BridgeStatus payload.
+          - name: mcp-bridge-client
+            type: type
+            description: >
+              McpBridge interface + factory — listSystems, loadSystem,
+              getRulebook, checkCompliance (returns RawComplianceResult,
+              bridge-internal, structured detail), getTokens,
+              readComponent. Injected into consumers; never a singleton.
+          - name: bridge-status-provider
+            type: type
+            description: >
+              Status provider registered with the Wave 1 status
+              registry; bridge state surfaces on /api/health and later
+              as the bridge.status WS event.
+        dependencies:
+          consumes_from_wave:
+            - wave: 1
+              contracts: [monorepo-root, studio-config, status-registry, server-bootstrap]
+          cross_agent_this_wave: []
+        dependency_note: >
+          The design-systems MCP server (python, launched per repo-root
+          .mcp.json) is an external read-only dependency. Integration
+          tests spawn the real server — verify python availability
+          before the wave starts.
+        verification:
+          - Bridge connects to the real MCP server and lists all 8 registered systems
+          - All six wrappers return typed results verified against real tool output (Swiss tokens, a real component read, a compliance run on a known SVG)
+          - Rule detail arrives as structured Record<string, unknown>, never a JSON string
+          - Kill the MCP subprocess mid-call → typed bridge_down result, supervised restart with backoff, status transitions starting→up observed
+          - Cancellation and timeout produce typed results without poisoning the queued calls behind them
+          - Status provider registered; /api/health reflects bridge state transitions
+
+    gates:
+      - level: L1
+        name: File existence
+        check: >
+          apps/studio/packages/contract/src/bridge.ts exists.
+          apps/studio/server/src/mcp/ holds transport, supervision, queue,
+          typed wrappers, and types.ts (RawComplianceResult).
+      - level: L3
+        name: Type safety and lint
+        check: npm run typecheck and npm run lint pass with zero errors.
+      - level: L4
+        name: Real MCP server integration
+        check: >
+          The full bridge integration suite passes against the real
+          design-systems MCP server, including crash-recovery and
+          cancellation cases. The MCP server is never mocked.
+
+    wave_completion_criteria: >
+      Agent reports success. All gates pass. The server can invoke all
+      six direct-call tools with typed results and survives MCP
+      subprocess crashes. Wave 3's artifact-pipeline can run compliance;
+      Wave 4's library endpoints have their data source.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# WAVE 3 — DOMAIN
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Two agents in parallel: the conversational agent loop and the
+# artifact lifecycle. The seam between them is the artifact_produced
+# event carrying ArtifactSource — the type is OWNED by artifact-pipeline
+# (contract module artifact.ts), so w3-artifact-pipeline delivers
+# slice 1 before w3-agent-orchestration's generation flow (its slice 3)
+# emits typed events.
+
+  - number: 3
+    name: Domain
+    status: implemented
+    agents_count: 2
+    parallel: true
+
+    agents:
+
+      # ── Agent 4: Agent Orchestration ──────────────────────────────
+      - id: w3-agent-orchestration
+        capability: agent-orchestration
+        status: implemented
+        description: >
+          Claude Agent SDK loop per workspace over its OWN MCP
+          connection (wf_generate, wf_build_substitution_request,
+          wf_apply_substitutions, wf_assemble_from_blueprint,
+          wf_select_layout). Intent routing (generate / substitute /
+          compose / plain conversation), decision chips with re-run on
+          change, per-artifact context, transcript persistence,
+          ANTHROPIC_API_KEY resolution (env → apps/studio/.env) with pino
+          redaction and auth status, mid-generation cancellation.
+        territory:
+          contract:
+            - apps/studio/packages/contract/src/agent-events.ts
+          server:
+            - apps/studio/server/src/agent/
+            - apps/studio/server/test/agent/
+        slices:
+          - agent-orchestration/1   # API key resolution and auth status reporting
+          - agent-orchestration/2   # Agent SDK session per workspace with plain conversation
+          - agent-orchestration/3   # Generation flow with default selection as decision chips
+          - agent-orchestration/4   # Per-artifact context and transcript persistence
+          - agent-orchestration/5   # Two-pass substitution refinement
+          - agent-orchestration/6   # Blueprint composition for novel layouts
+          - agent-orchestration/7   # Mid-generation cancellation
+        contracts_produced:
+          - name: agent-events-module
+            type: type
+            description: >
+              apps/studio/packages/contract/src/agent-events.ts — AgentEvent
+              union (message_started, assistant_delta, tool_started,
+              tool_finished, chips_updated, artifact_produced,
+              message_completed, error), AgentToolName (five tools),
+              ChipKind, DecisionChip { kind, value, options, rerunStep },
+              ChipSet { artifactId, messageId, chips }, domain
+              ChipUpdate.
+          - name: agent-session
+            type: type
+            description: >
+              AgentSession API — send(text, references?), updateChip
+              (domain ChipUpdate), cancel(); emits the AgentEvent
+              stream Wave 4 relays to WS.
+          - name: auth-status-provider
+            type: type
+            description: >
+              Auth state (configured | missing | invalid) registered
+              with the status registry and emitted for the auth.status
+              WS event. Keyless mode degrades gracefully.
+        dependencies:
+          consumes_from_wave:
+            - wave: 1
+              contracts: [monorepo-root, studio-config, status-registry, store-repositories]
+          cross_agent_this_wave:
+            - w3-artifact-pipeline: [artifact-contract-module]
+        dependency_note: >
+          artifact_produced carries ArtifactSource, owned by
+          artifact-pipeline in artifact.ts. Start with slices 1-2
+          (auth + plain conversation — no artifact types needed); emit
+          typed artifact_produced events from slice 3 onward, after
+          w3-artifact-pipeline delivers its slice 1. The design-systems
+          MCP server is reached through the SDK's own connection — NOT
+          through mcp-bridge.
+        verification:
+          - Keyless start → auth status missing, generation refused with structured guidance, plain capabilities unaffected
+          - "With a real key: a brief produces wf_generate output and an artifact_produced event with ArtifactSource kind 'paths' plus chips for system/layout/platform"
+          - Chip update re-runs only the affected step (platform → regenerate; system → regenerate in new system)
+          - "Substitution refinement emits ArtifactSource kind 'paths'; blueprint composition emits kind 'text'"
+          - Transcript records (message, tool_call, decision_chips, routing_result) persist through the store and restore a session
+          - chat.cancel mid-generation stops the SDK call and emits a terminal event; the session accepts the next message
+          - The API key never appears in any log line (pino redaction verified)
+
+      # ── Agent 5: Artifact Pipeline ────────────────────────────────
+      - id: w3-artifact-pipeline
+        capability: artifact-pipeline
+        status: implemented
+        description: >
+          Artifact lifecycle: ingest ArtifactSource (paths or text) with
+          provenance, immutable version graph with headVersion and
+          restore-as-new-head, wireframe.spec.yaml parsed to typed
+          metadata, ds_check_compliance via mcp-bridge on every version,
+          violation-to-node mapping over stable assembler group IDs,
+          SVG sanitization for serving (version SVGs only).
+        territory:
+          contract:
+            - apps/studio/packages/contract/src/artifact.ts
+          server:
+            - apps/studio/server/src/artifact-pipeline/
+            - apps/studio/server/test/artifact-pipeline/
+        slices:
+          - artifact-pipeline/1   # Version ingestion with provenance (ArtifactSource paths|text)
+          - artifact-pipeline/2   # Version graph and restore-as-new-head (headVersion)
+          - artifact-pipeline/3   # spec.yaml parsing into typed artifact metadata
+          - artifact-pipeline/4   # Compliance execution per version via mcp-bridge
+          - artifact-pipeline/5   # SVG sanitization and violation-to-node mapping
+        contracts_produced:
+          - name: artifact-contract-module
+            type: type
+            description: >
+              apps/studio/packages/contract/src/artifact.ts — ArtifactSource
+              (paths | text), ArtifactVersion, VersionProvenance,
+              ArtifactRecord { headVersion: number | null },
+              ComplianceReport (canonical domain model),
+              ViolationNodeMapping, ParsedSpecMetadata, event payloads.
+              Deliver this module FIRST — w3-agent-orchestration
+              consumes ArtifactSource this wave.
+          - name: artifact-ingest
+            type: type
+            description: >
+              ingest(workspaceId, artifactId, source: ArtifactSource,
+              provenance) → new immutable version; compliance attaches
+              asynchronously and never blocks landing.
+          - name: artifact-restore
+            type: type
+            description: >
+              restore(workspaceId, artifactId, n) → new head version
+              with tool "restore" provenance; emits
+              artifact.version_created identically to generation.
+          - name: sanitized-svg-serving
+            type: type
+            description: >
+              Sanitized version SVG with stable {region}__{component}_{idx}
+              node IDs preserved byte-identical, plus the
+              violation-to-node mapping the compliance bar consumes.
+        dependencies:
+          consumes_from_wave:
+            - wave: 1
+              contracts: [monorepo-root, store-repositories]
+            - wave: 2
+              contracts: [mcp-bridge-client, bridge-contract-module]
+          cross_agent_this_wave: []
+        verification:
+          - "Ingest kind 'paths' (real wf_generate output fixture) and kind 'text' (assembly fixture) both land as immutable versions with provenance"
+          - First version sets headVersion 1; restore of version 1 from head 3 creates version 4 with restored_from provenance — never mutates
+          - wireframe.spec.yaml parses to typed metadata (design_system block, components_used, rulebook_compliance)
+          - ds_check_compliance runs via the real bridge on every version; bridge_down records ComplianceState unavailable without failing ingestion
+          - Violation-to-node mapping resolves offending rules to stable SVG group IDs on a known-violating fixture
+          - Sanitizer strips script/event-handler/external-reference vectors from the shared adversarial fixture set while preserving node IDs byte-identical
+
+    gates:
+      - level: L1
+        name: File existence
+        check: >
+          apps/studio/packages/contract/src/{agent-events.ts, artifact.ts}
+          exist. apps/studio/server/src/agent/ and
+          apps/studio/server/src/artifact-pipeline/ hold their spec'd
+          modules.
+      - level: L3
+        name: Type safety and lint
+        check: npm run typecheck and npm run lint pass with zero errors.
+      - level: L4
+        name: Domain integration
+        check: >
+          Artifact-pipeline suite passes against real store + real
+          bridge (ingest both kinds, restore, compliance, sanitization,
+          violation mapping). Agent-orchestration keyless suite passes
+          without a key; the keyed suite (real SDK, real generation)
+          passes with ANTHROPIC_API_KEY present.
+
+    wave_completion_criteria: >
+      Both agents report success. All gates pass. A brief can be driven
+      programmatically end-to-end: agent loop → generation → versioned
+      artifact with compliance attached → refinement → restore. Only
+      the protocol surface is missing.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# WAVE 4 — PROTOCOL (Phase 1 exit)
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Single agent. The WebSocket/HTTP surface, the protocol modules of
+# @studio/contract, and the headless-loop integration suite — the
+# Phase 1 exit criterion.
+
+  - number: 4
+    name: Protocol
+    status: implemented
+    agents_count: 1
+    parallel: false
+
+    agents:
+
+      # ── Agent 6: Studio API ───────────────────────────────────────
+      - id: w4-studio-api
+        capability: studio-api
+        status: implemented
+        description: >
+          The protocol surface: ClientEnvelope/ServerEnvelope with
+          per-workspace seq journal and reconnect-with-resume, chat
+          streaming relay (AgentEvent → WS events, chip.update
+          translation via ChipSet lookup), workspace/artifact/
+          preferences/restore HTTP endpoints, library endpoints proxying
+          mcp-bridge with fs.watch cache invalidation on registry.yaml,
+          boundary validation with structured errors, and the
+          scripted-client headless loop suite.
+        territory:
+          contract:
+            - apps/studio/packages/contract/src/envelope.ts
+            - apps/studio/packages/contract/src/ws-messages.ts
+            - apps/studio/packages/contract/src/http-payloads.ts
+            - apps/studio/packages/contract/src/errors.ts
+          server:
+            - apps/studio/server/src/api/
+            - apps/studio/server/test/api/
+        slices:
+          - studio-api/1   # @studio/contract protocol message and payload types
+          - studio-api/2   # WebSocket channel — workspace attach and reconnect-with-resume
+          - studio-api/3   # Chat streaming relay from the agent event stream
+          - studio-api/4   # Workspace, artifact, preferences, and restore HTTP endpoints
+          - studio-api/5   # Library endpoints with cache and registry invalidation
+          - studio-api/6   # Boundary validation and structured error responses
+          - studio-api/7   # Headless conversational loop integration suite
+        contracts_produced:
+          - name: protocol-modules
+            type: type
+            description: >
+              envelope.ts (ClientEnvelope no seq / ServerEnvelope with
+              seq), ws-messages.ts (all WS payloads — ChatSendPayload
+              with references?, ChipUpdatePayload { messageId, kind,
+              value }), http-payloads.ts (ComplianceResponse,
+              RestoreResponse, workspace/artifact payloads), errors.ts.
+          - name: ws-channel
+            type: type
+            description: >
+              /ws sessions — workspace.attach binding, per-workspace
+              event journal with monotonic seq, replay-or-resync on
+              reattach.
+          - name: http-surface
+            type: file_location
+            description: >
+              Every route in the architecture.md table, including
+              POST .../versions/:n/restore (returns RestoreResponse)
+              and the /api/library/* endpoints with cached bridge data.
+          - name: headless-loop-suite
+            type: file_location
+            description: >
+              The scripted-client integration suite proving the Phase 1
+              exit criterion — the executable form of the
+              scripted-client-completes-headless-loop story.
+        dependencies:
+          consumes_from_wave:
+            - wave: 1
+              contracts: [monorepo-root, studio-config, server-bootstrap, ws-upgrade, health-contract, store-repositories]
+            - wave: 2
+              contracts: [mcp-bridge-client, bridge-contract-module, bridge-status-provider]
+            - wave: 3
+              contracts: [agent-events-module, agent-session, auth-status-provider, artifact-contract-module, artifact-ingest, artifact-restore, sanitized-svg-serving]
+          cross_agent_this_wave: []
+        dependency_note: >
+          Slice 7 (headless loop) requires ANTHROPIC_API_KEY in the
+          test environment — the loop drives real generation through
+          the real agent loop and real MCP server. Slices 1-6 are
+          testable keyless (relay tested against synthetic AgentEvent
+          streams; library and artifact routes against real bridge and
+          store).
+        verification:
+          - A scripted WS client attaches, sends a brief, and receives the full ordered stream (message_started → deltas → tool events → chips.updated → artifact.version_created → message_completed) with monotonic seq
+          - Disconnect mid-generation, reattach with last seq → missed events replay in order (or full re-sync), no duplicates
+          - chip.update with { messageId, kind, value } reaches the agent as domain ChipUpdate with artifactId resolved via ChipSet lookup
+          - All HTTP routes match the architecture.md table; restore returns RestoreResponse and the version_created event follows on WS
+          - Library responses are cached; touching registry.yaml invalidates; bridge_down yields a structured 503 with staleness indicated
+          - Invalid payloads are rejected at the boundary with structured field-level errors before domain code runs
+          - The headless loop suite passes — brief → generate → refine (substitution) → compliance retrieved, over real WS/HTTP with no UI
+
+    gates:
+      - level: L1
+        name: File existence
+        check: >
+          All four protocol modules exist in
+          apps/studio/packages/contract/src/. apps/studio/server/src/api/ holds
+          ws sessions, journal, chat-relay, routes, library-cache, and
+          validation.
+      - level: L3
+        name: Type safety and lint
+        check: >
+          npm run typecheck and npm run lint pass with zero errors.
+          No WS message type string exists outside ws-messages.ts.
+      - level: L4
+        name: Protocol integration
+        check: >
+          API suite passes over real HTTP/WS against real store and
+          real bridge — attach/resume, relay ordering, validation,
+          library cache, restore.
+      - level: L5
+        name: Headless loop (Phase 1 exit)
+        check: >
+          The scripted-client-completes-headless-loop suite passes
+          end-to-end with a real ANTHROPIC_API_KEY: brief → generate →
+          refine → compliance, no UI. This gate blocks Phase 1
+          completion.
+
+    wave_completion_criteria: >
+      Agent reports success. All gates pass including L5. The Phase 1
+      exit criterion is met: the studio is a complete, verified
+      headless product. Phase 2 (docking-shell, then the MVP triangle)
+      builds a thin client over this protocol.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# WAVE 5 — SHELL (Phase 2)
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Single agent. The Vite + React SPA scaffold and the docking system —
+# rails, panel registry, drag-to-swap, stack, collapse, silent layout
+# persistence, workspace routing, and the StudioSocket WS client. Panel
+# CONTENTS arrive in Wave 6; the shell ships with placeholder panel
+# registrations proving the registry seam.
+
+  - number: 5
+    name: Shell
+    status: implemented
+    agents_count: 1
+    parallel: false
+
+    agents:
+
+      - id: w5-docking-shell
+        capability: docking-shell
+        status: implemented
+        description: >
+          React 19 + Vite + TS strict SPA at apps/studio/client (built dist
+          served by studio-server's static hosting). Docking shell:
+          canvas slot always center, two rails, panel registry
+          (PanelDefinition), drag-to-swap with drop indicators +
+          settings fallback, stack/tab within a rail, collapse to icon
+          strip, silent LayoutPreference persistence via GET/PUT
+          /api/preferences, workspace switcher with URL routing,
+          StudioSocket (typed WS client over @studio/contract with
+          reconnect/resume via lastSeq), inline connection state,
+          keyboard parity, reduced-motion respect.
+        territory:
+          root:
+            - apps/studio/package.json            # additive: add "client" workspace
+          client:
+            - apps/studio/client/                 # everything except src/panels/chat/, src/panels/library/, src/canvas/
+        slices:
+          - docking-shell/1   # SPA scaffold and shell frame
+          - docking-shell/2   # Panel registry and rail docking model
+          - docking-shell/3   # Drag-to-swap with drop indicators and settings fallback
+          - docking-shell/4   # Collapse to icon strip and keyboard parity
+          - docking-shell/5   # Silent layout persistence through the preferences endpoint
+          - docking-shell/6   # Workspace routing and WebSocket client with reconnect/resume
+        contracts_produced:
+          - name: client-scaffold
+            type: file_location
+            description: >
+              apps/studio/client Vite app — npm run build emits
+              apps/studio/client/dist consumed by studio-server static
+              hosting; vitest + Testing Library configured.
+          - name: panel-registry
+            type: type
+            description: >
+              PanelDefinition + registerPanel/usePanel APIs — Wave 6
+              panels plug in without shell changes; placeholder
+              registrations prove the seam.
+          - name: studio-socket
+            type: type
+            description: >
+              StudioSocket — typed send/on over @studio/contract
+              envelopes, workspace.attach on connect, lastSeq resume,
+              reconnect backoff, ConnectionState surfaced inline.
+          - name: shell-state
+            type: type
+            description: >
+              Shared shell state seam — active workspace, attached
+              artifact focus (chat→canvas references), panel
+              arrangement; the cross-panel communication mechanism.
+          - name: layout-persistence
+            type: type
+            description: >
+              LayoutPreference load/apply/save (debounced, silent) via
+              /api/preferences; defaults when null.
+        dependencies:
+          consumes_from_wave:
+            - wave: 4
+              contracts: [protocol-modules, ws-channel, http-surface]
+          cross_agent_this_wave: []
+        verification:
+          - npm run build --workspace @studio/client emits dist; studio-server serves it (no more placeholder page)
+          - Panel registry renders two placeholder panels on opposite rails; drag-to-swap, stack, collapse all work via mouse AND keyboard (Testing Library)
+          - Layout round-trips through real /api/preferences against a running server; reload restores arrangement with no save action
+          - StudioSocket attaches, receives ordered events, resumes with lastSeq after a dropped socket (tested against the real server with the scripted runtime)
+          - Connection state renders inline (no toast); reduced-motion honored
+          - npm run typecheck/lint/test green across workspaces
+
+    gates:
+      - level: L1
+        name: File existence
+        check: apps/studio/client scaffold, shell/docking modules, StudioSocket, and placeholder panel registrations exist.
+      - level: L3
+        name: Type safety and lint
+        check: npm run typecheck and npm run lint pass with zero errors; no WS type strings outside @studio/contract imports.
+      - level: L4
+        name: Shell integration
+        check: >
+          Client test suite green (Testing Library + jsdom for
+          components; socket/preferences suites against the real
+          server). Built dist serves through studio-server.
+
+    wave_completion_criteria: >
+      Agent reports success, gates pass. The shell runs against the
+      Phase 1 server: workspaces switchable, panels dockable, layout
+      persisting silently, socket resuming. Wave 6 fills the panels.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# WAVE 6 — MVP TRIANGLE (Phase 2)
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Three agents — canvas, library-panel, chat-panel — sharing the Wave 5
+# seams. Execution is serialized in this order: canvas (no cross-panel
+# deps) → library-panel (owns contract library.ts / LibraryReference)
+# → chat-panel (imports LibraryReference for composer intake; focuses
+# canvas via shell-state).
+
+  - number: 6
+    name: MVP Triangle
+    status: implemented
+    agents_count: 3
+    parallel: false            # serialized: shared client package.json and panel registration composition
+
+    agents:
+
+      - id: w6-canvas
+        capability: canvas
+        status: implemented
+        description: >
+          The center stage: native SVG rendering of artifact versions,
+          platform frames at true dims (375×812 / 1280×800) with
+          side-by-side mode, zoom/pan with fit-to-frame and keyboard
+          controls, inspect-on-hover overlay from artifact metadata,
+          history filmstrip with restore-as-new-head (undo, no
+          confirmation), persistent compliance bar with
+          click-to-highlight via ViolationNodeMapping nodeIds, live
+          artifact.version_created / compliance_completed updates,
+          empty and progressive loading states.
+        territory:
+          client:
+            - apps/studio/client/src/canvas/
+            - apps/studio/client/test/canvas/
+            - one additive panel/stage registration in the shell composition file
+        slices:
+          - canvas/1   # Canvas panel and native SVG stage
+          - canvas/2   # Platform frames and side-by-side mode
+          - canvas/3   # Zoom/pan with fit-to-frame default and keyboard controls
+          - canvas/4   # Inspect-on-hover overlay
+          - canvas/5   # Generation-history filmstrip
+          - canvas/6   # Compliance bar with violation highlighting
+          - canvas/7   # Live artifact events and progressive generation loading
+        contracts_produced:
+          - name: canvas-stage
+            type: type
+            description: Center-stage component registered with the shell; consumes shell-state artifact focus (chat references land here).
+        dependencies:
+          consumes_from_wave:
+            - wave: 5
+              contracts: [client-scaffold, panel-registry, studio-socket, shell-state]
+          cross_agent_this_wave: []
+        verification:
+          - Renders the Phase 1 test fixtures (swiss-dashboard, violating SVG) natively with frames, zoom, inspect
+          - Filmstrip scrubs versions; restore calls POST restore and appends the new head from the WS event
+          - Compliance bar maps violations to highlighted nodes on the violating fixture
+          - Keyboard parity for stage navigation; reduced-motion honored; Testing Library suites green
+
+      - id: w6-library-panel
+        capability: library-panel
+        status: implemented
+        description: >
+          Visual browser over the registered systems via /api/library/*:
+          system switcher, token browser (palette swatches, type
+          specimens at real sizes, spacing grid, border/elevation
+          rules), component gallery rendering real library SVGs with
+          variant toggles and progressive loading, layout-template
+          browser, search/filter, reference-into-chat emitting
+          LibraryReference through the shell seam, client-side
+          sanitizer passing the shared adversarial fixture set,
+          bridge-down staleness shown in place.
+        territory:
+          contract:
+            - apps/studio/packages/contract/src/library.ts   # LibraryReference — owned here
+          client:
+            - apps/studio/client/src/panels/library/
+            - apps/studio/client/test/panels/library/
+            - one additive panel registration in the shell composition file
+        slices:
+          - library-panel/1   # Library panel scaffold and system switcher
+          - library-panel/2   # Token browser with real-size specimens
+          - library-panel/3   # Component gallery with progressive SVG loading
+          - library-panel/4   # Layout-template browser
+          - library-panel/5   # Library search and filter
+          - library-panel/6   # Reference-into-chat
+        contracts_produced:
+          - name: library-reference
+            type: type
+            description: LibraryReference union in apps/studio/packages/contract/src/library.ts (+ barrel export) — chat-panel imports it for composer intake.
+          - name: library-sanitizer
+            type: type
+            description: Client-side sanitizeSvg passing the shared adversarial fixture set from server/test/artifact-pipeline/fixtures/adversarial/.
+        dependencies:
+          consumes_from_wave:
+            - wave: 5
+              contracts: [client-scaffold, panel-registry, studio-socket, shell-state]
+          cross_agent_this_wave: []
+        verification:
+          - All 9 systems browse through real /api/library data shapes (token/component fixtures captured from the live endpoints)
+          - Gallery loads progressively; sanitizer passes the shared adversarial set; staleness renders in place when the API returns 503/stale
+          - Reference action emits a typed LibraryReference into the shell seam
+          - Search filters tokens and components; Testing Library suites green
+
+      - id: w6-chat-panel
+        capability: chat-panel
+        status: implemented
+        description: >
+          The agentic chat surface: streaming assistant rendering with
+          aria-live, multiline composer with disabled-with-reason
+          (busy / auth missing with apps/studio/.env guidance in place),
+          decision chips as editable selects sending chip.update,
+          inline tool progress, structured error display in place,
+          artifact references focusing the canvas via shell-state,
+          LibraryReference composer intake (removable chips riding
+          chat.send references), cancel during generation, transcript
+          restore on attach, keyboard and screen-reader support.
+        territory:
+          client:
+            - apps/studio/client/src/panels/chat/
+            - apps/studio/client/test/panels/chat/
+            - one additive panel registration in the shell composition file
+        slices:
+          - chat-panel/1   # Chat panel scaffold and transcript restore
+          - chat-panel/2   # Streaming assistant rendering with aria-live region
+          - chat-panel/3   # Composer with disabled-with-reason, auth guidance, and cancel
+          - chat-panel/4   # Inline tool progress and structured error display
+          - chat-panel/5   # Decision chips with re-run on change
+          - chat-panel/6   # Artifact references with canvas focus
+          - chat-panel/7   # Keyboard and screen-reader pass (WCAG AA)
+        contracts_produced:
+          - name: chat-panel-registration
+            type: type
+            description: Chat panel registered with the shell; composer accepts LibraryReference intake from the shell seam.
+        dependencies:
+          consumes_from_wave:
+            - wave: 5
+              contracts: [client-scaffold, panel-registry, studio-socket, shell-state]
+          cross_agent_this_wave:
+            - w6-library-panel: [library-reference]
+            - w6-canvas: [canvas-stage]
+        verification:
+          - Streaming render against recorded AgentEvent streams; chips edit → chip.update with { messageId, kind, value }
+          - Keyless state shows the apps/studio/.env guidance in place, composer disabled-with-reason; no toasts anywhere
+          - Reference chips ride chat.send references; artifact reference click focuses the canvas version via shell-state
+          - Transcript restores on attach; aria-live + keyboard pass; Testing Library suites green
+
+    gates:
+      - level: L1
+        name: File existence
+        check: canvas/, panels/library/, panels/chat/ modules and contract library.ts exist; all three registered with the shell.
+      - level: L3
+        name: Type safety and lint
+        check: npm run typecheck and npm run lint pass with zero errors.
+      - level: L4
+        name: Client integration
+        check: full client suite green; built dist serves through studio-server; library data verified against the real /api/library endpoints.
+      - level: L5
+        name: Composed studio smoke (Phase 2 exit)
+        check: >
+          npm run build; boot the composed server; the served SPA
+          loads with all three panels docked around the canvas;
+          /api/health green (auth missing acceptable keyless); a
+          scripted-runtime generation drives an artifact onto the
+          canvas through the real protocol path.
+
+    wave_completion_criteria: >
+      All three agents report success, gates pass including the
+      composed-studio smoke. The MVP triangle is live: brief in chat,
+      artifact on canvas with compliance bar, library browsable,
+      panels swappable with persistent layout.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# INTEGRATION VERIFICATION
+# ═══════════════════════════════════════════════════════════════════════
+
+integration_verification:
+  name: Headless Studio Complete
+  description: >
+    Verify the headless server satisfies every server-side
+    product.yaml success criterion. The Wave 4 headless-loop suite is
+    the authoritative verification — it runs as the L5 gate, not as a
+    separate step.
+
+  test_scenarios:
+    - name: Conversational generation loop
+      flow: >
+        Scripted WS client attaches to a fresh workspace → sends a
+        brief → agent selects system/layout/platform (chips.updated
+        observed) → wf_generate runs → artifact.version_created →
+        compliance.yaml retrieved over HTTP → chip edited (platform) →
+        regeneration → second version observed.
+
+    - name: Two-pass refinement and novel layout
+      flow: >
+        "Swap the header copy" → substitution flow (build_substitution_request
+        → apply_substitutions) → new version, provenance records the
+        tool. A novel-layout brief → compose flow → assembly text
+        ingested (ArtifactSource kind text) → version lands with
+        compliance attached.
+
+    - name: Version history and restore
+      flow: >
+        Three versions generated → POST restore of version 1 → version
+        4 created with restored_from provenance → headVersion is 4 →
+        artifact.version_created observed on WS → version 1 content
+        byte-identical to version 4 SVG.
+
+    - name: Keyless degradation
+      flow: >
+        Server started without ANTHROPIC_API_KEY → auth.status missing
+        → chat.send refused with structured guidance naming apps/studio/.env
+        → library endpoints, artifact reads, and compliance retrieval
+        all still work.
+
+    - name: Bridge resilience
+      flow: >
+        Kill the MCP subprocess during a library request → structured
+        503 with staleness → bridge.status events show
+        restarting → up → next request succeeds without server restart.
+
+    - name: Workspace persistence and resume
+      flow: >
+        Generate, disconnect, stop the server → restart → reattach →
+        transcript restores (messages, tool calls, chips,
+        routing_result records), artifact versions intact, preferences
+        document round-tripped. Soft-delete a workspace → recover it
+        from .trash-.
+
+  completion_criteria:
+    - Wave 4 L5 gate passes (headless loop, real key, real MCP server)
+    - All wave L4 integration suites pass (store temp-dir, real-bridge, domain, protocol)
+    - npm run typecheck passes with zero errors across all workspaces
+    - npm run lint passes
+    - All unit tests pass
+    - Every architecture.md route and WS event is exercised by at least one test
+    - All contracts_produced in this file exist at their declared locations
+    - The API key appears in no log output (redaction sweep)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# DEPENDENCY SUMMARY
+# ═══════════════════════════════════════════════════════════════════════
+#
+#   Wave 1 (Foundation) — no dependencies, parallel after slice-1 head start
+#     ├── w1-studio-server        5 slices
+#     └── w1-workspace-store      5 slices (needs monorepo-root from w1-studio-server slice 1)
+#
+#   Wave 2 (Bridge) — depends on Wave 1
+#     └── w2-mcp-bridge           5 slices (real MCP server required for tests)
+#
+#   Wave 3 (Domain) — depends on Waves 1-2, parallel
+#     ├── w3-artifact-pipeline    5 slices (delivers artifact.ts first)
+#     └── w3-agent-orchestration  7 slices (consumes ArtifactSource from w3-artifact-pipeline slice 1)
+#
+#   Wave 4 (Protocol) — depends on Waves 1-3
+#     └── w4-studio-api           7 slices (slice 7 = Phase 1 exit criterion)
+#
+#   Phase 1 total: 4 waves, 6 agents, 34 slices
+#   Phase 2 (deferred): Wave 5 docking-shell (6 slices);
+#     Wave 6 chat-panel (7), canvas (7), library-panel (6) — planned
+#     in a follow-up orchestration after the L5 gate passes.
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# EXECUTION NOTES
+# ═══════════════════════════════════════════════════════════════════════
+
+execution_notes:
+
+  launch_order_within_waves:
+    wave_1: >
+      Launch w1-studio-server first. w1-workspace-store starts as soon
+      as the monorepo root and @studio/contract skeleton land
+      (studio-server slice 1) — everything after that is fully
+      parallel. Neither agent touches the other's directories.
+    wave_2: >
+      Single agent. Before launching, verify the design-systems MCP
+      server starts locally (python per repo-root .mcp.json) — the
+      integration suite depends on it.
+    wave_3: >
+      Launch w3-artifact-pipeline first — its slice 1 declares
+      ArtifactSource in artifact.ts, which w3-agent-orchestration's
+      generation flow (slice 3) imports. The agent-orchestration agent
+      starts immediately on slices 1-2 (auth resolution, plain
+      conversation), which need no artifact types. Real-key SDK tests
+      incur API cost — run the keyed suite once per slice completion,
+      not per edit.
+    wave_4: >
+      Single agent. Implement slices in order — the contract modules
+      (slice 1) underpin everything. Slice 7 (headless loop) is the
+      capstone: run it last, with ANTHROPIC_API_KEY present, against
+      the real MCP server. It is the executable Phase 1 exit criterion.
+
+  binding_documents: >
+    apps/studio/_planning/architecture.md is authoritative over any
+    individual spec if a conflict surfaces mid-implementation — fix
+    the spec, don't fork the contract. Each agent reads its own
+    specs/<capability>.yaml (13 sections) and slices/<capability>.yaml
+    before writing code. The contract package ownership table in
+    architecture.md is binding: an agent only creates contract modules
+    it owns; it imports everything else.
+
+  reference_usage: >
+    The design-systems MCP server (tools/mcp-server/) and the
+    wireframe-skill python modules are read-only upstream dependencies
+    — consult them for exact tool result shapes (Result envelope,
+    GenerationResult, RawComplianceResult wire form, spec.yaml schema
+    from emit.py) but never modify them. The compass_app repo
+    (/Users/tucker/@tucker/compass_app/) is a format/process reference
+    only — no code is shared.
+
+  testing_strategy: >
+    Tests ship with each slice, not after the wave. Real seams per
+    architecture.md: temp-dir store tests, real-MCP-server bridge
+    tests, real HTTP/WS protocol tests. The MCP server is never
+    mocked. Two test tiers for agent-orchestration: keyless
+    (degradation, routing, persistence — runs in any environment) and
+    keyed (real SDK generation — requires ANTHROPIC_API_KEY, incurs
+    API cost, gates L4/L5 only). Gates at L4+ block wave completion;
+    no wave advances with a red suite.
+
+  cross_agent_communication: >
+    Producing agents complete contract deliverables before consumers
+    import them. In practice:
+    - Wave 1: studio-server lands the monorepo + contract skeleton
+      before workspace-store contributes store.ts
+    - Wave 3: artifact-pipeline lands artifact.ts (ArtifactSource)
+      before agent-orchestration emits typed artifact_produced events
+    - Wave 4: studio-api consumes every prior contract; any shape
+      mismatch discovered here is a spec bug — fix the owning spec and
+      architecture.md together, then resume.

@@ -1,0 +1,524 @@
+# Capabilities — tkr-design-systems Studio
+# Schema: planning-skill capability entities
+# Layers: infrastructure | data | domain | api | ui
+# Status: draft — all capabilities pending feature decomposition
+#
+# Dependency notation: depends_on lists capabilities that must provide
+# interfaces before this capability can be built. provides_to lists
+# capabilities that consume this capability's interfaces.
+
+capabilities:
+
+  # ─── INFRASTRUCTURE LAYER ──────────────────────────────────────────
+
+  - name: studio-server
+    layer: infrastructure
+    status: implemented
+    description: |
+      Node + TypeScript server foundation for the studio. Process
+      lifecycle, configuration resolution (repo root, MCP server
+      location, workspace storage path, port), pino structured logging,
+      health endpoint, static asset hosting for the built SPA, and
+      graceful shutdown. The single process every other server-side
+      capability mounts into.
+    scope_in:
+      - Server bootstrap and process lifecycle (start, shutdown, signal handling)
+      - Configuration loading and validation (paths, ports, env overrides)
+      - pino structured logging with request/session correlation IDs
+      - HTTP server with static hosting for the built client bundle
+      - WebSocket upgrade handling (connection acceptance, heartbeat, close semantics)
+      - Localhost-only binding (single-user, local-only by design — never exposed beyond the machine)
+      - Health/readiness endpoint (/api/health — route owned here; HealthResponse and StatusReport contributed to the contract package) reporting process, bridge, store, and auth status
+      - Error boundary: unhandled rejection/exception capture with structured logs
+    scope_out:
+      - MCP protocol communication (see mcp-bridge)
+      - API route and message schema definitions (see studio-api)
+      - Workspace data persistence (see workspace-store)
+    depends_on: []
+    provides_to:
+      - mcp-bridge
+      - workspace-store
+      - studio-api
+
+  - name: mcp-bridge
+    layer: infrastructure
+    status: implemented
+    description: |
+      Direct-call MCP client for tool invocations that happen outside
+      the agent loop. The Claude Agent SDK owns its own connection to
+      the design-systems MCP server for agent-driven tool use (decided);
+      this bridge owns a second, independent stdio connection serving
+      the library endpoints (ds_list_systems, wf_get_tokens,
+      wf_read_component) and artifact-pipeline compliance runs
+      (ds_check_compliance). The MCP server is stateless per call, so
+      dual connections are safe. Owns its subprocess lifecycle and
+      translates MCP errors into typed results the API can surface in
+      place.
+    scope_in:
+      - MCP server subprocess spawn, supervision, and restart on crash (bridge connection only)
+      - Typed wrappers for the direct-call tool set (ds_list_systems, ds_load_system, ds_get_rulebook, ds_check_compliance, wf_get_tokens, wf_read_component)
+      - Call serialization/queueing over the single stdio transport
+      - Timeout and cancellation handling per tool call
+      - Error translation (MCP protocol errors, tool-level failures) into typed results
+      - Bridge status reporting (up, restarting, failed) for health and UI surfaces
+      - Result payload handling (SVG content, token vocabularies, YAML specs)
+    scope_out:
+      - Agent-driven tool calls — wf_generate, substitution, blueprint assembly run over the Agent SDK's own MCP connection (see agent-orchestration)
+      - Deciding which tool to call for an intent (see agent-orchestration)
+      - Persisting generation results (see artifact-pipeline)
+      - MCP server implementation itself (lives in tools/mcp-server, read-only dependency)
+    depends_on:
+      - studio-server
+    provides_to:
+      - artifact-pipeline
+      - studio-api
+
+  # ─── DATA LAYER ────────────────────────────────────────────────────
+
+  - name: workspace-store
+    layer: data
+    status: implemented
+    description: |
+      Persistence for everything the studio must remember. Plain files
+      only (decided): workspaces as directories holding chat transcripts,
+      artifact versions (SVG + spec.yaml + compliance results), and
+      workspace metadata — YAML metadata, raw SVG, human-readable
+      transcripts, every piece of state reviewable on disk without
+      tooling. No database. A user-preferences store covers panel
+      layout. The interface is repository-shaped so consumers never
+      touch paths directly.
+    scope_in:
+      - Workspace root at apps/studio/workspaces/, gitignored (personal working state, not repo history)
+      - Workspace model (id, name, created/updated, active artifact, settings)
+      - Chat transcript persistence (messages, tool-call records, decision chips)
+      - Artifact version storage (SVG content, spec.yaml metadata, compliance report, parent version)
+      - User preference store (panel arrangement, collapsed state, last workspace)
+      - Repository interfaces with IoC (consumers receive the store, never construct it)
+      - Atomic writes (no partial artifact or transcript corruption on crash)
+      - Workspace listing, creation, soft-delete with recovery
+    scope_out:
+      - Artifact lifecycle semantics — what a version means, when one is created (see artifact-pipeline)
+      - Chat semantics — what a message means (see agent-orchestration)
+      - Preference UI (see docking-shell)
+    depends_on:
+      - studio-server
+    provides_to:
+      - agent-orchestration
+      - artifact-pipeline
+      - studio-api
+
+  # ─── DOMAIN LAYER ──────────────────────────────────────────────────
+
+  - name: agent-orchestration
+    layer: domain
+    status: implemented
+    description: |
+      The conversational agent loop. Receives chat messages in workspace
+      context, decides intent, and drives the MCP bridge: a fresh brief
+      becomes wf_generate; a content refinement becomes the two-pass
+      substitution flow; a novel layout becomes the compose/blueprint
+      flow with the agent authoring the LayoutBlueprint. Maintains
+      per-artifact conversation context so refinements need no
+      restatement. Emits its choices (system, layout, platform) as
+      editable decision chips rather than asking up front. Streams
+      assistant output and tool progress as events. The design-systems
+      MCP server is an external read-only dependency, reached through
+      the SDK's own connection (not through mcp-bridge).
+    scope_in:
+      - Agent loop built on the Claude Agent SDK (TypeScript), decided — SDK manages the model loop and its own MCP connection to the design-systems server (configured from studio-server config, independent of mcp-bridge)
+      - API key resolution — ANTHROPIC_API_KEY from environment or gitignored local config, injected into the SDK environment; never logged (pino redaction)
+      - Auth status reporting (configured, missing, invalid) for health and the API event stream
+      - Intent routing — new generation vs. substitution refinement vs. blueprint composition vs. plain conversation
+      - Default selection (system, layout archetype, platform) surfaced as editable decision chips
+      - Two-pass substitution orchestration (wf_build_substitution_request → agent judgment → wf_apply_substitutions)
+      - Blueprint authoring for the compose flow (decomposition request → LayoutBlueprint JSON → wf_assemble_from_blueprint)
+      - Per-workspace, per-artifact conversation context windows
+      - Event stream contract (assistant tokens, tool started/finished, artifact produced, error)
+      - Transcript persistence through workspace-store
+    scope_out:
+      - Direct-call MCP invocations outside the agent loop (see mcp-bridge)
+      - Artifact versioning and compliance runs (see artifact-pipeline)
+      - WebSocket delivery of events (see studio-api)
+      - Chat rendering (see chat-panel)
+      - claude.ai subscription login — prohibited for embedded SDK apps by Anthropic policy; API key is the only auth path
+    depends_on:
+      - workspace-store
+    provides_to:
+      - artifact-pipeline
+      - studio-api
+
+  - name: artifact-pipeline
+    layer: domain
+    status: implemented
+    description: |
+      Artifact lifecycle from generation result to inspectable, versioned
+      canvas object. Ingests wf_generate / assembly outputs (SVG +
+      spec.yaml), creates immutable versions with parent links, parses
+      spec metadata (components_used, design_system block), runs
+      ds_check_compliance on every version, and maps violations to SVG
+      node references so the canvas can highlight them. Restoring a
+      prior version is a new head pointer, never a destructive rollback.
+    scope_in:
+      - Version creation from generation results (SVG + spec.yaml + provenance: brief, tool, parameters)
+      - Version graph (parent links, head pointer, restore-as-new-head)
+      - spec.yaml parsing into typed artifact metadata
+      - Compliance execution per version via ds_check_compliance
+      - Violation-to-SVG-node mapping for canvas highlighting
+      - Artifact event emission (version created, compliance completed) into the API event stream
+      - SVG content serving preparation (sanitized, stable node IDs preserved)
+    scope_out:
+      - Storage mechanics (see workspace-store)
+      - Deciding when to generate (see agent-orchestration)
+      - Rendering the SVG or the compliance bar (see canvas)
+      - Rulebook definitions (live in system specs, read-only)
+    depends_on:
+      - mcp-bridge
+      - workspace-store
+    provides_to:
+      - studio-api
+
+  # ─── API LAYER ─────────────────────────────────────────────────────
+
+  - name: studio-api
+    layer: api
+    status: implemented
+    description: |
+      The protocol surface between server and client — the headless-first
+      deliverable. WebSocket channel per client for chat streaming and
+      workspace events; HTTP endpoints for artifact SVG/metadata serving,
+      library data (systems, tokens, components, layouts proxied through
+      the MCP bridge with caching), workspace CRUD, and preferences.
+      Typed message schemas shared with the client as a contract package.
+      Fully exercisable by a scripted client with no UI.
+    scope_in:
+      - WebSocket message schema (chat send, assistant stream, tool progress, artifact events, decision-chip updates)
+      - Connection/session management (workspace attachment, reconnect with resume)
+      - HTTP endpoints — workspaces (list/create/rename/delete), artifacts (SVG, metadata, versions, compliance), preferences (get/put)
+      - Library endpoints — systems via ds_list_systems, tokens via wf_get_tokens, components via wf_read_component, layouts from loaded specs; cached with invalidation on registry change
+      - Shared contract package (TypeScript types for every message and payload, consumed by client and server)
+      - Input validation at the boundary (invalid states rejected before domain code)
+      - Structured error responses (what failed, how to fix, in place)
+    scope_out:
+      - Business logic (delegates to agent-orchestration and artifact-pipeline)
+      - Authentication/multi-user (single-user local tool; future capability if hosted)
+      - UI rendering (see ui capabilities)
+    depends_on:
+      - studio-server
+      - agent-orchestration
+      - artifact-pipeline
+      - mcp-bridge
+    provides_to:
+      - docking-shell
+      - chat-panel
+      - canvas
+      - library-panel
+
+  # ─── UI LAYER ──────────────────────────────────────────────────────
+
+  - name: docking-shell
+    layer: ui
+    status: implemented
+    description: |
+      The React SPA shell: a docking system, not a fixed grid. Canvas
+      always center; two rails flank it, each hosting zero or more
+      panels. Panels are first-class citizens — swappable between rails
+      by dragging the panel header, stackable/tabbable within one rail,
+      collapsible to icon strips with one-click restore. Arrangement
+      persists silently through the preferences API. Workspace routing,
+      connection state surfaced inline, and the panel registry future
+      panels (compliance detail, history, blueprint tree) plug into.
+    scope_in:
+      - Vite + React + TypeScript strict application scaffold in apps/studio/
+      - Rail/panel docking model (panel registry, slot assignment, z-order within rail)
+      - Drag-to-swap between rails with drop indicators; settings toggle as fallback
+      - Stack/tab behavior when multiple panels share a rail
+      - Collapse-to-icon-strip and restore per panel
+      - Silent layout persistence via preferences endpoints (no save action)
+      - Workspace switcher and routing (URL ↔ active workspace)
+      - WebSocket client with reconnect/resume and inline connection status
+      - Keyboard parity for all panel operations (move, collapse, focus)
+    scope_out:
+      - Panel contents (see chat-panel, canvas, library-panel)
+      - WebSocket message schema definitions (owned by studio-api in the contract package; the shell contributes UI-specific contract types like LayoutPreference)
+      - The showcase SPA (untouched)
+    depends_on:
+      - studio-api
+    provides_to:
+      - chat-panel
+      - canvas
+      - library-panel
+
+  - name: chat-panel
+    layer: ui
+    status: implemented
+    description: |
+      The agentic chat surface. Streams assistant output, renders tool
+      progress contextually ("generating in Swiss…"), and shows the
+      agent's choices as editable decision chips (system, layout,
+      platform) — changing a chip re-runs the affected step. Messages
+      that produced artifacts link to the canvas version they created.
+      Transcript restores with the workspace.
+    scope_in:
+      - Message list with streaming assistant rendering
+      - Composer (multiline, submit affordance, disabled-with-reason while agent is busy)
+      - Decision chips on agent turns — editable selects for system/layout/platform, re-run on change
+      - Inline tool progress and structured error display (what failed, how to fix)
+      - Artifact references in messages (click focuses that version on the canvas)
+      - Transcript restore on workspace open
+      - Keyboard and screen-reader support (live region for streaming, focus management)
+    scope_out:
+      - Agent reasoning and tool routing (see agent-orchestration)
+      - Panel docking mechanics (see docking-shell)
+    depends_on:
+      - docking-shell
+      - studio-api
+    provides_to: []
+
+  - name: canvas
+    layer: ui
+    status: implemented
+    description: |
+      The center stage. Renders artifact SVG natively at true platform
+      dimensions inside device frames, with zoom/pan, side-by-side
+      platform views, inspect-on-hover (component identity and token
+      refs read from artifact metadata, devtools-style), a generation-
+      history filmstrip for scrubbing and restoring versions, and the
+      persistent compliance bar — per-rule status, click a violation to
+      highlight the offending SVG node.
+    scope_in:
+      - Native SVG rendering of artifact versions (no rasterization)
+      - Platform frames at true dimensions (375×812 mobile, 1280×800 desktop), side-by-side mode
+      - Zoom/pan with fit-to-frame default and keyboard controls
+      - Inspect-on-hover overlay (component name, variant, token references from artifact metadata)
+      - History filmstrip (version thumbnails, scrub, restore-as-new-head — undo, not confirmation)
+      - Compliance bar (per-rule pass/warn/fail, click-to-highlight violation nodes)
+      - Empty state (no artifact yet → points at chat), loading state during generation (progressive, non-blocking)
+    scope_out:
+      - Compliance computation (see artifact-pipeline)
+      - Version storage (see workspace-store)
+      - Direct SVG editing (future — blueprint-editor is the editing path)
+    depends_on:
+      - docking-shell
+      - studio-api
+    provides_to: []
+
+  - name: library-panel
+    layer: ui
+    status: implemented
+    description: |
+      Visual browser over the registered design systems, sourced live
+      from the library endpoints. System switcher, token browser
+      (palette swatches, type-scale specimens, spacing grid, radius and
+      elevation rules), component gallery rendered from the real library
+      SVGs with variant toggles, and layout-template thumbnails. Items
+      are referenceable into chat ("use this card style") to ground the
+      agent's next action.
+    scope_in:
+      - System switcher fed by ds_list_systems (name, tagline, status)
+      - Token browser — palette swatches with values, type specimens at real sizes, spacing grid, border/elevation rules (wf_get_tokens)
+      - Component gallery — real component SVGs with variant toggles (wf_read_component)
+      - Layout-template browser with thumbnails from system specs
+      - Reference-into-chat (drag or action sends a typed component/token reference to the composer)
+      - Search/filter across components and tokens within a system
+      - Progressive loading (gallery SVGs load as scrolled, not all-or-nothing)
+    scope_out:
+      - Spec editing or registration (see system-authoring, deferred)
+      - Library data shape (see studio-api library endpoints)
+    depends_on:
+      - docking-shell
+      - studio-api
+    provides_to: []
+
+  # ─── DEFERRED (defined, not sequenced) ─────────────────────────────
+
+  - name: system-comparison
+    layer: ui
+    status: deferred
+    description: |
+      One brief rendered across N systems side-by-side — the showcase
+      feature. Chat request ("show this in Swiss, Terminal, and Riso")
+      fans out parallel generations through the agent; the canvas enters
+      comparison mode with synchronized zoom and per-cell compliance
+      status. Selecting a winner continues refinement in that system.
+    scope_in:
+      - Comparison request flow through chat (multi-system generation fan-out)
+      - Comparison canvas mode (grid of platform-framed artifacts, synchronized zoom/pan)
+      - Per-cell system label and compliance summary
+      - Promote-to-active (pick a cell, continue refining in that system)
+    scope_out:
+      - Generation mechanics (see agent-orchestration, artifact-pipeline)
+    depends_on:
+      - canvas
+      - agent-orchestration
+    provides_to: []
+
+  - name: blueprint-editor
+    layer: ui
+    status: deferred
+    description: |
+      Direct-manipulation editing of the compose flow's LayoutBlueprint:
+      a region/component tree panel synced to the canvas, rearrange and
+      re-parametrize nodes, reassemble through wf_assemble_from_blueprint
+      on change. The bridge from chat-only to hands-on editing.
+    scope_in:
+      - Blueprint tree panel (regions, component placements, parameters)
+      - Edit operations (reorder, swap component, adjust placement) with immediate reassembly
+      - Canvas selection sync (click region on canvas ↔ select node in tree)
+      - Version creation per edit (history scrubber covers manual edits)
+    scope_out:
+      - Blueprint schema (owned by wireframe-skill assembler, read-only contract)
+    depends_on:
+      - canvas
+      - artifact-pipeline
+    provides_to: []
+
+  - name: system-authoring
+    layer: ui
+    status: deferred
+    description: |
+      Guided design-system creation: fork an existing system's spec,
+      edit tokens with live preview against a reference screen, validate
+      inline as you type (ds_validate_spec), register when green
+      (ds_register_system). Turns the project from eight systems into a
+      system factory; the chat agent can drive it conversationally.
+    scope_in:
+      - Fork-from-existing-system starting point
+      - Token editing with live re-render of a reference artifact
+      - Inline validation as values change (errors in place, never on submit)
+      - Rulebook editing with mechanical-rule preview
+      - Registration flow (ds_register_system) and unregistration
+      - Agent-driven authoring path ("make a Swiss variant with a warmer palette")
+    scope_out:
+      - Spec schema definition (owned by design-system-skill, read-only contract)
+      - Component SVG authoring (future; authoring starts token-level)
+    depends_on:
+      - library-panel
+      - agent-orchestration
+    provides_to: []
+
+  - name: project-board
+    layer: ui
+    status: deferred
+    description: |
+      Batch view for multi-screen projects: a grid of screens ×
+      platforms with per-cell artifact thumbnails and compliance status —
+      a visual surface over the wireframe-batch TRACKER files, which
+      remain the source of truth (decided). Click a cell to open it on
+      the canvas; regenerate stale cells from the board.
+    scope_in:
+      - TRACKER file reading and watching (screens × platforms inventory parsed from tracker state)
+      - Board grid with thumbnails, compliance badges, staleness indicators
+      - Cell actions (open on canvas, regenerate, compare versions)
+      - Batch generation fan-out through agent-orchestration
+    scope_out:
+      - TRACKER file writes (wireframe-batch owns tracker mutation; the board reads)
+    depends_on:
+      - canvas
+      - agent-orchestration
+      - artifact-pipeline
+    provides_to: []
+
+  - name: export-surface
+    layer: domain
+    status: deferred
+    description: |
+      Outputs that land where people work: SVG → PNG rasterization,
+      token export as CSS custom properties / Tailwind config, copy
+      component-as-SVG, and artifact download with spec.yaml sidecar.
+    scope_in:
+      - PNG export at 1x/2x from artifact SVG
+      - Token export formats (CSS custom properties, Tailwind config, JSON)
+      - Copy-as-SVG for components and full artifacts
+      - Download bundles (SVG + spec.yaml + compliance report)
+    scope_out:
+      - Code generation (React components from artifacts — future product question)
+    depends_on:
+      - artifact-pipeline
+      - studio-api
+    provides_to: []
+
+
+# ─── STRATEGY: HEADLESS-FIRST ────────────────────────────────────────
+#
+# Build the server stack — foundation, MCP bridge, persistence, agent
+# loop, artifact pipeline, and API — before any browser code. The
+# WebSocket/HTTP API is the Phase 1 deliverable: a scripted client must
+# run brief → generate → refine → compliance end-to-end with no UI.
+# Phase 2 builds the docking shell, then the MVP triangle (chat panel +
+# canvas with compliance bar), then the library panel. Deferred
+# capabilities are defined above but not sequenced until the triangle
+# is verified end-to-end.
+#
+# ─── DEPENDENCY GRAPH (summary) ──────────────────────────────────────
+#
+# No dependencies (foundation):
+#   studio-server
+#
+# Single dependency:
+#   mcp-bridge → studio-server
+#   workspace-store → studio-server
+#
+# Domain:
+#   agent-orchestration → workspace-store (Agent SDK owns its own MCP connection)
+#   artifact-pipeline → mcp-bridge, workspace-store
+#
+# API:
+#   studio-api → studio-server, agent-orchestration, artifact-pipeline,
+#                mcp-bridge (library endpoints)
+#
+# UI:
+#   docking-shell → studio-api
+#   chat-panel, canvas, library-panel → docking-shell, studio-api
+#
+# ─── PHASE 1: HEADLESS (build sequence) ──────────────────────────────
+#
+#   Wave 1 — Foundation:
+#     studio-server, workspace-store
+#
+#     Deliverable: running server with config, logging, health, static
+#     hosting, and a tested repository layer for workspaces, transcripts,
+#     artifacts, and preferences.
+#
+#   Wave 2 — Bridge:
+#     mcp-bridge
+#
+#     Deliverable: supervised MCP subprocess with typed wrappers for the
+#     direct-call tool set (registry, tokens, components, compliance),
+#     exercised by integration tests against the real design-systems
+#     MCP server. Agent-driven tools arrive in Wave 3 via the SDK's own
+#     connection.
+#
+#   Wave 3 — Domain:
+#     agent-orchestration, artifact-pipeline
+#
+#     Deliverable: agent loop routing intents to generate / substitute /
+#     compose flows; artifacts versioned with compliance attached.
+#     Testable by driving the loop programmatically.
+#
+#   Wave 4 — Protocol:
+#     studio-api
+#
+#     Deliverable: full WebSocket + HTTP surface with shared contract
+#     package. A scripted client completes brief → artifact → refinement
+#     → compliance with no browser.
+#
+# ─── PHASE 2: UI (build sequence) ────────────────────────────────────
+#
+#   Wave 5 — Shell:
+#     docking-shell
+#
+#     Deliverable: SPA scaffold, rail/panel docking with drag-to-swap,
+#     stack, collapse, and silently persisted layout.
+#
+#   Wave 6 — MVP triangle + library:
+#     chat-panel, canvas, then library-panel
+#
+#     Deliverable: the conversational loop on screen — brief in chat,
+#     artifact on canvas, compliance bar live, history scrubbing,
+#     token/component browsing.
+#
+# ─── PHASE 3: DEFERRED ───────────────────────────────────────────────
+#
+#   system-comparison, blueprint-editor, system-authoring,
+#   project-board, export-surface — defined above, sequenced after the
+#   MVP triangle is verified end-to-end.

@@ -1,0 +1,97 @@
+# Features — mcp-bridge
+# Capability: Direct-call MCP client over stdio for the design-systems server
+# Layer: infrastructure | Wave: 2
+
+capability: mcp-bridge
+
+features:
+
+  - name: transport-and-supervision
+    description: |
+      MCP client connection to the design-systems server over stdio using
+      the official MCP TypeScript SDK (@modelcontextprotocol/sdk). The
+      StdioClientTransport spawns the server subprocess from the launch
+      command declared in repo-root .mcp.json (/usr/local/bin/python3
+      tools/mcp-server/server.py, cwd = repo root), performs the
+      MCP initialize handshake, and owns the connection lifecycle.
+      Supervision detects subprocess exit/transport close, restarts with
+      exponential backoff up to a configured budget, and reports bridge
+      state (up, restarting, failed) into the studio-server status
+      registry and the bridge.status WS event. This connection is
+      independent of the Agent SDK's own MCP connection (dual-connection
+      topology, decided); the MCP server is stateless per call.
+    scope:
+      - Launch command resolution from studio-server config (command, args, cwd sourced from repo-root .mcp.json semantics — relative server.py path resolved against repo root)
+      - Subprocess spawn via StdioClientTransport (the transport owns the child process; stderr piped into pino logs)
+      - MCP initialize handshake and capability exchange via the SDK Client
+      - Startup verification (listTools includes the six direct-call tool names)
+      - Crash detection (transport onclose/onerror, subprocess exit)
+      - Restart with exponential backoff and a configured restart budget; budget exhaustion transitions to failed
+      - Bridge state machine (starting, up, restarting, failed, stopped) with transition events
+      - Status reporting into the studio-server health registry (/api/health bridge field) and bridge.status WS event payload (shared via the bridge-owned bridge.ts module in the already-scaffolded @studio/contract package)
+      - Graceful shutdown (close transport, terminate subprocess, drain or fail pending calls)
+      - pino structured logging for every lifecycle transition (spawn, handshake, crash, restart attempt, give-up)
+
+  - name: call-management
+    description: |
+      Call serialization and queueing over the single stdio transport.
+      Tool calls are dispatched one at a time in FIFO order; concurrent
+      callers queue. Every call carries a per-call timeout (configurable
+      default) and accepts an AbortSignal for cancellation — a cancelled
+      queued call never dispatches, a cancelled or timed-out in-flight
+      call resolves immediately as a typed failure while the queue moves
+      on. No call ever blocks the process or throws across the seam.
+    scope:
+      - FIFO call queue over the single transport (one in-flight call at a time)
+      - Per-call timeout (default from studio-server config, override per call via CallOptions.timeoutMs)
+      - Cancellation via AbortSignal (queued calls removed before dispatch; in-flight calls resolved as cancelled)
+      - Timeout expiry resolves the call as a typed timeout failure; the transport stays up and the queue continues
+      - Queue drain on shutdown and on bridge failure (pending calls resolve as bridge_down, never hang)
+      - Calls issued while restarting are held in the queue until up, or failed as bridge_down when the restart budget is exhausted
+      - "Correlation logging (requestId per call: tool name, queue depth, outcome)"
+
+  - name: typed-tool-wrappers
+    description: |
+      Typed wrappers for exactly the six direct-call tools — the bridge's
+      public API: ds_list_systems, ds_load_system, ds_get_rulebook,
+      ds_check_compliance, wf_get_tokens, wf_read_component. Parameter
+      objects and result payload types mirror the actual server.py
+      signatures and skill result shapes. FastMCP returns tool results
+      as JSON text content; wrappers parse and unwrap the skill Result
+      envelope ({ok, data, warnings} / {ok: false, errors}) into
+      BridgeResult<T>. Agent-driven tools (wf_generate, substitution,
+      blueprint assembly) are explicitly NOT wrapped — they run over the
+      Agent SDK's own connection.
+    scope:
+      - listSystems() → SystemDescriptor[] (id, name, tagline, grammar_family, version, spec_version, status)
+      - loadSystem({ systemId, validate? }) → LoadedSystemSpec (full normalized spec — tokens, components with absolute SVG paths, layouts, rulebook, grammar_extensions, _meta)
+      - getRulebook({ systemId }) → RulebookEntry[] (id, rule, rationale, severity, check_method, check_scope, applies_when, scope, check_implementation)
+      - "checkCompliance({ systemId, artifactPath, scope? }) → RawComplianceResult (bridge-internal raw shape; system_id, artifact_path, scope, passed, failed, advisory, results[{rule_id, status, detail: Record<string, unknown> parsed from the wire's JSON string}], ruleset, mechanical_only, note?)"
+      - getTokens({ systemId }) → AuthoringTokens (system_id, palette[{name, value, role, usage_constraint}], drawing_rules, typography, layout)
+      - readComponent({ systemId, componentId }) → ComponentRead (component_id, svg_source, viewBox{w,h}, rendering_notes, anatomy, tier, states, constraints); readComponents({ systemId, componentIds }) → ComponentRead[] batch
+      - JSON text content parsing (FastMCP serializes dict returns to content[0].text)
+      - "Skill Result envelope unwrapping ({ok: true, data, warnings?} → value + warnings; {ok: false, errors} → typed tool error)"
+      - camelCase parameter objects mapped to the server's snake_case tool arguments (system_id, artifact_path, component_id, component_ids)
+      - McpBridge interface exported for IoC injection (consumers receive the bridge, never construct or import a singleton)
+      - Integration tests for every wrapper against the REAL design-systems MCP server (never mocked, per testing policy)
+
+  - name: error-translation
+    description: |
+      The typed Result model at the capability seam. Every wrapper
+      resolves to BridgeResult<T> — a discriminated union of success
+      (value + warnings) and failure (BridgeError with kind, message,
+      optional skill error code and detail). All failure modes translate
+      into it: MCP protocol/JSON-RPC errors, isError tool responses,
+      in-band skill failures ({ok: false, errors} with stable codes like
+      SYSTEM_NOT_FOUND), timeouts, cancellations, and bridge-down. Errors
+      never throw across the seam; consumers (artifact-pipeline,
+      studio-api) branch on result.ok and surface failures in place.
+    scope:
+      - "BridgeResult<T> discriminated union ({ ok: true; value; warnings } | { ok: false; error })"
+      - "BridgeError model (kind: protocol | tool | timeout | cancelled | bridge_down; message; code?; detail?)"
+      - Skill error code passthrough (SYSTEM_NOT_FOUND, SPEC_FILE_MISSING, SPEC_PARSE_FAILED, SCHEMA_VALIDATION_FAILED, REFERENCED_FILE_MISSING, INVALID_PATH, RULESET_UNKNOWN, INTERNAL, …) as BridgeError.code when kind is tool
+      - Handling both skill error shapes — structured {code, message, detail} objects from Result.to_dict and plain message strings from the server's _error_result catchall
+      - MCP protocol error translation (transport closed, JSON-RPC error responses, malformed/unparseable content) → kind protocol
+      - Warning passthrough (skill Result warnings surfaced on success, e.g. SPEC_FILE_MISSING degraded descriptors from ds_list_systems)
+      - No thrown exceptions across the capability seam (wrappers are total functions over BridgeResult)
+      - Structured pino error logging with requestId, tool name, error kind, and code

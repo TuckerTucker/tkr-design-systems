@@ -1,0 +1,297 @@
+# Capability Spec — canvas
+# 13-section architectural design
+# Layer: ui | Wave: 6
+
+capability: canvas
+status: implemented
+
+context: |
+  The canvas is the always-center stage of the Studio docking shell —
+  the one panel that never moves to a rail. It renders artifact versions
+  produced by the generation pipeline as native inline SVG (no
+  rasterization), framed at true platform dimensions (375×812 mobile,
+  1280×800 desktop per architecture.md), with zoom/pan, a devtools-style
+  inspect-on-hover overlay, a generation-history filmstrip, and a
+  persistent compliance bar.
+
+  The capability boundary from capabilities.yaml is binding: compliance
+  COMPUTATION belongs to artifact-pipeline (server-side, via
+  ds_check_compliance); version storage belongs to workspace-store; the
+  canvas renders and interacts. Restore is artifact-pipeline's
+  restore-as-new-head semantics — the canvas only requests it. Direct
+  SVG editing is explicitly out of scope; blueprint-editor (deferred) is
+  the future editing path. All data arrives through studio-api: HTTP for
+  SVG/spec/compliance content, WebSocket events
+  (artifact.version_created, artifact.compliance_completed) for live
+  updates, with every message type imported from packages/contract.
+
+problem_statement: |
+  Wave 5 delivers the docking shell and Wave 6's chat panel produces
+  artifacts — but without the canvas there is nowhere to see them:
+  - Generated SVGs exist as versioned files behind the API with no
+    rendering surface; the conversational loop has no visible result
+  - Component identity and token references live in wireframe.spec.yaml
+    metadata but are invisible without reading YAML by hand
+  - Version history exists in the artifact pipeline but cannot be
+    browsed, previewed, or restored from the UI
+  - Compliance results are computed per version yet have no persistent
+    display, and violations cannot be located visually on the artifact
+  - Platform dimensions are part of every generation, but nothing shows
+    artifacts at true device size or compares mobile/desktop together
+
+scope:
+  in:
+    - Canvas panel in the docking-shell registry (center stage, never railed)
+    - Native inline SVG rendering of artifact versions from sanitized server content (stable node IDs preserved)
+    - Device frames at true platform dimensions (375×812 mobile, 1280×800 desktop), side-by-side mode
+    - Zoom/pan viewport with fit-to-frame default, input parity (mouse, trackpad, touch, keyboard)
+    - Inspect-on-hover overlay (component identity + token refs from artifact spec metadata, devtools-style, toggleable, keyboard-reachable)
+    - Generation-history filmstrip (thumbnails, scrub-to-preview, restore-as-new-head with inline undo)
+    - Persistent compliance bar (per-rule pass/warn/fail, violation click-to-highlight via stable node IDs)
+    - Live updates on artifact.version_created / artifact.compliance_completed WebSocket events
+    - Empty state pointing at chat; progressive non-blocking loading during generation
+    - WCAG AA, reduced-motion respect, screen-reader support for inspect and compliance surfaces
+  out:
+    - Compliance computation (artifact-pipeline owns ds_check_compliance runs)
+    - Version storage and head-pointer mechanics (workspace-store + artifact-pipeline)
+    - Restore semantics (artifact-pipeline owns restore-as-new-head; canvas requests it)
+    - Direct SVG editing or node manipulation (blueprint-editor, deferred, is the editing path)
+    - Generation triggering and intent routing (chat-panel + agent-orchestration)
+    - Panel docking mechanics (docking-shell)
+    - Comparison-mode grid across systems (system-comparison, deferred)
+    - PNG export and download bundles (export-surface, deferred)
+
+dependencies:
+  upstream:
+    - "docking-shell — panel registry, center-slot hosting, WebSocket client with reconnect/resume"
+    - "studio-api — artifact HTTP routes (/api/workspaces/:wsId/artifacts/:artId, .../versions/:n/svg, .../versions/:n/spec, .../versions/:n/compliance) and WS events (artifact.version_created, artifact.compliance_completed)"
+    - "studio-api — restore endpoint POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore (owned by studio-api, slice 4) delegating to artifact-pipeline's restore-as-new-head; returns RestoreResponse (the new head's VersionSummary); canvas never mutates versions itself"
+    - "artifact-pipeline — sanitized SVG with stable node IDs, violation-to-node mapping, version provenance (parent, brief, tool, parameters)"
+    - "packages/contract — typed payloads for every message and HTTP body consumed"
+  downstream:
+    - "chat-panel — artifact references in messages focus a canvas version"
+    - "system-comparison (deferred) — extends the canvas with a comparison grid mode"
+    - "blueprint-editor (deferred) — syncs tree selection with canvas node highlighting"
+    - "project-board (deferred) — opens board cells on the canvas"
+  external:
+    - "Browser native SVG DOM (inline rendering, getBBox/getBoundingClientRect hit-testing)"
+    - "prefers-reduced-motion media query (system motion preference)"
+
+data_contracts: |
+  ## Canvas View State
+
+  ```typescript
+  // apps/studio/client/src/canvas/state.ts
+  export type PlatformMode = "mobile" | "desktop" | "side-by-side";
+
+  export interface Viewport {
+    zoom: number;            // 1 = 100%; clamped 0.1–4
+    pan: { x: number; y: number };
+    fitToFrame: boolean;     // true → zoom/pan derived from panel size
+  }
+
+  export interface CanvasViewState {
+    artifactId: string | null;     // null → empty state
+    headVersion: number | null;    // head pointer as reported by the API
+    renderedVersion: number | null; // head, or filmstrip scrub preview
+    platformMode: PlatformMode;
+    viewport: Viewport;
+    inspectEnabled: boolean;
+    highlightedNodeId: string | null; // compliance click-to-highlight target
+    generationInProgress: boolean;    // progressive, non-blocking indicator
+  }
+  ```
+
+  ## Inspect Overlay Model
+
+  ```typescript
+  // apps/studio/client/src/canvas/inspect.ts
+  export interface TokenRef {
+    category: "color" | "typography" | "spacing" | "radius" | "elevation";
+    name: string;            // token name from the system spec
+    value: string;           // resolved value, e.g. "#E3000B", "14px"
+  }
+
+  export interface InspectTarget {
+    nodeId: string;          // stable node ID preserved by artifact-pipeline
+    componentId: string | null;   // e.g. "card-default"; null when unmapped
+    componentName: string | null;
+    variant: string | null;
+    tokenRefs: TokenRef[];   // empty when unmapped
+    bounds: { x: number; y: number; width: number; height: number }; // stage coords
+  }
+
+  export interface InspectModel {
+    enabled: boolean;
+    targets: ReadonlyMap<string, InspectTarget>; // nodeId → target, built from spec metadata
+    active: InspectTarget | null;                // hovered or keyboard-focused
+  }
+  ```
+
+  ## Filmstrip Model
+
+  ```typescript
+  // apps/studio/client/src/canvas/filmstrip.ts
+  export interface FilmstripEntry {
+    version: number;          // zero-padded sequential on disk; numeric here
+    parentVersion: number | null;
+    isHead: boolean;
+    createdAt: string;        // ISO 8601 from version provenance
+    brief: string;            // provenance brief (excerpted for display)
+    tool: string;             // wf_generate | substitution | blueprint
+    thumbnailSvgUrl: string;  // versions/:n/svg
+  }
+
+  export interface FilmstripModel {
+    entries: FilmstripEntry[];   // ordered oldest → newest
+    headVersion: number;
+    scrubVersion: number | null; // null → stage renders head
+    restorePending: boolean;     // restore request in flight
+    undoTarget: number | null;   // previous head, offered as inline undo after restore
+  }
+  ```
+
+  ## Restore Response
+
+  The restore fetcher in api.ts calls
+  POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore and
+  returns `RestoreResponse` (packages/contract http-payloads.ts) — the
+  new head's `VersionSummary`. The inline Undo affordance reads the new
+  version number from this response; the filmstrip also updates live via
+  the normal artifact.version_created event, identical to generation.
+
+  ## Compliance Bar Model
+
+  ```typescript
+  // apps/studio/client/src/canvas/compliance.ts
+  export type RuleStatus = "pass" | "warn" | "fail";
+
+  export interface ComplianceViolation {
+    id: string;
+    ruleId: string;
+    message: string;
+    severity: "warn" | "fail";
+    nodeId: string | null;    // stable SVG node ID; null → highlight unavailable
+  }
+
+  export interface ComplianceRule {
+    ruleId: string;
+    name: string;
+    status: RuleStatus;
+    violations: ComplianceViolation[];
+  }
+
+  export interface ComplianceBarModel {
+    version: number;                    // version the result belongs to
+    overall: RuleStatus | "pending";    // pending until compliance_completed arrives
+    rules: ComplianceRule[];
+    expandedRuleId: string | null;
+  }
+  ```
+
+file_locations:
+  - apps/studio/client/src/canvas/CanvasPanel.tsx — Panel root; registry entry, view-state owner, layout (stage + filmstrip + compliance bar)
+  - apps/studio/client/src/canvas/SvgStage.tsx — Native inline SVG rendering of the rendered version
+  - apps/studio/client/src/canvas/DeviceFrame.tsx — Platform frame chrome at true dimensions; side-by-side composition
+  - apps/studio/client/src/canvas/EmptyState.tsx — No-artifact state pointing at chat
+  - apps/studio/client/src/canvas/state.ts — CanvasViewState model and reducers
+  - apps/studio/client/src/canvas/useViewport.ts — Zoom/pan/fit-to-frame logic, input handlers, keyboard controls
+  - apps/studio/client/src/canvas/inspect.ts — InspectModel, spec-metadata → node-map builder
+  - apps/studio/client/src/canvas/InspectOverlay.tsx — Outline + popover rendering, hover/keyboard targeting
+  - apps/studio/client/src/canvas/filmstrip.ts — FilmstripModel and restore/undo actions
+  - apps/studio/client/src/canvas/HistoryFilmstrip.tsx — Thumbnail strip, scrub, restore, undo affordance
+  - apps/studio/client/src/canvas/compliance.ts — ComplianceBarModel mapping from API payloads
+  - apps/studio/client/src/canvas/ComplianceBar.tsx — Persistent bar, rule chips, violation list, highlight dispatch
+  - apps/studio/client/src/canvas/useArtifactEvents.ts — WS subscription (artifact.version_created, artifact.compliance_completed), reconnect resync
+  - apps/studio/client/src/canvas/api.ts — Typed fetchers for artifact/version/spec/compliance/restore routes (restore returns RestoreResponse — the new head's VersionSummary)
+  - apps/studio/client/src/canvas/index.ts — Named exports; panel registration
+  - apps/studio/packages/contract/ — WS and HTTP payload types (consumed, READ-ONLY from this capability)
+
+implementation_steps:
+  - Register the canvas panel in the docking-shell registry as the fixed center stage
+  - Build typed API fetchers over the artifact routes using packages/contract types
+  - Implement CanvasViewState and the SvgStage native inline SVG renderer (sanitized content, stable node IDs intact)
+  - Build EmptyState (points at chat) and inline fetch-error display
+  - Build DeviceFrame at true platform dimensions and the platform-mode switcher with side-by-side composition
+  - Implement useViewport — fit-to-frame default, zoom/pan transform, clamping/bounding, keyboard controls, reduced-motion handling
+  - Build the inspect node map from the version spec endpoint (components_used + design_system block keyed by stable node ID)
+  - Build InspectOverlay — toggle, hover hit-testing, keyboard cycling, outline + edge-aware popover, unmapped fallback, aria-describedby exposure
+  - Build FilmstripModel and HistoryFilmstrip — thumbnails, metadata on hover/focus, scrub-to-preview, keyboard parity
+  - Wire restore through POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore; use the RestoreResponse (new head's VersionSummary) to drive the inline Undo's new version number; render inline Undo (previous head as another new head) while the filmstrip also appends live via artifact.version_created
+  - Build ComplianceBarModel mapping and ComplianceBar — overall + per-rule chips, inline violation expansion, non-color status indicators
+  - Implement violation click-to-highlight (outline offending node via stable node ID, pan into view; disabled-with-reason when nodeId is null)
+  - Implement useArtifactEvents — live head swap, filmstrip append, compliance refresh, pending state, stale-event guarding, reconnect resync
+  - Implement progressive generation state (current version stays interactive; contextual status on the stage)
+  - Component tests (Testing Library) for stage, viewport, inspect, filmstrip, compliance bar; axe checks for WCAG AA
+
+error_handling: |
+  - SVG fetch fails (network, 404) → inline error on the stage with the failing version and a retry action; previous content retained if present
+  - Spec metadata fetch fails → stage still renders; inspect toggle disabled-with-reason ("component metadata unavailable for this version")
+  - Compliance fetch fails → bar shows inline error state with retry; never blocks the stage
+  - Restore request fails → filmstrip head marker unchanged, inline error at the restore action (what failed, how to fix); no optimistic head swap left dangling
+  - WebSocket disconnected → docking-shell surfaces connection state; canvas freezes live updates and resyncs (head + compliance) on resume
+  - Malformed SVG content (parse failure on inline insertion) → inline error naming the version; offending content never half-rendered
+  - Violation references a nodeId absent from the rendered SVG → highlight action disabled-with-reason on that violation; remaining violations unaffected
+  - Event payload fails contract validation → event dropped and logged; canvas state never corrupted by a bad message
+  - All errors render in place at the affected surface — no toasts, no console-only errors
+
+edge_cases: |
+  - Workspace with no artifact → empty state pointing at chat; filmstrip and compliance bar absent (not empty chrome)
+  - Artifact with a single version → filmstrip shows one thumbnail; restore disabled with reason
+  - Restore of the current head → restore action disabled on the head thumbnail (no-op prevented, not errored)
+  - Scrub preview active when artifact.version_created arrives → filmstrip appends; scrub preview preserved; head indicator updates; leaving scrub returns to the NEW head
+  - compliance_completed arrives for a version that is not currently rendered → cached for that version; bar unchanged until that version renders
+  - Side-by-side requested when only one platform variant exists → mode disabled-with-reason (greyed, tooltip explains), single frame shown
+  - Very large SVG (long-page desktop artifact) → fit-to-frame computes from full bounds; progressive render keeps the panel responsive
+  - Zoom at clamp boundaries → further input is a no-op; indicator shows the bound; no error
+  - Inspect hover over nested nodes → innermost mapped node wins; unmapped innermost falls back to nearest mapped ancestor
+  - Panel resized (rail collapse/expand) while fitToFrame is true → viewport refits; while false → pan re-bounded, zoom preserved
+  - prefers-reduced-motion set → no animated zoom easing, no animated stage swaps; all state changes immediate
+  - Rapid successive generations → each version_created appends; stage swaps to the latest head only (no intermediate flicker)
+  - Undo offered after restore, then a new generation arrives → undo target preserved (restore is just another version; undo still creates a new head)
+
+integration_points:
+  - "docking-shell: panel registry hosts the canvas in the fixed center slot; WS client and connection state come from the shell"
+  - "studio-api: all artifact/spec/compliance content over HTTP; artifact.version_created and artifact.compliance_completed over WS; restore via studio-api's POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore (studio-api slice 4), which returns RestoreResponse and delegates to artifact-pipeline's restore-as-new-head"
+  - "artifact-pipeline (via studio-api): sanitized SVG with stable node IDs, violation-to-node mapping, version provenance — the canvas renders, never recomputes"
+  - "chat-panel: messages that produced artifacts focus the corresponding canvas version; decision-chip changes land as new versions the canvas picks up live"
+  - "packages/contract: every payload type imported, no stringly-typed messages"
+  - "system-comparison / blueprint-editor / project-board (deferred): build on the canvas stage, node highlighting, and version focus"
+
+verification_criteria:
+  - Empty workspace renders the empty state directing the user to chat; no dead chrome
+  - Generated artifact head renders as native inline SVG (DOM contains <svg>, no <img>/rasterized fallback) with stable node IDs intact
+  - Mobile frame measures 375×812 and desktop 1280×800 at 100% zoom; side-by-side shows both simultaneously
+  - Side-by-side is disabled-with-reason when only one platform variant exists
+  - Fit-to-frame applies on load, mode change, and panel resize; 0 refits, 1 sets 100%, +/- zoom, arrows pan — keyboard-only operation covers every viewport action
+  - Zoom clamps at 10% and 400%; artifact can never be panned fully out of view
+  - Inspect toggle off by default; hovering a mapped node outlines it and shows component id, variant, and token refs matching wireframe.spec.yaml metadata exactly
+  - Keyboard inspection cycles mapped nodes with the same popover; popover content exposed to screen readers via aria-describedby
+  - Unmapped nodes show node id with a "no component metadata" note
+  - Filmstrip lists all versions oldest → newest with head marked; scrubbing previews a version without changing head; leaving scrub returns to head
+  - Restore creates a new head (version count increases by one, prior versions untouched on disk); no confirmation dialog appears anywhere
+  - Inline Undo after restore creates another new head matching the previous one
+  - Compliance bar shows overall + per-rule status for the rendered version; expanding a rule lists violations inline
+  - Clicking/Enter on a violation with a nodeId outlines that exact SVG node and pans it into view; node-less violations show highlight disabled-with-reason
+  - artifact.version_created swaps the stage and appends to the filmstrip without user action; artifact.compliance_completed refreshes the bar; pending state shown in between
+  - During generation the current version stays visible and interactive; generation status is contextual on the stage, non-blocking
+  - All status colors meet WCAG AA contrast and carry non-color indicators; prefers-reduced-motion disables all stage animation
+  - Testing Library + axe checks pass for stage, inspect, filmstrip, and compliance bar; no console-only errors in any failure path
+
+performance: |
+  - Stage render of a typical artifact (≤ 500 SVG nodes): < 100ms from fetched content to painted DOM
+  - Zoom/pan applied as a single CSS/SVG transform — no re-render of artifact nodes per frame; interaction stays at 60fps
+  - Inspect hit-testing via cached node bounds (computed once per version render), not per-mousemove getBBox calls
+  - Filmstrip thumbnails lazy-rendered as scrolled into view; scrub preview reuses fetched version content (cached per version, no refetch on repeat scrub)
+  - Version SVG, spec, and compliance responses cached client-side per (artifact, version) — immutable versions never refetched
+  - Live event handling is O(1) state updates; no full-canvas re-render on compliance refresh
+  - Progressive loading: generation status never blocks input on the current version
+
+security: |
+  - Artifact version SVGs are rendered only from server-sanitized content prepared by artifact-pipeline; the canvas never injects raw third-party SVG. Library component/layout SVGs are rendered by library-panel (not the canvas) and are covered by library-panel's own client-side sanitizer per architecture.md's dual-sanitizer contract.
+  - Inline insertion strategy still treats content as untrusted: script elements, event-handler attributes, and external references are rejected client-side as defense in depth
+  - All artifact content comes from the localhost-only studio-api; the canvas never reads the filesystem or spawns processes (browser boundary per product.yaml)
+  - No credentials handled in the canvas; ANTHROPIC_API_KEY never reaches the client
+  - Spec metadata and compliance payloads validated against contract types at the boundary before entering canvas state
+  - Restore requests carry only workspace/artifact/version identifiers — no content round-trips from the client
+  - TypeScript strict mode and named exports throughout; no any-typed message handling

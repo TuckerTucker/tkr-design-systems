@@ -1,0 +1,100 @@
+# Features — chat-panel
+# Capability: Agentic chat surface as a docked panel
+# Layer: ui | Wave: 6
+
+capability: chat-panel
+
+features:
+
+  - name: message-stream
+    description: |
+      The message list with streaming assistant rendering. Consumes the
+      WebSocket chat lifecycle (chat.message_started, chat.assistant_delta,
+      chat.message_completed) and appends deltas into the active assistant
+      message inside an aria-live region. Tool progress renders inline and
+      contextual to the message it belongs to ("generating in Swiss…" from
+      chat.tool_started/chat.tool_finished) — never a toast. Structured
+      errors (chat.error) render in place on the failed turn: what failed
+      and how to fix it.
+    scope:
+      - Message list rendering user and assistant turns in transcript order
+      - Streaming assistant message accumulation from chat.assistant_delta (keyed by requestId)
+      - Message lifecycle handling (chat.message_started opens a streaming message, chat.message_completed closes it)
+      - aria-live="polite" region for streamed assistant text (announced without focus theft)
+      - Inline tool progress markers from chat.tool_started/chat.tool_finished, rendered inside the owning message
+      - Human-readable progress labels derived from tool name and parameters ("generating in Swiss…", "applying substitutions…")
+      - Structured error display from chat.error — what failed, how to fix, rendered in place on the turn (no toast, no console-only error)
+      - Auto-scroll to newest content while pinned to bottom; scroll position preserved when the user has scrolled up
+      - Message view model derived from packages/contract event payload types (no stringly-typed events)
+
+  - name: composer
+    description: |
+      The multiline input where briefs and refinements are typed. Submit
+      affordance with Enter-to-send / Shift+Enter-newline. Disabled with a
+      visible reason — never silently — while the agent is busy or while
+      auth is missing (auth.status drives in-place guidance: "Add
+      ANTHROPIC_API_KEY to apps/studio/.env"). While a generation streams, the
+      submit affordance becomes a cancel control that sends chat.cancel.
+      Draft text is never lost to state transitions.
+    scope:
+      - Multiline textarea composer with auto-grow and Enter-to-send, Shift+Enter for newline
+      - Submit affordance (button + keyboard) sending chat.send with the workspace context
+      - Disabled-with-reason while the agent is busy ("Agent is working — cancel to send a new message")
+      - Disabled-with-reason while auth is missing or invalid, driven by auth.status ("Add ANTHROPIC_API_KEY to apps/studio/.env") — guidance in place, never a console-only error
+      - Re-enable on auth.status configured and on chat.message_completed/chat.error
+      - Cancel control during generation sending chat.cancel; composer re-enables on the resulting completion event
+      - Draft preservation across busy/disabled transitions and panel collapse/restore
+      - Optimistic append of the user message on send (rolled back in place if the send fails)
+      - Reference intake — incoming LibraryReference payloads from library-panel (drag or explicit send action) render as removable reference chips attached to the draft
+      - Attached references ride chat.send as ChatSendPayload's references field; a chip removed before send is excluded
+
+  - name: decision-chips
+    description: |
+      The agent's choices — system, layout, platform — rendered on agent
+      turns as editable decision chips (chips.updated). Each chip is a
+      select populated with the valid options; changing one sends
+      chip.update and re-runs the affected step, with the resulting
+      regeneration streaming into the conversation. Chips eliminate the
+      up-front interrogation: the agent decides, the user adjusts.
+    scope:
+      - Chip row rendered on agent turns that carry decisions, from chips.updated payloads
+      - Editable selects for system, layout, and platform populated with the option lists in the payload
+      - chip.update sent on change (requestId-correlated); the affected step re-runs server-side
+      - Re-run feedback — the chip row reflects the pending value and the regeneration streams as normal chat events
+      - Chips disabled-with-reason while a re-run is in flight (no double-fire)
+      - Chips on historical turns render read-only (only the latest decision set is editable)
+      - Accessible labelling per chip (visible label + aria-label, e.g. "Design system")
+
+  - name: artifact-references
+    description: |
+      Messages that produced artifacts link to the canvas version they
+      created. artifact.version_created events are correlated to the
+      producing message; the reference renders as an inline affordance
+      showing artifact and version. Clicking it focuses that version on
+      the canvas through shared shell state — no navigation, no mode
+      switch; the conversation stays visible.
+    scope:
+      - Correlation of artifact.version_created to the producing message via requestId
+      - Inline artifact reference affordance (artifact name, version number, system/platform summary)
+      - Click/Enter focuses that artifact version on the canvas via shared shell state (docking-shell provided context)
+      - Active-version indication when the referenced version is the one currently on the canvas
+      - References persist in the transcript and remain clickable on restore
+      - Multiple references per message supported (e.g. comparison or multi-platform turns)
+
+  - name: transcript-and-accessibility
+    description: |
+      Continuity and input-agnostic operation. The transcript restores on
+      workspace attach — messages, tool-call records, decision chips, and
+      artifact references exactly as they were. Full keyboard and screen-
+      reader support: logical tab order through messages, chips, references,
+      and composer; focus management on send, cancel, and restore; WCAG AA
+      throughout.
+    scope:
+      - Transcript restore on workspace.attach (messages, tool-call records, chips, artifact references, errors)
+      - Scroll restored to the latest message; composer focused and ready after restore
+      - Logical tab order — message content, chip selects, artifact references, composer, send/cancel
+      - Focus management (focus returns to composer after send and after cancel; no focus theft during streaming)
+      - aria-live region announces streamed assistant text and tool progress for screen readers
+      - Screen-reader labelling for all interactive elements (composer, send, cancel, chips, references)
+      - WCAG AA color contrast on all chat surfaces including disabled-with-reason states
+      - Reduced-motion preference respected (no animated streaming effects when prefers-reduced-motion)

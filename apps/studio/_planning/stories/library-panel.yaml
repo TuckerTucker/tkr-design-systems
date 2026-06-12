@@ -1,0 +1,280 @@
+# Interaction Stories — library-panel
+# Layer: ui | Wave: 6
+
+capability: library-panel
+
+stories:
+
+  # ── system-switcher ─────────────────────────────────────────────
+
+  - name: designer-switches-design-systems
+    feature: system-switcher
+    number: 1
+    actor: Designer
+    intent: "Browse the registered design systems and switch the library panel between them, picking up exactly where I left off next session."
+    preconditions:
+      - Studio server running with the MCP bridge up
+      - At least two systems registered (e.g. swiss, terminal)
+      - Library panel docked and expanded
+    trigger_action: Open the library panel and change the active system in the switcher
+    steps:
+      - actor: Designer
+        action: "Opens the library panel"
+        system_response: "Switcher lists every registered system with name, tagline, and status from /api/library/systems; the last-viewed system is already active and its sections render from cache or fresh fetch"
+      - actor: Designer
+        action: "Selects a different system (e.g. Swiss → Terminal)"
+        system_response: "Token browser, component gallery, layout browser, and search rescope to Terminal; gallery scroll resets to top; in-flight Swiss fetches are cancelled"
+      - actor: Designer
+        action: "Switches back to Swiss"
+        system_response: "Swiss sections render instantly from the per-system cache; no network round trip"
+      - actor: Keyboard User
+        action: "Operates the switcher with keyboard only (focus, arrows, Enter)"
+        system_response: "Selection works identically to mouse; focus lands on the panel content after the switch"
+      - actor: System
+        action: "Persists the selected system through the preferences endpoint, debounced, with no save action"
+        system_response: "Reopening the studio restores the same active system"
+    acceptance_criteria:
+      - given: "Two or more registered systems"
+        when: "The panel opens"
+        then: "All systems appear with name, tagline, and status; draft systems carry a badge"
+      - given: "Swiss is active"
+        when: "The designer selects Terminal"
+        then: "Every panel section rescopes to Terminal; no Swiss data remains visible"
+      - given: "Swiss was browsed earlier this session"
+        when: "The designer switches back to Swiss"
+        then: "Sections render from cache without a network request"
+      - given: "The designer closes and reopens the studio"
+        when: "The library panel mounts"
+        then: "The previously active system is selected without any save action having occurred"
+
+  - name: designer-browses-with-bridge-down
+    feature: system-switcher
+    number: 2
+    actor: Designer
+    intent: "Keep referencing tokens and components I already browsed while the MCP bridge is down, and see clearly that I'm looking at cached data."
+    preconditions:
+      - Designer has already browsed at least one system (cache populated)
+      - MCP bridge subprocess crashes or is restarting
+      - bridge.status WebSocket events are flowing
+    trigger_action: The bridge goes down while the library panel is open
+    steps:
+      - actor: System
+        action: "Receives bridge.status = restarting/failed over the WebSocket"
+        system_response: "All cached library payloads flip to stale; each panel section shows an in-place staleness indicator with the fetched-at context — no toast, no modal, no blank panel"
+      - actor: Designer
+        action: "Continues browsing the already-loaded token sections and gallery cards"
+        system_response: "Cached data remains fully browsable; copy-hex and reference-into-chat still work from cache"
+      - actor: Designer
+        action: "Scrolls to a gallery card whose SVG was never fetched"
+        system_response: "That card shows an inline explanation (bridge down, will load on recovery) instead of a spinner that never resolves"
+      - actor: System
+        action: "Receives bridge.status = up"
+        system_response: "Stale payloads refetch automatically; indicators clear without user action; unfetched cards load as scrolled"
+    acceptance_criteria:
+      - given: "A populated cache and a downed bridge"
+        when: "The designer views any library section"
+        then: "Cached content renders with staleness indicated in place on the section, never a blank panel or toast"
+      - given: "A downed bridge"
+        when: "The designer scrolls to an unfetched gallery card"
+        then: "The card explains the outage inline and recovers automatically when the bridge returns"
+      - given: "The bridge recovers"
+        when: "bridge.status = up arrives"
+        then: "Data refetches and staleness indicators clear with zero user action"
+
+  # ── token-browser ───────────────────────────────────────────────
+
+  - name: designer-browses-system-tokens
+    feature: token-browser
+    number: 3
+    actor: Designer
+    intent: "See a system's actual visual vocabulary — palette, type scale, spacing, borders, elevation — without reading spec.yaml."
+    preconditions:
+      - Library panel open with a system active (e.g. Swiss)
+      - "/api/library/swiss/tokens returns the wf_get_tokens payload"
+    trigger_action: Expand the token browser sections for the active system
+    steps:
+      - actor: Designer
+        action: "Opens the palette section"
+        system_response: "One swatch per palette entry: color chip, name (ink, paper, red…), hex value, role, and usage constraint (e.g. red — 'exactly 4 uses per screen')"
+      - actor: Designer
+        action: "Clicks a swatch"
+        system_response: "Hex value copies to the clipboard; confirmation appears inline on the swatch itself"
+      - actor: Designer
+        action: "Opens the type-scale section"
+        system_response: "Each scale entry renders as a specimen at its true pixel size in the system's structural stack (Swiss: 9, 11, 13, 14, 22, 32, 40px Inter), labeled with size and role; case and tracking rules shown beside the specimens they govern"
+      - actor: Designer
+        action: "Opens the spacing section"
+        system_response: "Grid unit and allowed steps render as a proportional visualization (Swiss: 8px unit; 8–64 steps); page margins and gaps labeled"
+      - actor: Designer
+        action: "Opens the borders and elevation sections"
+        system_response: "Radius values render as drawn corner examples (Swiss draws square corners labeled 0); Swiss's typographic elevation strategy renders its rule weights and the elevation note instead of border-stroke examples"
+      - actor: System
+        action: "Persists which sections are expanded through preferences"
+        system_response: "Next session restores the same expand/collapse arrangement"
+    acceptance_criteria:
+      - given: "Swiss is active"
+        when: "The palette section renders"
+        then: "All seven palette entries appear with chip, name, hex, role, and usage constraint matching spec.yaml"
+      - given: "The type-scale section is open"
+        when: "Specimens render"
+        then: "Each specimen's rendered font-size equals its token px value — 40px renders at 40px even in a narrow panel (scrolls, never scales down)"
+      - given: "A system whose elevation strategy is not borders_only"
+        when: "The elevation section renders"
+        then: "The strategy name and elevation note display instead of border-stroke examples; the section is never empty"
+      - given: "A swatch is clicked"
+        when: "The copy completes"
+        then: "The hex is on the clipboard and confirmation shows on the swatch, not in a toast"
+
+  # ── component-gallery ───────────────────────────────────────────
+
+  - name: designer-explores-component-gallery
+    feature: component-gallery
+    number: 4
+    actor: Designer
+    intent: "See the real library SVGs for every component in the system, flip between variants, and read the rendering constraints on demand."
+    preconditions:
+      - Library panel open with a system active
+      - "Component index loaded from /api/library/:systemId/components"
+    trigger_action: Scroll through the component gallery
+    steps:
+      - actor: Designer
+        action: "Opens the gallery section"
+        system_response: "One card per component renders from the index (grouped/badged by tier) with placeholders; only the cards in view fetch their SVGs"
+      - actor: Designer
+        action: "Scrolls down the gallery"
+        system_response: "Cards entering the viewport fetch their SVGs via /api/library/:systemId/components/:componentId and render the real library SVG inline, scaled from its viewBox — progressive, never all-or-nothing"
+      - actor: Designer
+        action: "Toggles a multi-variant component (e.g. card: default → gray_surface)"
+        system_response: "The rendered SVG swaps in place to the selected variant; the card's selection is retained while the panel lives"
+      - actor: Designer
+        action: "Expands a card's details"
+        system_response: "Rendering notes, anatomy labels, states, and constraints appear (e.g. card: 'Never apply border-radius'); hidden again on collapse"
+      - actor: Screen Reader User
+        action: "Navigates the gallery"
+        system_response: "Each card exposes an accessible name (component + variant); variant toggles are keyboard-operable and announce the selected variant"
+    acceptance_criteria:
+      - given: "A system with N components"
+        when: "The gallery renders"
+        then: "N cards appear on one scrollable surface with no pagination"
+      - given: "Cards below the fold"
+        when: "The gallery first renders"
+        then: "Their SVGs are not fetched until scrolled into view; placeholders never block the panel"
+      - given: "A component with variants"
+        when: "The designer toggles a variant"
+        then: "The real variant SVG renders in place; rendering notes update to the variant's notes"
+      - given: "One component's SVG fetch fails"
+        when: "The gallery renders"
+        then: "Only that card shows an inline error with the reason; all other cards render normally"
+
+  # ── layout-browser ──────────────────────────────────────────────
+
+  - name: designer-browses-layout-templates
+    feature: layout-browser
+    number: 5
+    actor: Designer
+    intent: "See the system's layout vocabulary as thumbnails so I can ask for a layout by looking at it, not guessing its name."
+    preconditions:
+      - Library panel open with a system active
+      - "/api/library/:systemId/layouts returns the spec's layout templates"
+    trigger_action: Open the layout-template section
+    steps:
+      - actor: Designer
+        action: "Opens the layouts section"
+        system_response: "A thumbnail grid renders — each template's authored layout SVG scaled down natively, labeled with its id (auth, dashboard, data_table…) and the spec description"
+      - actor: Designer
+        action: "Scrolls the thumbnail grid"
+        system_response: "Thumbnails load progressively as they enter the viewport, reusing the gallery's mechanism"
+      - actor: Designer
+        action: "Activates a thumbnail (click or Enter)"
+        system_response: "The template expands to a larger in-panel preview — no modal, no navigation away; Escape or the close affordance returns to the grid"
+      - actor: Designer
+        action: "Reads the description on the dashboard template"
+        system_response: "The spec description renders verbatim (e.g. Swiss dashboard: 'Sidebar + main split. Sidebar 280px…')"
+    acceptance_criteria:
+      - given: "A system with authored layout templates"
+        when: "The layouts section renders"
+        then: "One thumbnail per template appears with id and spec description, rendered from the real layout SVG"
+      - given: "A thumbnail is activated"
+        when: "The preview opens"
+        then: "It expands in-panel and closes via Escape or close affordance without losing grid scroll position"
+      - given: "One layout SVG fails to load"
+        when: "The grid renders"
+        then: "Only that thumbnail shows an inline error; the rest render"
+
+  # ── search-and-chat-reference ───────────────────────────────────
+
+  - name: designer-filters-library-content
+    feature: search-and-chat-reference
+    number: 6
+    actor: Designer
+    intent: "Find a component or token inside the active system by typing what I remember — a name, a hex value, a label."
+    preconditions:
+      - Library panel open with a system active
+      - Token payload and component index cached (search operates on the cached index)
+    trigger_action: Type a query into the library search field
+    steps:
+      - actor: Designer
+        action: "Types 'card' into the search field"
+        system_response: "Results filter live with each keystroke — component section keeps card and any component whose id, variant ids, anatomy, or rendering notes match; non-matches drop out; per-section match counts update"
+      - actor: Designer
+        action: "Types '#E3000B'"
+        system_response: "Token section keeps the matching palette entry (red); component section shows its zero-count state — both sections stay visible, neither silently vanishes"
+      - actor: Designer
+        action: "Types a string matching nothing"
+        system_response: "An in-place empty state appears with a one-click clear-filter affordance"
+      - actor: Keyboard User
+        action: "Presses Escape in the search field"
+        system_response: "The query clears, the full library restores, and scroll position is preserved"
+    acceptance_criteria:
+      - given: "A cached index for the active system"
+        when: "The designer types each character of a query"
+        then: "Filtering happens client-side with zero network requests per keystroke"
+      - given: "A query matching tokens but no components"
+        when: "Results render"
+        then: "The token section shows matches, the component section shows a zero count, and neither section disappears"
+      - given: "A query matching nothing"
+        when: "Results render"
+        then: "An in-place empty state offers clear-filter; one activation restores the full library"
+      - given: "Token and component data not yet loaded"
+        when: "The designer focuses search"
+        then: "The field is disabled with the reason inline until the index is cached — never an error after typing"
+
+  - name: designer-references-component-into-chat
+    feature: search-and-chat-reference
+    number: 7
+    actor: Designer
+    intent: "Point the agent at this exact card style — send a typed reference into the chat composer instead of describing the component in prose."
+    preconditions:
+      - Library panel and chat panel both available in the docking shell
+      - Component gallery loaded for the active system
+      - A workspace is attached (chat composer present)
+    trigger_action: Drag a gallery card onto the chat composer, or use its explicit send-to-chat action
+    steps:
+      - actor: Designer
+        action: "Drags the card gray_surface gallery card onto the chat composer"
+        system_response: "The composer receives a typed LibraryReference (kind: component, systemId, componentId: card, variantId: gray_surface, label) and renders it as a removable chip"
+      - actor: Keyboard User
+        action: "Focuses a palette swatch and activates its send-to-chat action"
+        system_response: "The identical typed payload (kind: token, tokenPath, value, label) lands as a chip — full keyboard parity with drag"
+      - actor: Designer
+        action: "Types 'use this card style for the sidebar items' and sends"
+        system_response: "chat.send carries the message plus the reference in its references field (ChatSendPayload); the agent grounds its next tool call on the exact component variant instead of guessing from prose"
+      - actor: Designer
+        action: "Drags a layout thumbnail while the chat panel is collapsed to an icon strip"
+        system_response: "The chat panel restores (or its icon strip indicates receipt) and the chip is present — the reference is never silently dropped"
+      - actor: Designer
+        action: "Removes a chip before sending"
+        system_response: "The reference detaches from the pending message; the library panel state is unaffected"
+    acceptance_criteria:
+      - given: "A gallery card with a selected variant"
+        when: "It is dragged onto the composer"
+        then: "A LibraryReference chip appears carrying kind component, the system id, component id, variant id, and a human label"
+      - given: "Any referenceable item (card, swatch, layout thumbnail)"
+        when: "Its explicit send action is activated by keyboard"
+        then: "The payload is identical to the drag path — full input parity"
+      - given: "A chip in the composer"
+        when: "The designer sends the message"
+        then: "chat.send carries the typed reference in its references field and the agent's next step targets that exact artifact"
+      - given: "The chat panel is collapsed"
+        when: "A reference is sent"
+        then: "The panel restores or indicates receipt; the reference is never dropped without feedback"

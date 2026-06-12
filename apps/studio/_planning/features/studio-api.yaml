@@ -1,0 +1,137 @@
+# Features — studio-api
+# Capability: WebSocket + HTTP protocol surface and shared contract package
+# Layer: api | Wave: 4
+
+capability: studio-api
+
+features:
+
+  - name: contract-package
+    description: |
+      studio-api's protocol modules in the shared @studio/contract
+      package (npm name @studio/contract ↔ path apps/studio/packages/contract;
+      the package skeleton is scaffolded in Wave 1 by studio-server
+      slice 1) — every WebSocket message and HTTP payload declared once
+      as TypeScript types, imported by both server and client. The
+      ClientEnvelope/ServerEnvelope split (seq on server→client only),
+      all four client→server messages (workspace.attach, chat.send,
+      chat.cancel, chip.update), all eleven server→client events
+      (chat.message_started through auth.status), and the HTTP payload
+      types (workspaces, artifacts, versions, compliance, restore,
+      library, structured errors). No stringly-typed messages anywhere:
+      discriminated unions make an unknown message type a compile error.
+    scope:
+      - ClientEnvelope ({ type, requestId?, payload }, no seq) and ServerEnvelope ({ type, requestId?, seq, payload }) — client code cannot emit a sequence number by construction
+      - Client→server payload types — workspace.attach (workspaceId, lastEventSeq), chat.send (text, artifactId, optional references as LibraryReference[] imported from library.ts, owned by library-panel), chat.cancel (messageId), chip.update (messageId, kind, value)
+      - Server→client payload types — chat.message_started, chat.assistant_delta, chat.tool_started, chat.tool_finished, chat.message_completed, chat.error, chips.updated, artifact.version_created, artifact.compliance_completed, bridge.status, auth.status
+      - ClientMessage and ServerMessage discriminated unions over the two envelopes
+      - HTTP payload types — WorkspaceSummary, WorkspaceCreateRequest, WorkspacePatchRequest, ArtifactSummary, ArtifactDetail, VersionSummary, RestoreResponse, ComplianceResponse, RuleResult, LibrarySystem, TokenSetResponse, ComponentIndexEntry, ComponentDetail, LayoutTemplate; HealthResponse (health.ts, studio-server) and LayoutPreference (preferences.ts, docking-shell) are imported, never redeclared
+      - Structured error type (ApiError — code, message, fix, field) shared by HTTP error responses and chat.error payloads
+      - Domain enums (Platform, ChipKind, AuthState, compliance status) as literal unions; BridgeState imported from bridge.ts (owned by mcp-bridge, five states)
+      - studio-api's contract modules (envelope.ts, ws-messages.ts, http-payloads.ts, errors.ts) — TypeScript strict, ES modules, named exports only, zero runtime dependencies
+      - Type-level tests asserting the union covers exactly the architecture.md message list (no extra, no missing)
+
+  - name: ws-session-management
+    description: |
+      The /ws endpoint's connection and session semantics. One WebSocket
+      connection per client; the client attaches to a workspace by
+      message (workspace.attach), not by URL. Reconnect resumes: the
+      server keeps a bounded per-workspace event journal with monotonic
+      sequence numbers; an attach carrying lastEventSeq within the
+      journal window replays the missed events in order, and an attach
+      outside the window re-syncs state by re-emitting the workspace's
+      current state through the same event vocabulary. No invented
+      message types — resume uses the contract's existing events.
+    scope:
+      - Single /ws endpoint mounted on the studio-server Fastify instance (@fastify/websocket); connection acceptance, heartbeat, and close semantics stay in studio-server
+      - Connection registry (connectionId per connection, pino correlation with requestId and workspaceId)
+      - workspace.attach handling — validate workspaceId exists, bind connection to workspace, detach any previous binding
+      - Per-workspace event journal with monotonic seq stamped on server→client envelopes
+      - Resume path — attach with lastEventSeq inside the journal window replays missed events in order, echoing the attach requestId on the first replayed envelope
+      - Re-sync path — attach with no cursor or a cursor outside the window re-emits current workspace state (transcript as completed chat events, artifact heads via artifact.version_created and artifact.compliance_completed, current bridge.status and auth.status)
+      - Attach failures (unknown workspace, malformed payload) answered as chat.error envelopes echoing the requestId with a structured ApiError
+      - Connection teardown — journal retained per workspace (bounded), connection state released
+
+  - name: chat-streaming-relay
+    description: |
+      The relay from agent-orchestration's event stream to WebSocket
+      envelopes. chat.send enters the agent loop in workspace context;
+      assistant tokens, tool progress, decision-chip updates, and
+      artifact events stream back as the contract's server events.
+      chat.cancel aborts the in-flight turn; chip.update re-runs the
+      affected step with the edited choice. The relay carries events —
+      it owns no intent routing, no tool selection, no versioning.
+    scope:
+      - chat.send → agent-orchestration invocation in the attached workspace's context (artifactId scoping when provided)
+      - Event mapping — agent stream events to chat.message_started, chat.assistant_delta, chat.tool_started, chat.tool_finished, chat.message_completed envelopes with requestId echo
+      - Decision-chip relay — agent default selections emitted as chips.updated; chip-update resolution as a named relay step — the relay resolves artifactId by looking up the ChipSet previously emitted for that messageId (ChipSet carries artifactId and messageId), then hands agent-orchestration its domain ChipUpdate (requestId, artifactId, kind, value) for re-run
+      - Artifact event relay — artifact-pipeline emissions forwarded as artifact.version_created and artifact.compliance_completed
+      - chat.cancel — abort the in-flight agent turn; the turn closes with chat.message_completed or chat.error, never silence
+      - Agent/tool failures surfaced as chat.error with structured ApiError (what failed, how to fix); auth-missing failures reference the auth.status fix
+      - bridge.status and auth.status pushed on change to all attached connections
+      - One in-flight turn per workspace — a second chat.send while busy is rejected as chat.error with the busy reason
+      - Every relayed event journaled (feature ws-session-management) so streams survive reconnect
+
+  - name: workspace-artifact-endpoints
+    description: |
+      The HTTP surface for workspaces, artifacts, and preferences per
+      the architecture route table. Workspaces CRUD (list, create, read,
+      rename/settings, soft-delete), artifact metadata and version
+      lists, raw SVG serving, spec.yaml as JSON, compliance results,
+      version restore (restore-as-new-head, delegated to
+      artifact-pipeline), and preferences get/put. Thin handlers: every
+      route validates, calls
+      workspace-store or artifact-pipeline, and shapes the contract
+      payload — no business logic in route code.
+    scope:
+      - GET/POST /api/workspaces — list summaries; create with optional name (auto-named "Untitled Workspace N" when omitted)
+      - GET/PATCH/DELETE /api/workspaces/:wsId — read, rename/settings update, soft-delete (recoverable via workspace-store trash semantics)
+      - GET /api/workspaces/:wsId/artifacts — artifact summaries (id, name, system, platform, head version)
+      - GET /api/workspaces/:wsId/artifacts/:artId — artifact metadata + full version list with provenance and compliance status
+      - GET /api/workspaces/:wsId/artifacts/:artId/versions/:n/svg — raw SVG, image/svg+xml, stable node IDs preserved for canvas highlighting
+      - GET /api/workspaces/:wsId/artifacts/:artId/versions/:n/spec — wireframe.spec.yaml parsed to JSON (yaml package, never hand-rolled)
+      - GET /api/workspaces/:wsId/artifacts/:artId/versions/:n/compliance — ComplianceResponse for that version (projection of artifact-pipeline's domain ComplianceReport with violation nodeIds resolved)
+      - POST /api/workspaces/:wsId/artifacts/:artId/versions/:n/restore — restore-as-new-head (undo semantics), delegates to artifact-pipeline, returns RestoreResponse (the new head's VersionSummary), emits artifact.version_created through the normal pipeline path
+      - GET/PUT /api/preferences — LayoutPreference (imported from preferences.ts, owned by docking-shell), persisted through workspace-store's preference store
+      - GET /api/health is owned by studio-server, including its HealthResponse contract type (health.ts) — studio-api only references it
+      - 404 with structured ApiError for unknown workspace, artifact, or version (code, message, fix)
+
+  - name: library-endpoints
+    description: |
+      Read-only library data proxied through mcp-bridge with caching.
+      Systems via ds_list_systems, tokens via wf_get_tokens, the
+      component index and individual components via wf_read_component,
+      and layout templates from the loaded system specs. Responses are
+      cached so the library panel never re-pays bridge latency for
+      static spec data; the cache invalidates when the registry changes.
+    scope:
+      - GET /api/library/systems — ds_list_systems mapped to LibrarySystem[]
+      - GET /api/library/:systemId/tokens — wf_get_tokens mapped to TokenSetResponse
+      - GET /api/library/:systemId/components — component index (id, name, variants) from the loaded system spec
+      - GET /api/library/:systemId/components/:componentId — wf_read_component mapped to ComponentDetail (SVG content included)
+      - GET /api/library/:systemId/layouts — LayoutTemplate[] from the loaded spec's layout definitions
+      - In-memory response cache keyed by route + systemId
+      - Cache invalidation on registry change — studio-api watches systems/registry.yaml directly via fs.watch (path from studio-server config; the bridge exposes no registry-change signal) — full library cache flush, next request repopulates
+      - Bridge-down behavior — cached entries still served; uncached requests answered 503 with structured ApiError pointing at bridge status
+      - Unknown systemId → 404 with ApiError listing how to discover valid systems (GET /api/library/systems)
+
+  - name: boundary-validation-and-headless-verification
+    description: |
+      The boundary that makes invalid states unrepresentable past the
+      API layer, and the integration proof that the whole protocol
+      works headlessly. Every HTTP body, route param, and WebSocket
+      message is validated against the contract before any domain code
+      runs; failures return structured errors that say what failed and
+      how to fix it. The verification suite runs over real HTTP and
+      WebSocket connections — including the Phase 1 exit criterion: a
+      scripted WebSocket client completes brief → generate → refine →
+      compliance end-to-end with no UI.
+    scope:
+      - Validation schemas derived from @studio/contract types for every HTTP body, query, and route param (wsId/artId slug shape, version number bounds)
+      - WebSocket message validation — envelope shape, known type, payload schema — before dispatch; failures answered as chat.error with requestId echo
+      - Structured error mapping — every rejection carries ApiError (code, message, fix, field); no stack traces or internals leak to clients
+      - Typed-result error seam — domain failures cross into the API as typed results, mapped to HTTP status + ApiError (never thrown across the boundary)
+      - Path-traversal hardening — slugs validated before any store lookup; no client input ever concatenated into filesystem paths
+      - Integration test suite over real HTTP/WS per the testing policy (vitest, real server instance, real workspace-store temp directory, real MCP server through the bridge — no mocks at the seams)
+      - Headless conversational loop test — scripted WS client attaches, sends a brief, receives the generation stream, refines via follow-up chat.send, receives the substitution stream, fetches SVG/spec/compliance over HTTP, and asserts version lineage
+      - Reconnect-resume integration test — drop the socket mid-stream, reattach with lastEventSeq, assert no missed or duplicated events
