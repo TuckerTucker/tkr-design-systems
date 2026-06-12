@@ -25,7 +25,7 @@ Two gaps remain:
    files, Sketch's `"Emoji + label"` tag-chip token, and incidental examples.
    The showcases document the systems but contradict the specs they document.
 2. No decision existed for *functional* icons (send, search, status marks) in
-   showcase/studio UI or future wireframe components — the per-system
+   showcase UI or future wireframe components — the per-system
    avatar strategies cover identity, not iconography.
 
 ## Decision
