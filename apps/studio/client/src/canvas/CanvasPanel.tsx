@@ -579,7 +579,13 @@ export function CanvasPanel(props: CanvasPanelProps): ReactElement {
   if (active === null || state.artifacts.length === 0) {
     return (
       <section className="canvas-panel" data-testid="canvas-panel">
-        <EmptyState />
+        <EmptyState
+          generationSummary={
+            state.generation.inProgress
+              ? (state.generation.summary ?? "working")
+              : null
+          }
+        />
       </section>
     );
   }

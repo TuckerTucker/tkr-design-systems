@@ -48,6 +48,50 @@ describe("toLayoutPreference / fromLayoutPreference round trip", () => {
   });
 });
 
+describe("active-tab fallback", () => {
+  it("hydrates a document with active:false everywhere to visible panels", () => {
+    // Regression: a persisted document where no placement carries
+    // active:true (written by older builds, or saved from a null-active
+    // state) must not hydrate every panel host hidden — boot feeds this
+    // result straight into the reducer's initial state, bypassing the
+    // hydrate normalization.
+    const wire: LayoutPreference = {
+      schemaVersion: 1,
+      placements: [
+        { panelId: "chat", zone: "left", order: 1000, collapsed: false, active: false },
+        { panelId: "library", zone: "right", order: 1000, collapsed: false, active: false },
+      ],
+      activeTab: "",
+      railWidths: { left: 320, right: 360 },
+      lastWorkspaceId: "untitled-workspace-1",
+    };
+
+    const hydrated = fromLayoutPreference(wire, panels);
+    expect(hydrated).not.toBeNull();
+    expect(hydrated!.dock.activeTab.left).toBe("chat");
+    expect(hydrated!.dock.activeTab.right).toBe("library");
+  });
+
+  it("leaves a rail's active tab null only when every panel there is collapsed", () => {
+    const wire: LayoutPreference = {
+      schemaVersion: 1,
+      placements: [
+        { panelId: "chat", zone: "left", order: 0, collapsed: true, active: false },
+        { panelId: "library", zone: "left", order: 1, collapsed: false, active: false },
+      ],
+      activeTab: "",
+      railWidths: { left: 320, right: 360 },
+      lastWorkspaceId: null,
+    };
+
+    const hydrated = fromLayoutPreference(wire, panels);
+    expect(hydrated).not.toBeNull();
+    // library is the first expanded panel on the left; right rail is empty.
+    expect(hydrated!.dock.activeTab.left).toBe("library");
+    expect(hydrated!.dock.activeTab.right).toBeNull();
+  });
+});
+
 describe("tolerances", () => {
   it("gates unrecognized schema versions to null (defaults apply)", () => {
     const wire = {

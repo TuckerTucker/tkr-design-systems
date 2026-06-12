@@ -28,6 +28,45 @@ describe("empty and loading surfaces", () => {
     expect(screen.queryByTestId("canvas-compliance-bar")).toBeNull();
   });
 
+  it("carries the live generation status on the empty state during a first generation", async () => {
+    // Regression: a workspace's FIRST artifact lands only when the turn
+    // completes — the empty state must reflect the in-flight generation
+    // instead of "nothing yet" while tools visibly run in chat.
+    const canvasApi = createFakeCanvasApi();
+    const view = renderCanvas({ canvasApi });
+    await waitFor(() =>
+      expect(screen.getByTestId("canvas-empty")).toBeTruthy(),
+    );
+
+    view.socket.emit({
+      type: "chat.tool_started",
+      seq: 100,
+      payload: {
+        messageId: "m1",
+        toolCallId: "t1",
+        tool: "wf_generate",
+        summary: "Generating the login screen",
+      },
+    });
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Generating — Generating the login screen/),
+      ).toBeTruthy(),
+    );
+    expect(
+      screen.getByTestId("canvas-empty").getAttribute("role"),
+    ).toBe("status");
+
+    view.socket.emit({
+      type: "chat.message_completed",
+      seq: 101,
+      payload: { messageId: "m1", artifactRefs: [], cancelled: false },
+    });
+    await waitFor(() =>
+      expect(screen.getByText(/nothing on the canvas yet/i)).toBeTruthy(),
+    );
+  });
+
   it("shows the artifact-list failure inline with a retry that recovers", async () => {
     const canvasApi = createFakeCanvasApi();
     seedAssembledArtifact(canvasApi);
