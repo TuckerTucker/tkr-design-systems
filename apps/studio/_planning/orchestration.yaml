@@ -43,7 +43,7 @@ orchestration:
   total_slices: 34
   phase_2:
     name: studio-ui
-    status: planned            # waves 5-6, detailed below — Phase 1 implemented (keyless exit criterion green)
+    status: implemented        # waves 5-6 complete — composed-studio smoke green (keyless)
     strategy: shell-first-then-mvp-triangle
     waves: 2
     agents: 4                  # w5-docking-shell; w6-canvas, w6-library-panel, w6-chat-panel
@@ -678,7 +678,7 @@ waves:
 
   - number: 5
     name: Shell
-    status: planned
+    status: implemented
     agents_count: 1
     parallel: false
 
@@ -686,7 +686,7 @@ waves:
 
       - id: w5-docking-shell
         capability: docking-shell
-        status: planned
+        status: implemented
         description: >
           React 19 + Vite + TS strict SPA at apps/studio/client (built dist
           served by studio-server's static hosting). Docking shell:
@@ -785,7 +785,7 @@ waves:
 
   - number: 6
     name: MVP Triangle
-    status: planned
+    status: implemented
     agents_count: 3
     parallel: false            # serialized: shared client package.json and panel registration composition
 
@@ -793,7 +793,7 @@ waves:
 
       - id: w6-canvas
         capability: canvas
-        status: planned
+        status: implemented
         description: >
           The center stage: native SVG rendering of artifact versions,
           platform frames at true dims (375×812 / 1280×800) with
@@ -834,7 +834,7 @@ waves:
 
       - id: w6-library-panel
         capability: library-panel
-        status: planned
+        status: implemented
         description: >
           Visual browser over the registered systems via /api/library/*:
           system switcher, token browser (palette swatches, type
@@ -879,7 +879,7 @@ waves:
 
       - id: w6-chat-panel
         capability: chat-panel
-        status: planned
+        status: implemented
         description: >
           The agentic chat surface: streaming assistant rendering with
           aria-live, multiline composer with disabled-with-reason

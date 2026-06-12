@@ -3,7 +3,7 @@
 # Layer: ui | Wave: 5
 
 capability: docking-shell
-status: planned
+status: implemented
 
 context: |
   The docking-shell capability is the first UI deliverable (Phase 2,

@@ -3,7 +3,7 @@
 # Layer: ui | Wave: 6
 
 capability: chat-panel
-status: planned
+status: implemented
 
 context: |
   The chat-panel capability delivers the agentic chat surface of the Studio

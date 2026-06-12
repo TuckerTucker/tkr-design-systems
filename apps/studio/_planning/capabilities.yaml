@@ -217,7 +217,7 @@ capabilities:
 
   - name: docking-shell
     layer: ui
-    status: planned
+    status: implemented
     description: |
       The React SPA shell: a docking system, not a fixed grid. Canvas
       always center; two rails flank it, each hosting zero or more
@@ -250,7 +250,7 @@ capabilities:
 
   - name: chat-panel
     layer: ui
-    status: planned
+    status: implemented
     description: |
       The agentic chat surface. Streams assistant output, renders tool
       progress contextually ("generating in Swiss…"), and shows the
@@ -276,7 +276,7 @@ capabilities:
 
   - name: canvas
     layer: ui
-    status: planned
+    status: implemented
     description: |
       The center stage. Renders artifact SVG natively at true platform
       dimensions inside device frames, with zoom/pan, side-by-side
@@ -304,7 +304,7 @@ capabilities:
 
   - name: library-panel
     layer: ui
-    status: planned
+    status: implemented
     description: |
       Visual browser over the registered design systems, sourced live
       from the library endpoints. System switcher, token browser

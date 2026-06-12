@@ -3,7 +3,7 @@
 # Layer: ui | Wave: 6
 
 capability: library-panel
-status: planned
+status: implemented
 
 context: |
   The library-panel capability is the visual browser over the registered

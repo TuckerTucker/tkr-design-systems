@@ -3,7 +3,7 @@
 # Layer: ui | Wave: 6
 
 capability: canvas
-status: planned
+status: implemented
 
 context: |
   The canvas is the always-center stage of the Studio docking shell —
