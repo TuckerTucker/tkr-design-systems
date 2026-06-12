@@ -5,11 +5,24 @@
  *   an ephemeral port (server test composition reused) and exercises the
  *   preferences endpoints and the /ws protocol over real connections.
  */
+import { fileURLToPath } from "node:url";
+
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
+/** apps/studio — the npm workspace root (default fs allow scope). */
+const studioRoot = fileURLToPath(new URL("..", import.meta.url));
+/** Repo root /systems — real design-system SVGs imported ?raw by the
+ * library-panel fixtures (test/panels/library/helpers/fixtures.ts). */
+const systemsDir = fileURLToPath(new URL("../../../systems", import.meta.url));
+
 export default defineConfig({
   plugins: [react()],
+  server: {
+    fs: {
+      allow: [studioRoot, systemsDir],
+    },
+  },
   test: {
     projects: [
       {

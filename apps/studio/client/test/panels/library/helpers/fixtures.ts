@@ -14,7 +14,7 @@ import type {
   TokenSetResponse,
 } from "@studio/contract";
 
-import swissButtonSvgRaw from "../../../../../../systems/swiss/components/button-primary.svg?raw";
+import swissButtonSvgRaw from "../../../../../../../systems/swiss/components/button-primary.svg?raw";
 import scriptInjectionRaw from "../../../../../server/test/artifact-pipeline/fixtures/adversarial/script-injection.svg?raw";
 import eventHandlersRaw from "../../../../../server/test/artifact-pipeline/fixtures/adversarial/event-handlers.svg?raw";
 import externalReferencesRaw from "../../../../../server/test/artifact-pipeline/fixtures/adversarial/external-references.svg?raw";
