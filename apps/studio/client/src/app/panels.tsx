@@ -43,7 +43,7 @@ export function registerStudioPanels(registry: PanelRegistry): void {
     id: "chat",
     title: "Chat",
     icon: ChatIcon,
-    component: lazy(() => import("../panels/chatPlaceholder.jsx")),
+    component: lazy(() => import("../panels/chat/ChatPanel.jsx")),
     defaultPlacement: { rail: "left", order: 0 },
     minWidth: 280,
   });
