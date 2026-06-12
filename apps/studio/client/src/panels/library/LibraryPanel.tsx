@@ -125,31 +125,38 @@ export function LibraryPanel(props: LibraryPanelProps): ReactElement {
     bridgeDown,
   });
 
-  const [activeSystemId, setActiveSystemId] = useState<string | null>(null);
+  const [selectedSystemId, setSelectedSystemId] = useState<string | null>(
+    null,
+  );
 
-  // Restore the last-viewed system (silent, no save action) or default to
-  // the first registered system once the list resolves.
-  useEffect(() => {
+  // Resolve the active system synchronously at render time — explicit
+  // selection wins when still registered; otherwise the remembered system
+  // (silent restore, no save action); otherwise the first registered
+  // system. Derived rather than effect-driven so radios never render an
+  // unselected intermediate state.
+  const activeSystemId = useMemo((): string | null => {
     if (systems.state.status !== "ready") {
-      return;
+      return selectedSystemId;
     }
     const list = systems.state.value;
     if (
-      activeSystemId !== null &&
-      list.some((system) => system.id === activeSystemId)
+      selectedSystemId !== null &&
+      list.some((system) => system.id === selectedSystemId)
     ) {
-      return;
+      return selectedSystemId;
     }
     const remembered = readSessionValue(ACTIVE_SYSTEM_KEY);
-    const restored =
-      remembered !== null && list.some((system) => system.id === remembered)
-        ? remembered
-        : (list[0]?.id ?? null);
-    setActiveSystemId(restored);
-  }, [systems.state, activeSystemId]);
+    if (
+      remembered !== null &&
+      list.some((system) => system.id === remembered)
+    ) {
+      return remembered;
+    }
+    return list[0]?.id ?? null;
+  }, [systems.state, selectedSystemId]);
 
   const selectSystem = useCallback((systemId: string): void => {
-    setActiveSystemId(systemId);
+    setSelectedSystemId(systemId);
     writeSessionValue(ACTIVE_SYSTEM_KEY, systemId);
   }, []);
 
