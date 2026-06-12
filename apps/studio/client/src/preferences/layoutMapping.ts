@@ -81,6 +81,20 @@ export function fromLayoutPreference(
     }
   }
 
+  // A rail with expanded panels must always have an active tab — documents
+  // persisted with `active: false` everywhere (or written by older builds)
+  // would otherwise hydrate every panel host hidden. Mirror the reducer's
+  // resolveActiveTab fallback: first expanded panel by order.
+  for (const rail of ["left", "right"] as const) {
+    if (active[rail] !== null) {
+      continue;
+    }
+    const firstExpanded = placements
+      .filter((placement) => placement.rail === rail && !placement.collapsed)
+      .sort((a, b) => a.order - b.order)[0];
+    active[rail] = firstExpanded?.panelId ?? null;
+  }
+
   const left = Number.isFinite(preference.railWidths.left)
     ? preference.railWidths.left
     : DEFAULT_RAIL_WIDTHS.left;
