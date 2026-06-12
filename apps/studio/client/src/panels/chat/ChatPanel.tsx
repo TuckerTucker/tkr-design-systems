@@ -19,6 +19,7 @@
 import { useCallback, useState, type ReactElement } from "react";
 
 import { useShellState } from "../../app/shellState.jsx";
+import { AuthSetupNotice } from "./AuthSetupNotice.jsx";
 import { Composer, type ComposerDisabledReason } from "./Composer.jsx";
 import { MessageList } from "./MessageList.jsx";
 import type { ArtifactRefView } from "./messageViewModel.js";
@@ -109,6 +110,11 @@ export function ChatPanel(props: ChatPanelProps): ReactElement {
         onArtifactFocus={onArtifactFocus}
         onRetrySend={retry}
       />
+      {authStatus !== null && authStatus.state === "missing" ? (
+        <AuthSetupNotice variant="missing" />
+      ) : authStatus !== null && authStatus.state === "invalid" ? (
+        <AuthSetupNotice variant="invalid" />
+      ) : null}
       <Composer
         draft={draft}
         onDraftChange={setDraft}
