@@ -8,3 +8,6 @@ __pycache__/
 *~
 .*.swp
 apps/studio/
+
+# tkr-kit runtime state (contains service credentials)
+.tkr-kit/
