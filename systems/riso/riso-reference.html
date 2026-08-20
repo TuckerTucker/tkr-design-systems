@@ -1,0 +1,2460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riso — Design System Reference</title>
+<meta name="description" content="Duotone Print + Tweakable Press — machine-readable spec plus live specimens.">
+<meta name="generator" content="tools/builders/build_riso_reference.py">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --ui-bg: #14110F;
+  --ui-panel: #1C1917;
+  --ui-line: rgba(255,255,255,0.09);
+  --ui-text: #E7E2DA;
+  --ui-dim: #98908A;
+  --ui-faint: #6A625D;
+  --ui-good: #34D399;
+  --ui-bad: #FF6B6B;
+  --ui-mark: #FF48B0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 120px; }
+code, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+h1 { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; margin: 0 0 4px; }
+h2 {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.16em; color: var(--ui-mark);
+  margin: 64px 0 16px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--ui-line);
+}
+h3 { font-size: 17px; font-weight: 700; margin: 32px 0 10px; letter-spacing: -0.01em; }
+h4 { font-size: 12px; font-weight: 700; margin: 20px 0 8px; color: var(--ui-dim);
+     text-transform: uppercase; letter-spacing: 0.1em; }
+p { color: var(--ui-dim); margin: 0 0 12px; max-width: 74ch; }
+a { color: var(--ui-mark); }
+
+.lede { font-size: 16px; color: var(--ui-text); max-width: 74ch; }
+.kicker { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: 0.18em; color: var(--ui-faint); }
+
+.agent-note {
+  border: 1px solid var(--ui-mark); border-left-width: 3px;
+  background: rgba(255,72,176,0.06);
+  padding: 18px 20px; margin: 28px 0 8px; border-radius: 3px;
+}
+.agent-note h4 { margin-top: 0; color: var(--ui-mark); }
+.agent-note ol { margin: 0; padding-left: 20px; color: var(--ui-dim); }
+.agent-note li { margin-bottom: 6px; }
+
+table { width: 100%; border-collapse: collapse; margin: 10px 0 18px; font-size: 13px; }
+th {
+  text-align: left; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--ui-faint); padding: 6px 10px;
+  border-bottom: 1px solid var(--ui-line); font-family: 'JetBrains Mono', monospace;
+}
+td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04);
+     color: var(--ui-dim); vertical-align: top; }
+td.k { color: var(--ui-text); font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+td strong { color: var(--ui-text); font-weight: 600; }
+.scroll { overflow-x: auto; }
+
+pre {
+  background: #0E0C0B; border: 1px solid var(--ui-line); border-radius: 3px;
+  padding: 14px 16px; overflow-x: auto; font-size: 11.5px; line-height: 1.6;
+  color: #C9C2BA; margin: 8px 0 16px;
+}
+.chip {
+  display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 2px 7px; border-radius: 2px; border: 1px solid currentColor;
+}
+.chip.req { color: var(--ui-bad); }
+.chip.rec { color: #FBBF24; }
+.chip.mech { color: #60A5FA; }
+.chip.sem { color: #A78BFA; }
+
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 10px; }
+.sw { border: 1px solid var(--ui-line); border-radius: 3px; overflow: hidden; }
+.sw .fill { height: 54px; }
+.sw .meta { padding: 7px 9px; }
+.sw .nm { font-size: 11.5px; font-weight: 600; color: var(--ui-text); }
+.sw .hx { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ui-faint); }
+
+.rule { border: 1px solid var(--ui-line); border-radius: 3px; padding: 16px 18px; margin-bottom: 10px; }
+.rule .hd { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.rule .rid { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--ui-text); }
+.rule .stmt { color: var(--ui-text); margin-bottom: 6px; }
+.rule .why { color: var(--ui-dim); font-size: 13px; }
+.rule .why b { color: var(--ui-faint); font-weight: 700; font-size: 10px;
+               text-transform: uppercase; letter-spacing: 0.12em; }
+
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 26px; }
+.pane { border: 1px solid var(--ui-line); border-radius: 3px; overflow: hidden; }
+.pane > .lbl {
+  font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.14em; padding: 7px 10px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.pane.ok > .lbl { color: var(--ui-good); background: rgba(52,211,153,0.07); }
+.pane.no > .lbl { color: var(--ui-bad);  background: rgba(255,107,107,0.07); }
+.pane .note { padding: 8px 10px 10px; font-size: 11.5px; color: var(--ui-dim);
+              border-top: 1px solid var(--ui-line); }
+
+.dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 6px 0 16px; font-size: 12.5px; }
+.dl dt { font-family: 'JetBrains Mono', monospace; color: var(--ui-text); font-size: 11.5px; }
+.dl dd { margin: 0; color: var(--ui-dim); }
+.dos li { color: var(--ui-dim); margin-bottom: 4px; }
+.dos li::marker { color: var(--ui-good); }
+.donts li::marker { color: var(--ui-bad); }
+
+.cmp { border: 1px solid var(--ui-line); border-radius: 3px; padding: 16px 18px; margin-bottom: 12px; }
+.cmp .nm { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; }
+.cmp .tier { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+             color: var(--ui-faint); font-family: 'JetBrains Mono', monospace; }
+.cmp .contract { color: var(--ui-text); font-size: 13px; margin: 8px 0 4px; }
+
+/* ── press controls ── */
+.press {
+  position: sticky; top: 0; z-index: 500;
+  display: flex; gap: 22px; flex-wrap: wrap; align-items: center;
+  background: rgba(20,17,15,0.94); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--ui-line); padding: 12px 28px; margin-bottom: 0;
+}
+.press .grp { display: flex; align-items: center; gap: 7px; }
+.press .grp > span {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--ui-faint);
+}
+.press button {
+  font: inherit; font-size: 11px; cursor: pointer; padding: 4px 9px;
+  background: transparent; color: var(--ui-dim);
+  border: 1px solid var(--ui-line); border-radius: 2px;
+  display: flex; align-items: center; gap: 5px;
+}
+.press button[aria-pressed="true"] { color: var(--ui-text); border-color: var(--ui-mark); background: rgba(255,72,176,0.12); }
+.press .dot { width: 9px; height: 9px; display: inline-block; border: 1px solid rgba(0,0,0,0.3); }
+
+/* ── the Riso surface itself ── */
+.riso {
+  position: relative;
+  background: var(--riso-paper);
+  color: var(--riso-text);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+.riso .grain {
+  position: absolute; inset: 0; pointer-events: none; z-index: 100;
+  mix-blend-mode: overlay;
+  background-image: var(--riso-grain-url);
+  background-size: 220px 220px;
+  opacity: var(--riso-grain-amount);
+}
+.duo { position: relative; display: inline-block; color: var(--riso-ink-1); line-height: 1; }
+.duo > .f { position: relative; z-index: 2; }
+.duo > .g {
+  position: absolute; left: 0; top: 0; width: 100%; z-index: 1;
+  color: var(--riso-ink-2);
+  mix-blend-mode: var(--riso-blend);
+  opacity: var(--riso-ink-density);
+  transform: translate(var(--riso-off-x), var(--riso-off-y));
+  pointer-events: none;
+}
+.duo.i2 { color: var(--riso-ink-2); }
+.duo.i2 > .g { color: var(--riso-ink-1); }
+
+.ht { width: 100%; overflow: hidden; position: relative;
+      mix-blend-mode: var(--riso-blend); opacity: var(--riso-ink-density); }
+.ht > i {
+  position: absolute; inset: -50%; display: block;
+  background-image: radial-gradient(circle, var(--ht-ink)
+    calc(35% - (var(--riso-ht-softness) * 15%)),
+    transparent calc(36% + (var(--riso-ht-softness) * 15%)));
+  background-size: var(--riso-ht-size) var(--riso-ht-size);
+  transform: rotate(var(--riso-ht-angle));
+  filter: blur(var(--riso-bleed));
+}
+.ht.i1 { --ht-ink: var(--riso-ink-1); }
+.ht.i2 { --ht-ink: var(--riso-ink-2); }
+
+.tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--riso-ink-1);
+  mix-blend-mode: var(--riso-blend); opacity: var(--riso-ink-density);
+}
+.tag.i2 { color: var(--riso-ink-2); }
+.tag.sm { font-size: 8.5px; letter-spacing: 0.14em; }
+
+.body-ink { filter: blur(calc(var(--riso-bleed) * 0.4)); }
+
+/* specimen shell */
+.shell { display: grid; grid-template-columns: 260px 1fr; min-height: 460px; }
+.shell .sb { border-right: 1px solid rgba(0,0,0,0.15); position: relative; z-index: 2; }
+.shell .ca { position: relative; z-index: 2; display: flex; flex-direction: column; }
+.li { padding: 10px 16px; border-top: 1px solid rgba(0,0,0,0.1); cursor: default; }
+.li.sel { background: rgba(0,0,0,0.03); }
+.li .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+.li .nm { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+.li .pv { font-size: 11px; opacity: 0.65; line-height: 1.4; margin-top: 3px;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unread {
+  padding: 1px 6px; background: var(--riso-ink-2); color: var(--riso-paper);
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.04em; mix-blend-mode: var(--riso-blend); opacity: var(--riso-ink-density);
+}
+.msg { margin-bottom: 18px; display: flex; flex-direction: column; }
+.msg.user { align-self: flex-end; max-width: 70%; align-items: flex-end; }
+.msg.ai { align-self: flex-start; max-width: 84%; }
+.msg .hd { display: flex; gap: 8px; align-items: baseline; margin-bottom: 5px; }
+.msg .tx { font-size: 14px; font-weight: 500; line-height: 1.55; letter-spacing: -0.005em; }
+
+.specimen { border: 1px solid var(--ui-line); border-radius: 3px; overflow: hidden; margin: 14px 0 24px; }
+.mini { padding: 22px 20px; }
+
+.layers { display: flex; flex-direction: column-reverse; gap: 3px; margin: 10px 0 20px; max-width: 620px; }
+.layers .ly {
+  display: grid; grid-template-columns: 54px 150px 1fr; align-items: center; gap: 12px;
+  border: 1px solid var(--ui-line); border-left: 3px solid var(--ui-mark);
+  padding: 9px 12px; border-radius: 2px; font-size: 12.5px; color: var(--ui-dim);
+}
+.layers .ly .z { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ui-faint); }
+.layers .ly .nm { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ui-text); }
+
+footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--ui-line);
+         font-size: 11.5px; color: var(--ui-faint); }
+
+@media (max-width: 860px) {
+  .pair { grid-template-columns: 1fr; }
+  .shell { grid-template-columns: 1fr; }
+}
+
+:root {
+  --riso-off-x: 2px;
+  --riso-off-y: -1px;
+  --riso-ht-size: 6px;
+  --riso-ht-angle: 15deg;
+  --riso-ht-softness: 0.35;
+  --riso-grain-amount: 0.35;
+  --riso-bleed: 0.3px;
+  --riso-tremor: 0.5px;
+  --riso-grain-url: url("data:image/svg+xml;charset=utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27220%27%20height%3D%27220%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%271.2%27%20numOctaves%3D%272%27%20seed%3D%277%27%20stitchTiles%3D%27stitch%27/%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200%20%200%200%200%200%200%20%200%200%200%200%200%20%200%200%200%200.6%200%27/%3E%3C/filter%3E%3Crect%20width%3D%27220%27%20height%3D%27220%27%20filter%3D%27url%28%23n%29%27/%3E%3C/svg%3E");
+}
+[data-paper="cream"] {
+  --riso-paper: #F4EFE4;
+  --riso-text: #1A1614;
+  --riso-blend: multiply;
+  --riso-ink-density: 0.92;
+}
+[data-paper="kraft"] {
+  --riso-paper: #D4BE94;
+  --riso-text: #2A1F12;
+  --riso-blend: multiply;
+  --riso-ink-density: 0.85;
+}
+[data-paper="white"] {
+  --riso-paper: #FDFCF8;
+  --riso-text: #151515;
+  --riso-blend: multiply;
+  --riso-ink-density: 0.98;
+}
+[data-paper="gray"] {
+  --riso-paper: #BFBDB5;
+  --riso-text: #141414;
+  --riso-blend: darken;
+  --riso-ink-density: 0.82;
+}
+[data-paper="newsprint"] {
+  --riso-paper: #E4DCC9;
+  --riso-text: #2B2620;
+  --riso-blend: color-burn;
+  --riso-ink-density: 0.78;
+}
+[data-ink="classic"] {
+  --riso-ink-1: #3255A4;
+  --riso-ink-2: #FF48B0;
+}
+[data-ink="electric"] {
+  --riso-ink-1: #FF48B0;
+  --riso-ink-2: #00A95C;
+}
+[data-ink="sunset"] {
+  --riso-ink-1: #FF665E;
+  --riso-ink-2: #E8C700;
+}
+[data-ink="forest"] {
+  --riso-ink-1: #00838F;
+  --riso-ink-2: #00A95C;
+}
+[data-ink="spritz"] {
+  --riso-ink-1: #3255A4;
+  --riso-ink-2: #E8C700;
+}
+[data-ink="ink"] {
+  --riso-ink-1: #1A1A1A;
+  --riso-ink-2: #FF48B0;
+}
+</style>
+</head>
+<body data-paper="cream" data-ink="classic">
+
+<!-- ══════════════════════════════════════════════════════════════════
+     MACHINE PAYLOAD — the complete spec, first element in the body.
+     Agents: parse this block. Everything below is the same data
+     rendered for eyes.
+     ══════════════════════════════════════════════════════════════════ -->
+<script type="application/json" id="riso-spec">
+{
+  "spec_version": "0.2",
+  "system": {
+    "id": "riso",
+    "name": "Riso",
+    "tagline": "Duotone Print + Tweakable Press",
+    "grammar_family": "print_texture",
+    "version": "3.0.0",
+    "source_jsx": "../../apps/showcase/src/systems/design-system-riso.jsx",
+    "reference_export": "riso-reference.html",
+    "premise": "A duotone-print aesthetic inspired by Risograph duplicators — the two-drum stencil presses beloved in zines, art books, and independent publishing. Color comes from two spot inks printed on a tinted paper stock. Registration is slightly off. Dots and grain are visible. Accidents are celebrated.\n",
+    "parametric": true,
+    "core_principles": [
+      {
+        "id": "two_inks_one_paper",
+        "title": "Two inks, one paper",
+        "detail": "Every surface is composed from exactly two spot colors over a paper stock. Neutral grays, additional hues, and dark text come from the paper color — not extra inks.\n"
+      },
+      {
+        "id": "imperfection_as_signal",
+        "title": "Imperfection as signal",
+        "detail": "Misregistration, ink bleed, and grain are signature moments, not defects. A too-clean riso reads as fake. Calibrate slider defaults to always sit slightly askew.\n"
+      },
+      {
+        "id": "paper_drives_ink",
+        "title": "Paper drives ink behavior",
+        "detail": "Changing paper changes blend-mode, ink density, and effective contrast — because that's what real paper does. A preset selector bundles these as one decision.\n"
+      },
+      {
+        "id": "tweakable_by_contract",
+        "title": "Tweakable by contract",
+        "detail": "Sliders and presets for registration, halftone, grain, and bleed are part of the system, not a dev tool. Expose them in a settings panel (not inline in the page).\n"
+      }
+    ],
+    "use_when": [
+      "Independent publishing, reading apps, zines, creative communities, editorial products with visible craft",
+      "Products that want a 'press-printed' personality and can tolerate visible texture in the UI"
+    ],
+    "avoid_when": [
+      "Accessibility-first products — grain + blend modes reduce contrast below WCAG thresholds without care",
+      "High-data-density dashboards or financial tools — Riso's texture competes with information"
+    ],
+    "format_fitness": {
+      "html_css": {
+        "level": "native",
+        "acceptable_for": [
+          "all"
+        ],
+        "note": "The implementation is CSS-first: halftone is a rotated radial-gradient, grain is an inline feTurbulence data-URL at mix-blend-mode: overlay, ink bleed is filter: blur(). Only image duotone uses SVG filters.\n"
+      },
+      "svg": {
+        "level": "approximation",
+        "caveat": "SVG has no mix-blend-mode cascade and no CSS custom properties, so the paper/ink compositing model must be flattened at author time. Halftone must be re-authored as a <pattern>; grain via feTurbulence renders but softer than Chrome's CSS overlay blend.\n",
+        "acceptable_for": [
+          "wireframing",
+          "layout_review"
+        ],
+        "not_acceptable_for": [
+          "final_design_review",
+          "production_handoff"
+        ]
+      },
+      "pdf": {
+        "level": "degraded",
+        "caveat": "feTurbulence may not render in PDF readers; grain layer may be missing",
+        "acceptable_for": [
+          "layout_review"
+        ]
+      }
+    },
+    "requires_emoji": false
+  },
+  "tokens": {
+    "colors": {
+      "page_bg": "#F4EFE4",
+      "surface": "#F4EFE4",
+      "surface_elevated": "#F4EFE4",
+      "text_primary": "#1A1614",
+      "text_secondary": "rgba(26,22,20,0.75)",
+      "text_muted": "rgba(26,22,20,0.65)",
+      "accent": "#FF48B0",
+      "palette": [
+        {
+          "name": "paper_cream",
+          "value": "#F4EFE4",
+          "role": "paper — default, warm, forgiving"
+        },
+        {
+          "name": "paper_kraft",
+          "value": "#D4BE94",
+          "role": "paper — earthier, colors shift muddy"
+        },
+        {
+          "name": "paper_white",
+          "value": "#FDFCF8",
+          "role": "paper — clinical, max ink saturation"
+        },
+        {
+          "name": "paper_gray",
+          "value": "#BFBDB5",
+          "role": "paper — industrial zine feel"
+        },
+        {
+          "name": "paper_newsprint",
+          "value": "#E4DCC9",
+          "role": "paper — bleached, grainy, most 'printed'"
+        },
+        {
+          "name": "ink_federal_blue",
+          "value": "#3255A4",
+          "role": "ink — classic ink-1, spritz ink-1"
+        },
+        {
+          "name": "ink_fluorescent_pink",
+          "value": "#FF48B0",
+          "role": "ink — classic ink-2, electric ink-1, ink ink-2"
+        },
+        {
+          "name": "ink_green",
+          "value": "#00A95C",
+          "role": "ink — electric ink-2, forest ink-2"
+        },
+        {
+          "name": "ink_red",
+          "value": "#FF665E",
+          "role": "ink — sunset ink-1"
+        },
+        {
+          "name": "ink_yellow",
+          "value": "#E8C700",
+          "role": "ink — sunset ink-2, spritz ink-2"
+        },
+        {
+          "name": "ink_teal",
+          "value": "#00838F",
+          "role": "ink — forest ink-1"
+        },
+        {
+          "name": "ink_black",
+          "value": "#1A1A1A",
+          "role": "ink — ink preset ink-1"
+        }
+      ]
+    },
+    "typography": {
+      "families": [
+        {
+          "id": "structural",
+          "stack": "'Space Grotesk', system-ui, sans-serif",
+          "role": "content — the page",
+          "mixing_rule": "Body text, titles, messages, replies, navigation, and any label above 11px. A slightly quirky grotesk that pairs well with print textures.\n"
+        },
+        {
+          "id": "metadata",
+          "stack": "'JetBrains Mono', ui-monospace, monospace",
+          "role": "metadata — the colophon",
+          "mixing_rule": "Tracked uppercase labels at 11px and below only: timestamps, issue numbers, sender tags, section headers. The monospace width gives the printed-catalog rhythm. Never for body.\n"
+        }
+      ],
+      "scale": [
+        {
+          "id": "masthead",
+          "size": 30,
+          "weight": 700,
+          "line_height": 1.0,
+          "tracking": -0.03,
+          "family": "structural",
+          "treatment": "DuotoneText",
+          "role": "conversation title"
+        },
+        {
+          "id": "brand",
+          "size": 28,
+          "weight": 700,
+          "line_height": 0.95,
+          "tracking": -0.04,
+          "family": "structural",
+          "treatment": "DuotoneText",
+          "role": "wordmark"
+        },
+        {
+          "id": "title",
+          "size": 16,
+          "weight": 700,
+          "line_height": 1.1,
+          "tracking": -0.02,
+          "family": "structural",
+          "treatment": "DuotoneText",
+          "role": "selected item"
+        },
+        {
+          "id": "item",
+          "size": 14,
+          "weight": 600,
+          "line_height": 1.2,
+          "tracking": -0.01,
+          "family": "structural",
+          "treatment": "plain",
+          "role": "sidebar names"
+        },
+        {
+          "id": "body",
+          "size": 14,
+          "weight": 500,
+          "line_height": 1.55,
+          "tracking": -0.005,
+          "family": "structural",
+          "treatment": "ink_bleed",
+          "role": "messages"
+        },
+        {
+          "id": "preview",
+          "size": 11,
+          "weight": 400,
+          "line_height": 1.4,
+          "tracking": 0,
+          "family": "structural",
+          "treatment": "plain",
+          "role": "preview text at 0.65 opacity"
+        },
+        {
+          "id": "label",
+          "size": 9,
+          "weight": 700,
+          "line_height": 1.3,
+          "tracking": 0.16,
+          "family": "metadata",
+          "treatment": "InkTag",
+          "role": "InkTag, uppercase"
+        },
+        {
+          "id": "micro",
+          "size": 8.5,
+          "weight": 700,
+          "line_height": 1.3,
+          "tracking": 0.14,
+          "family": "metadata",
+          "treatment": "InkTag",
+          "role": "tiny meta, uppercase"
+        }
+      ],
+      "case": {
+        "metadata": "uppercase",
+        "body": "sentence",
+        "headers": "sentence"
+      },
+      "tracking": {
+        "metadata": 0.16,
+        "body": -0.005,
+        "headers": -0.03
+      },
+      "modifiers": {
+        "body_filter": "blur(calc(var(--riso-bleed) * 0.4))",
+        "text_shadow": "none",
+        "duotone_offset": "translate(var(--riso-off-x), var(--riso-off-y))",
+        "tremor": "translate(±random, ±random) per letter — display only, 0 by default"
+      }
+    },
+    "spacing": {
+      "grid_unit": 8,
+      "allowed_steps": [
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24
+      ],
+      "enforcement": "relaxed",
+      "note": "Riso's rhythm is editorial, not modular. The implementation uses off-grid paddings (10px 16px, 18px 24px, 20px 24px 22px) deliberately — a strict 8pt grid reads as software, not print. Enforcement is relaxed by design; do not \"fix\" these to the grid.\n"
+    },
+    "borders": {
+      "radius_default": 0,
+      "radius_inputs": 0,
+      "radius_chrome": 0,
+      "note": "Radius 4 appears ONLY in spec-panel chrome, never in the system itself.",
+      "rules": {
+        "hairline": "1px solid rgba(0,0,0,0.1)",
+        "strong": "1px solid var(--riso-text)",
+        "grid": "1px solid var(--riso-text)",
+        "vertical": "1px solid rgba(0,0,0,0.15)"
+      }
+    },
+    "elevation": {
+      "strategy": "duotone_filter",
+      "premise": "Riso has no traditional elevation system. Depth is communicated through ink layering: which color sits on top, where halftone fields accumulate, how registration offsets stack. \"Above\" and \"below\" are ink-order concepts, not z-index.\n",
+      "ink_stacking_order": [
+        {
+          "layer": "paper",
+          "z": 0,
+          "detail": "base paper stock color — always bottom"
+        },
+        {
+          "layer": "ink_1",
+          "z": 1,
+          "detail": "primary structural ink (labels, rules)"
+        },
+        {
+          "layer": "ink_2",
+          "z": 2,
+          "detail": "accent ink — offset for duotone ghost"
+        },
+        {
+          "layer": "grain",
+          "z": 100,
+          "detail": "overlay-blend noise, always top"
+        }
+      ],
+      "blend_mode": "var(--riso-blend)"
+    }
+  },
+  "press_presets": {
+    "paper": [
+      {
+        "id": "cream",
+        "label": "Cream",
+        "paper": "#F4EFE4",
+        "blend": "multiply",
+        "density": 0.92,
+        "text_ink": "#1A1614",
+        "character": "Default. Warm, forgiving. The benchmark."
+      },
+      {
+        "id": "kraft",
+        "label": "Kraft",
+        "paper": "#D4BE94",
+        "blend": "multiply",
+        "density": 0.85,
+        "text_ink": "#2A1F12",
+        "character": "Earthier. Colors shift toward muddy."
+      },
+      {
+        "id": "white",
+        "label": "White",
+        "paper": "#FDFCF8",
+        "blend": "multiply",
+        "density": 0.98,
+        "text_ink": "#151515",
+        "character": "Clinical. Maximum ink saturation."
+      },
+      {
+        "id": "gray",
+        "label": "Gray",
+        "paper": "#BFBDB5",
+        "blend": "darken",
+        "density": 0.82,
+        "text_ink": "#141414",
+        "character": "Industrial zine feel. Ink darkens, not multiplies."
+      },
+      {
+        "id": "newsprint",
+        "label": "Newsprint",
+        "paper": "#E4DCC9",
+        "blend": "color-burn",
+        "density": 0.78,
+        "text_ink": "#2B2620",
+        "character": "Bleached, grainy. The most 'printed'-feeling."
+      }
+    ],
+    "ink": [
+      {
+        "id": "classic",
+        "label": "Blue + Pink",
+        "ink_1": "#3255A4",
+        "ink_2": "#FF48B0",
+        "character": "Federal Blue + Fluorescent Pink — the canonical riso pair"
+      },
+      {
+        "id": "electric",
+        "label": "Pink + Green",
+        "ink_1": "#FF48B0",
+        "ink_2": "#00A95C",
+        "character": "Highest-vibration pair; use sparingly"
+      },
+      {
+        "id": "sunset",
+        "label": "Red + Yellow",
+        "ink_1": "#FF665E",
+        "ink_2": "#E8C700",
+        "character": "Warm, low-contrast; weakest for body text"
+      },
+      {
+        "id": "forest",
+        "label": "Teal + Green",
+        "ink_1": "#00838F",
+        "ink_2": "#00A95C",
+        "character": "Organic, closest-hue pair; duotone reads subtly"
+      },
+      {
+        "id": "spritz",
+        "label": "Blue + Yellow",
+        "ink_1": "#3255A4",
+        "ink_2": "#E8C700",
+        "character": "Maximum ink-to-ink contrast"
+      },
+      {
+        "id": "ink",
+        "label": "Black + Pink",
+        "ink_1": "#1A1A1A",
+        "ink_2": "#FF48B0",
+        "character": "Most legible; the 'serious' configuration"
+      }
+    ]
+  },
+  "system_state": [
+    {
+      "id": "active_paper",
+      "type": "enum",
+      "options": [
+        "cream",
+        "kraft",
+        "white",
+        "gray",
+        "newsprint"
+      ],
+      "default": "cream",
+      "atomic_bundle": [
+        "paper",
+        "blend",
+        "density",
+        "text_ink"
+      ],
+      "affects": [
+        "tokens.colors.page_bg",
+        "tokens.colors.text_primary",
+        "artifact_treatments.page_background"
+      ]
+    },
+    {
+      "id": "active_ink",
+      "type": "enum",
+      "options": [
+        "classic",
+        "electric",
+        "sunset",
+        "forest",
+        "spritz",
+        "ink"
+      ],
+      "default": "classic",
+      "atomic_bundle": [
+        "ink_1",
+        "ink_2"
+      ],
+      "affects": [
+        "filter_library.riso_duotone_primary",
+        "filter_library.riso_duotone_ghost"
+      ]
+    },
+    {
+      "id": "registration_offset_x",
+      "css_var": "--riso-off-x",
+      "type": "number",
+      "range": [
+        -4,
+        4
+      ],
+      "step": 0.5,
+      "unit": "px",
+      "default": 2,
+      "randomize_range": [
+        -3,
+        3
+      ],
+      "affects": [
+        "components.DuotoneText",
+        "components.RisoImage",
+        "artifact_treatments.registration_offset"
+      ]
+    },
+    {
+      "id": "registration_offset_y",
+      "css_var": "--riso-off-y",
+      "type": "number",
+      "range": [
+        -4,
+        4
+      ],
+      "step": 0.5,
+      "unit": "px",
+      "default": -1,
+      "randomize_range": [
+        -3,
+        3
+      ],
+      "affects": [
+        "components.DuotoneText",
+        "components.RisoImage",
+        "artifact_treatments.registration_offset"
+      ]
+    },
+    {
+      "id": "halftone_dot_size",
+      "css_var": "--riso-ht-size",
+      "type": "number",
+      "range": [
+        2,
+        14
+      ],
+      "step": 1,
+      "unit": "px",
+      "default": 6,
+      "randomize_range": [
+        4,
+        10
+      ],
+      "affects": [
+        "components.HalftoneStrip",
+        "components.RisoImage"
+      ]
+    },
+    {
+      "id": "halftone_angle",
+      "css_var": "--riso-ht-angle",
+      "type": "number",
+      "range": [
+        0,
+        90
+      ],
+      "step": 5,
+      "unit": "deg",
+      "default": 15,
+      "randomize_options": [
+        0,
+        15,
+        45,
+        75
+      ],
+      "affects": [
+        "components.HalftoneStrip",
+        "components.RisoImage"
+      ]
+    },
+    {
+      "id": "halftone_softness",
+      "css_var": "--riso-ht-softness",
+      "type": "number",
+      "range": [
+        0,
+        1
+      ],
+      "step": 0.05,
+      "default": 0.35,
+      "affects": [
+        "components.HalftoneStrip",
+        "components.RisoImage"
+      ]
+    },
+    {
+      "id": "grain_amount",
+      "css_var": "--riso-grain-amount",
+      "type": "number",
+      "range": [
+        0,
+        1
+      ],
+      "step": 0.05,
+      "default": 0.35,
+      "randomize_range": [
+        0.2,
+        0.6
+      ],
+      "ceiling_note": "Keep <= 0.5 to preserve body-text contrast.",
+      "affects": [
+        "artifact_treatments.grain_overlay"
+      ]
+    },
+    {
+      "id": "grain_frequency",
+      "css_var": null,
+      "type": "number",
+      "range": [
+        0.3,
+        3
+      ],
+      "step": 0.1,
+      "default": 1.2,
+      "affects": [
+        "filter_library.riso_grain"
+      ],
+      "note": "NOT a CSS variable. SVG feTurbulence cannot read CSS custom properties, so GrainLayer reads this from context and rebuilds the data-URL.\n"
+    },
+    {
+      "id": "ink_bleed",
+      "css_var": "--riso-bleed",
+      "type": "number",
+      "range": [
+        0,
+        2
+      ],
+      "step": 0.1,
+      "unit": "px",
+      "default": 0.3,
+      "affects": [
+        "typography.modifiers.body_filter",
+        "components.HalftoneStrip",
+        "components.RisoImage"
+      ]
+    },
+    {
+      "id": "type_tremor",
+      "css_var": "--riso-tremor",
+      "type": "number",
+      "range": [
+        0,
+        3
+      ],
+      "step": 0.1,
+      "unit": "px",
+      "default": 0.5,
+      "affects": [
+        "components.DuotoneText"
+      ],
+      "note": "Display type only. Dramatic above 1.5px. Never applied to body copy."
+    },
+    {
+      "id": "ink_density",
+      "css_var": "--riso-ink-density",
+      "type": "derived",
+      "source": "press_presets.paper[active_paper].density",
+      "range": [
+        0.78,
+        0.98
+      ]
+    },
+    {
+      "id": "blend_mode",
+      "css_var": "--riso-blend",
+      "type": "derived",
+      "source": "press_presets.paper[active_paper].blend",
+      "options": [
+        "multiply",
+        "darken",
+        "color-burn"
+      ]
+    }
+  ],
+  "randomize_behavior": {
+    "action": "Reprint",
+    "premise": "A one-click re-roll of registration, halftone angle, and grain within taste-constrained ranges. This is a Riso-appropriate affordance — the aesthetic celebrates variation. Other systems would reject it outright.\n",
+    "randomizes": [
+      "registration_offset_x",
+      "registration_offset_y",
+      "halftone_dot_size",
+      "halftone_angle",
+      "grain_amount"
+    ],
+    "never_randomizes": [
+      "active_paper",
+      "active_ink"
+    ],
+    "rationale": "Paper and ink are deliberate choices, not accidents."
+  },
+  "filter_library": [
+    {
+      "id": "riso_duotone_primary",
+      "description": "Linearly interpolates between ink-1 (shadows) and paper (highlights) along Rec.709 luminance. Applied to the base image layer.\n",
+      "computed": true,
+      "matrix_formula": "Let c1 = ink_1 as normalized RGB, p = paper as normalized RGB.\nLet d = p - c1  (per channel).\nRow R: [0.2126*d.r, 0.7152*d.r, 0.0722*d.r, 0, c1.r]\nRow G: [0.2126*d.g, 0.7152*d.g, 0.0722*d.g, 0, c1.g]\nRow B: [0.2126*d.b, 0.7152*d.b, 0.0722*d.b, 0, c1.b]\nRow A: [0, 0, 0, 1, 0]\ni.e. out = c1 + (paper - c1) * luminance\n",
+      "luminance": "Rec.709 — 0.2126 R + 0.7152 G + 0.0722 B",
+      "color_interpolation": "sRGB",
+      "id_scoping": "useId() with ':' replaced by '-' — per-provider, never global",
+      "svg_defs": "<!-- resolved for paper: cream (#F4EFE4), ink: classic (ink-1 #3255A4) -->\n<filter id=\"riso-duo-primary\" color-interpolation-filters=\"sRGB\">\n  <feColorMatrix type=\"matrix\" values=\"\n    0.1310 0.4406 0.0445 0 0.1961\n    0.1200 0.4036 0.0407 0 0.3333\n    0.0630 0.2119 0.0214 0 0.6431\n    0      0      0      1 0\"/>\n</filter>\n"
+    },
+    {
+      "id": "riso_duotone_ghost",
+      "description": "Flat ink-2 color with alpha driven by inverse luminance, so ink-2 \"prints\" only in shadow areas. Applied to a duplicate layer offset by the same registration variables as text. This is what turns a single-ink duotone into a two-ink riso.\n",
+      "computed": true,
+      "matrix_formula": "Let c2 = ink_2 as normalized RGB.\nRow R: [0, 0, 0, 0, c2.r]\nRow G: [0, 0, 0, 0, c2.g]\nRow B: [0, 0, 0, 0, c2.b]\nRow A: [-0.2126, -0.7152, -0.0722, 0, 1]   # alpha = 1 - luminance\n",
+      "color_interpolation": "sRGB",
+      "composite": "mix-blend-mode: multiply, applied on the container — not in the filter",
+      "caveat": "Alpha is derived from luminance ALONE, so fully transparent pixels (luminance 0) come out as solid ink-2. The filter is only safe on a fully opaque source, inside a container with overflow: hidden — otherwise the default filter region (-10%/120%) paints an ink-2 halo around the subject. RisoImage satisfies both conditions via object-fit: cover and an overflow-hidden wrapper; anything else applying this filter must too.\n",
+      "svg_defs": "<!-- resolved for ink: classic (ink-2 #FF48B0) -->\n<filter id=\"riso-duo-ghost\" color-interpolation-filters=\"sRGB\">\n  <feColorMatrix type=\"matrix\" values=\"\n     0       0       0       0 1.0000\n     0       0       0       0 0.2824\n     0       0       0       0 0.6902\n    -0.2126 -0.7152 -0.0722  0 1\"/>\n</filter>\n"
+    },
+    {
+      "id": "riso_grain",
+      "description": "Continuous fractal noise across the whole artifact, delivered as an inline SVG data-URL background at mix-blend-mode: overlay. NOT applied as an SVG filter to content — it is a separate top layer.\n",
+      "computed": true,
+      "parameters": {
+        "base_frequency": 1.2,
+        "num_octaves": 2,
+        "seed": 7,
+        "stitch_tiles": "stitch",
+        "tile_size": "220x220",
+        "alpha": 0.6,
+        "layer_opacity": 0.35,
+        "mix_blend_mode": "overlay",
+        "z_index": 100
+      },
+      "svg_defs": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"220\" height=\"220\">\n  <filter id=\"n\">\n    <feTurbulence type=\"fractalNoise\" baseFrequency=\"1.2\"\n                  numOctaves=\"2\" seed=\"7\" stitchTiles=\"stitch\"/>\n    <feColorMatrix values=\"0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0\"/>\n  </filter>\n  <rect width=\"220\" height=\"220\" filter=\"url(#n)\"/>\n</svg>\n"
+    }
+  ],
+  "css_pattern_library": [
+    {
+      "id": "riso_halftone",
+      "description": "Rotated radial-gradient dot field. The system's halftone, everywhere.",
+      "css": "background-image: radial-gradient(circle,\n  <ink> calc(35% - (var(--riso-ht-softness) * 15%)),\n  transparent calc(36% + (var(--riso-ht-softness) * 15%)));\nbackground-size: var(--riso-ht-size) var(--riso-ht-size);\ntransform: rotate(var(--riso-ht-angle));\nfilter: blur(var(--riso-bleed));\n",
+      "required_container": "position: absolute; inset: -50%  — oversize prevents rotation edge gaps",
+      "variant_image_overlay": "/* on RisoImage, at reduced opacity and tighter dot coverage */\nbackground-image: radial-gradient(circle,\n  rgba(0,0,0,0.38) calc(28% - (var(--riso-ht-softness) * 14%)),\n  transparent calc(30% + (var(--riso-ht-softness) * 14%)));\nbackground-size: var(--riso-ht-size) var(--riso-ht-size);\nmix-blend-mode: overlay;\nopacity: 0.45;\n"
+    }
+  ],
+  "artifact_treatments": [
+    {
+      "id": "page_background",
+      "layer": "bottom",
+      "type": "fill",
+      "fill": "ref:tokens.colors.page_bg",
+      "description": "Paper-tinted base substrate. All components composite onto this via var(--riso-blend)."
+    },
+    {
+      "id": "registration_offset",
+      "layer": "per_component",
+      "type": "transform",
+      "transform": "translate(var(--riso-off-x), var(--riso-off-y))",
+      "description": "Applied to ghost layers only (DuotoneText ghost span, RisoImage ghost img). Never to the primary layer, and never to interactive elements.\n",
+      "applies_to": [
+        "DuotoneText.ghost",
+        "RisoImage.ghost"
+      ]
+    },
+    {
+      "id": "grain_overlay",
+      "layer": "top",
+      "type": "css_overlay",
+      "filter_ref": "riso_grain",
+      "scope": "theme root only — exactly one layer per artifact",
+      "description": "One continuous noise field over the whole artifact. Per-component grain produces visible seams at component boundaries and compounds unnaturally where components overlap.\n"
+    }
+  ],
+  "components": {
+    "DuotoneText": {
+      "tier": "primitive",
+      "parts": [
+        "primary-layer",
+        "ghost-layer"
+      ],
+      "contract": "Render a text element twice — once in the primary ink, once in the secondary ink offset by (--riso-off-x, --riso-off-y) with the paper's blend mode. Ghost layer is aria-hidden and pointer-events: none.\n",
+      "specs": {
+        "primary.color": "var(--riso-ink-1)",
+        "ghost.color": "var(--riso-ink-2)",
+        "ghost.transform": "translate(var(--riso-off-x), var(--riso-off-y))",
+        "ghost.mix-blend-mode": "var(--riso-blend)",
+        "ghost.opacity": "var(--riso-ink-density)",
+        "ghost.aria": "aria-hidden",
+        "ghost.pointer-events": "none",
+        "min.font-size": "16px"
+      },
+      "dos": [
+        "Use for masthead, brand wordmark, title moments, selected-state names",
+        "Wrap selected sidebar names so selection visually intensifies"
+      ],
+      "donts": [
+        "Apply to body copy or small labels — offset destroys legibility",
+        "Stack multiple duotones on the same line — creates mud"
+      ]
+    },
+    "HalftoneStrip": {
+      "tier": "primitive",
+      "parts": [
+        "clip-container",
+        "dot-field",
+        "blend-layer"
+      ],
+      "contract": "Render a horizontal band of halftone dots at the current dot-size and angle. Clip overflow to prevent edge artifacts from rotation. Blend with the paper through the active blend mode.\n",
+      "specs": {
+        "dot.source": "radial-gradient(circle, <ink>, transparent)",
+        "dot.size": "var(--riso-ht-size)",
+        "dot.softness": "var(--riso-ht-softness)",
+        "rotation": "var(--riso-ht-angle)",
+        "oversize": "inset: -50%",
+        "filter": "blur(var(--riso-bleed))",
+        "opacity": "var(--riso-ink-density)",
+        "typical.height": "10-14px"
+      },
+      "dos": [
+        "Use beneath mastheads, between sections, as sidebar accents",
+        "Pick ink-1 for structural strips, ink-2 for accent strips"
+      ],
+      "donts": [
+        "Use full halftone fills across large content areas — breaks readability",
+        "Rotate a strip element without an oversize inset clip — produces visible gaps"
+      ]
+    },
+    "GrainLayer": {
+      "tier": "primitive",
+      "parts": [
+        "svg-filter",
+        "blend-surface"
+      ],
+      "contract": "Render an inline SVG feTurbulence data-URL as an overlay-blend layer on top of all content. Always aria-hidden and pointer-events: none.\n",
+      "specs": {
+        "source": "inline SVG feTurbulence data-URL",
+        "baseFrequency": "system_state.grain_frequency",
+        "numOctaves": "2",
+        "stitchTiles": "stitch",
+        "mix-blend-mode": "overlay",
+        "opacity": "system_state.grain_amount",
+        "z-index": "100",
+        "aria": "aria-hidden"
+      },
+      "dos": [
+        "Apply once at the theme root, covering the full content area",
+        "Keep grain_amount <= 0.5 to preserve body-text contrast"
+      ],
+      "donts": [
+        "Apply multiple grain layers on top of each other — noise compounds unnaturally",
+        "Use grain on form inputs — destroys focus-indicator contrast"
+      ]
+    },
+    "RisoFilters": {
+      "tier": "primitive",
+      "parts": [
+        "duotone-filter",
+        "ghost-filter"
+      ],
+      "contract": "Render an invisible SVG with two <filter> defs: a primary duotone filter and a ghost-mask filter. IDs are per-provider (useId-scoped) so multiple Riso instances on a page do not collide.\n",
+      "specs": {
+        "primary.operation": "single feColorMatrix",
+        "primary.math": "lerp(ink-1, paper, luminance)",
+        "primary.luminance": "Rec.709 — 0.2126 R + 0.7152 G + 0.0722 B",
+        "ghost.operation": "single feColorMatrix",
+        "ghost.rgb": "constant ink-2 values",
+        "ghost.alpha": "1 - luminance",
+        "color-interpolation-filters": "sRGB",
+        "id.scoping": "useId() with ':' replaced by '-'",
+        "mount.point": "inside the theme provider element",
+        "aria": "aria-hidden, width=height=0"
+      },
+      "dos": [
+        "Recompute the two matrices whenever ink or paper changes",
+        "Use sRGB color-interpolation so filter math matches CSS expectations"
+      ],
+      "donts": [
+        "Share a global filter id across providers — causes collisions",
+        "Use linearRGB color-interpolation — produces muddy duotone output"
+      ]
+    },
+    "RisoImage": {
+      "tier": "primitive",
+      "parts": [
+        "primary-layer",
+        "ghost-layer",
+        "halftone-overlay",
+        "bleed-container"
+      ],
+      "contract": "Render a raster image three times stacked: primary duotone, ghost (offset, multiply), and a CSS halftone texture overlay. Container applies ink bleed and composites with paper.\n",
+      "specs": {
+        "primary.filter": "url(#<primaryId>)",
+        "primary.object-fit": "cover",
+        "ghost.filter": "url(#<ghostId>)",
+        "ghost.transform": "translate(var(--riso-off-x), var(--riso-off-y))",
+        "ghost.mix-blend-mode": "multiply",
+        "halftone.opacity": "0.45",
+        "halftone.mix-blend-mode": "overlay",
+        "container.filter": "blur(calc(var(--riso-bleed) * 0.5))",
+        "container.mix-blend-mode": "var(--riso-blend)",
+        "container.opacity": "var(--riso-ink-density)",
+        "aspect-ratio.default": "4/5"
+      },
+      "dos": [
+        "Wrap every photograph in RisoImage — unfiltered images look out of place",
+        "Treat the halftone overlay as always-on — it bridges CSS dots and the duotone image"
+      ],
+      "donts": [
+        "Nest RisoImage inside another RisoImage — filter stacking compounds unpredictably",
+        "Use RisoImage for iconography or logos — duotone interpolation blurs crisp edges"
+      ]
+    },
+    "InkTag": {
+      "tier": "primitive",
+      "parts": [
+        "label-text"
+      ],
+      "contract": "Render a small uppercase tracked monospace label in one of the two inks. Carries all metadata — timestamps, section labels, sender tags, counts. Always mix-blends with the paper.\n",
+      "specs": {
+        "font-family": "'JetBrains Mono', monospace",
+        "font-size": "8.5-10px",
+        "font-weight": "700",
+        "text-transform": "uppercase",
+        "letter-spacing": "0.14-0.16em",
+        "color.ink-1": "var(--riso-ink-1)",
+        "color.ink-2": "var(--riso-ink-2)",
+        "mix-blend-mode": "var(--riso-blend)",
+        "opacity": "var(--riso-ink-density)"
+      },
+      "dos": [
+        "Use ink-1 for structural metadata (issue numbers, section labels), ink-2 for status and action cues"
+      ],
+      "donts": [
+        "Use InkTag above 11px — use DuotoneText or plain text instead"
+      ]
+    },
+    "MessageColumn": {
+      "tier": "composite",
+      "parts": [
+        "sender-row",
+        "body",
+        "bleed-filter"
+      ],
+      "contract": "Render a message as a typographic column — no bubble, no container. Sender row uses InkTag; body uses Space Grotesk with a subtle bleed filter.\n",
+      "specs": {
+        "padding": "0",
+        "max-width.ai": "84%",
+        "max-width.user": "70%",
+        "align-self.user": "flex-end",
+        "sender.InkTag": "ink-1 (AI) / ink-2 (user)",
+        "body.font": "Space Grotesk, 14px, 500",
+        "body.color": "var(--riso-text)",
+        "body.line-height": "1.55",
+        "body.filter": "blur(calc(var(--riso-bleed) * 0.4))"
+      },
+      "dos": [
+        "Use ink-2 for the user sender tag — the accent ink signals 'you'",
+        "Keep bleed on body small (0.4x of the ink bleed)"
+      ],
+      "donts": [
+        "Wrap messages in bubbles, cards, or bordered containers",
+        "Apply full ink bleed (1x) to body — illegible above 0.8px"
+      ]
+    },
+    "PortraitCarousel": {
+      "tier": "composite",
+      "parts": [
+        "header",
+        "prev-btn",
+        "image-slot",
+        "next-btn",
+        "position-ticks"
+      ],
+      "contract": "Single-focal carousel of RisoImage items with prev/next controls and a tick strip indicating position. All press settings propagate to the displayed image. Navigation is keyboard-accessible.\n",
+      "specs": {
+        "padding": "20px 24px 22px",
+        "border-top": "1px solid rgba(0,0,0,0.15)",
+        "header.components": "InkTag kicker + No-index + credit",
+        "image.width": "260px",
+        "image.aspect-ratio": "4/5",
+        "ticks.size": "22x3 px bars",
+        "tick.active": "var(--riso-ink-2)",
+        "tick.inactive": "rgba(0,0,0,0.18)"
+      },
+      "dos": [
+        "Always display a position indicator — carousels without feedback feel broken",
+        "Credit each image visibly — riso inherits the zine convention of naming the source"
+      ],
+      "donts": [
+        "Auto-advance images on a timer — the user is in control of the press",
+        "Animate transitions with fades or slides — riso cuts, it does not dissolve"
+      ]
+    },
+    "PaperSelector": {
+      "tier": "composite",
+      "parts": [
+        "segmented-control",
+        "swatch",
+        "label"
+      ],
+      "contract": "Segmented control showing a swatch per option. Selecting an option bundles multiple parameter changes as ONE action.\n",
+      "specs": {
+        "paper.bundles": "{paper, blend, density, text_ink}",
+        "ink.bundles": "{ink_1, ink_2}",
+        "swatch.size": "6x6 px (ink) / 18x18 (paper detail)",
+        "columns": "2"
+      },
+      "dos": [
+        "Bundle related parameters under presets — a real press changes multiple things at once",
+        "Keep preset lists short (5-8) — more becomes a menu, not a choice"
+      ],
+      "donts": [
+        "Expose paper color without its matching blend mode — they are physically coupled",
+        "Allow free-form color pickers without presets — destroys the print-lineage feel"
+      ]
+    },
+    "TweakPanel": {
+      "tier": "composite",
+      "parts": [
+        "preset-groups",
+        "slider-groups",
+        "actions"
+      ],
+      "contract": "A settings surface with Paper + Ink preset selectors, Registration / Halftone / Grain / Ink / Type slider groups, and Reprint / Reset / Copy Tokens actions. In production this lives in a settings panel, not inline in the page.\n",
+      "specs": {
+        "slider.step.offset": "0.5px",
+        "slider.step.angle": "5deg",
+        "slider.step.dot-size": "1px",
+        "actions": "Reprint · Reset · Copy Tokens",
+        "copy.format": "JSON of resolved press settings"
+      },
+      "dos": [
+        "Constrain slider step values to enforce taste",
+        "Include a Reprint action that randomizes registration/halftone/grain within taste bounds",
+        "Emit JSON on Copy Tokens for downstream theme export"
+      ],
+      "donts": [
+        "Expose every internal CSS var as a slider — surface only the meaningful ones",
+        "Let sliders produce values outside the ranges defined in system_state"
+      ]
+    },
+    "list_item": {
+      "tier": "composite",
+      "composed_of": [
+        "InkTag",
+        "DuotoneText"
+      ],
+      "anatomy": [
+        {
+          "id": "index",
+          "position": "left",
+          "fixed_width": 32
+        },
+        {
+          "id": "title",
+          "position": "top_main",
+          "yields_to": [
+            "timestamp"
+          ],
+          "min_gap": 8
+        },
+        {
+          "id": "timestamp",
+          "position": "top_right",
+          "fixed_width": 40
+        },
+        {
+          "id": "preview",
+          "position": "middle_main",
+          "yields_to": [
+            "unread_count"
+          ],
+          "min_gap": 8
+        },
+        {
+          "id": "unread_count",
+          "position": "bottom_main",
+          "fixed_width": 60,
+          "optional": true
+        }
+      ],
+      "variants": [
+        {
+          "id": "default",
+          "svg": "components/list-item-default.svg",
+          "applies_filters": [
+            "riso_duotone_primary"
+          ],
+          "rendering_notes": "Index + timestamp in JetBrains Mono uppercase ink-1 (InkTag). Title in Space Grotesk at var(--riso-text), weight 600. Preview at 0.65 opacity. Unread count is a solid ink-2 chip with paper-colored numerals.\n",
+          "states": [
+            "default",
+            "hover",
+            "selected"
+          ]
+        },
+        {
+          "id": "selected",
+          "svg": "components/list-item-selected.svg",
+          "applies_filters": [
+            "riso_duotone_primary",
+            "riso_duotone_ghost"
+          ],
+          "selection_signal": "text_treatment",
+          "selection_signal_detail": {
+            "background": "rgba(0,0,0,0.03) — a paper darkening, not an ink fill",
+            "title_treatment": "wraps in DuotoneText (ghost layer appears)",
+            "weight_bump": {
+              "from": 600,
+              "to": 700
+            },
+            "focus_outline": "2px solid var(--riso-ink-2), offset 2px"
+          },
+          "rendering_notes": "Selection is signalled by the title gaining its duotone ghost layer and a barely-there paper darkening. NO solid ink background.\n",
+          "states": [
+            "selected"
+          ]
+        }
+      ],
+      "constraints": [
+        "Never use a solid ink block as a selection background — selection is a text treatment",
+        "Metadata (index, timestamp) is InkTag and never receives the duotone ghost",
+        "Preview text yields to unread_count per anatomy.preview.yields_to (8px min gap)"
+      ]
+    }
+  },
+  "patterns": {
+    "sidebar_main": {
+      "name": "Sidebar + Main",
+      "rules": {
+        "sidebar_width": "260px fixed",
+        "main_area": "fluid, fills remaining",
+        "sidebar_order": "Brand (duotone) → halftone strip → section label → items → press operator",
+        "vertical_divider": "1px solid rgba(0,0,0,0.15)",
+        "background_both": "var(--riso-paper)"
+      }
+    },
+    "message_flow": {
+      "name": "Message Flow",
+      "rules": {
+        "direction": "vertical stack, chronological",
+        "alignment": "AI → left (84%), user → right (70%)",
+        "gap": "18px between messages",
+        "entrance": "fadeSlideUp, 400ms ease-out, 80ms stagger",
+        "sender_row": "InkTag (ink-1 for AI, ink-2 for user) + timestamp",
+        "body_filter": "blur(calc(var(--riso-bleed) * 0.4))"
+      }
+    },
+    "active_selection": {
+      "name": "Active Selection",
+      "rules": {
+        "model": "single selection only",
+        "trigger": "click or Enter/Space",
+        "visual": "background rgba(0,0,0,0.03); name wraps in DuotoneText",
+        "transition": "instant — riso cuts, it does not dissolve",
+        "focus_outline": "2px solid var(--riso-ink-2) offset 2px"
+      }
+    },
+    "grain_halftone_composition": {
+      "name": "Grain + Halftone Composition",
+      "rules": {
+        "grain_scope": "theme root only — one layer",
+        "halftone_scope": "explicit strips and blocks, never full-page",
+        "rotation_policy": "halftone rotates; grain does not",
+        "blend_stacking": "paper → ink-1 → ink-2 (duotone) → halftone → grain"
+      }
+    },
+    "tweakability": {
+      "name": "Tweakability",
+      "rules": {
+        "scope": "global — one press, one configuration per session",
+        "persistence": "settings panel state; serializable to JSON",
+        "preset_bundles": "paper {color, blend, density, text_ink}; ink {ink_1, ink_2}",
+        "slider_constraints": "snap to taste-appropriate steps (0.5px, 5deg, 1px)",
+        "randomize_range": "offset ±3px, angle in {0,15,45,75}, grain 0.2-0.6"
+      }
+    },
+    "image_composition": {
+      "name": "Image Composition",
+      "rules": {
+        "wrapper": "RisoImage — required for every raster asset",
+        "layer_stack": "primary duotone → ghost (offset) → halftone overlay → container blend",
+        "filter_source": "SVG feColorMatrix defs, scoped per provider",
+        "registration": "ghost layer uses the same --riso-off-x / --riso-off-y as text",
+        "halftone": "same dot pitch + softness vars as decorative strips, at reduced opacity",
+        "bleed": "container filter: blur(calc(var(--riso-bleed) * 0.5))"
+      }
+    }
+  },
+  "voice": {
+    "premise": "Riso speaks the language of independent publishing — issues, editions, presses, filed, composed. The AI is \"The Press\" or \"The Studio\"; users are \"correspondents\" or \"operators.\" Copy should feel like a zine colophon, not a chatbot.\n",
+    "tone": {
+      "is": [
+        "craft-aware",
+        "warm",
+        "considered",
+        "press-lineage"
+      ],
+      "is_not": [
+        "chatbot",
+        "corporate"
+      ]
+    },
+    "vocabulary": {
+      "use": [
+        "compose",
+        "file",
+        "print",
+        "reprint",
+        "edition",
+        "issue",
+        "impression",
+        "colophon"
+      ],
+      "avoid": [
+        "send",
+        "submit",
+        "post",
+        "ping",
+        "message"
+      ],
+      "renames": {
+        "thread": "issue",
+        "message": "dispatch / correspondence",
+        "assistant": "The Press",
+        "user": "correspondent / operator"
+      }
+    },
+    "conventions": [
+      "Sentence case for UI chrome; UPPERCASE with 0.16em tracking for InkTag labels only",
+      "Numbers prefixed with № in metadata (№04, Issue №01 / 05)",
+      "Use · (middle dot) and — (em dash) as separators in label rows",
+      "No exclamation points in any copy",
+      "No title-case headlines — sentence case matches the editorial register",
+      "No emoji anywhere — Riso is visual, not iconographic"
+    ],
+    "state_text": [
+      {
+        "state": "input placeholder",
+        "copy": "Compose your reply…",
+        "face": "Space Grotesk italic"
+      },
+      {
+        "state": "sidebar search",
+        "copy": "Search back issues…",
+        "face": "Space Grotesk italic"
+      },
+      {
+        "state": "empty list",
+        "copy": "No issues filed yet.",
+        "face": "Space Grotesk"
+      },
+      {
+        "state": "loading",
+        "copy": "Printing.",
+        "face": "InkTag"
+      },
+      {
+        "state": "success",
+        "copy": "Filed.",
+        "face": "InkTag"
+      },
+      {
+        "state": "error",
+        "copy": "Could not file. Misregistered.",
+        "face": "Space Grotesk"
+      }
+    ],
+    "symbols": [
+      {
+        "symbol": "№",
+        "use": "issue/edition prefix"
+      },
+      {
+        "symbol": "·",
+        "use": "middle dot separator"
+      },
+      {
+        "symbol": "—",
+        "use": "em dash / range"
+      },
+      {
+        "symbol": "→",
+        "use": "forward action (File Reply →)"
+      },
+      {
+        "symbol": "●",
+        "use": "status indicator"
+      },
+      {
+        "symbol": "↻",
+        "use": "reprint/randomize"
+      },
+      {
+        "symbol": "I.",
+        "use": "section numeral"
+      },
+      {
+        "symbol": "/",
+        "use": "pair separator (01 / 05)"
+      },
+      {
+        "symbol": "…",
+        "use": "continuation only"
+      }
+    ]
+  },
+  "accessibility": {
+    "contrast": [
+      {
+        "pair": "Text ink on Cream paper",
+        "ratio": "9.6:1",
+        "level": "AAA"
+      },
+      {
+        "pair": "Ink-1 (Blue) on Cream",
+        "ratio": "7.2:1",
+        "level": "AAA"
+      },
+      {
+        "pair": "Ink-2 (Pink) on Cream",
+        "ratio": "3.4:1",
+        "level": "AA (large only)"
+      },
+      {
+        "pair": "Duotone composite on Cream",
+        "ratio": "~5.8:1",
+        "level": "AA"
+      },
+      {
+        "pair": "Body text through 0.35 grain",
+        "ratio": "reduced ~12%",
+        "level": "verify per preset"
+      }
+    ],
+    "requirements": [
+      "Ink-2 is large-text-only on cream. Never use it for body copy.",
+      "Contrast must be re-measured per paper preset — density varies 0.78-0.98.",
+      "Ghost layers are aria-hidden; grain and halftone are aria-hidden + pointer-events: none.",
+      "Focus outline is 2px solid ink-2 at 2px offset — never removed, never grain-covered."
+    ]
+  },
+  "rulebook": [
+    {
+      "id": "riso-two-inks-only",
+      "rule": "Exactly two inks are active per artifact, drawn from one press_presets.ink pair. A third color must come from blend-mode composition, not a new ink.",
+      "rationale": "Riso printing physically uses two drums. The constraint is the system's structural truth.",
+      "severity": "required",
+      "check_method": "semantic",
+      "check_scope": "artifact",
+      "check_implementation": "Render the artifact and verify no more than 2 distinct ink hues appear.\nPaper color and paper-derived text ink do not count as inks.\n"
+    },
+    {
+      "id": "riso-paper-is-the-neutral",
+      "rule": "Grays, neutrals, and backgrounds come from the paper color. No gray fills, no introduced tints.",
+      "rationale": "Paper is a substrate, not a default. A gray fill breaks the two-ink model.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "both",
+      "check_implementation": "Verify no fill values are neutral grays outside the paper palette.\nPermitted paper-derived darkenings: rgba(0,0,0,0.02-0.03) hairlines and\nselection washes.\n"
+    },
+    {
+      "id": "riso-paper-preset-atomic",
+      "rule": "Paper is selected as a whole preset — color, blend mode, density, and text ink change together.",
+      "rationale": "Real paper stocks absorb ink differently. Unbundling the four values produces combinations no press can print.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "artifact",
+      "check_implementation": "Verify the resolved {page_bg, blend, density, text_primary} tuple matches\none row of press_presets.paper exactly.\n"
+    },
+    {
+      "id": "riso-no-shadows",
+      "rule": "No box-shadow, no filter: drop-shadow, no text-shadow — ever. Depth is ink layering.",
+      "rationale": "Shadows are a screen-light vocabulary; Riso is a print-ink vocabulary.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "both",
+      "check_implementation": "Verify no box-shadow / text-shadow declarations and no feDropShadow\nelements exist in the rendered output.\n"
+    },
+    {
+      "id": "riso-grain-once-at-root",
+      "rule": "Exactly one grain layer, applied at the theme root above all content (z-index 100, mix-blend-mode: overlay).",
+      "rationale": "Grain unifies the artifact as one print. Per-component grain seams at boundaries and compounds where components overlap.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "artifact",
+      "check_implementation": "Verify exactly one element carries the grain background, that it is a\ndescendant of the theme root, and that no component subtree contains a\nsecond grain layer.\n"
+    },
+    {
+      "id": "riso-duotone-display-only",
+      "rule": "DuotoneText applies only to type at 16px and above. Body copy, preview text, and labels render plain.",
+      "rationale": "The ghost offset is 2px; below 16px it reads as blur, not registration.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "component",
+      "check_implementation": "Verify every element with a ghost layer has computed font-size >= 16px.\n"
+    },
+    {
+      "id": "riso-metadata-is-inktag",
+      "rule": "All metadata — timestamps, indices, section labels, sender tags, counts — uses JetBrains Mono uppercase at 0.14-0.16em tracking, 11px or below, and never receives a duotone ghost.",
+      "rationale": "Metadata in Riso is the colophon layer — it is about the print, not part of it.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "component",
+      "applies_when": "element carries metadata content",
+      "check_implementation": "Verify metadata elements use the metadata typeface family, are uppercase,\nare <= 11px, and have no ghost sibling.\n"
+    },
+    {
+      "id": "riso-halftone-is-gradient",
+      "rule": "Halftone is a rotated radial-gradient dot field inside an oversized (inset: -50%) clipping container — not noise, not a texture image.",
+      "rationale": "feTurbulence produces noise, not dots. Rotating without an oversize inset leaves visible gaps at the strip edges.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "component",
+      "check_implementation": "Verify halftone elements use radial-gradient backgrounds sized by\n--riso-ht-size and sit inside a container with inset: -50% and\noverflow: hidden.\n"
+    },
+    {
+      "id": "riso-halftone-not-full-page",
+      "rule": "Halftone appears as explicit strips and blocks. It never fills a whole content area.",
+      "rationale": "A full-page dot field destroys body-text readability.",
+      "severity": "required",
+      "check_method": "semantic",
+      "check_scope": "artifact"
+    },
+    {
+      "id": "riso-registration-not-on-controls",
+      "rule": "Registration offset applies to ghost layers of display type and images only — never to icons, buttons, inputs, or other interactive elements.",
+      "rationale": "Misregistered affordances read as broken, not as printed.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "both",
+      "check_implementation": "Verify no interactive element (button, input, a, [role=button]) or its\nchildren carry the registration transform.\n"
+    },
+    {
+      "id": "riso-selection-is-text-treatment",
+      "rule": "Selection is signalled by the title gaining its duotone ghost plus a paper darkening at most rgba(0,0,0,0.03). Never a solid ink background.",
+      "rationale": "A solid ink fill would spend a whole drum on a state change.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "component",
+      "check_implementation": "Verify selected variants have no ink-colored background fill and do carry\na ghost layer on the title.\n"
+    },
+    {
+      "id": "riso-srgb-filters",
+      "rule": "All feColorMatrix filters declare color-interpolation-filters=\"sRGB\".",
+      "rationale": "linearRGB produces oversaturated, unprintable duotone at the same matrix values.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "both",
+      "check_implementation": "Verify every <filter> in the output carries color-interpolation-filters=\"sRGB\".\n"
+    },
+    {
+      "id": "riso-scoped-filter-ids",
+      "rule": "Filter ids are scoped per theme instance, never global constants.",
+      "rationale": "Two Riso surfaces on one page with a shared id collide — the second silently reuses the first's inks.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "artifact"
+    },
+    {
+      "id": "riso-images-wrapped",
+      "rule": "Every raster image passes through RisoImage (primary duotone + offset ghost + halftone overlay). Icons and logos do not.",
+      "rationale": "An unfiltered photograph is the single most system-breaking element you can place in a Riso surface. Duotone interpolation, conversely, destroys crisp icon edges.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "component"
+    },
+    {
+      "id": "riso-ink2-not-body",
+      "rule": "Ink-2 is never used for body copy. On cream it measures 3.4:1 — large text only.",
+      "rationale": "Fluorescent inks are low-contrast by nature. This is a legibility floor, not a preference.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "component"
+    },
+    {
+      "id": "riso-bleed-ceiling",
+      "rule": "Ink bleed on body copy is 0.4x the global bleed value and must not exceed 0.8px effective blur.",
+      "rationale": "Above 0.8px, body text stops being readable and starts being texture.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "component"
+    },
+    {
+      "id": "riso-no-emoji",
+      "rule": "No emoji in any copy, label, or avatar slot. Use № indices and the symbol vocabulary.",
+      "rationale": "Riso is visual, not iconographic. An emoji is a full-color raster in a two-ink system.",
+      "severity": "required",
+      "check_method": "mechanical",
+      "check_scope": "both"
+    },
+    {
+      "id": "riso-print-vocabulary",
+      "rule": "UI copy uses printing verbs (compose, file, print, reprint, edition, issue) rather than chat-app verbs (send, submit, post, ping).",
+      "rationale": "The vocabulary is the other half of the aesthetic. 'Send' in a riso surface is a costume, not a system.",
+      "severity": "recommended",
+      "check_method": "semantic",
+      "check_scope": "artifact"
+    },
+    {
+      "id": "riso-sentence-case",
+      "rule": "Headlines and UI chrome are sentence case. Uppercase is reserved for InkTag.",
+      "rationale": "Title case reads as marketing; sentence case matches the editorial register.",
+      "severity": "recommended",
+      "check_method": "mechanical",
+      "check_scope": "both"
+    },
+    {
+      "id": "riso-no-dissolve",
+      "rule": "State transitions cut. No fades, no slides, no crossfades — except the one-time fadeSlideUp entrance for message flow.",
+      "rationale": "Riso cuts, it does not dissolve. A press has no transition state.",
+      "severity": "recommended",
+      "check_method": "mechanical",
+      "check_scope": "artifact"
+    }
+  ],
+  "grammar_extensions": {
+    "family": "print_texture",
+    "per_system_signature": {
+      "duotone": {
+        "ghost_layer": {
+          "enabled": true,
+          "alpha_curve": "1 - luminance",
+          "offset": "system_state.registration_offset_x / _y — shared with images",
+          "blend": "var(--riso-blend)",
+          "opacity": "var(--riso-ink-density)",
+          "min_font_size": 16
+        }
+      },
+      "halftone": {
+        "available_as_component": true,
+        "implementation": "css_radial_gradient",
+        "density_responds_to_paper": true
+      },
+      "print_inheritance": {
+        "enabled": true,
+        "role": "All components inherit the active paper, inks, halftone params, grain, and bleed from the theme root's CSS custom properties. No component overrides these — a component that hardcodes an ink is a bug.\n"
+      }
+    }
+  }
+}
+</script>
+
+<svg aria-hidden="true" width="0" height="0" style="position:absolute">
+<defs>
+<filter id="riso-duo-primary--cream--classic" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1617 0.5441 0.0549 0 0.1961  0.1284 0.4319 0.0436 0 0.3333  0.0534 0.1795 0.0181 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--cream--electric" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0092 -0.0309 -0.0031 0 1.0000  0.1392 0.4684 0.0473 0 0.2824  0.0434 0.1458 0.0147 0 0.6902  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--cream--sunset" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0092 -0.0309 -0.0031 0 1.0000  0.1142 0.3842 0.0388 0 0.4000  0.1117 0.3758 0.0379 0 0.3686  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--cream--forest" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.2034 0.6843 0.0691 0 0.0000  0.0900 0.3029 0.0306 0 0.5137  0.0709 0.2384 0.0241 0 0.5608  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--cream--spritz" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1617 0.5441 0.0549 0 0.1961  0.1284 0.4319 0.0436 0 0.3333  0.0534 0.1795 0.0181 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--cream--ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1818 0.6114 0.0617 0 0.1020  0.1776 0.5974 0.0603 0 0.1020  0.1684 0.5666 0.0572 0 0.1020  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--kraft--classic" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1351 0.4544 0.0459 0 0.1961  0.0875 0.2945 0.0297 0 0.3333  -0.0133 -0.0449 -0.0045 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--kraft--electric" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0359 -0.1206 -0.0122 0 1.0000  0.0984 0.3310 0.0334 0 0.2824  -0.0233 -0.0785 -0.0079 0 0.6902  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--kraft--sunset" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0359 -0.1206 -0.0122 0 1.0000  0.0734 0.2468 0.0249 0 0.4000  0.0450 0.1515 0.0153 0 0.3686  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--kraft--forest" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1767 0.5946 0.0600 0 0.0000  0.0492 0.1655 0.0167 0 0.5137  0.0042 0.0140 0.0014 0 0.5608  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--kraft--spritz" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1351 0.4544 0.0459 0 0.1961  0.0875 0.2945 0.0297 0 0.3333  -0.0133 -0.0449 -0.0045 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--kraft--ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1551 0.5217 0.0527 0 0.1020  0.1367 0.4600 0.0464 0 0.1020  0.1017 0.3422 0.0345 0 0.1020  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--white--classic" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1692 0.5694 0.0575 0 0.1961  0.1392 0.4684 0.0473 0 0.3333  0.0700 0.2356 0.0238 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--white--electric" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0017 -0.0056 -0.0006 0 1.0000  0.1501 0.5048 0.0510 0 0.2824  0.0600 0.2019 0.0204 0 0.6902  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--white--sunset" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0017 -0.0056 -0.0006 0 1.0000  0.1251 0.4207 0.0425 0 0.4000  0.1284 0.4319 0.0436 0 0.3686  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--white--forest" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.2109 0.7096 0.0716 0 0.0000  0.1009 0.3394 0.0343 0 0.5137  0.0875 0.2945 0.0297 0 0.5608  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--white--spritz" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1692 0.5694 0.0575 0 0.1961  0.1392 0.4684 0.0473 0 0.3333  0.0700 0.2356 0.0238 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--white--ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1893 0.6367 0.0643 0 0.1020  0.1884 0.6339 0.0640 0 0.1020  0.1851 0.6226 0.0629 0 0.1020  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--gray--classic" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1176 0.3955 0.0399 0 0.1961  0.0867 0.2917 0.0294 0 0.3333  0.0142 0.0477 0.0048 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--gray--electric" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0534 -0.1795 -0.0181 0 1.0000  0.0975 0.3282 0.0331 0 0.2824  0.0042 0.0140 0.0014 0 0.6902  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--gray--sunset" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0534 -0.1795 -0.0181 0 1.0000  0.0725 0.2440 0.0246 0 0.4000  0.0725 0.2440 0.0246 0 0.3686  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--gray--forest" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1592 0.5357 0.0541 0 0.0000  0.0484 0.1627 0.0164 0 0.5137  0.0317 0.1066 0.0108 0 0.5608  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--gray--spritz" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1176 0.3955 0.0399 0 0.1961  0.0867 0.2917 0.0294 0 0.3333  0.0142 0.0477 0.0048 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--gray--ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1376 0.4628 0.0467 0 0.1020  0.1359 0.4572 0.0462 0 0.1020  0.1292 0.4347 0.0439 0 0.1020  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--newsprint--classic" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1484 0.4992 0.0504 0 0.1961  0.1126 0.3786 0.0382 0 0.3333  0.0308 0.1038 0.0105 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--newsprint--electric" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0225 -0.0757 -0.0076 0 1.0000  0.1234 0.4151 0.0419 0 0.2824  0.0208 0.0701 0.0071 0 0.6902  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--newsprint--sunset" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-0.0225 -0.0757 -0.0076 0 1.0000  0.0984 0.3310 0.0334 0 0.4000  0.0892 0.3001 0.0303 0 0.3686  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--newsprint--forest" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1901 0.6395 0.0646 0 0.0000  0.0742 0.2496 0.0252 0 0.5137  0.0484 0.1627 0.0164 0 0.5608  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--newsprint--spritz" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1484 0.4992 0.0504 0 0.1961  0.1126 0.3786 0.0382 0 0.3333  0.0308 0.1038 0.0105 0 0.6431  0 0 0 1 0"/></filter>
+<filter id="riso-duo-primary--newsprint--ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.1684 0.5666 0.0572 0 0.1020  0.1617 0.5441 0.0549 0 0.1020  0.1459 0.4908 0.0495 0 0.1020  0 0 0 1 0"/></filter>
+<filter id="riso-duo-ghost--classic" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1.0000  0 0 0 0 0.2824  0 0 0 0 0.6902  -0.2126 -0.7152 -0.0722 0 1"/></filter>
+<filter id="riso-duo-ghost--electric" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0.0000  0 0 0 0 0.6627  0 0 0 0 0.3608  -0.2126 -0.7152 -0.0722 0 1"/></filter>
+<filter id="riso-duo-ghost--sunset" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0.9098  0 0 0 0 0.7804  0 0 0 0 0.0000  -0.2126 -0.7152 -0.0722 0 1"/></filter>
+<filter id="riso-duo-ghost--forest" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0.0000  0 0 0 0 0.6627  0 0 0 0 0.3608  -0.2126 -0.7152 -0.0722 0 1"/></filter>
+<filter id="riso-duo-ghost--spritz" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 0.9098  0 0 0 0 0.7804  0 0 0 0 0.0000  -0.2126 -0.7152 -0.0722 0 1"/></filter>
+<filter id="riso-duo-ghost--ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0 0 0 0 1.0000  0 0 0 0 0.2824  0 0 0 0 0.6902  -0.2126 -0.7152 -0.0722 0 1"/></filter>
+</defs></svg>
+
+
+<div class="press">
+  <div class="grp"><span>Paper</span><button type="button" data-set="paper" data-val="cream" aria-pressed="true"><span class="dot" style="background:#F4EFE4"></span>Cream</button><button type="button" data-set="paper" data-val="kraft" aria-pressed="false"><span class="dot" style="background:#D4BE94"></span>Kraft</button><button type="button" data-set="paper" data-val="white" aria-pressed="false"><span class="dot" style="background:#FDFCF8"></span>White</button><button type="button" data-set="paper" data-val="gray" aria-pressed="false"><span class="dot" style="background:#BFBDB5"></span>Gray</button><button type="button" data-set="paper" data-val="newsprint" aria-pressed="false"><span class="dot" style="background:#E4DCC9"></span>Newsprint</button></div>
+  <div class="grp"><span>Ink</span><button type="button" data-set="ink" data-val="classic" aria-pressed="true"><span class="dot" style="background:#3255A4"></span><span class="dot" style="background:#FF48B0"></span>Blue + Pink</button><button type="button" data-set="ink" data-val="electric" aria-pressed="false"><span class="dot" style="background:#FF48B0"></span><span class="dot" style="background:#00A95C"></span>Pink + Green</button><button type="button" data-set="ink" data-val="sunset" aria-pressed="false"><span class="dot" style="background:#FF665E"></span><span class="dot" style="background:#E8C700"></span>Red + Yellow</button><button type="button" data-set="ink" data-val="forest" aria-pressed="false"><span class="dot" style="background:#00838F"></span><span class="dot" style="background:#00A95C"></span>Teal + Green</button><button type="button" data-set="ink" data-val="spritz" aria-pressed="false"><span class="dot" style="background:#3255A4"></span><span class="dot" style="background:#E8C700"></span>Blue + Yellow</button><button type="button" data-set="ink" data-val="ink" aria-pressed="false"><span class="dot" style="background:#1A1A1A"></span><span class="dot" style="background:#FF48B0"></span>Black + Pink</button></div>
+</div>
+
+
+<div class="wrap">
+
+<header>
+  <div class="kicker">print_texture · spec 0.2 · system v3.0.0</div>
+  <h1>Riso</h1>
+  <p class="lede">Duotone Print + Tweakable Press — A duotone-print aesthetic inspired by Risograph duplicators — the two-drum stencil presses beloved in zines, art books, and independent publishing. Color comes from two spot inks printed on a tinted paper stock. Registration is slightly off. Dots and grain are visible. Accidents are celebrated.</p>
+</header>
+
+<div class="agent-note">
+  <h4>If you are an agent reading this file</h4>
+  <ol>
+    <li>The complete spec is JSON in <code>&lt;script type="application/json" id="riso-spec"&gt;</code>.
+        Parse that; do not scrape the markup below for values.</li>
+    <li>The markup below is the <em>visual</em> ground truth for the same data — it renders the real
+        duotone / halftone / grain pipeline. Screenshot it to verify your own output against it.</li>
+    <li>Riso is <strong>parametric</strong>. There is no single palette: a surface resolves from one
+        <code>press_presets.paper</code> row and one <code>press_presets.ink</code> row. Pick a pair,
+        then hold it for the whole artifact.</li>
+    <li>The rulebook is the highest-value section. Most of it is <em>negative</em> constraints —
+        the things that look reasonable and are wrong here. Read it before generating.</li>
+    <li>Source of truth is <code>systems/riso/spec.yaml</code>, itself reconciled against
+        <code>../../apps/showcase/src/systems/design-system-riso.jsx</code>. This page is generated; never hand-edit it.</li>
+  </ol>
+</div>
+
+
+<h2>The surface</h2>
+<p>Every value in this specimen resolves from the two presets selected above. Nothing is hardcoded —
+switch paper or ink and the inks, blend mode, density, filters, and text color all re-press together.</p>
+
+<div class="specimen riso" data-riso>
+  <div class="shell">
+    <div class="sb">
+      <div style="padding:18px 16px 8px">
+        <span class="duo" style="font-size:28px;font-weight:700;letter-spacing:-0.04em"><span class="f">RISO</span><span class="g" aria-hidden="true">RISO</span></span>
+        <div style="margin-top:6px"><span class="tag i2">Edition №04 · Vol. I</span></div>
+      </div>
+      <div class="ht i1" style="height:10px;margin:6px 16px 8px"><i></i></div>
+      <div style="padding:6px 16px 4px"><span class="tag">Recent Issues</span></div>
+      <div class="li sel"><div class="row"><span class="tag sm">№01 · 2m</span><span class="unread">2</span></div><div class="nm"><span class="duo" style="font-size:14px;font-weight:700;letter-spacing:-0.01em"><span class="f">Tokyo Trip</span><span class="g" aria-hidden="true">Tokyo Trip</span></span></div><div class="pv">Want me to build a day-by-day itinerary?</div></div><div class="li"><div class="row"><span class="tag sm">№02 · 1h</span></div><div class="nm"><span>Recipe Ideas</span></div><div class="pv">Here are 5 ramen variations you&#x27;ll love…</div></div><div class="li"><div class="row"><span class="tag sm">№03 · 3h</span><span class="unread">1</span></div><div class="nm"><span>Book Club</span></div><div class="pv">I&#x27;d recommend starting with Murakami&#x27;s…</div></div><div class="li"><div class="row"><span class="tag sm">№04 · 1d</span></div><div class="nm"><span>Fitness Plan</span></div><div class="pv">Your 4-week progressive routine is ready.</div></div>
+      <div style="padding:12px 16px;border-top:1px solid var(--riso-text)">
+        <span class="tag sm">Press Operator</span>
+        <div style="font-size:13px;font-weight:600;margin-top:2px">T. Harris</div>
+      </div>
+    </div>
+    <div class="ca">
+      <div style="padding:18px 24px 10px;border-bottom:1px solid var(--riso-text)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span class="tag i2">Issue №04 · Filed 14:23</span><span class="tag">● Active</span>
+        </div>
+        <div style="margin-top:6px"><span class="duo" style="font-size:30px;font-weight:700;letter-spacing:-0.03em"><span class="f">Tokyo Trip</span><span class="g" aria-hidden="true">Tokyo Trip</span></span></div>
+        <div style="font-size:12px;opacity:0.75;margin-top:6px;font-style:italic">
+          A printed correspondence on temples, ramen, and the after-hours food scene in Shibuya.</div>
+      </div>
+      <div class="ht i2" style="height:12px;"><i></i></div>
+      <div style="padding:18px 24px;display:flex;flex-direction:column">
+        <div class="msg ai"><div class="hd"><span class="tag">The Press</span><span class="tag sm">14:23</span></div><div class="tx body-ink">Absolutely. Tokyo is incredible. Are you looking for a culture-focused trip, a food adventure, or a mix of everything?</div></div><div class="msg user"><div class="hd"><span class="tag i2">Reply · T. Harris</span><span class="tag sm">14:24</span></div><div class="tx body-ink">Definitely a mix — temples in the morning, ramen at night.</div></div>
+        <div style="margin-bottom:8px"><span class="tag i2">Sections — 04</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);
+                    border-top:1px solid var(--riso-text);border-left:1px solid var(--riso-text)">
+          <div style="padding:10px 12px;border-right:1px solid var(--riso-text);border-bottom:1px solid var(--riso-text)"><span class="tag">I.</span><div style="font-size:13px;font-weight:600;letter-spacing:-0.01em;margin-top:3px">Temples</div></div><div style="padding:10px 12px;border-right:1px solid var(--riso-text);border-bottom:1px solid var(--riso-text)"><span class="tag">II.</span><div style="font-size:13px;font-weight:600;letter-spacing:-0.01em;margin-top:3px">Ramen</div></div><div style="padding:10px 12px;border-right:1px solid var(--riso-text);border-bottom:1px solid var(--riso-text)"><span class="tag">III.</span><div style="font-size:13px;font-weight:600;letter-spacing:-0.01em;margin-top:3px">Culture</div></div><div style="padding:10px 12px;border-right:1px solid var(--riso-text);border-bottom:1px solid var(--riso-text)"><span class="tag">IV.</span><div style="font-size:13px;font-weight:600;letter-spacing:-0.01em;margin-top:3px">Parks</div></div>
+        </div>
+      </div>
+      <div style="margin-top:auto;padding:14px 24px;border-top:1px solid var(--riso-text);background:rgba(0,0,0,0.02)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+          <span style="font-size:14px;font-style:italic;opacity:0.6">Compose your reply…</span>
+          <span class="tag i2">File Reply →</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="grain"></div>
+</div>
+
+
+<h2>Layer order</h2>
+<p>Riso has no elevation system. Depth is ink order. Read the diagram bottom-up — paper is printed
+first, grain last, and grain is applied <em>once</em>, over the composed artifact.</p>
+<div class="layers"><div class="ly"><span class="z">z 0</span><span class="nm">paper</span><span>base paper stock color — always bottom</span></div><div class="ly"><span class="z">z 1</span><span class="nm">ink_1</span><span>primary structural ink (labels, rules)</span></div><div class="ly"><span class="z">z 2</span><span class="nm">ink_2</span><span>accent ink — offset for duotone ghost</span></div><div class="ly"><span class="z">z 100</span><span class="nm">grain</span><span>overlay-blend noise, always top</span></div></div>
+
+<h4>Artifact treatments</h4>
+<div class="scroll"><table>
+  <thead><tr><th>id</th><th>layer</th><th>applies</th></tr></thead>
+  <tbody><tr><td class="k">page_background</td><td><strong>bottom</strong></td><td>Paper-tinted base substrate. All components composite onto this via var(--riso-blend).</td></tr><tr><td class="k">registration_offset</td><td><strong>per_component</strong></td><td>Applied to ghost layers only (DuotoneText ghost span, RisoImage ghost img). Never to the primary layer, and never to interactive elements.</td></tr><tr><td class="k">grain_overlay</td><td><strong>top</strong></td><td>One continuous noise field over the whole artifact. Per-component grain produces visible seams at component boundaries and compounds unnaturally where components overlap.</td></tr></tbody>
+</table></div>
+
+
+<h2>Press presets</h2>
+<p>Both axes are <strong>atomic</strong>. Selecting a paper changes four values at once — color, blend
+mode, ink density, and text ink — because that is what physically happens when you change stock.
+Unbundling them produces combinations no press can print.</p>
+
+<h4>Paper stocks</h4>
+<div class="scroll"><table>
+  <thead><tr><th></th><th>stock</th><th>color</th><th>blend</th><th>density</th><th>text ink</th><th>character</th></tr></thead>
+  <tbody><tr><td><span class="dot" style="display:inline-block;width:22px;height:22px;background:#F4EFE4;border:1px solid rgba(255,255,255,0.2)"></span></td><td><strong>Cream</strong></td><td class="k">#F4EFE4</td><td class="k">multiply</td><td class="k">0.92×</td><td class="k">#1A1614</td><td>Default. Warm, forgiving. The benchmark.</td></tr><tr><td><span class="dot" style="display:inline-block;width:22px;height:22px;background:#D4BE94;border:1px solid rgba(255,255,255,0.2)"></span></td><td><strong>Kraft</strong></td><td class="k">#D4BE94</td><td class="k">multiply</td><td class="k">0.85×</td><td class="k">#2A1F12</td><td>Earthier. Colors shift toward muddy.</td></tr><tr><td><span class="dot" style="display:inline-block;width:22px;height:22px;background:#FDFCF8;border:1px solid rgba(255,255,255,0.2)"></span></td><td><strong>White</strong></td><td class="k">#FDFCF8</td><td class="k">multiply</td><td class="k">0.98×</td><td class="k">#151515</td><td>Clinical. Maximum ink saturation.</td></tr><tr><td><span class="dot" style="display:inline-block;width:22px;height:22px;background:#BFBDB5;border:1px solid rgba(255,255,255,0.2)"></span></td><td><strong>Gray</strong></td><td class="k">#BFBDB5</td><td class="k">darken</td><td class="k">0.82×</td><td class="k">#141414</td><td>Industrial zine feel. Ink darkens, not multiplies.</td></tr><tr><td><span class="dot" style="display:inline-block;width:22px;height:22px;background:#E4DCC9;border:1px solid rgba(255,255,255,0.2)"></span></td><td><strong>Newsprint</strong></td><td class="k">#E4DCC9</td><td class="k">color-burn</td><td class="k">0.78×</td><td class="k">#2B2620</td><td>Bleached, grainy. The most &#x27;printed&#x27;-feeling.</td></tr></tbody>
+</table></div>
+
+<h4>Ink drums</h4>
+<div class="scroll"><table>
+  <thead><tr><th></th><th>pair</th><th>ink-1</th><th>ink-2</th><th>character</th></tr></thead>
+  <tbody><tr><td><span style="display:inline-flex;gap:2px"><span style="width:22px;height:22px;background:#3255A4;border:1px solid rgba(255,255,255,0.15)"></span><span style="width:22px;height:22px;background:#FF48B0;border:1px solid rgba(255,255,255,0.15)"></span></span></td><td><strong>Blue + Pink</strong></td><td class="k">#3255A4</td><td class="k">#FF48B0</td><td>Federal Blue + Fluorescent Pink — the canonical riso pair</td></tr><tr><td><span style="display:inline-flex;gap:2px"><span style="width:22px;height:22px;background:#FF48B0;border:1px solid rgba(255,255,255,0.15)"></span><span style="width:22px;height:22px;background:#00A95C;border:1px solid rgba(255,255,255,0.15)"></span></span></td><td><strong>Pink + Green</strong></td><td class="k">#FF48B0</td><td class="k">#00A95C</td><td>Highest-vibration pair; use sparingly</td></tr><tr><td><span style="display:inline-flex;gap:2px"><span style="width:22px;height:22px;background:#FF665E;border:1px solid rgba(255,255,255,0.15)"></span><span style="width:22px;height:22px;background:#E8C700;border:1px solid rgba(255,255,255,0.15)"></span></span></td><td><strong>Red + Yellow</strong></td><td class="k">#FF665E</td><td class="k">#E8C700</td><td>Warm, low-contrast; weakest for body text</td></tr><tr><td><span style="display:inline-flex;gap:2px"><span style="width:22px;height:22px;background:#00838F;border:1px solid rgba(255,255,255,0.15)"></span><span style="width:22px;height:22px;background:#00A95C;border:1px solid rgba(255,255,255,0.15)"></span></span></td><td><strong>Teal + Green</strong></td><td class="k">#00838F</td><td class="k">#00A95C</td><td>Organic, closest-hue pair; duotone reads subtly</td></tr><tr><td><span style="display:inline-flex;gap:2px"><span style="width:22px;height:22px;background:#3255A4;border:1px solid rgba(255,255,255,0.15)"></span><span style="width:22px;height:22px;background:#E8C700;border:1px solid rgba(255,255,255,0.15)"></span></span></td><td><strong>Blue + Yellow</strong></td><td class="k">#3255A4</td><td class="k">#E8C700</td><td>Maximum ink-to-ink contrast</td></tr><tr><td><span style="display:inline-flex;gap:2px"><span style="width:22px;height:22px;background:#1A1A1A;border:1px solid rgba(255,255,255,0.15)"></span><span style="width:22px;height:22px;background:#FF48B0;border:1px solid rgba(255,255,255,0.15)"></span></span></td><td><strong>Black + Pink</strong></td><td class="k">#1A1A1A</td><td class="k">#FF48B0</td><td>Most legible; the &#x27;serious&#x27; configuration</td></tr></tbody>
+</table></div>
+
+<h4>Press controls (system_state)</h4>
+<div class="scroll"><table>
+  <thead><tr><th>id</th><th>css var</th><th>default</th><th>range / options</th><th>step</th><th>note</th></tr></thead>
+  <tbody><tr><td class="k">active_paper</td><td class="k">—</td><td class="k">cream</td><td class="k">[&#x27;cream&#x27;, &#x27;kraft&#x27;, &#x27;white&#x27;, &#x27;gray&#x27;, &#x27;newsprint&#x27;]</td><td class="k">—</td><td></td></tr><tr><td class="k">active_ink</td><td class="k">—</td><td class="k">classic</td><td class="k">[&#x27;classic&#x27;, &#x27;electric&#x27;, &#x27;sunset&#x27;, &#x27;forest&#x27;, &#x27;spritz&#x27;, &#x27;ink&#x27;]</td><td class="k">—</td><td></td></tr><tr><td class="k">registration_offset_x</td><td class="k">--riso-off-x</td><td class="k">2px</td><td class="k">[-4, 4]</td><td class="k">0.5</td><td></td></tr><tr><td class="k">registration_offset_y</td><td class="k">--riso-off-y</td><td class="k">-1px</td><td class="k">[-4, 4]</td><td class="k">0.5</td><td></td></tr><tr><td class="k">halftone_dot_size</td><td class="k">--riso-ht-size</td><td class="k">6px</td><td class="k">[2, 14]</td><td class="k">1</td><td></td></tr><tr><td class="k">halftone_angle</td><td class="k">--riso-ht-angle</td><td class="k">15deg</td><td class="k">[0, 90]</td><td class="k">5</td><td></td></tr><tr><td class="k">halftone_softness</td><td class="k">--riso-ht-softness</td><td class="k">0.35</td><td class="k">[0, 1]</td><td class="k">0.05</td><td></td></tr><tr><td class="k">grain_amount</td><td class="k">--riso-grain-amount</td><td class="k">0.35</td><td class="k">[0, 1]</td><td class="k">0.05</td><td>Keep &lt;= 0.5 to preserve body-text contrast.</td></tr><tr><td class="k">grain_frequency</td><td class="k">—</td><td class="k">1.2</td><td class="k">[0.3, 3]</td><td class="k">0.1</td><td>NOT a CSS variable. SVG feTurbulence cannot read CSS custom properties, so GrainLayer reads this from context and rebuilds the data-URL.</td></tr><tr><td class="k">ink_bleed</td><td class="k">--riso-bleed</td><td class="k">0.3px</td><td class="k">[0, 2]</td><td class="k">0.1</td><td></td></tr><tr><td class="k">type_tremor</td><td class="k">--riso-tremor</td><td class="k">0.5px</td><td class="k">[0, 3]</td><td class="k">0.1</td><td>Display type only. Dramatic above 1.5px. Never applied to body copy.</td></tr><tr><td class="k">ink_density</td><td class="k">--riso-ink-density</td><td class="k">None</td><td class="k">[0.78, 0.98]</td><td class="k">—</td><td></td></tr><tr><td class="k">blend_mode</td><td class="k">--riso-blend</td><td class="k">None</td><td class="k">[&#x27;multiply&#x27;, &#x27;darken&#x27;, &#x27;color-burn&#x27;]</td><td class="k">—</td><td></td></tr></tbody>
+</table></div>
+
+
+<h2>Typography</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="cmp"><div class="nm" style="font-family:&#x27;Space Grotesk&#x27;, system-ui, sans-serif;font-size:20px">Space Grotesk</div><div class="tier">content — the page</div><p style="margin:8px 0 0">Body text, titles, messages, replies, navigation, and any label above 11px. A slightly quirky grotesk that pairs well with print textures.</p></div><div class="cmp"><div class="nm" style="font-family:&#x27;JetBrains Mono&#x27;, ui-monospace, monospace;font-size:20px">JetBrains Mono</div><div class="tier">metadata — the colophon</div><p style="margin:8px 0 0">Tracked uppercase labels at 11px and below only: timestamps, issue numbers, sender tags, section headers. The monospace width gives the printed-catalog rhythm. Never for body.</p></div></div>
+
+<h4>Named scale</h4>
+<p>The <code>treatment</code> column is load-bearing: it names the primitive that must render the step.
+A masthead rendered as plain text is not a masthead.</p>
+<div class="scroll"><table>
+  <thead><tr><th>step</th><th>size</th><th>weight</th><th>tracking</th><th>treatment</th><th>role</th><th>specimen</th></tr></thead>
+  <tbody><tr><td class="k">masthead</td><td class="k">30px</td><td class="k">700</td><td class="k">-0.03em</td><td class="k">DuotoneText</td><td>conversation title</td><td style="text-align:right"><span style="font-family:'Space Grotesk', sans-serif;font-size:30px;font-weight:700;letter-spacing:-0.03em;line-height:1.0">Compose</span></td></tr><tr><td class="k">brand</td><td class="k">28px</td><td class="k">700</td><td class="k">-0.04em</td><td class="k">DuotoneText</td><td>wordmark</td><td style="text-align:right"><span style="font-family:'Space Grotesk', sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.04em;line-height:0.95">Compose</span></td></tr><tr><td class="k">title</td><td class="k">16px</td><td class="k">700</td><td class="k">-0.02em</td><td class="k">DuotoneText</td><td>selected item</td><td style="text-align:right"><span style="font-family:'Space Grotesk', sans-serif;font-size:16px;font-weight:700;letter-spacing:-0.02em;line-height:1.1">Compose</span></td></tr><tr><td class="k">item</td><td class="k">14px</td><td class="k">600</td><td class="k">-0.01em</td><td class="k">plain</td><td>sidebar names</td><td style="text-align:right"><span style="font-family:'Space Grotesk', sans-serif;font-size:14px;font-weight:600;letter-spacing:-0.01em;line-height:1.2">Compose</span></td></tr><tr><td class="k">body</td><td class="k">14px</td><td class="k">500</td><td class="k">-0.005em</td><td class="k">ink_bleed</td><td>messages</td><td style="text-align:right"><span style="font-family:'Space Grotesk', sans-serif;font-size:14px;font-weight:500;letter-spacing:-0.005em;line-height:1.55">Compose</span></td></tr><tr><td class="k">preview</td><td class="k">11px</td><td class="k">400</td><td class="k">0em</td><td class="k">plain</td><td>preview text at 0.65 opacity</td><td style="text-align:right"><span style="font-family:'Space Grotesk', sans-serif;font-size:11px;font-weight:400;letter-spacing:0em;line-height:1.4">Compose</span></td></tr><tr><td class="k">label</td><td class="k">9px</td><td class="k">700</td><td class="k">0.16em</td><td class="k">InkTag</td><td>InkTag, uppercase</td><td style="text-align:right"><span style="font-family:'JetBrains Mono', monospace;font-size:9px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;line-height:1.3">Compose</span></td></tr><tr><td class="k">micro</td><td class="k">8.5px</td><td class="k">700</td><td class="k">0.14em</td><td class="k">InkTag</td><td>tiny meta, uppercase</td><td style="text-align:right"><span style="font-family:'JetBrains Mono', monospace;font-size:8.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;line-height:1.3">Compose</span></td></tr></tbody>
+</table></div>
+
+<h4>Ink imperfection modifiers</h4>
+<dl class="dl"><dt>body_filter</dt><dd><code>blur(calc(var(--riso-bleed) * 0.4))</code></dd><dt>text_shadow</dt><dd><code>none</code></dd><dt>duotone_offset</dt><dd><code>translate(var(--riso-off-x), var(--riso-off-y))</code></dd><dt>tremor</dt><dd><code>translate(±random, ±random) per letter — display only, 0 by default</code></dd></dl>
+
+
+<h2>Filters &amp; patterns</h2>
+<p>Two SVG filters, one CSS pattern, one CSS noise layer. The single most common way to get Riso wrong
+is to reimplement halftone as <code>feTurbulence</code> — that produces noise, not dots. Halftone here
+is a rotated radial-gradient; grain is the turbulence.</p>
+
+<h3>riso_duotone_primary</h3>
+<p>Linearly interpolates between ink-1 (shadows) and paper (highlights) along Rec.709 luminance. Applied to the base image layer.</p>
+<pre>Let c1 = ink_1 as normalized RGB, p = paper as normalized RGB.
+Let d = p - c1  (per channel).
+Row R: [0.2126*d.r, 0.7152*d.r, 0.0722*d.r, 0, c1.r]
+Row G: [0.2126*d.g, 0.7152*d.g, 0.0722*d.g, 0, c1.g]
+Row B: [0.2126*d.b, 0.7152*d.b, 0.0722*d.b, 0, c1.b]
+Row A: [0, 0, 0, 1, 0]
+i.e. out = c1 + (paper - c1) * luminance</pre>
+<p class="kicker">resolved · cream + classic</p>
+<pre>&lt;!-- resolved for paper: cream (#F4EFE4), ink: classic (ink-1 #3255A4) --&gt;
+&lt;filter id=&quot;riso-duo-primary&quot; color-interpolation-filters=&quot;sRGB&quot;&gt;
+  &lt;feColorMatrix type=&quot;matrix&quot; values=&quot;
+    0.1310 0.4406 0.0445 0 0.1961
+    0.1200 0.4036 0.0407 0 0.3333
+    0.0630 0.2119 0.0214 0 0.6431
+    0      0      0      1 0&quot;/&gt;
+&lt;/filter&gt;</pre>
+
+<h3>riso_duotone_ghost</h3>
+<p>Flat ink-2 color with alpha driven by inverse luminance, so ink-2 &quot;prints&quot; only in shadow areas. Applied to a duplicate layer offset by the same registration variables as text. This is what turns a single-ink duotone into a two-ink riso.</p>
+<pre>Let c2 = ink_2 as normalized RGB.
+Row R: [0, 0, 0, 0, c2.r]
+Row G: [0, 0, 0, 0, c2.g]
+Row B: [0, 0, 0, 0, c2.b]
+Row A: [-0.2126, -0.7152, -0.0722, 0, 1]   # alpha = 1 - luminance</pre>
+<p class="kicker">resolved · classic</p>
+<pre>&lt;!-- resolved for ink: classic (ink-2 #FF48B0) --&gt;
+&lt;filter id=&quot;riso-duo-ghost&quot; color-interpolation-filters=&quot;sRGB&quot;&gt;
+  &lt;feColorMatrix type=&quot;matrix&quot; values=&quot;
+     0       0       0       0 1.0000
+     0       0       0       0 0.2824
+     0       0       0       0 0.6902
+    -0.2126 -0.7152 -0.0722  0 1&quot;/&gt;
+&lt;/filter&gt;</pre>
+
+<h3>riso_halftone <span class="chip mech">css, not svg</span></h3>
+<p>Rotated radial-gradient dot field. The system&#x27;s halftone, everywhere.</p>
+<pre>background-image: radial-gradient(circle,
+  &lt;ink&gt; calc(35% - (var(--riso-ht-softness) * 15%)),
+  transparent calc(36% + (var(--riso-ht-softness) * 15%)));
+background-size: var(--riso-ht-size) var(--riso-ht-size);
+transform: rotate(var(--riso-ht-angle));
+filter: blur(var(--riso-bleed));</pre>
+<p><strong>Required container:</strong> <code>position: absolute; inset: -50%  — oversize prevents rotation edge gaps</code> — rotating without
+the oversize inset leaves visible wedges at the strip corners.</p>
+<div class="specimen riso" data-riso>
+  <div class="mini">
+    <div style="margin-bottom:8px"><span class="tag sm">halftone · ink-1 · 14px</span></div>
+    <div class="ht i1" style="height:14px;"><i></i></div>
+    <div style="margin:14px 0 8px"><span class="tag i2 sm">halftone · ink-2 · 22px</span></div>
+    <div class="ht i2" style="height:22px;"><i></i></div>
+  </div>
+  <div class="grain"></div>
+</div>
+
+<h3>riso_grain</h3>
+<p>Continuous fractal noise across the whole artifact, delivered as an inline SVG data-URL background at mix-blend-mode: overlay. NOT applied as an SVG filter to content — it is a separate top layer.</p>
+<pre>&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;220&quot; height=&quot;220&quot;&gt;
+  &lt;filter id=&quot;n&quot;&gt;
+    &lt;feTurbulence type=&quot;fractalNoise&quot; baseFrequency=&quot;1.2&quot;
+                  numOctaves=&quot;2&quot; seed=&quot;7&quot; stitchTiles=&quot;stitch&quot;/&gt;
+    &lt;feColorMatrix values=&quot;0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0&quot;/&gt;
+  &lt;/filter&gt;
+  &lt;rect width=&quot;220&quot; height=&quot;220&quot; filter=&quot;url(#n)&quot;/&gt;
+&lt;/svg&gt;</pre>
+
+
+<h4>The duotone stack, live</h4>
+<p>A grayscale luminance ramp pushed through the real filters. The primary layer maps shadows to ink-1
+and highlights to the paper; the ghost layer prints flat ink-2 with <code>alpha = 1 − luminance</code>,
+offset by the registration variables. Change the press above and the matrices change with it.</p>
+<p><strong>Note the clip.</strong> The ghost filter reads alpha from luminance alone, so transparent
+pixels resolve to solid ink-2 — including the empty margin of the default filter region. The ghost
+layer is only safe over a fully opaque source inside an <code>overflow: hidden</code> container.
+<code>RisoImage</code> satisfies both; this specimen clips to match.</p>
+<div class="specimen riso" data-riso>
+  <div class="mini">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+      <div>
+        <div style="margin-bottom:6px"><span class="tag sm">01 · source</span></div>
+        <svg viewBox="0 0 200 90" width="100%" height="90" role="img" aria-label="Grayscale luminance ramp">
+          <defs><linearGradient id="ramp"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
+          <rect width="200" height="90" fill="url(#ramp)"/>
+        </svg>
+      </div>
+      <div>
+        <div style="margin-bottom:6px"><span class="tag sm">02 · primary duotone</span></div>
+        <svg viewBox="0 0 200 90" width="100%" height="90" role="img" aria-label="Ramp through the primary duotone filter">
+          <rect width="200" height="90" fill="url(#ramp)" data-duo-primary/>
+        </svg>
+      </div>
+      <div>
+        <div style="margin-bottom:6px"><span class="tag sm">03 · + offset ghost</span></div>
+        <svg viewBox="0 0 200 90" width="100%" height="90" role="img" aria-label="Ramp with the ghost ink layer stacked and offset">
+          <defs><clipPath id="ramp-clip"><rect width="200" height="90"/></clipPath></defs>
+          <g clip-path="url(#ramp-clip)">
+            <rect width="200" height="90" fill="url(#ramp)" data-duo-primary/>
+            <g style="mix-blend-mode:multiply;transform:translate(var(--riso-off-x),var(--riso-off-y))">
+              <rect width="200" height="90" fill="url(#ramp)" data-duo-ghost/>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="grain"></div>
+</div>
+
+
+<h2>Components</h2>
+<p>Primitives carry a behavioral contract, exact values, and do/don't rules. Anything reading a color
+directly instead of a CSS variable is a bug — the press must be able to re-press it.</p>
+
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">DuotoneText</span>
+    <span class="tier">primitive</span>
+    <span class="tier" style="margin-left:auto">primary-layer · ghost-layer</span>
+  </div>
+  <div class="contract">Render a text element twice — once in the primary ink, once in the secondary ink offset by (--riso-off-x, --riso-off-y) with the paper&#x27;s blend mode. Ghost layer is aria-hidden and pointer-events: none.</div>
+  <dl class="dl"><dt>primary.color</dt><dd><code>var(--riso-ink-1)</code></dd><dt>ghost.color</dt><dd><code>var(--riso-ink-2)</code></dd><dt>ghost.transform</dt><dd><code>translate(var(--riso-off-x), var(--riso-off-y))</code></dd><dt>ghost.mix-blend-mode</dt><dd><code>var(--riso-blend)</code></dd><dt>ghost.opacity</dt><dd><code>var(--riso-ink-density)</code></dd><dt>ghost.aria</dt><dd><code>aria-hidden</code></dd><dt>ghost.pointer-events</dt><dd><code>none</code></dd><dt>min.font-size</dt><dd><code>16px</code></dd></dl>
+  <ul class="dos"><li>Use for masthead, brand wordmark, title moments, selected-state names</li><li>Wrap selected sidebar names so selection visually intensifies</li></ul>
+  <ul class="donts"><li>Apply to body copy or small labels — offset destroys legibility</li><li>Stack multiple duotones on the same line — creates mud</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">HalftoneStrip</span>
+    <span class="tier">primitive</span>
+    <span class="tier" style="margin-left:auto">clip-container · dot-field · blend-layer</span>
+  </div>
+  <div class="contract">Render a horizontal band of halftone dots at the current dot-size and angle. Clip overflow to prevent edge artifacts from rotation. Blend with the paper through the active blend mode.</div>
+  <dl class="dl"><dt>dot.source</dt><dd><code>radial-gradient(circle, &lt;ink&gt;, transparent)</code></dd><dt>dot.size</dt><dd><code>var(--riso-ht-size)</code></dd><dt>dot.softness</dt><dd><code>var(--riso-ht-softness)</code></dd><dt>rotation</dt><dd><code>var(--riso-ht-angle)</code></dd><dt>oversize</dt><dd><code>inset: -50%</code></dd><dt>filter</dt><dd><code>blur(var(--riso-bleed))</code></dd><dt>opacity</dt><dd><code>var(--riso-ink-density)</code></dd><dt>typical.height</dt><dd><code>10-14px</code></dd></dl>
+  <ul class="dos"><li>Use beneath mastheads, between sections, as sidebar accents</li><li>Pick ink-1 for structural strips, ink-2 for accent strips</li></ul>
+  <ul class="donts"><li>Use full halftone fills across large content areas — breaks readability</li><li>Rotate a strip element without an oversize inset clip — produces visible gaps</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">GrainLayer</span>
+    <span class="tier">primitive</span>
+    <span class="tier" style="margin-left:auto">svg-filter · blend-surface</span>
+  </div>
+  <div class="contract">Render an inline SVG feTurbulence data-URL as an overlay-blend layer on top of all content. Always aria-hidden and pointer-events: none.</div>
+  <dl class="dl"><dt>source</dt><dd><code>inline SVG feTurbulence data-URL</code></dd><dt>baseFrequency</dt><dd><code>system_state.grain_frequency</code></dd><dt>numOctaves</dt><dd><code>2</code></dd><dt>stitchTiles</dt><dd><code>stitch</code></dd><dt>mix-blend-mode</dt><dd><code>overlay</code></dd><dt>opacity</dt><dd><code>system_state.grain_amount</code></dd><dt>z-index</dt><dd><code>100</code></dd><dt>aria</dt><dd><code>aria-hidden</code></dd></dl>
+  <ul class="dos"><li>Apply once at the theme root, covering the full content area</li><li>Keep grain_amount &lt;= 0.5 to preserve body-text contrast</li></ul>
+  <ul class="donts"><li>Apply multiple grain layers on top of each other — noise compounds unnaturally</li><li>Use grain on form inputs — destroys focus-indicator contrast</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">RisoFilters</span>
+    <span class="tier">primitive</span>
+    <span class="tier" style="margin-left:auto">duotone-filter · ghost-filter</span>
+  </div>
+  <div class="contract">Render an invisible SVG with two &lt;filter&gt; defs: a primary duotone filter and a ghost-mask filter. IDs are per-provider (useId-scoped) so multiple Riso instances on a page do not collide.</div>
+  <dl class="dl"><dt>primary.operation</dt><dd><code>single feColorMatrix</code></dd><dt>primary.math</dt><dd><code>lerp(ink-1, paper, luminance)</code></dd><dt>primary.luminance</dt><dd><code>Rec.709 — 0.2126 R + 0.7152 G + 0.0722 B</code></dd><dt>ghost.operation</dt><dd><code>single feColorMatrix</code></dd><dt>ghost.rgb</dt><dd><code>constant ink-2 values</code></dd><dt>ghost.alpha</dt><dd><code>1 - luminance</code></dd><dt>color-interpolation-filters</dt><dd><code>sRGB</code></dd><dt>id.scoping</dt><dd><code>useId() with &#x27;:&#x27; replaced by &#x27;-&#x27;</code></dd><dt>mount.point</dt><dd><code>inside the theme provider element</code></dd><dt>aria</dt><dd><code>aria-hidden, width=height=0</code></dd></dl>
+  <ul class="dos"><li>Recompute the two matrices whenever ink or paper changes</li><li>Use sRGB color-interpolation so filter math matches CSS expectations</li></ul>
+  <ul class="donts"><li>Share a global filter id across providers — causes collisions</li><li>Use linearRGB color-interpolation — produces muddy duotone output</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">RisoImage</span>
+    <span class="tier">primitive</span>
+    <span class="tier" style="margin-left:auto">primary-layer · ghost-layer · halftone-overlay · bleed-container</span>
+  </div>
+  <div class="contract">Render a raster image three times stacked: primary duotone, ghost (offset, multiply), and a CSS halftone texture overlay. Container applies ink bleed and composites with paper.</div>
+  <dl class="dl"><dt>primary.filter</dt><dd><code>url(#&lt;primaryId&gt;)</code></dd><dt>primary.object-fit</dt><dd><code>cover</code></dd><dt>ghost.filter</dt><dd><code>url(#&lt;ghostId&gt;)</code></dd><dt>ghost.transform</dt><dd><code>translate(var(--riso-off-x), var(--riso-off-y))</code></dd><dt>ghost.mix-blend-mode</dt><dd><code>multiply</code></dd><dt>halftone.opacity</dt><dd><code>0.45</code></dd><dt>halftone.mix-blend-mode</dt><dd><code>overlay</code></dd><dt>container.filter</dt><dd><code>blur(calc(var(--riso-bleed) * 0.5))</code></dd><dt>container.mix-blend-mode</dt><dd><code>var(--riso-blend)</code></dd><dt>container.opacity</dt><dd><code>var(--riso-ink-density)</code></dd><dt>aspect-ratio.default</dt><dd><code>4/5</code></dd></dl>
+  <ul class="dos"><li>Wrap every photograph in RisoImage — unfiltered images look out of place</li><li>Treat the halftone overlay as always-on — it bridges CSS dots and the duotone image</li></ul>
+  <ul class="donts"><li>Nest RisoImage inside another RisoImage — filter stacking compounds unpredictably</li><li>Use RisoImage for iconography or logos — duotone interpolation blurs crisp edges</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">InkTag</span>
+    <span class="tier">primitive</span>
+    <span class="tier" style="margin-left:auto">label-text</span>
+  </div>
+  <div class="contract">Render a small uppercase tracked monospace label in one of the two inks. Carries all metadata — timestamps, section labels, sender tags, counts. Always mix-blends with the paper.</div>
+  <dl class="dl"><dt>font-family</dt><dd><code>&#x27;JetBrains Mono&#x27;, monospace</code></dd><dt>font-size</dt><dd><code>8.5-10px</code></dd><dt>font-weight</dt><dd><code>700</code></dd><dt>text-transform</dt><dd><code>uppercase</code></dd><dt>letter-spacing</dt><dd><code>0.14-0.16em</code></dd><dt>color.ink-1</dt><dd><code>var(--riso-ink-1)</code></dd><dt>color.ink-2</dt><dd><code>var(--riso-ink-2)</code></dd><dt>mix-blend-mode</dt><dd><code>var(--riso-blend)</code></dd><dt>opacity</dt><dd><code>var(--riso-ink-density)</code></dd></dl>
+  <ul class="dos"><li>Use ink-1 for structural metadata (issue numbers, section labels), ink-2 for status and action cues</li></ul>
+  <ul class="donts"><li>Use InkTag above 11px — use DuotoneText or plain text instead</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">MessageColumn</span>
+    <span class="tier">composite</span>
+    <span class="tier" style="margin-left:auto">sender-row · body · bleed-filter</span>
+  </div>
+  <div class="contract">Render a message as a typographic column — no bubble, no container. Sender row uses InkTag; body uses Space Grotesk with a subtle bleed filter.</div>
+  <dl class="dl"><dt>padding</dt><dd><code>0</code></dd><dt>max-width.ai</dt><dd><code>84%</code></dd><dt>max-width.user</dt><dd><code>70%</code></dd><dt>align-self.user</dt><dd><code>flex-end</code></dd><dt>sender.InkTag</dt><dd><code>ink-1 (AI) / ink-2 (user)</code></dd><dt>body.font</dt><dd><code>Space Grotesk, 14px, 500</code></dd><dt>body.color</dt><dd><code>var(--riso-text)</code></dd><dt>body.line-height</dt><dd><code>1.55</code></dd><dt>body.filter</dt><dd><code>blur(calc(var(--riso-bleed) * 0.4))</code></dd></dl>
+  <ul class="dos"><li>Use ink-2 for the user sender tag — the accent ink signals &#x27;you&#x27;</li><li>Keep bleed on body small (0.4x of the ink bleed)</li></ul>
+  <ul class="donts"><li>Wrap messages in bubbles, cards, or bordered containers</li><li>Apply full ink bleed (1x) to body — illegible above 0.8px</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">PortraitCarousel</span>
+    <span class="tier">composite</span>
+    <span class="tier" style="margin-left:auto">header · prev-btn · image-slot · next-btn · position-ticks</span>
+  </div>
+  <div class="contract">Single-focal carousel of RisoImage items with prev/next controls and a tick strip indicating position. All press settings propagate to the displayed image. Navigation is keyboard-accessible.</div>
+  <dl class="dl"><dt>padding</dt><dd><code>20px 24px 22px</code></dd><dt>border-top</dt><dd><code>1px solid rgba(0,0,0,0.15)</code></dd><dt>header.components</dt><dd><code>InkTag kicker + No-index + credit</code></dd><dt>image.width</dt><dd><code>260px</code></dd><dt>image.aspect-ratio</dt><dd><code>4/5</code></dd><dt>ticks.size</dt><dd><code>22x3 px bars</code></dd><dt>tick.active</dt><dd><code>var(--riso-ink-2)</code></dd><dt>tick.inactive</dt><dd><code>rgba(0,0,0,0.18)</code></dd></dl>
+  <ul class="dos"><li>Always display a position indicator — carousels without feedback feel broken</li><li>Credit each image visibly — riso inherits the zine convention of naming the source</li></ul>
+  <ul class="donts"><li>Auto-advance images on a timer — the user is in control of the press</li><li>Animate transitions with fades or slides — riso cuts, it does not dissolve</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">PaperSelector</span>
+    <span class="tier">composite</span>
+    <span class="tier" style="margin-left:auto">segmented-control · swatch · label</span>
+  </div>
+  <div class="contract">Segmented control showing a swatch per option. Selecting an option bundles multiple parameter changes as ONE action.</div>
+  <dl class="dl"><dt>paper.bundles</dt><dd><code>{paper, blend, density, text_ink}</code></dd><dt>ink.bundles</dt><dd><code>{ink_1, ink_2}</code></dd><dt>swatch.size</dt><dd><code>6x6 px (ink) / 18x18 (paper detail)</code></dd><dt>columns</dt><dd><code>2</code></dd></dl>
+  <ul class="dos"><li>Bundle related parameters under presets — a real press changes multiple things at once</li><li>Keep preset lists short (5-8) — more becomes a menu, not a choice</li></ul>
+  <ul class="donts"><li>Expose paper color without its matching blend mode — they are physically coupled</li><li>Allow free-form color pickers without presets — destroys the print-lineage feel</li></ul>
+</div>
+<div class="cmp">
+  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+    <span class="nm">TweakPanel</span>
+    <span class="tier">composite</span>
+    <span class="tier" style="margin-left:auto">preset-groups · slider-groups · actions</span>
+  </div>
+  <div class="contract">A settings surface with Paper + Ink preset selectors, Registration / Halftone / Grain / Ink / Type slider groups, and Reprint / Reset / Copy Tokens actions. In production this lives in a settings panel, not inline in the page.</div>
+  <dl class="dl"><dt>slider.step.offset</dt><dd><code>0.5px</code></dd><dt>slider.step.angle</dt><dd><code>5deg</code></dd><dt>slider.step.dot-size</dt><dd><code>1px</code></dd><dt>actions</dt><dd><code>Reprint · Reset · Copy Tokens</code></dd><dt>copy.format</dt><dd><code>JSON of resolved press settings</code></dd></dl>
+  <ul class="dos"><li>Constrain slider step values to enforce taste</li><li>Include a Reprint action that randomizes registration/halftone/grain within taste bounds</li><li>Emit JSON on Copy Tokens for downstream theme export</li></ul>
+  <ul class="donts"><li>Expose every internal CSS var as a slider — surface only the meaningful ones</li><li>Let sliders produce values outside the ranges defined in system_state</li></ul>
+</div>
+
+<h3>list_item <span class="tier">composite · authored SVG</span></h3>
+<div class="scroll"><table>
+  <thead><tr><th>part</th><th>position</th><th>width</th><th>yields to</th><th></th></tr></thead>
+  <tbody><tr><td class="k">index</td><td class="k">left</td><td class="k">32</td><td class="k">—</td><td class="k">required</td></tr><tr><td class="k">title</td><td class="k">top_main</td><td class="k">—</td><td class="k">timestamp</td><td class="k">required</td></tr><tr><td class="k">timestamp</td><td class="k">top_right</td><td class="k">40</td><td class="k">—</td><td class="k">required</td></tr><tr><td class="k">preview</td><td class="k">middle_main</td><td class="k">—</td><td class="k">unread_count</td><td class="k">required</td></tr><tr><td class="k">unread_count</td><td class="k">bottom_main</td><td class="k">60</td><td class="k">—</td><td class="k">optional</td></tr></tbody>
+</table></div>
+<div class="scroll"><table>
+  <thead><tr><th>variant</th><th>svg</th><th>filters</th><th>rendering notes</th></tr></thead>
+  <tbody><tr><td class="k">default</td><td class="k">components/list-item-default.svg</td><td class="k">riso_duotone_primary</td><td>Index + timestamp in JetBrains Mono uppercase ink-1 (InkTag). Title in Space Grotesk at var(--riso-text), weight 600. Preview at 0.65 opacity. Unread count is a solid ink-2 chip with paper-colored numerals.</td></tr><tr><td class="k">selected</td><td class="k">components/list-item-selected.svg</td><td class="k">riso_duotone_primary, riso_duotone_ghost</td><td>Selection is signalled by the title gaining its duotone ghost layer and a barely-there paper darkening. NO solid ink background.</td></tr></tbody>
+</table></div>
+<ul class="donts"><li>Never use a solid ink block as a selection background — selection is a text treatment</li><li>Metadata (index, timestamp) is InkTag and never receives the duotone ghost</li><li>Preview text yields to unread_count per anatomy.preview.yields_to (8px min gap)</li></ul>
+
+
+<h2>Patterns</h2>
+<h4>Sidebar + Main</h4><div class="scroll"><table><tbody><tr><td class="k">sidebar_width</td><td>260px fixed</td></tr><tr><td class="k">main_area</td><td>fluid, fills remaining</td></tr><tr><td class="k">sidebar_order</td><td>Brand (duotone) → halftone strip → section label → items → press operator</td></tr><tr><td class="k">vertical_divider</td><td>1px solid rgba(0,0,0,0.15)</td></tr><tr><td class="k">background_both</td><td>var(--riso-paper)</td></tr></tbody></table></div><h4>Message Flow</h4><div class="scroll"><table><tbody><tr><td class="k">direction</td><td>vertical stack, chronological</td></tr><tr><td class="k">alignment</td><td>AI → left (84%), user → right (70%)</td></tr><tr><td class="k">gap</td><td>18px between messages</td></tr><tr><td class="k">entrance</td><td>fadeSlideUp, 400ms ease-out, 80ms stagger</td></tr><tr><td class="k">sender_row</td><td>InkTag (ink-1 for AI, ink-2 for user) + timestamp</td></tr><tr><td class="k">body_filter</td><td>blur(calc(var(--riso-bleed) * 0.4))</td></tr></tbody></table></div><h4>Active Selection</h4><div class="scroll"><table><tbody><tr><td class="k">model</td><td>single selection only</td></tr><tr><td class="k">trigger</td><td>click or Enter/Space</td></tr><tr><td class="k">visual</td><td>background rgba(0,0,0,0.03); name wraps in DuotoneText</td></tr><tr><td class="k">transition</td><td>instant — riso cuts, it does not dissolve</td></tr><tr><td class="k">focus_outline</td><td>2px solid var(--riso-ink-2) offset 2px</td></tr></tbody></table></div><h4>Grain + Halftone Composition</h4><div class="scroll"><table><tbody><tr><td class="k">grain_scope</td><td>theme root only — one layer</td></tr><tr><td class="k">halftone_scope</td><td>explicit strips and blocks, never full-page</td></tr><tr><td class="k">rotation_policy</td><td>halftone rotates; grain does not</td></tr><tr><td class="k">blend_stacking</td><td>paper → ink-1 → ink-2 (duotone) → halftone → grain</td></tr></tbody></table></div><h4>Tweakability</h4><div class="scroll"><table><tbody><tr><td class="k">scope</td><td>global — one press, one configuration per session</td></tr><tr><td class="k">persistence</td><td>settings panel state; serializable to JSON</td></tr><tr><td class="k">preset_bundles</td><td>paper {color, blend, density, text_ink}; ink {ink_1, ink_2}</td></tr><tr><td class="k">slider_constraints</td><td>snap to taste-appropriate steps (0.5px, 5deg, 1px)</td></tr><tr><td class="k">randomize_range</td><td>offset ±3px, angle in {0,15,45,75}, grain 0.2-0.6</td></tr></tbody></table></div><h4>Image Composition</h4><div class="scroll"><table><tbody><tr><td class="k">wrapper</td><td>RisoImage — required for every raster asset</td></tr><tr><td class="k">layer_stack</td><td>primary duotone → ghost (offset) → halftone overlay → container blend</td></tr><tr><td class="k">filter_source</td><td>SVG feColorMatrix defs, scoped per provider</td></tr><tr><td class="k">registration</td><td>ghost layer uses the same --riso-off-x / --riso-off-y as text</td></tr><tr><td class="k">halftone</td><td>same dot pitch + softness vars as decorative strips, at reduced opacity</td></tr><tr><td class="k">bleed</td><td>container filter: blur(calc(var(--riso-bleed) * 0.5))</td></tr></tbody></table></div>
+
+
+<h2>Rulebook</h2>
+<p>The highest-value section for anyone generating Riso. Most entries are negative constraints — the
+choices that look reasonable in any other system and are wrong in this one. Where a rule is visually
+demonstrable, the compliant and violating versions are rendered side by side in the current press state.</p>
+
+<div class="rule" id="riso-two-inks-only">
+  <div class="hd"><span class="rid">riso-two-inks-only</span><span class="chip req">required</span><span class="chip sem">semantic</span><span class="chip">artifact</span></div>
+  <div class="stmt">Exactly two inks are active per artifact, drawn from one press_presets.ink pair. A third color must come from blend-mode composition, not a new ink.</div>
+  <div class="why"><b>Why</b> — Riso printing physically uses two drums. The constraint is the system&#x27;s structural truth.</div>
+  <pre>Render the artifact and verify no more than 2 distinct ink hues appear.
+Paper color and paper-derived text ink do not count as inks.</pre>
+</div>
+<div class="rule" id="riso-paper-is-the-neutral">
+  <div class="hd"><span class="rid">riso-paper-is-the-neutral</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">both</span></div>
+  <div class="stmt">Grays, neutrals, and backgrounds come from the paper color. No gray fills, no introduced tints.</div>
+  <div class="why"><b>Why</b> — Paper is a substrate, not a default. A gray fill breaks the two-ink model.</div>
+  <pre>Verify no fill values are neutral grays outside the paper palette.
+Permitted paper-derived darkenings: rgba(0,0,0,0.02-0.03) hairlines and
+selection washes.</pre>
+</div>
+<div class="rule" id="riso-paper-preset-atomic">
+  <div class="hd"><span class="rid">riso-paper-preset-atomic</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">artifact</span></div>
+  <div class="stmt">Paper is selected as a whole preset — color, blend mode, density, and text ink change together.</div>
+  <div class="why"><b>Why</b> — Real paper stocks absorb ink differently. Unbundling the four values produces combinations no press can print.</div>
+  <pre>Verify the resolved {page_bg, blend, density, text_primary} tuple matches
+one row of press_presets.paper exactly.</pre>
+</div>
+<div class="rule" id="riso-no-shadows">
+  <div class="hd"><span class="rid">riso-no-shadows</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">both</span></div>
+  <div class="stmt">No box-shadow, no filter: drop-shadow, no text-shadow — ever. Depth is ink layering.</div>
+  <div class="why"><b>Why</b> — Shadows are a screen-light vocabulary; Riso is a print-ink vocabulary.</div>
+  <pre>Verify no box-shadow / text-shadow declarations and no feDropShadow
+elements exist in the rendered output.</pre>
+</div><div class="pair"><div class="pane ok"><div class="lbl">Ink layering</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="border:1px solid var(--riso-text);padding:14px 16px"><span class="tag i2">Issue №04</span><div style="margin-top:4px"><span class="duo" style="font-size:24px;font-weight:700;letter-spacing:-0.03em"><span class="f">Tokyo Trip</span><span class="g" aria-hidden="true">Tokyo Trip</span></span></div></div></div><div class="grain"></div></div><div class="note">A hairline rule and the duotone ghost. Depth is ink order.</div></div><div class="pane no"><div class="lbl">Cast light</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="background:var(--riso-paper);padding:14px 16px;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.35)"><span class="tag i2">Issue №04</span><div style="margin-top:4px;font-size:24px;font-weight:700;letter-spacing:-0.03em">Tokyo Trip</div></div></div><div class="grain"></div></div><div class="note">Box-shadow and a 6px radius. This is a screen-light vocabulary pasted onto a print system — and the radius breaks the 0-radius rule too.</div></div></div>
+<div class="rule" id="riso-grain-once-at-root">
+  <div class="hd"><span class="rid">riso-grain-once-at-root</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">artifact</span></div>
+  <div class="stmt">Exactly one grain layer, applied at the theme root above all content (z-index 100, mix-blend-mode: overlay).</div>
+  <div class="why"><b>Why</b> — Grain unifies the artifact as one print. Per-component grain seams at boundaries and compounds where components overlap.</div>
+  <pre>Verify exactly one element carries the grain background, that it is a
+descendant of the theme root, and that no component subtree contains a
+second grain layer.</pre>
+</div><div class="pair"><div class="pane ok"><div class="lbl">One field, at the root</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="display:flex;gap:10px"><div style="flex:1;border:1px solid var(--riso-text);padding:10px"><span class="tag sm">Panel A</span></div><div style="flex:1;border:1px solid var(--riso-text);padding:10px"><span class="tag sm">Panel B</span></div></div></div><div class="grain"></div></div><div class="note">A single continuous noise field over the composed artifact. The panels belong to one print.</div></div><div class="pane no"><div class="lbl">Grain per component</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="display:flex;gap:10px"><div style="flex:1;border:1px solid var(--riso-text);padding:10px;position:relative;overflow:hidden"><span class="tag sm">Panel A</span><span class="grain" style="opacity:0.6"></span></div><div style="flex:1;border:1px solid var(--riso-text);padding:10px;position:relative;overflow:hidden"><span class="tag sm">Panel B</span><span class="grain" style="opacity:0.6;background-position:12px 30px"></span></div></div></div></div><div class="note">Each panel carries its own layer, so the noise restarts at every boundary and doubles wherever components overlap. The seams are the tell.</div></div></div>
+<div class="rule" id="riso-duotone-display-only">
+  <div class="hd"><span class="rid">riso-duotone-display-only</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">component</span></div>
+  <div class="stmt">DuotoneText applies only to type at 16px and above. Body copy, preview text, and labels render plain.</div>
+  <div class="why"><b>Why</b> — The ghost offset is 2px; below 16px it reads as blur, not registration.</div>
+  <pre>Verify every element with a ghost layer has computed font-size &gt;= 16px.</pre>
+</div><div class="pair"><div class="pane ok"><div class="lbl">Ghost on display type only</div><div class="riso" data-riso style="position:relative"><div class="mini"><div><span class="duo" style="font-size:30px;font-weight:700;letter-spacing:-0.03em"><span class="f">Tokyo Trip</span><span class="g" aria-hidden="true">Tokyo Trip</span></span></div><div style="font-size:11px;opacity:0.65;margin-top:8px">Want me to build a day-by-day itinerary?</div></div><div class="grain"></div></div><div class="note">Masthead carries the ghost; the 11px preview renders plain in the paper&#x27;s text ink.</div></div><div class="pane no"><div class="lbl">Ghost on 11px preview</div><div class="riso" data-riso style="position:relative"><div class="mini"><div><span class="duo" style="font-size:30px;font-weight:700;letter-spacing:-0.03em"><span class="f">Tokyo Trip</span><span class="g" aria-hidden="true">Tokyo Trip</span></span></div><div style="margin-top:8px"><span class="duo" style="font-size:11px;font-weight:400;letter-spacing:0"><span class="f">Want me to build a day-by-day itinerary?</span><span class="g" aria-hidden="true">Want me to build a day-by-day itinerary?</span></span></div></div><div class="grain"></div></div><div class="note">The 2px offset is larger than the letterforms&#x27; stroke gaps, so it reads as a printing fault rather than registration. Below 16px, duotone is just blur.</div></div></div>
+<div class="rule" id="riso-metadata-is-inktag">
+  <div class="hd"><span class="rid">riso-metadata-is-inktag</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">component</span></div>
+  <div class="stmt">All metadata — timestamps, indices, section labels, sender tags, counts — uses JetBrains Mono uppercase at 0.14-0.16em tracking, 11px or below, and never receives a duotone ghost.</div>
+  <div class="why"><b>Why</b> — Metadata in Riso is the colophon layer — it is about the print, not part of it.</div>
+  <pre>Verify metadata elements use the metadata typeface family, are uppercase,
+are &lt;= 11px, and have no ghost sibling.</pre>
+</div><div class="pair"><div class="pane ok"><div class="lbl">InkTag</div><div class="riso" data-riso style="position:relative"><div class="mini"><div class="row" style="display:flex;gap:10px"><span class="tag i2">№04 · Filed 14:23</span><span class="tag">● Active</span></div></div><div class="grain"></div></div><div class="note">JetBrains Mono, 9px, uppercase, 0.16em tracking, in ink — the colophon layer.</div></div><div class="pane no"><div class="lbl">Grotesk metadata</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="display:flex;gap:10px;font-size:12px;font-weight:500"><span>No. 04 · Filed 14:23</span><span style="opacity:0.6">● Active</span></div></div><div class="grain"></div></div><div class="note">Same content in the content face. It stops reading as apparatus and starts competing with the headline; the printed-catalog rhythm disappears.</div></div></div>
+<div class="rule" id="riso-halftone-is-gradient">
+  <div class="hd"><span class="rid">riso-halftone-is-gradient</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">component</span></div>
+  <div class="stmt">Halftone is a rotated radial-gradient dot field inside an oversized (inset: -50%) clipping container — not noise, not a texture image.</div>
+  <div class="why"><b>Why</b> — feTurbulence produces noise, not dots. Rotating without an oversize inset leaves visible gaps at the strip edges.</div>
+  <pre>Verify halftone elements use radial-gradient backgrounds sized by
+--riso-ht-size and sit inside a container with inset: -50% and
+overflow: hidden.</pre>
+</div><div class="pair"><div class="pane ok"><div class="lbl">Dots</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="margin-bottom:8px"><span class="tag sm">radial-gradient dots</span></div><div class="ht i1" style="height:26px;"><i></i></div></div><div class="grain"></div></div><div class="note">A rotated radial-gradient field. Dot pitch, angle, and softness are all driven by the press variables, so it re-presses with everything else.</div></div><div class="pane no"><div class="lbl">Noise</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="margin-bottom:8px"><span class="tag sm">feTurbulence</span></div><div style="height:26px;background-image:var(--riso-grain-url);background-size:44px 44px;opacity:0.9;mix-blend-mode:var(--riso-blend);filter:contrast(2.2)"></div></div><div class="grain"></div></div><div class="note">Turbulence at any frequency produces a stochastic field, never a screen. It also cannot respond to dot-size or angle — the controls go dead.</div></div></div>
+<div class="rule" id="riso-halftone-not-full-page">
+  <div class="hd"><span class="rid">riso-halftone-not-full-page</span><span class="chip req">required</span><span class="chip sem">semantic</span><span class="chip">artifact</span></div>
+  <div class="stmt">Halftone appears as explicit strips and blocks. It never fills a whole content area.</div>
+  <div class="why"><b>Why</b> — A full-page dot field destroys body-text readability.</div>
+  
+</div>
+<div class="rule" id="riso-registration-not-on-controls">
+  <div class="hd"><span class="rid">riso-registration-not-on-controls</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">both</span></div>
+  <div class="stmt">Registration offset applies to ghost layers of display type and images only — never to icons, buttons, inputs, or other interactive elements.</div>
+  <div class="why"><b>Why</b> — Misregistered affordances read as broken, not as printed.</div>
+  <pre>Verify no interactive element (button, input, a, [role=button]) or its
+children carry the registration transform.</pre>
+</div>
+<div class="rule" id="riso-selection-is-text-treatment">
+  <div class="hd"><span class="rid">riso-selection-is-text-treatment</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">component</span></div>
+  <div class="stmt">Selection is signalled by the title gaining its duotone ghost plus a paper darkening at most rgba(0,0,0,0.03). Never a solid ink background.</div>
+  <div class="why"><b>Why</b> — A solid ink fill would spend a whole drum on a state change.</div>
+  <pre>Verify selected variants have no ink-colored background fill and do carry
+a ghost layer on the title.</pre>
+</div><div class="pair"><div class="pane ok"><div class="lbl">Density + ghost</div><div class="riso" data-riso style="position:relative"><div class="mini"><div class="li sel" style="border-top:1px solid var(--riso-text)"><div class="row"><span class="tag sm">№01 · 2m</span><span class="unread">2</span></div><div class="nm"><span class="duo" style="font-size:14px;font-weight:700;letter-spacing:-0.01em"><span class="f">Tokyo Trip</span><span class="g" aria-hidden="true">Tokyo Trip</span></span></div><div class="pv">Want me to build a day-by-day itinerary?</div></div><div class="li"><div class="row"><span class="tag sm">№02 · 1h</span></div><div class="nm">Recipe Ideas</div><div class="pv">Here are 5 ramen variations…</div></div></div><div class="grain"></div></div><div class="note">Selection = the title gains its ghost layer, plus a rgba(0,0,0,0.03) paper darkening.</div></div><div class="pane no"><div class="lbl">Solid ink fill</div><div class="riso" data-riso style="position:relative"><div class="mini"><div class="li" style="background:var(--riso-ink-1);border-top:1px solid var(--riso-text)"><div class="row"><span class="tag" style="color:var(--riso-paper);mix-blend-mode:normal;opacity:1">№01 · 2M</span></div><div class="nm" style="color:var(--riso-paper)">Tokyo Trip</div><div class="pv" style="color:var(--riso-paper);opacity:0.8">Want me to build a day-by-day itinerary?</div></div><div class="li"><div class="row"><span class="tag sm">№02 · 1h</span></div><div class="nm">Recipe Ideas</div><div class="pv">Here are 5 ramen variations…</div></div></div><div class="grain"></div></div><div class="note">A solid ink-1 block spends an entire drum on a hover-weight state change, and forces paper-colored knockout text that no other row uses.</div></div></div>
+<div class="rule" id="riso-srgb-filters">
+  <div class="hd"><span class="rid">riso-srgb-filters</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">both</span></div>
+  <div class="stmt">All feColorMatrix filters declare color-interpolation-filters=&quot;sRGB&quot;.</div>
+  <div class="why"><b>Why</b> — linearRGB produces oversaturated, unprintable duotone at the same matrix values.</div>
+  <pre>Verify every &lt;filter&gt; in the output carries color-interpolation-filters=&quot;sRGB&quot;.</pre>
+</div>
+<div class="rule" id="riso-scoped-filter-ids">
+  <div class="hd"><span class="rid">riso-scoped-filter-ids</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">artifact</span></div>
+  <div class="stmt">Filter ids are scoped per theme instance, never global constants.</div>
+  <div class="why"><b>Why</b> — Two Riso surfaces on one page with a shared id collide — the second silently reuses the first&#x27;s inks.</div>
+  
+</div>
+<div class="rule" id="riso-images-wrapped">
+  <div class="hd"><span class="rid">riso-images-wrapped</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">component</span></div>
+  <div class="stmt">Every raster image passes through RisoImage (primary duotone + offset ghost + halftone overlay). Icons and logos do not.</div>
+  <div class="why"><b>Why</b> — An unfiltered photograph is the single most system-breaking element you can place in a Riso surface. Duotone interpolation, conversely, destroys crisp icon edges.</div>
+  
+</div>
+<div class="rule" id="riso-ink2-not-body">
+  <div class="hd"><span class="rid">riso-ink2-not-body</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">component</span></div>
+  <div class="stmt">Ink-2 is never used for body copy. On cream it measures 3.4:1 — large text only.</div>
+  <div class="why"><b>Why</b> — Fluorescent inks are low-contrast by nature. This is a legibility floor, not a preference.</div>
+  
+</div><div class="pair"><div class="pane ok"><div class="lbl">Body in paper text ink</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="font-size:14px;line-height:1.55">Absolutely. Tokyo is incredible. Are you looking for a culture-focused trip, a food adventure, or a mix of everything?</div></div><div class="grain"></div></div><div class="note">9.6:1 on cream. The inks carry structure and accent; the paper&#x27;s own text ink carries reading.</div></div><div class="pane no"><div class="lbl">Body in ink-2</div><div class="riso" data-riso style="position:relative"><div class="mini"><div style="font-size:14px;line-height:1.55;color:var(--riso-ink-2)">Absolutely. Tokyo is incredible. Are you looking for a culture-focused trip, a food adventure, or a mix of everything?</div></div><div class="grain"></div></div><div class="note">3.4:1 on cream — below the 4.5:1 floor for body text, and grain removes roughly another 12%.</div></div></div>
+<div class="rule" id="riso-bleed-ceiling">
+  <div class="hd"><span class="rid">riso-bleed-ceiling</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">component</span></div>
+  <div class="stmt">Ink bleed on body copy is 0.4x the global bleed value and must not exceed 0.8px effective blur.</div>
+  <div class="why"><b>Why</b> — Above 0.8px, body text stops being readable and starts being texture.</div>
+  
+</div>
+<div class="rule" id="riso-no-emoji">
+  <div class="hd"><span class="rid">riso-no-emoji</span><span class="chip req">required</span><span class="chip mech">mechanical</span><span class="chip">both</span></div>
+  <div class="stmt">No emoji in any copy, label, or avatar slot. Use № indices and the symbol vocabulary.</div>
+  <div class="why"><b>Why</b> — Riso is visual, not iconographic. An emoji is a full-color raster in a two-ink system.</div>
+  
+</div>
+<div class="rule" id="riso-print-vocabulary">
+  <div class="hd"><span class="rid">riso-print-vocabulary</span><span class="chip rec">recommended</span><span class="chip sem">semantic</span><span class="chip">artifact</span></div>
+  <div class="stmt">UI copy uses printing verbs (compose, file, print, reprint, edition, issue) rather than chat-app verbs (send, submit, post, ping).</div>
+  <div class="why"><b>Why</b> — The vocabulary is the other half of the aesthetic. &#x27;Send&#x27; in a riso surface is a costume, not a system.</div>
+  
+</div>
+<div class="rule" id="riso-sentence-case">
+  <div class="hd"><span class="rid">riso-sentence-case</span><span class="chip rec">recommended</span><span class="chip mech">mechanical</span><span class="chip">both</span></div>
+  <div class="stmt">Headlines and UI chrome are sentence case. Uppercase is reserved for InkTag.</div>
+  <div class="why"><b>Why</b> — Title case reads as marketing; sentence case matches the editorial register.</div>
+  
+</div>
+<div class="rule" id="riso-no-dissolve">
+  <div class="hd"><span class="rid">riso-no-dissolve</span><span class="chip rec">recommended</span><span class="chip mech">mechanical</span><span class="chip">artifact</span></div>
+  <div class="stmt">State transitions cut. No fades, no slides, no crossfades — except the one-time fadeSlideUp entrance for message flow.</div>
+  <div class="why"><b>Why</b> — Riso cuts, it does not dissolve. A press has no transition state.</div>
+  
+</div>
+
+
+<h2>Voice &amp; tone</h2>
+<p>Riso speaks the language of independent publishing — issues, editions, presses, filed, composed. The AI is &quot;The Press&quot; or &quot;The Studio&quot;; users are &quot;correspondents&quot; or &quot;operators.&quot; Copy should feel like a zine colophon, not a chatbot.</p>
+
+<div class="scroll"><table>
+  <thead><tr><th></th><th>vocabulary</th></tr></thead>
+  <tbody>
+    <tr><td class="k">use</td><td>compose, file, print, reprint, edition, issue, impression, colophon</td></tr>
+    <tr><td class="k">avoid</td><td>send, submit, post, ping, message</td></tr>
+  </tbody>
+</table></div>
+
+<h4>Renames</h4>
+<div class="scroll"><table><tbody><tr><td class="k">thread</td><td><strong>issue</strong></td></tr><tr><td class="k">message</td><td><strong>dispatch / correspondence</strong></td></tr><tr><td class="k">assistant</td><td><strong>The Press</strong></td></tr><tr><td class="k">user</td><td><strong>correspondent / operator</strong></td></tr></tbody></table></div>
+
+<h4>State text</h4>
+<div class="scroll"><table>
+  <thead><tr><th>state</th><th>copy</th><th>face</th></tr></thead>
+  <tbody><tr><td class="k">input placeholder</td><td><strong>Compose your reply…</strong></td><td class="k">Space Grotesk italic</td></tr><tr><td class="k">sidebar search</td><td><strong>Search back issues…</strong></td><td class="k">Space Grotesk italic</td></tr><tr><td class="k">empty list</td><td><strong>No issues filed yet.</strong></td><td class="k">Space Grotesk</td></tr><tr><td class="k">loading</td><td><strong>Printing.</strong></td><td class="k">InkTag</td></tr><tr><td class="k">success</td><td><strong>Filed.</strong></td><td class="k">InkTag</td></tr><tr><td class="k">error</td><td><strong>Could not file. Misregistered.</strong></td><td class="k">Space Grotesk</td></tr></tbody>
+</table></div>
+
+<h4>Conventions</h4>
+<ul class="dos"><li>Sentence case for UI chrome; UPPERCASE with 0.16em tracking for InkTag labels only</li><li>Numbers prefixed with № in metadata (№04, Issue №01 / 05)</li><li>Use · (middle dot) and — (em dash) as separators in label rows</li><li>No exclamation points in any copy</li><li>No title-case headlines — sentence case matches the editorial register</li><li>No emoji anywhere — Riso is visual, not iconographic</li></ul>
+
+<h4>Symbol vocabulary</h4>
+<div class="swatches"><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">№</div><div class="hx">issue/edition prefix</div></div></div><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">·</div><div class="hx">middle dot separator</div></div></div><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">—</div><div class="hx">em dash / range</div></div></div><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">→</div><div class="hx">forward action (File Reply →)</div></div></div><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">●</div><div class="hx">status indicator</div></div></div><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">↻</div><div class="hx">reprint/randomize</div></div></div><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">I.</div><div class="hx">section numeral</div></div></div><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">/</div><div class="hx">pair separator (01 / 05)</div></div></div><div class="sw"><div class="meta"><div class="nm" style="font-size:20px">…</div><div class="hx">continuation only</div></div></div></div>
+
+
+<h2>Accessibility</h2>
+<p>Measured at the default press state (cream + classic). Every other preset pair must be re-measured —
+ink density varies from 0.78 to 0.98 across the stocks.</p>
+<div class="scroll"><table>
+  <thead><tr><th>pair</th><th>ratio</th><th>level</th></tr></thead>
+  <tbody><tr><td>Text ink on Cream paper</td><td class="k">9.6:1</td><td class="k" style="color:#34D399">AAA</td></tr><tr><td>Ink-1 (Blue) on Cream</td><td class="k">7.2:1</td><td class="k" style="color:#34D399">AAA</td></tr><tr><td>Ink-2 (Pink) on Cream</td><td class="k">3.4:1</td><td class="k" style="color:#FBBF24">AA (large only)</td></tr><tr><td>Duotone composite on Cream</td><td class="k">~5.8:1</td><td class="k" style="color:#FBBF24">AA</td></tr><tr><td>Body text through 0.35 grain</td><td class="k">reduced ~12%</td><td class="k" style="color:#FBBF24">verify per preset</td></tr></tbody>
+</table></div>
+<ul class="donts"><li>Ink-2 is large-text-only on cream. Never use it for body copy.</li><li>Contrast must be re-measured per paper preset — density varies 0.78-0.98.</li><li>Ghost layers are aria-hidden; grain and halftone are aria-hidden + pointer-events: none.</li><li>Focus outline is 2px solid ink-2 at 2px offset — never removed, never grain-covered.</li></ul>
+
+
+<footer>
+  Generated from <code>systems/riso/spec.yaml</code> (spec 0.2,
+  system v3.0.0) by <code>tools/builders/build_riso_reference.py</code>.
+  Regenerate after any spec change — do not hand-edit this file.
+</footer>
+</div>
+
+<script>
+
+(function () {
+  var root = document.body;
+  function apply(kind, value) {
+    root.setAttribute('data-' + kind, value);
+    var buttons = document.querySelectorAll('.press button[data-set="' + kind + '"]');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute('aria-pressed', String(buttons[i].dataset.val === value));
+    }
+    retarget();
+  }
+  // Filter ids encode the resolved matrix for a (paper, ink) pair, so switching
+  // presets is a matter of repointing, never recomputing.
+  function retarget() {
+    var paper = root.getAttribute('data-paper');
+    var ink = root.getAttribute('data-ink');
+    var primary = document.querySelectorAll('[data-duo-primary]');
+    for (var i = 0; i < primary.length; i++) {
+      primary[i].style.filter = 'url(#riso-duo-primary--' + paper + '--' + ink + ')';
+    }
+    var ghost = document.querySelectorAll('[data-duo-ghost]');
+    for (var j = 0; j < ghost.length; j++) {
+      ghost[j].style.filter = 'url(#riso-duo-ghost--' + ink + ')';
+    }
+  }
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest ? ev.target.closest('.press button') : null;
+    if (!btn) return;
+    apply(btn.dataset.set, btn.dataset.val);
+  });
+  retarget();
+})();
+
+</script>
+</body>
+</html>
