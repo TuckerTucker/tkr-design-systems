@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 96" width="280" height="96">
   <!-- Riso list item — default state
        grammar_family: print_texture
-       Active paper: cream (#F4EDD9)
-       Active ink: classic (ink_1=#1B3A8A blue, ink_2=#E5347A pink)
+       Active paper: cream (#F4EFE4)
+       Active ink: classic (ink_1=#3255A4 blue, ink_2=#FF48B0 pink)
 
        Layered rendering:
          1. Paper background (cream)
@@ -30,7 +30,7 @@
   </defs>
 
   <!-- Paper background -->
-  <rect x="0" y="0" width="280" height="96" fill="#F4EDD9"/>
+  <rect x="0" y="0" width="280" height="96" fill="#F4EFE4"/>
 
   <!-- ─── GHOST INK LAYER (ink_2 pink, offset) ───
        Text duplicated, shifted +0.4px x and +0.4px y, in ink_2.
@@ -39,29 +39,29 @@
   <g opacity="0.65">
     <!-- Index ghost -->
     <text x="16.4" y="28.4"
-          font-family="'Space Mono', ui-monospace, monospace"
+          font-family="'JetBrains Mono', ui-monospace, monospace"
           font-size="14"
           font-weight="500"
-          fill="#E5347A"
+          fill="#FF48B0"
           letter-spacing="1.4">01</text>
     <!-- Title ghost -->
     <text x="46.4" y="28.4"
           font-family="'Space Grotesk', system-ui, sans-serif"
           font-size="14"
           font-weight="500"
-          fill="#E5347A">Tokyo Trip</text>
+          fill="#FF48B0">Tokyo Trip</text>
     <!-- Preview ghost -->
     <text x="46.4" y="48.4"
           font-family="'Space Grotesk', system-ui, sans-serif"
           font-size="12"
           font-weight="400"
-          fill="#E5347A">Build day-by-day itinerary?</text>
+          fill="#FF48B0">Build day-by-day itinerary?</text>
     <!-- Unread count ghost -->
     <text x="46.4" y="84.4"
           font-family="'Space Grotesk', system-ui, sans-serif"
           font-size="30"
           font-weight="700"
-          fill="#E5347A">02</text>
+          fill="#FF48B0">02</text>
   </g>
 
   <!-- ─── PRIMARY INK LAYER (ink_1 blue, on top) ───
@@ -69,10 +69,10 @@
   -->
   <!-- Index — Space Mono per riso-monospace-metadata rulebook entry -->
   <text x="16" y="28"
-        font-family="'Space Mono', ui-monospace, monospace"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
         font-size="14"
         font-weight="500"
-        fill="#1B3A8A"
+        fill="#3255A4"
         letter-spacing="1.4">01</text>
 
   <!-- Title — Space Grotesk -->
@@ -80,14 +80,14 @@
         font-family="'Space Grotesk', system-ui, sans-serif"
         font-size="14"
         font-weight="500"
-        fill="#1B3A8A">Tokyo Trip</text>
+        fill="#3255A4">Tokyo Trip</text>
 
   <!-- Timestamp top-right — Space Mono uppercase, 60% density -->
   <text x="264" y="28"
-        font-family="'Space Mono', ui-monospace, monospace"
+        font-family="'JetBrains Mono', ui-monospace, monospace"
         font-size="12"
         font-weight="500"
-        fill="#1B3A8A"
+        fill="#3255A4"
         opacity="0.6"
         text-anchor="end">2M</text>
 
@@ -96,7 +96,7 @@
         font-family="'Space Grotesk', system-ui, sans-serif"
         font-size="12"
         font-weight="400"
-        fill="#1B3A8A"
+        fill="#3255A4"
         opacity="0.7">Build day-by-day itinerary?</text>
 
   <!-- Unread count — large duotone numeral -->
@@ -104,13 +104,13 @@
         font-family="'Space Grotesk', system-ui, sans-serif"
         font-size="30"
         font-weight="700"
-        fill="#1B3A8A">02</text>
+        fill="#3255A4">02</text>
 
   <!-- ─── GRAIN OVERLAY ───
        feTurbulence noise applied as a multiply layer over everything.
        Without this, the artifact reads as flat vector — with it, it
        reads as printed.
   -->
-  <rect x="0" y="0" width="280" height="96" fill="#1B3A8A" opacity="0.06"
+  <rect x="0" y="0" width="280" height="96" fill="#3255A4" opacity="0.06"
         filter="url(#grain)"/>
 </svg>
