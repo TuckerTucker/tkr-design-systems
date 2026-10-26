@@ -1,8 +1,12 @@
 {
   "mcpServers": {
     "tkr-design-systems": {
-      "command": "/usr/local/bin/python3",
+      "command": "uv",
       "args": [
+        "run",
+        "--project",
+        ".",
+        "python",
         "tools/mcp-server/server.py"
       ]
     }

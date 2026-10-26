@@ -29,20 +29,26 @@ and any MCP-compatible client.
 
 ## Running Standalone
 
+Dependencies are declared in the root `pyproject.toml` and pinned in `uv.lock`.
+Launch with [uv](https://docs.astral.sh/uv/) from the repo root; it creates the
+virtualenv and installs the locked dependencies on first run:
+
 ```bash
-/usr/local/bin/python3 tools/mcp-server/server.py
+uv run --project . python tools/mcp-server/server.py
 ```
 
 ## Claude Code Setup
 
 The repo includes `.mcp.json` at the root. Claude Code reads this automatically
-when the project is opened — no manual registration needed.
+when the project is opened — no manual registration needed. It launches the
+server via `uv run --project . python tools/mcp-server/server.py`, so `uv` must
+be on `PATH`.
 
 To register manually instead:
 
 ```bash
-claude mcp add tkr-design-systems /usr/local/bin/python3 \
-  -- /path/to/tools/mcp-server/server.py
+claude mcp add tkr-design-systems -- uv run --project /path/to/repo \
+  python /path/to/repo/tools/mcp-server/server.py
 ```
 
 ## Claude Desktop Setup
@@ -53,14 +59,18 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "tkr-design-systems": {
-      "command": "/usr/local/bin/python3",
-      "args": ["/path/to/tools/mcp-server/server.py"]
+      "command": "uv",
+      "args": [
+        "run", "--project", "/path/to/repo",
+        "python", "/path/to/repo/tools/mcp-server/server.py"
+      ]
     }
   }
 }
 ```
 
-Restart Claude Desktop after adding.
+If Claude Desktop can't find `uv`, use its absolute path (`which uv`) as
+`command`. Restart Claude Desktop after adding.
 
 ## Environment Variables
 
@@ -71,12 +81,20 @@ Restart Claude Desktop after adding.
 ## Testing
 
 ```bash
-/usr/local/bin/python3 tools/mcp-server/test_mcp_server.py
+uv run pytest -q tools/mcp-server/test_mcp_server.py
+
+# All three suites
+uv run pytest -q tools/design-system-skill/test_design_system_skill.py \
+  tools/wireframe-skill/test_wireframe_skill.py tools/mcp-server/test_mcp_server.py
 ```
 
 ## Dependencies
 
+Declared in the root `pyproject.toml`, locked in `uv.lock`:
+
 - Python 3.12+
-- `mcp` (MCP Python SDK, v1.26.0+)
+- `mcp` (MCP Python SDK, `>=1.26,<2` — `mcp.server.fastmcp` was removed in 2.x)
 - `structlog`
 - `PyYAML`
+- `cairosvg`
+- `pytest` (dev group)
