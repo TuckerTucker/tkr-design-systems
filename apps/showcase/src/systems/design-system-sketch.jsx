@@ -88,7 +88,7 @@ function SketchChat({ sel, setSel }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ fontSize: 12.5, fontWeight: 600, color: C.text_primary }}>{c.name}</span>
-                    <span style={{ fontSize: 10, color: C.text_placeholder }}>{c.time}</span>
+                    <span style={{ fontSize: 10, color: C.text_muted }}>{c.time}</span>
                   </div>
                   <div style={{ fontSize: 11, color: C.text_muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{c.preview}</div>
                 </div>
@@ -355,6 +355,7 @@ function sketchSpec(a) { return {
         ["title.font", "label (12.5px/600)"],
         ["preview.font", "caption (11px/400)"],
         ["preview.color", C.text_muted, "Tertiary text"],
+        ["time.color", C.text_muted, "Timestamps are muted text (4.5:1), not placeholder"],
       ]}
       dos={[
         "Use background color + border for selected state — never shadow",

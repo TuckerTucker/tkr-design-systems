@@ -16,6 +16,23 @@ const rule = (w, col) => `${w}px solid ${col}`;
 
 const TM = { name: "Revolt", tag: "Neobrutalist + Y2K", color: C.accent };
 
+/* Contrast table: labels are derived from the token values, so a token change
+   cannot leave a stale "White on Pink" behind. */
+const PALETTE_NAMES = [[C.text_primary, "Black"], [C.surface, "White"], [C.page_bg, "Cream"], [C.action, "Lime"], [C.accent, "Pink"], [C.text_secondary, "Grey"], [C.text_muted, "Light grey"]];
+const colorName = (value) => (PALETTE_NAMES.find(([v]) => v.toUpperCase() === value.toUpperCase()) ?? [value, value])[1];
+const pairName = (fg, bg) => `${colorName(fg)} on ${colorName(bg)}`;
+const contrastRows = [
+  [C.text_primary, C.page_bg, "Text on the page"],
+  [C.text_primary, C.surface, "Messages, cards"],
+  [C.action_foreground, C.action, "Send, selected row"],
+  [C.accent_foreground, C.accent, "Header, user messages, badges"],
+  [C.danger_foreground, C.danger, "ERROR status pill"],
+  [C.text_secondary, C.surface, "Labels, previews"],
+  [C.text_muted, C.page_bg, "Timestamps"],
+].map(([fg, bg, use]) => [pairName(fg, bg), fg, bg, use]);
+const weakestRow = contrastRows.reduce((lo, r) => (contrastRatio(r[1], r[2]) < contrastRatio(lo[1], lo[2]) ? r : lo));
+const pinkOnCream = contrastText(C.accent, C.page_bg);
+
 const chatList = [
   { id: 1, name: "Tokyo Trip", preview: "Want me to build a day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
   { id: 2, name: "Recipe Ideas", preview: "Here are 5 ramen variations you'll love...", time: "1h", unread: 0, avatar: "🍜" },
@@ -200,14 +217,15 @@ function revoltSpec(a) { return {
     </div>
     <H3>Contrast Ratios</H3>
     <div style={{ border: "2px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
-      {[["Black on Cream", C.text_primary, C.page_bg], ["Black on White", C.text_primary, C.surface], ["Black on Lime", C.action_foreground, C.action], ["White on Pink", C.accent_foreground, C.accent], ["Black on Pink", C.danger_foreground, C.danger]].map(([n, fg, bg]) => [n, contrastText(fg, bg), wcagLevel(contrastRatio(fg, bg))]).map((r, i) => (
-        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 65px 50px", padding: "5px 10px", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
+      {contrastRows.map(([n, fg, bg, use]) => [n, contrastText(fg, bg), wcagLevel(contrastRatio(fg, bg)), use]).map((r, i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 65px 50px", padding: "5px 10px", borderBottom: i < contrastRows.length - 1 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
+          <span style={{ fontSize: 9.5, color: "#666" }}>{r[3]}</span>
           <code className="mn" style={{ fontSize: 10, color: "#999" }}>{r[1]}</code>
           <span style={{ fontSize: 9, fontWeight: 600, color: r[2].includes("AAA") ? "#34D399" : "#FBBF24" }}>{r[2]}</span>
         </div>))}
     </div>
-    <P>High-contrast palette naturally passes WCAG AA on all combinations.</P>
+    <P>{`Every text pairing Revolt renders passes WCAG AA (lowest ${contrastText(...weakestRow.slice(1, 3))}, ${weakestRow[0]}). Not every combination does: pink is never a text colour (${pinkOnCream} on cream), so errors use the black-on-pink ERROR pill.`}</P>
   </div>),
 
   typography: () => (<div>
@@ -342,8 +360,10 @@ function revoltSpec(a) { return {
     <Tk n="font" v="micro (9px/700)" a={a} />
     <Tk n="radius" v="0" d="Rectangular" a={a} />
     <Tk n="variants" v="LIVE, TYPING, OFFLINE, ERROR" a={a} />
-    <Do>White border + white text on accent backgrounds</Do>
+    <Do>{`${colorName(C.border_default)} border + ${colorName(C.accent_foreground).toLowerCase()} text on accent backgrounds (${contrastText(C.accent_foreground, C.accent)})`}</Do>
     <Do>Black border + black text on white/cream backgrounds</Do>
+    <Do>{`ERROR: ${colorName(C.danger).toLowerCase()} fill, ${colorName(C.border_default).toLowerCase()} border, ${colorName(C.danger_foreground).toLowerCase()} text (${contrastText(C.danger_foreground, C.danger)})`}</Do>
+    <Dont>{`Signal an error with pink text or a pink border alone: pink type is ${pinkOnCream} on cream`}</Dont>
   </div>),
 
   voice: () => (<div>

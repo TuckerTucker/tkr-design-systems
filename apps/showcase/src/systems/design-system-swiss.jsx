@@ -403,6 +403,8 @@ function swissSpec(a) { return {
     <Do>Treat red as a finite resource — each new use dilutes the others</Do>
     <Dont>Use red for hover states, warning messages, or decorative underlines</Dont>
     <Dont>Use red as any kind of background fill — red is type and 2px accent bars only</Dont>
+    <Do>{`Set errors and warnings in ink (${C.text_primary}): danger shares the accent red, so "Error: send failed." is never red — only a recovery CTA label ("Retry →") may be`}</Do>
+    <Dont>Use red for menu items ('Sign out') or severity labels ('ATTENTION') — neither is one of the four places</Dont>
 
     <H3>3. The Fixed Type Scale</H3>
     <P>Swiss forbids intermediate sizes. Exactly seven text sizes exist. Every piece of type in the system uses one of them. This is more restrictive than standard design systems — on purpose.</P>
@@ -453,6 +455,18 @@ function swissSpec(a) { return {
           <span style={{ fontSize: 9.5, color: "#666" }}>{p[2]}</span>
         </div>))}
     </div>
+
+    <H3>Error &amp; Warning Treatment</H3>
+    <P>Errors and warnings are carried by copy and type, never by hue: Swiss's danger reuses the accent red, so colour cannot say "this is broken".</P>
+    <Tk n="error.copy" v="Error: send failed." d="'Error:' + lowercase failure + period" />
+    <Tk n="error.color" v={C.text_primary} d="Ink, 11px under a field / 13px in a toast" />
+    <Tk n="error.field" v={rule(bw.default, C.border_input)} d="Input rule unchanged — no red, no thickening" />
+    <Tk n="warning.label" v={C.text_secondary} d="9px tracked uppercase, grey like every label" />
+    <Tk n="warning.copy" v={C.text_primary} d="Declarative sentence + period, ink" />
+    <Do>Name what failed after the prefix ('Error: could not connect to the server.')</Do>
+    <Do>Keep a recovery action as an ordinary CTA label ('Retry →') — it counts toward red's four uses</Do>
+    <Dont>Use 'ERROR', icons, pills, fills, a red rule or a ● for errors — the red ● means "live"</Dont>
+    <Dont>Set a warning label or warning message in red — red warnings are a Don't</Dont>
 
     <H3>Vocabulary</H3>
     <Do>Use one-syllable verbs when possible: Send, Save, File, Close, Open, Add, Edit</Do>
