@@ -28,6 +28,7 @@ ERROR_CODES = {
     "ALREADY_REGISTERED",        # register_system without replace=True
     "INVALID_PATH",              # caller passed a path that doesn't exist
     "RULESET_UNKNOWN",           # check_compliance asked for unknown ruleset
+    "TOKEN_DRIFT",               # spec.yaml disagrees with its tokens.json
     "INTERNAL",                  # catchall for unexpected exceptions
 }
 

@@ -75,8 +75,8 @@ def test_list_systems():
     for d in res.data:
         assert_(d["status"] == "available",
                 f"system '{d['id']}' has status='available' (got {d['status']})")
-        assert_(d["spec_version"] in ("0.1", "0.2"),
-                f"system '{d['id']}' spec_version is 0.1 or 0.2 (got {d['spec_version']})")
+        assert_(d["spec_version"] in ("0.1", "0.2", "0.3"),
+                f"system '{d['id']}' spec_version is 0.1, 0.2 or 0.3 (got {d['spec_version']})")
 
 
 # ─── test: load_system ──────────────────────────────────────────────
@@ -94,7 +94,7 @@ def test_load_system():
         assert_("_meta" in spec, f"load_system('{sys_id}') spec has _meta block")
         assert_(spec["_meta"]["system_id"] == sys_id,
                 f"load_system('{sys_id}') _meta.system_id matches")
-        assert_(spec["_meta"]["spec_version"] in ("0.1", "0.2"),
+        assert_(spec["_meta"]["spec_version"] in ("0.1", "0.2", "0.3"),
                 f"load_system('{sys_id}') _meta.spec_version is set")
 
 
@@ -573,6 +573,170 @@ tokens:
             clear_cache()
 
 
+# ─── test: semantic token contract (schema v0.3, issue #6) ────────
+
+def _minimal_token_doc(system_id: str = "synthetic") -> dict:
+    """Build a token document supplying every contract token with a
+    plausible value of the right kind (no file I/O)."""
+    from design_system_skill import contract as c
+    defaults = {
+        c.KIND_COLOR: "#808080",
+        c.KIND_PX: 4,
+        c.KIND_PX_LIST: [4, 8, 16],
+        c.KIND_FONT_STACK: "system-ui, sans-serif",
+        c.KIND_SHADOW: "none",
+        c.KIND_BLUR: "none",
+        c.KIND_ELEVATION_STRATEGY: "borders_only",
+    }
+    doc: dict = {"contract_version": c.CONTRACT_VERSION, "system": system_id}
+    for token in c.CONTRACT_TOKENS:
+        if token.kind == c.KIND_TYPE_ROLE:
+            value = {"size": 14, "weight": 400, "line_height": 1.5,
+                     "tracking": 0, "family": "body", "case": "none"}
+        else:
+            value = defaults[token.kind]
+        doc.setdefault(token.group, {})[token.name] = value
+    return doc
+
+
+def _write_v03_spec(dir_path: Path, doc: dict | None, system_id: str = "synthetic") -> Path:
+    """Write a minimal v0.3 spec (and optionally its tokens.json) into dir_path."""
+    spec_path = dir_path / "spec.yaml"
+    tokens_line = "  tokens_file: tokens.json\n" if doc is not None else ""
+    spec_path.write_text(
+        'spec_version: "0.3"\n'
+        "system:\n"
+        f"  id: {system_id}\n"
+        "  name: Synthetic\n"
+        f"{tokens_line}"
+        "tokens: {}\n"
+    )
+    if doc is not None:
+        (dir_path / "tokens.json").write_text(json.dumps(doc))
+    return spec_path
+
+
+def test_contract_doc_matches_module():
+    section("contract: SCHEMA-V0.3.md tables match contract.py")
+    from design_system_skill.contract import render_contract_table, render_pairs_table
+    doc = (HERE.parents[1] / "docs" / "specs" / "SCHEMA-V0.3.md").read_text()
+    assert_(render_contract_table() in doc,
+            "contract table in SCHEMA-V0.3.md equals render_contract_table()")
+    assert_(render_pairs_table() in doc,
+            "pairs table in SCHEMA-V0.3.md equals render_pairs_table()")
+
+
+def test_contract_pairs_reference_contract_tokens():
+    section("contract: every required pair names contract colour tokens")
+    from design_system_skill.contract import CONTRAST_PAIRS, TOKENS_BY_PATH, KIND_COLOR
+    for pair in CONTRAST_PAIRS:
+        for side in (pair.fg, pair.bg):
+            token = TOKENS_BY_PATH.get(side)
+            assert_(token is not None and token.kind == KIND_COLOR,
+                    f"pair side {side} is a contract colour token")
+
+
+def test_minimal_token_doc_validates():
+    section("contract: a complete token document validates")
+    from design_system_skill.token_file import validate_token_document
+    errors, _ = validate_token_document(_minimal_token_doc())
+    assert_(errors == [], "complete synthetic token doc has no errors",
+            "; ".join(e.message for e in errors)[:300])
+
+
+def test_missing_contract_token_fails():
+    section("contract: a token document missing a contract token fails")
+    from design_system_skill.token_file import validate_token_document
+    doc = _minimal_token_doc()
+    del doc["color"]["danger_foreground"]
+    del doc["type"]["label"]
+    errors, _ = validate_token_document(doc)
+    msgs = " | ".join(e.message for e in errors)
+    assert_("color.danger_foreground" in msgs, f"error names color.danger_foreground ({msgs[:200]})")
+    assert_("type.label" in msgs, f"error names type.label ({msgs[:200]})")
+
+
+def test_bad_token_values_fail():
+    section("contract: wrong-shaped values and stray keys fail")
+    from design_system_skill.token_file import validate_token_document
+    doc = _minimal_token_doc()
+    doc["color"]["accent"] = "red-ish"
+    doc["type"]["body"]["family"] = "serif_display"   # not a key of `font`
+    doc["space"]["steps"] = [16, 8]                    # not ascending
+    doc["color"]["brand_teal"] = "#00FFFF"             # extras belong in `extras`
+    errors, _ = validate_token_document(doc)
+    msgs = " | ".join(e.message for e in errors)
+    for needle in ("color.accent", "type.body", "space.steps", "color.brand_teal"):
+        assert_(needle in msgs, f"error mentions {needle} ({msgs[:300]})")
+
+
+def test_modes_validation():
+    section("contract: modes — default must equal base, overrides must be known tokens")
+    from design_system_skill.token_file import (
+        validate_token_document, resolve_mode, iter_mode_selections,
+    )
+    doc = _minimal_token_doc()
+    doc["color"]["page_bg"] = "#FFFFFF"
+    doc["modes"] = {"axes": [{
+        "id": "scheme", "default": "light",
+        "options": {"light": {"color.page_bg": "#FFFFFF"},
+                    "dark": {"color.page_bg": "#111111", "color.text_primary": "#EEEEEE"}},
+    }]}
+    errors, _ = validate_token_document(doc)
+    assert_(errors == [], "well-formed light/dark modes validate",
+            "; ".join(e.message for e in errors)[:300])
+    sels = list(iter_mode_selections(doc))
+    assert_(sels == [{"scheme": "light"}, {"scheme": "dark"}],
+            f"iter_mode_selections yields both options ({sels})")
+    dark = resolve_mode(doc, {"scheme": "dark"})
+    assert_(dark["color"]["page_bg"] == "#111111" and doc["color"]["page_bg"] == "#FFFFFF",
+            "resolve_mode applies overrides to a copy")
+
+    doc["modes"]["axes"][0]["options"]["light"]["color.page_bg"] = "#FAFAFA"
+    doc["modes"]["axes"][0]["options"]["dark"]["color.nonexistent"] = "#000000"
+    errors, _ = validate_token_document(doc)
+    msgs = " | ".join(e.message for e in errors)
+    assert_("default" in msgs and "color.page_bg" in msgs,
+            f"default option disagreeing with base value fails ({msgs[:200]})")
+    assert_("color.nonexistent" in msgs, f"override of unknown token fails ({msgs[:200]})")
+
+
+def test_v03_spec_requires_token_file():
+    section("validate_spec: v0.3 requires system.tokens_file with every contract token")
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        res = validate_spec(_write_v03_spec(td_path, None))
+        assert_(not res.ok, "v0.3 spec without tokens_file fails")
+        assert_(any("tokens_file" in e.message for e in res.errors),
+                "error mentions tokens_file")
+
+        doc = _minimal_token_doc()
+        res = validate_spec(_write_v03_spec(td_path, doc))
+        assert_(res.ok, "v0.3 spec with a complete token file validates",
+                "; ".join(e.message for e in res.errors)[:300])
+
+        del doc["color"]["focus_ring"]
+        res = validate_spec(_write_v03_spec(td_path, doc))
+        assert_(not res.ok, "v0.3 spec whose token file lacks focus_ring fails")
+        assert_(any("color.focus_ring" in e.message for e in res.errors),
+                "error names the missing token")
+
+        doc = _minimal_token_doc(system_id="someone_else")
+        res = validate_spec(_write_v03_spec(td_path, doc))
+        assert_(not res.ok and any("does not match" in e.message for e in res.errors),
+                "token file naming a different system fails")
+
+
+def test_v02_spec_without_token_file_still_valid():
+    section("validate_spec: v0.2 specs need no token file (backwards compatible)")
+    with tempfile.NamedTemporaryFile(suffix="-spec.yaml", mode="w", delete=False) as f:
+        f.write('spec_version: "0.2"\nsystem:\n  id: legacy\n  name: Legacy\ntokens: {}\n')
+        p = f.name
+    res = validate_spec(p)
+    Path(p).unlink(missing_ok=True)
+    assert_(res.ok, "v0.2 spec without tokens_file is valid")
+
+
 # ─── runner ─────────────────────────────────────────────────────────
 
 def main():
@@ -595,6 +759,14 @@ def main():
     test_extends_cycle_detection()
     test_extends_parent_not_found()
     test_extends_multi_level()
+    test_contract_doc_matches_module()
+    test_contract_pairs_reference_contract_tokens()
+    test_minimal_token_doc_validates()
+    test_missing_contract_token_fails()
+    test_bad_token_values_fail()
+    test_modes_validation()
+    test_v03_spec_requires_token_file()
+    test_v02_spec_without_token_file_still_valid()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")
