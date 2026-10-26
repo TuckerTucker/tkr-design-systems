@@ -89,7 +89,7 @@ def _error_result(exc: Exception) -> dict[str, Any]:
     return {"ok": False, "errors": [str(exc)]}
 
 
-# ─── design-system-skill tools (8) ────────────────────────────────────
+# ─── design-system-skill tools ────────────────────────────────────────
 
 
 @mcp.tool()
@@ -234,7 +234,7 @@ def ds_check_contrast(system_id: str | None = None, verbose: bool = False) -> di
         return _error_result(exc)
 
 
-# ─── wireframe-skill tools (4) ────────────────────────────────────────
+# ─── wireframe-skill tools ────────────────────────────────────────────
 
 
 @mcp.tool()

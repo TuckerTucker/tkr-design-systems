@@ -32,6 +32,7 @@ jobs:
           tools/e2e/test_check_systems.py
           tools/builders/test_build.py
           tools/design-system-skill/test_jsx_drift.py
+          tools/docs/test_generate.py
 
       - name: Check SVG libraries match their token files
         run: uv run python tools/builders/build.py --check
@@ -56,6 +57,9 @@ jobs:
 
       - name: Showcase JSX reads its design values from tokens.json (issue #4)
         run: uv run python tools/design-system-skill jsx-drift
+
+      - name: Check generated doc regions are current (issue #14)
+        run: uv run python tools/docs/generate.py --check
 
   showcase:
     name: Showcase build

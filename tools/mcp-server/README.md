@@ -1,32 +1,40 @@
 # tkr-design-systems MCP Server
 
 MCP server wrapping the design-system-skill and wireframe-skill packages.
-Exposes 11 tools over stdio transport for use with Claude Code, Claude Desktop,
+Exposes <!-- generated:mcp-tool-count -->15<!-- /generated:mcp-tool-count --> tools over stdio transport for use with Claude Code, Claude Desktop,
 and any MCP-compatible client.
 
 ## Tools
 
+<!-- generated:mcp-tools -->
 ### Design System (8 tools)
 
 | Tool | Description |
 |------|-------------|
-| `ds_list_systems` | List all registered design systems |
-| `ds_load_system` | Load and validate a system spec by id |
-| `ds_validate_spec` | Validate a spec.yaml without registering |
-| `ds_register_system` | Register a new system in the registry |
-| `ds_unregister_system` | Remove a system from the registry |
-| `ds_get_rulebook` | Get flattened rulebook for a system |
-| `ds_check_compliance` | Check SVG against mechanical rulebook |
-| `ds_check_contrast` | WCAG contrast + accent/danger hue gates on a system's tokens, every mode |
+| `ds_list_systems` | List all design systems registered in the tkr-kit registry. |
+| `ds_load_system` | Load and validate a design system spec by id. |
+| `ds_validate_spec` | Validate a spec.yaml against the schema without modifying the registry. |
+| `ds_register_system` | Register a new design system in the registry. |
+| `ds_unregister_system` | Remove a design system from the registry. |
+| `ds_get_rulebook` | Get the flattened rulebook for a design system. |
+| `ds_check_compliance` | Check an SVG artifact against a design system's mechanical rulebook. |
+| `ds_check_contrast` | Run the WCAG contrast and accent/danger hue gates on a system's tokens. |
 
-### Wireframe (4 tools)
+### Wireframe (7 tools)
 
 | Tool | Description |
 |------|-------------|
-| `wf_generate` | Generate a wireframe SVG from a brief |
-| `wf_build_substitution_request` | Build a content substitution request (two-pass Pass 1) |
-| `wf_apply_substitutions` | Apply substitutions to a wireframe SVG (two-pass Pass 2) |
-| `wf_assemble_from_blueprint` | Validate and assemble a component blueprint into SVG |
+| `wf_generate` | Generate a wireframe SVG from a free-text brief. |
+| `wf_build_substitution_request` | Build a content substitution request for a wireframe pattern. |
+| `wf_apply_substitutions` | Apply content substitutions to a wireframe SVG. |
+| `wf_select_layout` | Browse a system's library of layout patterns and components. |
+| `wf_assemble_from_blueprint` | Validate and assemble a component layout blueprint into a composited SVG. |
+| `wf_get_tokens` | Get design tokens formatted for freehand SVG authoring. |
+| `wf_read_component` | Read component SVG source and metadata for reference. |
+<!-- /generated:mcp-tools -->
+
+Generated from the `@mcp.tool()` functions in `server.py` (name and first
+docstring line) by `uv run python tools/docs/generate.py`.
 
 ## Running Standalone
 

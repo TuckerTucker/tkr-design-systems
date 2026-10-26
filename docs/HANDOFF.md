@@ -28,7 +28,7 @@ This document is a complete brief for picking up the work in a fresh session. Re
 | `docs/SCHEMA.md` | Schema v0.1 — original specification | ~600 |
 | `docs/SCHEMA-V0.2.md` | Schema v0.2 — current specification with 11 documented changes | ~600 |
 | `docs/V0.2-MIGRATIONS.md` | Per-system migration notes for v0.1 → v0.2 with effort estimates | ~250 |
-| `docs/LIBRARY-SPEC.md` | The 3-tier component vocabulary (Primitives/Composites/Patterns), 42 components total | ~400 |
+| `docs/LIBRARY-SPEC.md` | The 3-tier component vocabulary (Primitives/Composites/Patterns), <!-- generated:library-vocabulary-count -->42<!-- /generated:library-vocabulary-count --> components total | ~400 |
 | `docs/WIREFRAME-CONSUMPTION.md` | How wireframe-skill consumes a system spec (7-step generation flow) | ~150 |
 | `docs/RISO-FINDINGS.md` | Schema gaps surfaced by Riso authoring (informed v0.2) | ~100 |
 | `docs/REMAINING-SYSTEMS-FINDINGS.md` | Schema gaps surfaced by the remaining 5 systems | ~150 |
@@ -40,53 +40,61 @@ This document is a complete brief for picking up the work in a fresh session. Re
 | `design-system-skill/SKILL.md` | The 7-operation interface for system management (load_system, validate_spec, register_system, get_rulebook, check_compliance, list_systems, unregister_system) |
 | `design-system-skill/design_system_skill/` | Python implementation: `loader.py`, `registry.py`, `validation.py`, `rulebook.py`, `errors.py`, `paths.py` |
 | `design-system-skill/__main__.py` | CLI shim — invoke as `python3 design-system-skill <cmd>` |
-| `design-system-skill/test_design_system_skill.py` | 94/94 smoke tests passing |
+| `design-system-skill/test_design_system_skill.py` | Smoke tests (run in CI) |
 | `wireframe-skill/SKILL.md` | v3.0 — design-system-aware version of the existing v2.0 skill, defines the 7-step generation flow |
 | `wireframe-skill/wireframe_skill/` | Python implementation: `generator.py`, `placement.py`, `compose.py`, `emit.py` |
 | `wireframe-skill/__main__.py` | CLI shim — invoke as `python3 wireframe-skill --brief "..." [--system swiss] [--platform mobile] [--out dir]` |
-| `wireframe-skill/test_wireframe_skill.py` | 38/38 end-to-end tests passing |
-| `registry.yaml` | Initial registry indexing all 8 systems |
+| `wireframe-skill/test_wireframe_skill.py` | End-to-end tests (run in CI) |
+| `registry.yaml` | Registry: <!-- generated:system-count -->9 registry entries (8 systems plus 1 alias: `neutral` → `wireframe`)<!-- /generated:system-count --> |
 
-### Design system specs (8 total)
+### Design system specs
 
-All 8 system specs are at v0.2 (the v0.1 → v0.2 migration completed in Phase 1 item 4). Each spec lives **inside its own library directory** as `<system>-library/spec.yaml` — co-located with the components and layouts it describes. The registry resolves these paths.
+The v0.1 → v0.2 migration completed in Phase 1 item 4; every spec is now v0.3 (token contract, `docs/specs/SCHEMA-V0.3.md`). Current versions, library sizes and rulebook sizes, generated from the registry, specs and libraries by `tools/docs/generate.py`:
 
-| File | spec_version | Notes |
-|------|--------------|-------|
-| `systems/wireframe/spec.yaml` | **0.2** | The neutral default; 42-component vocabulary fully declared. `check_method` + `check_scope` on every rule. |
-| `systems/swiss/spec.yaml` | **0.2** | Full system definition; SVG references aligned with on-disk library (Phase 3.x item 9.4). |
-| `systems/terminal/spec.yaml` | **0.2** | Unicode blocks (Box Drawing, Block Elements), border `style: dashed`, `selection_signal: prompt_character`. |
-| `systems/riso/spec.yaml` | **0.2** | Full v0.2 demonstration: `filter_library`, `artifact_treatments`, `system_state`, em-based offsets. (Older `systems/riso/spec-fragment.yaml` retained for historical comparison.) |
-| `systems/editorial/spec.yaml` | **0.2** | `avatar_strategy: monogram` (Change 13); `selection_signal: surface_fill`; full check_method/check_scope coverage. |
-| `systems/sketch/spec.yaml` | **0.2** | `avatar_strategy: monogram` (Change 13); structured anatomy with `yields_to` on list_item; `selection_signal: surface_fill`. |
-| `systems/prism/spec.yaml` | **0.2** | `format_fitness` block (svg=approximation, html_css=native); `avatar_strategy: monogram` (Change 13); `selection_signal: surface_fill`. |
-| `systems/revolt/spec.yaml` | **0.2** | `avatar_strategy: abbreviation` (Change 13); structured anatomy; `selection_signal: hard_offset`. |
+<!-- generated:library-counts -->
+| System | spec_version | Version | Component SVGs | Layout SVGs | Rulebook entries |
+|--------|--------------|---------|----------------|-------------|------------------|
+| `wireframe` | 0.3 | 1.1.0 | 100 | 53 | 12 |
+| `swiss` | 0.3 | 1.0.0 | 71 | 12 | 13 |
+| `terminal` | 0.3 | 1.1.0 | 53 | 4 | 8 |
+| `editorial` | 0.3 | 1.2.0 | 73 | 5 | 9 |
+| `sketch` | 0.3 | 1.2.0 | 65 | 4 | 6 |
+| `prism` | 0.3 | 1.2.0 | 56 | 4 | 6 |
+| `revolt` | 0.3 | 1.2.0 | 57 | 3 | 8 |
+| `riso` | 0.3 | 3.0.0 | 2 | 0 | 20 |
+<!-- /generated:library-counts -->
+
+What each spec added at v0.2 (historical): Each spec lives **inside its own library directory** as `<system>-library/spec.yaml` — co-located with the components and layouts it describes. The registry resolves these paths.
+
+| File | Notes (v0.2 additions) |
+|------|-------|
+| `systems/wireframe/spec.yaml` | The neutral default; 42-component vocabulary fully declared. `check_method` + `check_scope` on every rule. |
+| `systems/swiss/spec.yaml` | Full system definition; SVG references aligned with on-disk library (Phase 3.x item 9.4). |
+| `systems/terminal/spec.yaml` | Unicode blocks (Box Drawing, Block Elements), border `style: dashed`, `selection_signal: prompt_character`. |
+| `systems/riso/spec.yaml` | Full v0.2 demonstration: `filter_library`, `artifact_treatments`, `system_state`, em-based offsets. (Older `systems/riso/spec-fragment.yaml` retained for historical comparison.) |
+| `systems/editorial/spec.yaml` | `avatar_strategy: monogram` (Change 13); `selection_signal: surface_fill`; full check_method/check_scope coverage. |
+| `systems/sketch/spec.yaml` | `avatar_strategy: monogram` (Change 13); structured anatomy with `yields_to` on list_item; `selection_signal: surface_fill`. |
+| `systems/prism/spec.yaml` | `format_fitness` block (svg=approximation, html_css=native); `avatar_strategy: monogram` (Change 13); `selection_signal: surface_fill`. |
+| `systems/revolt/spec.yaml` | `avatar_strategy: abbreviation` (Change 13); structured anatomy; `selection_signal: hard_offset`. |
 
 ### Component libraries (SVG + PNG previews)
 
 **Wireframe library** (the neutral default — `grammar_family: wireframe`):
-- `systems/wireframe/components/` — 100 SVG files (12 Primitives + 18 Composites with full variants), each with PNG preview
-- `systems/wireframe/layouts/` — 53 SVG files (12 Patterns: desktop variants from Phase 0 + 12 mobile-suffixed variants added in Phase 2 item 5)
+- `systems/wireframe/components/` — every Primitive and Composite with full variants, each with PNG preview
+- `systems/wireframe/layouts/` — every Pattern: desktop variants from Phase 0 plus mobile-suffixed variants added in Phase 2 item 5
 - `systems/wireframe/contact-sheet.svg/png` — visual reference of all components, now including the Patterns tier (Phase 2 item 6)
-- **Status: 153/153 files rulebook-clean**
+- **Status:** rulebook-clean (CI runs `rulebook_check.py --batch` on every library)
 
 **Swiss library** (full LIBRARY-SPEC vocabulary coverage; Phase 2 item 3):
-- `systems/swiss/components/` — 71 SVG files covering all 12 Primitives + all 18 Composites in Swiss's grammar
-- `systems/swiss/layouts/` — 12 SVG files: dashboard, sidebar, header (default + with-actions), modal, drawer-right, settings-layout-default, form-single-column, data-table-default, auth-sign-in, empty-state-default, empty-state-no-results
-- **Status: 83/83 files rulebook-clean (0 failures, 68 advisory — all are pre-existing `swiss-grid-alignment` text-baseline flags carried from v0.1)**
+- `systems/swiss/components/` — every Primitive and Composite in Swiss's grammar
+- `systems/swiss/layouts/` — dashboard, sidebar, header (default + with-actions), modal, drawer-right, settings-layout-default, form-single-column, data-table-default, auth-sign-in, empty-state-default, empty-state-no-results
+- **Status:** rulebook-clean; the advisories are `swiss-grid-alignment` text-baseline flags carried from v0.1
 
 ### Per-system full libraries (Editorial, Sketch, Prism, Revolt, Terminal, Riso)
 
 Each system has its own library folder following the same `components/` + `layouts/` structure as Swiss. Phase 4 (per-system expansion) brought five systems to full LIBRARY-SPEC coverage (12 Primitives + 18 Composites + Patterns) in their respective grammars. Riso remains signature-only.
 
-| Library | Components | Layouts | Status |
-|---------|-----------|---------|--------|
-| `systems/editorial/` | 73 SVG | 5 SVG | 78/78 rulebook-clean |
-| `systems/sketch/` | 65 SVG | 4 SVG | 69/69 rulebook-clean |
-| `systems/prism/` | 56 SVG | 4 SVG | 60/60 rulebook-clean |
-| `systems/revolt/` | 57 SVG | 3 SVG | 60/60 rulebook-clean |
-| `systems/terminal/` | 53 SVG | 4 SVG | 57/57 rulebook-clean |
-| `systems/riso/` | 1 SVG (signature only) | _(none yet)_ | n/a |
+Counts per library are in the generated table under *Design system specs* above. Riso's library is still partial; consumers fall back to the neutral library for what it has not authored.
 
 The original Phase 0 neutral reference SVGs (the pre-grammar generic versions) are archived under `neutral-signature-archive/` for historical comparison.
 
@@ -111,32 +119,32 @@ After Phase 2 cleanup, the project root contains:
 ```
 design-system-skill-draft/
 ├── HANDOFF.md                    # this document
-├── registry.yaml                 # registry of available design systems (8 entries)
-├── docs/                         # design docs (8 files): SCHEMA, SCHEMA-V0.2,
+├── registry.yaml                 # registry of available design systems
+├── docs/                         # design docs: SCHEMA, SCHEMA-V0.2,
 │                                 # LIBRARY-SPEC, V0.2-MIGRATIONS, UNIFIED-FOUNDATION,
 │                                 # WIREFRAME-CONSUMPTION, RISO-FINDINGS, REMAINING-SYSTEMS-FINDINGS
-├── tools/builders/                      # 8 Python scripts + calibration/ subfolder
+├── tools/builders/               # Python scripts + calibration/ subfolder
 │                                 # (system spec yamls now live inside each
 │                                 # `<system>-library/spec.yaml`)
 ├── design-system-skill/          # SKILL.md + Python package + CLI + tests
 │   ├── SKILL.md
 │   ├── __main__.py               # CLI shim
 │   ├── design_system_skill/      # Python package
-│   └── test_design_system_skill.py  # 94/94 passing
+│   └── test_design_system_skill.py
 ├── wireframe-skill/              # SKILL.md + Python package + CLI + tests
 │   ├── SKILL.md
 │   ├── __main__.py               # CLI shim
 │   ├── wireframe_skill/          # Python package
-│   └── test_wireframe_skill.py   # 38/38 passing
-├── systems/wireframe/            # 100 components + 53 layouts + contact-sheet
-├── systems/swiss/                # 71 components + 12 layouts (full coverage)
-├── systems/editorial/            # 73 components + 5 layouts (full coverage)
-├── systems/sketch/               # 65 components + 4 layouts (full coverage)
-├── systems/prism/                # 56 components + 4 layouts (full coverage)
-├── systems/revolt/               # 57 components + 3 layouts (full coverage)
-├── systems/terminal/             # 53 components + 4 layouts (full coverage)
-└── systems/riso/                 # signature components only (default list-item only)
-└── neutral-signature-archive/    # original Phase 0 reference SVGs (frozen)
+│   └── test_wireframe_skill.py
+├── systems/wireframe/          # components/ + layouts/ + contact-sheet
+├── systems/swiss/              # components/ + layouts/
+├── systems/editorial/          # components/ + layouts/
+├── systems/sketch/             # components/ + layouts/
+├── systems/prism/              # components/ + layouts/
+├── systems/revolt/             # components/ + layouts/
+├── systems/terminal/           # components/ + layouts/
+├── systems/riso/               # partial library (falls back to neutral)
+└── neutral-signature-archive/  # original Phase 0 reference SVGs (frozen)
 ```
 
 ---
@@ -161,7 +169,7 @@ wireframe-skill v3.0:
 **Key architectural decisions** (already made and documented):
 - The wireframe library IS a design system with `grammar_family: wireframe`. Same schema, same machinery.
 - wireframe-skill calls into design-system-skill, never the reverse.
-- Per-system libraries follow the same component vocabulary as the wireframe library (LIBRARY-SPEC's 42 components).
+- Per-system libraries follow the same component vocabulary as the wireframe library (LIBRARY-SPEC's <!-- generated:library-vocabulary-count -->42<!-- /generated:library-vocabulary-count --> components).
 - Schema v0.2 is fully backwards-compatible with v0.1 — all v0.1 specs continue to work.
 
 ---
@@ -169,16 +177,16 @@ wireframe-skill v3.0:
 ## What's Done
 
 ✅ Schema v0.2 written and documented (12 changes including `check_scope` from Phase 1)
-✅ All 8 system specs on v0.2 (wireframe, swiss, terminal, editorial, sketch, prism, revolt, riso)
-✅ Wireframe library complete: 100 components + 53 layouts (incl. 12 mobile variants), 153/153 rulebook-clean
-✅ Swiss library full LIBRARY-SPEC vocabulary coverage: 71 components + 12 patterns, 83/83 rulebook-clean
+✅ All system specs migrated to v0.2 (since moved to v0.3)
+✅ Wireframe library complete, including mobile pattern variants; rulebook-clean
+✅ Swiss library full LIBRARY-SPEC vocabulary coverage; rulebook-clean
 ✅ Tooling under `tools/builders/`: render_preview, rulebook_check, tracking_conversion, all build_* scripts
 ✅ Per-system signature libraries (editorial/sketch/prism/revolt/terminal/riso) with list-item + dashboard
 ✅ Contact sheet extended to render the full Patterns tier alongside Primitives + Composites
-✅ design-system-skill **implemented in Python** (`design-system-skill/design_system_skill/`); 94/94 tests pass
-✅ wireframe-skill v3.0 **implemented in Python** as deterministic shell (`wireframe-skill/wireframe_skill/`); 38/38 tests pass
+✅ design-system-skill **implemented in Python** (`design-system-skill/design_system_skill/`); tests pass in CI
+✅ wireframe-skill v3.0 **implemented in Python** as deterministic shell (`wireframe-skill/wireframe_skill/`); tests pass in CI
 ✅ Both skills have CLI shims (`python3 design-system-skill <cmd>`, `python3 wireframe-skill --brief ...`)
-✅ Initial `registry.yaml` indexes all 8 systems
+✅ `registry.yaml` indexes every system (current counts: generated table above)
 ✅ **Phase 3.5 conformance pass** — both SKILL.md docs adopt the project's L1/L2/L3 frontmatter + Composition table + explicit Output Contract sections; all 12 Python modules use `structlog` + Google-style docstrings; HANDOFF + docs swept of time estimates per the No-Time-Estimates Policy
 ✅ **Project-wide no-emoji policy** (Schema v0.2 Change 13) — `avatar_strategy` declared per system replacing `emoji_substitutions`; all 12 signature SVGs across editorial/sketch/prism/revolt re-authored with monograms or abbreviations; `check_no_emoji()` registered in every system's mechanical ruleset; HANDOFF Known Issue #3 (emoji substitution) resolved at the source rather than runtime
 ✅ Repo organized: `docs/`, `tools/builders/`, per-system `*-library/` folders, scripts auto-locate project root

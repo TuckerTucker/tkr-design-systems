@@ -342,7 +342,7 @@ Adding a system's library against this spec, in order:
 
 Total per-system scope: authoring 40-70 SVG files (Primitives + Composites + Patterns) against established conventions and the validated spec. The current authoring (one signature component per system) covered 2-3 files; full library scales with grammar complexity.
 
-## Coverage Targets For tkr-kit's Six Systems
+## Coverage Targets Per System
 
 Based on each system's grammar and likely use cases:
 
