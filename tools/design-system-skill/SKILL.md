@@ -106,6 +106,10 @@ Takes a system id and an artifact (currently SVG file path; future: also accepts
 
 The mechanical checks (color palette membership, type scale enforcement, no-shadow validation, etc.) run as deterministic Python — no model invocation. The semantic checks (Swiss's "red used in 4 places per screen" requires understanding *which* uses count as the protected categories) may invoke a model. The result distinguishes mechanical from semantic checks so consumers can decide whether they trust a fully-mechanical pass or want human review for semantic findings.
 
+### check_drift
+
+Compares a spec.yaml with its canonical token file (`systems/<id>/tokens.json`, schema v0.3) and reports every disagreement: stale literals at projected locations, unresolved `{group.token}` aliases or palette `token:` references, and colour/font literals the token file does not produce. `python3 design-system-skill drift --all` (default), `--id swiss`, or `--spec path`; exit 1 on drift. `validate_spec` runs the same check for any spec that declares `system.tokens_file`. See `docs/specs/TOKENS.md`.
+
 ## File Layout
 
 The skill expects this directory structure on disk:
@@ -302,7 +306,10 @@ The Python implementation lives at `design_system_skill/` (package) with these m
 |--------|----------------|
 | `loader.py` | `load_system()`; checksum-cached spec loading + SVG path resolution |
 | `registry.py` | `Registry` class wrapping `registry.yaml`; `list_systems()`, `register_system()`, `unregister_system()` |
-| `validation.py` | `validate_spec()`; hand-rolled schema checks against v0.1 + v0.2 |
+| `validation.py` | `validate_spec()`; hand-rolled schema checks against v0.1, v0.2 and v0.3 (token contract + drift) |
+| `contract.py` | The v0.3 semantic token contract (`CONTRACT_TOKENS`, `CONTRAST_PAIRS`), colour parsing — `docs/specs/SCHEMA-V0.3.md` |
+| `token_file.py` | Canonical `systems/<id>/tokens.json`: load, validate, modes, aliases, projection into the spec — `docs/specs/TOKENS.md` |
+| `drift.py` | `check_drift()` / `check_drift_all()`: spec.yaml vs tokens.json (`drift` CLI subcommand) |
 | `rulebook.py` | `get_rulebook()`, `check_compliance()`; delegates mechanical checks to `tools/builders/rulebook_check.py` |
 | `errors.py` | `Result` + `Error` dataclasses; `ERROR_CODES` enumeration |
 | `paths.py` | Project-root + registry-path resolution; honors `$DESIGN_SYSTEM_SKILL_REGISTRY` for tests |

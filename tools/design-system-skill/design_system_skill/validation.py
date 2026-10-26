@@ -32,6 +32,7 @@ from typing import Any
 import yaml
 
 from .errors import Error, Result
+from .drift import find_drift
 from .token_file import load_token_file, token_file_path, validate_token_document
 
 import structlog
@@ -259,7 +260,8 @@ def _check_token_contract(
 
     v0.3 specs must declare ``system.tokens_file``; earlier versions may.
     When declared, the file must exist, parse, name the same system, and
-    supply every contract token (``token_file.validate_token_document``).
+    supply every contract token (``token_file.validate_token_document``),
+    and spec.yaml must not drift from it (``drift.find_drift``).
 
     Args:
         data: Parsed spec mapping.
@@ -306,6 +308,14 @@ def _check_token_contract(
             f"elevation.strategy '{strategy}' (token file) is not a known convention. "
             f"Known values: {sorted(KNOWN_ELEVATION_STRATEGIES)}",
             {"strategy": strategy, "tokens_path": str(tok_path)},
+        ))
+
+    # spec.yaml must not disagree with its own source of truth.
+    for item in find_drift(data, doc):
+        errors.append(Error(
+            "TOKEN_DRIFT",
+            item.message,
+            {"kind": item.kind, "location": item.location, "tokens_path": str(tok_path)},
         ))
 
 

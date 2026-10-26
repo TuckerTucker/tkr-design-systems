@@ -78,6 +78,7 @@ class ContractToken:
 
 
 def _c(name: str, meaning: str, used_by: str) -> ContractToken:
+    """Shorthand for a ``color`` group contract token."""
     return ContractToken("color", name, KIND_COLOR, meaning, used_by)
 
 

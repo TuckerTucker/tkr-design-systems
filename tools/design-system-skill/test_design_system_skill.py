@@ -791,6 +791,12 @@ def test_neutral_alias_shares_wireframe_tokens():
                 "same tokens_path")
         assert_(nt.data["tokens"]["contract"]["system"] == "wireframe",
                 "token file system id is the canonical 'wireframe'")
+    from design_system_skill.token_file import load_tokens_for_system
+    builder_view = load_tokens_for_system("neutral")
+    assert_(builder_view.ok and builder_view.data["color"]["page_bg"] == "#F5F5F5",
+            "load_tokens_for_system('neutral') returns the wireframe token document")
+    assert_(not load_tokens_for_system("does_not_exist").ok,
+            "load_tokens_for_system fails cleanly for unknown ids")
 
 
 def test_riso_modes_cover_every_press():
@@ -834,6 +840,101 @@ def test_token_file_edit_invalidates_cache():
             clear_cache()
 
 
+# ─── test: drift check (issue #4) ─────────────────────────────────
+
+def test_find_drift_kinds():
+    section("find_drift: detects each kind of disagreement")
+    from design_system_skill.drift import find_drift
+    doc = _minimal_token_doc()
+    doc["color"]["accent"] = "#E3000B"
+    doc["extras"] = {"color": {"rule_hairline": "#F0F0F0"}}
+    spec = {
+        "tokens": {
+            "colors": {
+                "accent": "#e3000b",          # same colour, different spelling: not drift
+                "page_bg": "#FFFFFF",         # token says #808080
+                "palette": [
+                    {"name": "red", "token": "color.accent"},
+                    {"name": "hair", "token": "extras.color.rule_hairline", "value": "#EEEEEE"},
+                    {"name": "ghost", "token": "extras.color.nope"},
+                ],
+            },
+            "elevation": {"config": {
+                "rule": {"color": "{color.border_default}"},
+                "bar": {"color": "#123456"},                     # not in the token file
+                "broken": {"color": "{color.not_a_token}"},
+            }},
+            "typography": {"families": [{"id": "structural", "stack": "Comic Sans MS"}]},
+        },
+    }
+    items = find_drift(spec, doc)
+    kinds = {(i.kind, i.location) for i in items}
+    assert_(("value_mismatch", "tokens.colors.page_bg") in kinds, f"page_bg mismatch found ({kinds})")
+    assert_(not any(loc == "tokens.colors.accent" for _, loc in kinds),
+            "case-only difference is not drift")
+    assert_(("palette_mismatch", "tokens.colors.palette[1].value") in kinds, "palette value mismatch found")
+    assert_(("unresolved_alias", "tokens.colors.palette[2].token") in kinds, "unknown palette token found")
+    assert_(("unresolved_alias", "tokens.elevation.config.broken.color") in kinds, "unknown alias found")
+    assert_(("unknown_literal", "tokens.elevation.config.bar.color") in kinds, "unknown colour literal found")
+    assert_(("unknown_literal", "tokens.typography.families[0].stack") in kinds, "unknown font stack found")
+    assert_(len(items) == 6, f"exactly 6 drift items ({len(items)}: {sorted(kinds)})")
+
+
+def test_drift_clean_for_all_registered_systems():
+    section("check_drift_all: every registered spec agrees with its tokens.json")
+    from design_system_skill import check_drift_all
+    res = check_drift_all()
+    assert_(res.ok, "no drift in any registered system",
+            "; ".join(e.message for e in res.errors)[:400])
+    systems = (res.data or {}).get("systems", {})
+    assert_(systems.get("neutral") == {"alias_of": "wireframe"},
+            f"neutral is reported as an alias of wireframe ({systems.get('neutral')})")
+
+
+def _copy_swiss(td_path: Path) -> Path:
+    import shutil
+    dst = td_path / "swiss"
+    shutil.copytree(SYSTEMS_DIR / "swiss", dst)
+    return dst / "spec.yaml"
+
+
+def test_drift_fails_validation_and_cli():
+    section("drift: a drifting spec fails validate_spec and the CLI")
+    import contextlib
+    import importlib.util
+    import io
+    from design_system_skill import check_drift
+    spec_mod = importlib.util.spec_from_file_location("dss_cli", HERE / "__main__.py")
+    cli = importlib.util.module_from_spec(spec_mod)
+    spec_mod.loader.exec_module(cli)
+
+    with tempfile.TemporaryDirectory() as td:
+        spec_path = _copy_swiss(Path(td))
+        with contextlib.redirect_stdout(io.StringIO()):
+            clean_exit = cli.main(["drift", "--spec", str(spec_path)])
+        assert_(clean_exit == 0, f"CLI exits 0 on a clean spec (got {clean_exit})")
+
+        text = spec_path.read_text().replace(
+            "    palette:\n", '    text_muted: "#666666"   # the pre-v0.3 value\n\n    palette:\n', 1)
+        spec_path.write_text(text)
+
+        res = check_drift(spec_path)
+        assert_(not res.ok, "check_drift reports the stale literal")
+        drift = (res.data or {}).get("drift", [])
+        assert_(any(d["location"] == "tokens.colors.text_muted" and d["token_value"] == "#949494"
+                    for d in drift), f"drift names text_muted vs #949494 ({drift})")
+
+        val = validate_spec(spec_path, library_root=str(spec_path.parent))
+        assert_(not val.ok and any(e.code == "TOKEN_DRIFT" for e in val.errors),
+                "validate_spec fails with TOKEN_DRIFT")
+
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            drift_exit = cli.main(["drift", "--spec", str(spec_path)])
+        assert_(drift_exit == 1, f"CLI exits 1 on drift (got {drift_exit})")
+        assert_("text_muted" in out.getvalue(), "CLI output names the drifting key")
+
+
 # ─── runner ─────────────────────────────────────────────────────────
 
 def main():
@@ -868,6 +969,9 @@ def main():
     test_neutral_alias_shares_wireframe_tokens()
     test_riso_modes_cover_every_press()
     test_token_file_edit_invalidates_cache()
+    test_find_drift_kinds()
+    test_drift_clean_for_all_registered_systems()
+    test_drift_fails_validation_and_cli()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

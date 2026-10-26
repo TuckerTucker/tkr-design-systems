@@ -546,6 +546,48 @@ def apply_tokens_to_spec(spec: dict[str, Any], doc: dict[str, Any]) -> tuple[dic
     return resolved, unresolved
 
 
+def load_tokens_for_system(system_id: str) -> Result:
+    """Load a registered system's token document by id.
+
+    The entry point for builders and exporters: resolves the registry
+    entry, reads its spec's ``system.tokens_file`` and returns the parsed
+    document (not validated — ``validate_spec`` covers that).
+
+    Args:
+        system_id: Registered system id (``swiss``, ``neutral`` ...).
+
+    Returns:
+        Result with ``data`` = the token document.
+    """
+    # Local imports: registry -> validation -> token_file would otherwise cycle.
+    from .paths import project_root
+    from .registry import Registry
+
+    reg = Registry.load()
+    if not reg.ok:
+        return reg
+    entry = reg.data.get(system_id)
+    if entry is None:
+        return Result.failure(Error(
+            "SYSTEM_NOT_FOUND", f"System '{system_id}' is not in the registry",
+            {"system_id": system_id},
+        ))
+    spec_path = (project_root() / entry.spec).resolve()
+    try:
+        spec = yaml.safe_load(spec_path.read_text()) or {}
+    except (FileNotFoundError, yaml.YAMLError) as exc:
+        return Result.failure(Error("SPEC_FILE_MISSING", f"Cannot read {spec_path}: {exc}",
+                                    {"spec_path": str(spec_path)}))
+    tok_path = token_file_path(spec_path, spec)
+    if tok_path is None:
+        return Result.failure(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            f"System '{system_id}' declares no system.tokens_file",
+            {"system_id": system_id, "spec_path": str(spec_path)},
+        ))
+    return load_token_file(tok_path)
+
+
 def read_spec_with_tokens(spec_path: str | Path) -> Result:
     """Parse a spec.yaml file and apply its token file, without the registry.
 
