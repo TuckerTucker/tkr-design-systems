@@ -3,9 +3,10 @@
     <style>
       .text-primary { fill: #111111; font-family: 'Space Mono', monospace; }
       .text-secondary { fill: #666666; font-family: 'Space Mono', monospace; }
-      .text-muted { fill: #939393; font-family: 'Space Mono', monospace; }
+      .text-muted { fill: #757575; font-family: 'Space Mono', monospace; }
       .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', monospace; }
       .text-on-accent { fill: #111111; font-family: 'Space Mono', monospace; }
+      .text-on-danger { fill: #111111; font-family: 'Space Mono', monospace; }
     </style>
   </defs>
   <!-- ==================== TABLE-ROW-DEFAULT ==================== -->
@@ -14,6 +15,6 @@
   <text x="32" y="24" class="text-primary" font-size="9">Alex Rivera</text>
   <text x="160" y="24" class="text-secondary" font-size="9">alex@example.com</text>
   <text x="296" y="24" text-anchor="end" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">ACTIVE</text>
-  <line x1="0" y1="38" x2="320" y2="38" stroke="#939393" stroke-width="1"/>
+  <line x1="0" y1="38" x2="320" y2="38" stroke="#757575" stroke-width="1"/>
 
 </svg>

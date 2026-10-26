@@ -3,7 +3,7 @@
     <style>
       .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
       .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
       .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
       .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
     </style>

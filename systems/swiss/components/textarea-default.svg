@@ -3,7 +3,7 @@
     <style>
       .text-primary { fill: #000000; font-family: 'Inter', system-ui, sans-serif; }
       .text-secondary { fill: #5A5A5A; font-family: 'Inter', system-ui, sans-serif; }
-      .text-disabled { fill: #8E8E8E; font-family: 'Inter', system-ui, sans-serif; }
+      .text-disabled { fill: #707070; font-family: 'Inter', system-ui, sans-serif; }
       .text-accent { fill: #E3000B; font-family: 'Inter', system-ui, sans-serif; }
       .text-inverse { fill: #FFFFFF; font-family: 'Inter', system-ui, sans-serif; }
     </style>

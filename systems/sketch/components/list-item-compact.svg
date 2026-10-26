@@ -3,7 +3,7 @@
     <style>
       .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
       .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
       .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
       .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
     </style>
@@ -14,6 +14,6 @@
   <rect x="14" y="7" width="34" height="34" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="8" ry="8"/>
   <text x="31" y="30" font-family="'IBM Plex Sans', sans-serif" font-size="14" font-weight="600" fill="#2C2C2C" text-anchor="middle">R</text>
   <text x="58" y="29" font-family="'IBM Plex Sans', sans-serif" font-size="12.5" font-weight="600" fill="#2C2C2C">Recipe ideas</text>
-  <text x="266" y="29" font-family="'IBM Plex Sans', sans-serif" font-size="10" fill="#8A8680" text-anchor="end">1h</text>
+  <text x="266" y="29" font-family="'IBM Plex Sans', sans-serif" font-size="10" fill="#6F6B66" text-anchor="end">1h</text>
 
 </svg>

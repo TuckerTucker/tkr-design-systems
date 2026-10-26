@@ -3,10 +3,10 @@
     <style>
       .text-primary { fill: #1A1614; font-family: 'Fraunces', Georgia, serif; }
       .text-secondary { fill: #5C4F44; font-family: 'Fraunces', Georgia, serif; }
-      .text-metadata { fill: #8B7D6F; font-family: 'Inter', sans-serif; }
+      .text-metadata { fill: #77695B; font-family: 'Inter', sans-serif; }
       .text-metadata-accent { fill: #8B1E2D; font-family: 'Inter', sans-serif; }
       .text-accent { fill: #8B1E2D; font-family: 'Fraunces', Georgia, serif; }
-      .text-muted { fill: #8B7D6F; font-family: 'Inter', sans-serif; }
+      .text-muted { fill: #77695B; font-family: 'Inter', sans-serif; }
       .text-display { fill: #1A1614; font-family: 'Fraunces', Georgia, serif; }
     </style>
   </defs>
@@ -32,7 +32,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">2M AGO · DISPATCH</text>
 
   <!-- Unread "2 new" — Fraunces burgundy, NOT a badge per rulebook -->

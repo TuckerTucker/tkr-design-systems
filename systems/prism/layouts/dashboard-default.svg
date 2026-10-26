@@ -3,7 +3,7 @@
     <style>
       .text-primary { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
       .text-secondary { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
-      .text-muted { fill: rgba(255,255,255,0.66); font-family: 'Outfit', sans-serif; }
+      .text-muted { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
       .text-accent { fill: #9CFFDD; font-family: 'Outfit', sans-serif; }
     </style>
     <linearGradient id="prism-bg" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate(0)">

@@ -3,7 +3,7 @@
     <style>
       .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
       .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
       .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
       .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
     </style>
@@ -66,7 +66,7 @@
   <rect x="320" y="432" width="576" height="40" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="8" ry="8"/>
   <text x="332" y="458" class="text-primary" font-size="14" letter-spacing="-0.02em">America/Los_Angeles</text>
   <g transform="rotate(-2, 888, 452)">
-    <text x="888" y="458" text-anchor="end" font-family="'Caveat', cursive" font-size="14" font-weight="700" fill="#8A8680">↓</text>
+    <text x="888" y="458" text-anchor="end" font-family="'Caveat', cursive" font-size="14" font-weight="700" fill="#6F6B66">↓</text>
   </g>
 
   <line x1="320" y1="500" x2="1248" y2="500" stroke="#E5E3DE" stroke-width="1"/>

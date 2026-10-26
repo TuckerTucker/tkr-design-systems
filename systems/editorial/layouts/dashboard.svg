@@ -3,10 +3,10 @@
     <style>
       .text-primary { fill: #1A1614; font-family: 'Fraunces', Georgia, serif; }
       .text-secondary { fill: #5C4F44; font-family: 'Fraunces', Georgia, serif; }
-      .text-metadata { fill: #8B7D6F; font-family: 'Inter', sans-serif; }
+      .text-metadata { fill: #77695B; font-family: 'Inter', sans-serif; }
       .text-metadata-accent { fill: #8B1E2D; font-family: 'Inter', sans-serif; }
       .text-accent { fill: #8B1E2D; font-family: 'Fraunces', Georgia, serif; }
-      .text-muted { fill: #8B7D6F; font-family: 'Inter', sans-serif; }
+      .text-muted { fill: #77695B; font-family: 'Inter', sans-serif; }
       .text-display { fill: #1A1614; font-family: 'Fraunces', Georgia, serif; }
     </style>
   </defs>
@@ -50,7 +50,7 @@
         font-size="12"
         font-style="italic"
         font-weight="400"
-        fill="#8B7D6F">Search the archives…</text>
+        fill="#77695B">Search the archives…</text>
   <line x1="16" y1="116" x2="264" y2="116" stroke="#D8CEB9" stroke-width="1"/>
 
   <!-- Section header: tracked uppercase Inter -->
@@ -58,7 +58,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.62">RECENT DISPATCHES</text>
 
   <!-- Strong rule above first dispatch -->
@@ -70,7 +70,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">2M AGO · DISPATCH</text>
   <text x="264" y="174"
         font-family="'Fraunces', Georgia, serif"
@@ -97,7 +97,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">1H AGO · DISPATCH</text>
   <text x="16" y="287"
         font-family="'Fraunces', Georgia, serif"
@@ -118,7 +118,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">3H AGO · DISPATCH</text>
   <text x="264" y="352"
         font-family="'Fraunces', Georgia, serif"
@@ -145,7 +145,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">1D AGO · DISPATCH</text>
   <text x="16" y="465"
         font-family="'Fraunces', Georgia, serif"
@@ -166,7 +166,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">2D AGO · DISPATCH</text>
   <text x="16" y="554"
         font-family="'Fraunces', Georgia, serif"
@@ -188,7 +188,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">YOUR BYLINE</text>
   <text x="16" y="784"
         font-family="'Fraunces', Georgia, serif"
@@ -221,7 +221,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.26"
         text-anchor="end">FILED 14:23 · 4 EXCHANGES</text>
 
@@ -238,7 +238,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">YOU · 14:23</text>
   <line x1="540" y1="142" x2="540" y2="172" stroke="#8B1E2D" stroke-width="2"/>
   <text x="558" y="160"
@@ -253,7 +253,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">EDITORIAL · 14:24</text>
 
   <!-- DROP CAP per drop-cap-ceremony rule: 54px Fraunces 700 burgundy float-left -->
@@ -285,7 +285,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">YOU · 14:26</text>
   <line x1="500" y1="362" x2="500" y2="392" stroke="#8B1E2D" stroke-width="2"/>
   <text x="518" y="380"
@@ -300,7 +300,7 @@
         font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
-        fill="#8B7D6F"
+        fill="#77695B"
         letter-spacing="1.44">EDITORIAL · 14:27</text>
   <text x="320" y="464"
         font-family="'Fraunces', Georgia, serif"
@@ -325,7 +325,7 @@
         font-size="14"
         font-style="italic"
         font-weight="400"
-        fill="#8B7D6F">Compose a reply…</text>
+        fill="#77695B">Compose a reply…</text>
   <text x="1264" y="744"
         font-family="'Inter', sans-serif"
         font-size="9"

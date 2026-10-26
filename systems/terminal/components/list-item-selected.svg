@@ -3,7 +3,7 @@
     <style>
       .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', monospace; }
       .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', monospace; }
-      .text-muted { fill: #3D7044; font-family: 'JetBrains Mono', monospace; }
+      .text-muted { fill: #578B5D; font-family: 'JetBrains Mono', monospace; }
       .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', monospace; }
       .text-error { fill: #FF4E4E; font-family: 'JetBrains Mono', monospace; }
       .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', monospace; }
@@ -48,7 +48,7 @@
         font-family="'JetBrains Mono', monospace"
         font-size="10"
         font-weight="500"
-        fill="#3D7044"
+        fill="#578B5D"
         text-anchor="end">2m</text>
 
   <!-- Preview line — prefixed with `// ` -->

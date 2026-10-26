@@ -3,7 +3,7 @@
     <style>
       .text-primary { fill: #000000; font-family: 'Inter', system-ui, sans-serif; }
       .text-secondary { fill: #5A5A5A; font-family: 'Inter', system-ui, sans-serif; }
-      .text-disabled { fill: #8E8E8E; font-family: 'Inter', system-ui, sans-serif; }
+      .text-disabled { fill: #707070; font-family: 'Inter', system-ui, sans-serif; }
       .text-accent { fill: #E3000B; font-family: 'Inter', system-ui, sans-serif; }
       .text-inverse { fill: #FFFFFF; font-family: 'Inter', system-ui, sans-serif; }
     </style>
@@ -11,7 +11,7 @@
   <!-- ==================== BANNER-WARNING ==================== -->
 
   <line x1="0" y1="0" x2="640" y2="0" stroke="#000000" stroke-width="1"/>
-  <text x="0" y="34" class="text-accent" font-size="9" font-weight="500" letter-spacing="1.44">ATTENTION</text>
+  <text x="0" y="34" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">ATTENTION</text>
   <text x="96" y="34" class="text-primary" font-size="13">Your trial ends in 3 days.</text>
   <text x="624" y="34" text-anchor="end" class="text-primary" font-size="13" font-weight="500">Upgrade →</text>
   <line x1="0" y1="55.5" x2="640" y2="55.5" stroke="#F0F0F0" stroke-width="1"/>

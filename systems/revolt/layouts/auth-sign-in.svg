@@ -3,9 +3,10 @@
     <style>
       .text-primary { fill: #111111; font-family: 'Space Mono', monospace; }
       .text-secondary { fill: #666666; font-family: 'Space Mono', monospace; }
-      .text-muted { fill: #939393; font-family: 'Space Mono', monospace; }
+      .text-muted { fill: #757575; font-family: 'Space Mono', monospace; }
       .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', monospace; }
       .text-on-accent { fill: #111111; font-family: 'Space Mono', monospace; }
+      .text-on-danger { fill: #111111; font-family: 'Space Mono', monospace; }
     </style>
   </defs>
   <!-- ==================== AUTH-SIGN-IN ==================== -->
@@ -29,7 +30,7 @@
   <text x="490" y="198" class="text-muted" font-size="10">your@email.com</text>
 
   <!-- Divider -->
-  <line x1="480" y1="226" x2="792" y2="226" stroke="#939393" stroke-width="1"/>
+  <line x1="480" y1="226" x2="792" y2="226" stroke="#757575" stroke-width="1"/>
 
   <!-- Password field -->
   <text x="480" y="254" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">PASSWORD</text>
@@ -37,7 +38,7 @@
   <text x="490" y="282" class="text-primary" font-size="10" letter-spacing="1.5">••••••••</text>
 
   <!-- Divider -->
-  <line x1="480" y1="310" x2="792" y2="310" stroke="#939393" stroke-width="1"/>
+  <line x1="480" y1="310" x2="792" y2="310" stroke="#757575" stroke-width="1"/>
 
   <!-- Sign in button — lime with 4px hard shadow -->
   <rect x="484" y="342" width="304" height="48" fill="#111111"/>

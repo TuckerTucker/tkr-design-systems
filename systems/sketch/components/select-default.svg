@@ -3,7 +3,7 @@
     <style>
       .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
       .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
       .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
       .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
     </style>
@@ -13,7 +13,7 @@
   <rect x="0" y="0" width="320" height="56" fill="#FFFFFF" stroke="#8A8984" stroke-width="1" rx="8" ry="8"/>
   <text x="12" y="35" class="text-primary" font-size="14" letter-spacing="-0.02em">Choose one</text>
   <g transform="rotate(-2, 308, 28)">
-    <text x="308" y="35" text-anchor="end" font-family="'Caveat', cursive" font-size="14" font-weight="700" fill="#8A8680">↓</text>
+    <text x="308" y="35" text-anchor="end" font-family="'Caveat', cursive" font-size="14" font-weight="700" fill="#6F6B66">↓</text>
   </g>
 
 </svg>

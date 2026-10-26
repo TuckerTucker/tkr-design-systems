@@ -3,9 +3,10 @@
     <style>
       .text-primary { fill: #111111; font-family: 'Space Mono', monospace; }
       .text-secondary { fill: #666666; font-family: 'Space Mono', monospace; }
-      .text-muted { fill: #939393; font-family: 'Space Mono', monospace; }
+      .text-muted { fill: #757575; font-family: 'Space Mono', monospace; }
       .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', monospace; }
       .text-on-accent { fill: #111111; font-family: 'Space Mono', monospace; }
+      .text-on-danger { fill: #111111; font-family: 'Space Mono', monospace; }
     </style>
   </defs>
   <!-- ==================== INPUT-TEXT ==================== -->

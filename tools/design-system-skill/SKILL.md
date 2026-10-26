@@ -132,12 +132,12 @@ The user picks the system; this skill does not decide for them. The table says w
 | System | Intent | Grammar | Suits | Components / layouts | Rules |
 |--------|--------|---------|-------|----------------------|-------|
 | `wireframe` Wireframe | Neutral Greyscale Reference Library (showcase: Greyscale Wireframe Reference) | `wireframe` | Structure before a visual language is chosen. The default when the user names no system, and the fallback library for components another system has not authored. | 100 / 53 | 12 |
-| `swiss` Swiss | Grid + Grotesk + Single Saturated Accent (showcase: Grid-strict + Rams Heritage) | `contemporary_clean` | General-purpose product UI: dashboards, settings, forms, data tables, sign-in. Dense information where hierarchy comes from type and grid, with one accent. | 71 / 12 | 13 |
+| `swiss` Swiss | Grid + Grotesk + Single Saturated Accent (showcase: Grid-strict + Rams Heritage) | `contemporary_clean` | General-purpose product UI: dashboards, settings, forms, data tables, sign-in. Dense information where hierarchy comes from type and grid, with one accent. | 71 / 12 | 14 |
 | `terminal` Terminal | CLI + Phosphor Heritage | `character_grid` | Developer tools, logs, monitoring and command palettes; keyboard-first surfaces. Not long-form reading or consumer sign-in. | 53 / 4 | 8 |
 | `editorial` Editorial | Long-form Serif + Newsprint Masthead | `contemporary_clean` | Long-form reading: articles, briefings, newsletters, transcripts. The article pattern is its strength. | 73 / 5 | 9 |
 | `sketch` Sketch | Linear + Hand-Drawn | `contemporary_clean` | Early product UI that carries an annotation layer: design reviews, onboarding, explained flows. | 65 / 4 | 6 |
 | `prism` Prism | Liquid Glass + Bento | `contemporary_clean` | Atmospheric, short compositions: dashboards, modals, drawers. Built for HTML/CSS; its SVG glass is an approximation for layout review only. | 56 / 4 | 6 |
-| `revolt` Revolt | Neobrutalist + Y2K | `contemporary_clean` | Expressive, loud moments: launches, campaigns, banners, playful sign-in. | 57 / 3 | 8 |
+| `revolt` Revolt | Neobrutalist + Y2K | `contemporary_clean` | Expressive, loud moments: launches, campaigns, banners, playful sign-in. | 57 / 3 | 9 |
 | `riso` Riso | Duotone Print + Tweakable Press | `print_texture` | Content-heavy, print-flavoured surfaces: zines, features, articles, with parametric ink and paper presets. | 2 / 0 | 20 |
 | `neutral` | Alias of `wireframe`: same spec and library. |  |  |  |  |
 <!-- /generated:which-system -->
@@ -226,6 +226,7 @@ Tokens: spacing 8, 16, 24, 32, 40, 48, 64; type sizes 9, 11, 13, 14, 22, 32, 40;
 - `swiss-no-emoji-imagery` (required, semantic): No emoji avatars, no decorative imagery, no illustrations.
 - `swiss-error-prefix` (required, mechanical): Error copy reads 'Error: `<what failed>`.' — the prefix 'Error:' with a capital E and a colon, a space, the failure, and a closing period (JSX voice table: 'Error: send failed.').
 - `swiss-error-not-red` (required, mechanical): Text beginning 'Error:' is set in ink (color.text_primary), never in the accent red.
+- `swiss-warning-not-red` (required, mechanical): Warnings are typographic, like errors: the severity label is grey and the message ink; neither is red.
 - `swiss-error-typographic` (required, semantic): Error states are carried by copy and type alone: no icon, glyph, shape, badge, pill, fill, coloured or thickened border, and no ● (the red ● is the active-status dot).
 
 #### Terminal (`terminal`)
@@ -288,7 +289,8 @@ Tokens: spacing 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32; type sizes 8, 9, 10, 11.
 - `revolt-color-pairing` (required, both): Pink (#FF3366) and lime (#C8FF00) are paired accent colors.
 - `revolt-code-style-timestamps` (required, semantic): Message timestamps follow the format `{SENDER} // 00:N` (e.g. YOU // 00:1, BOT // 00:2).
 - `revolt-no-emoji-imagery` (required, mechanical): No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations).
-- `revolt-error-status` (required, semantic): An error is labelled, not recoloured: it carries the uppercase status label ERROR (JSX Status Pills variants LIVE / TYPING / OFFLINE / ERROR) in a rectangular bordered pill: 2px solid border, padding 2px 8px, 9px/700 Space Mono uppercase, radius 0.
+- `revolt-error-status` (required, both): An error is labelled, not recoloured: it carries the uppercase status label ERROR (JSX Status Pills variants LIVE / TYPING / OFFLINE / ERROR) in a rectangular bordered pill: 2px solid border, padding 2px 8px, 9px/700 Space Mono uppercase, radius 0.
+- `revolt-pink-not-text` (required, mechanical): Pink (#FF3366, color.accent, reused as color.danger) is a fill, never a text colour.
 
 #### Riso (`riso`)
 
