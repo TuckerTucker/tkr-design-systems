@@ -39,7 +39,10 @@ const X = tokens.extras.color;
 const T = { ...tokens.type, ...tokens.extras.type };
 const rule = (w, col) => `${w}px solid ${col}`;
 
-const TM = { name: "Riso", tag: "Duotone Print + Tweakable Press", color: C.accent };
+/* The showcase chrome is tinted with the default ink-2 drum (the system's signature
+   pink): color.accent is the contrast-checked shade for text on paper, too dark for
+   the dark spec viewer. */
+const TM = { name: "Riso", tag: "Duotone Print + Tweakable Press", color: X.ink_2 };
 
 const chatList = [
   { id: 1, name: "Tokyo Trip", preview: "Want me to build a day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
