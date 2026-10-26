@@ -21,6 +21,7 @@ import yaml
 from .errors import Error, Result
 from .paths import project_root
 from .registry import Registry
+from .contrast import GATES
 from .token_file import apply_tokens_to_spec, load_token_file, token_file_path
 from .validation import validate_spec
 
@@ -57,7 +58,8 @@ def load_system(
     Returns a Result whose data is a normalized spec dict with:
       - `_meta`: {spec_version, system_version, checksum, spec_path, library_root,
         and, when the spec declares a token file, tokens_path, tokens_checksum,
-        contract_version}
+        contract_version, and (validated loads) color_gates = {contrast,
+        hue_gate} per-pair reports, see contrast.GateReport.summary}
       - `tokens.contract`: the system's canonical token document
         (systems/<id>/tokens.json), when declared
       - legacy token locations (`tokens.colors.page_bg`, `tokens.borders.radius_*`,
@@ -136,10 +138,14 @@ def load_system(
     library_root = (root / entry.library_root).resolve()
 
     warnings: list[Error] = []
+    color_gates: dict | None = None
     if validate:
         val_result = validate_spec(spec_path, library_root=library_root)
         if not val_result.ok:
             return val_result
+        if val_result.data:
+            color_gates = {key: val_result.data[key] for key, _ in GATES
+                           if key in val_result.data} or None
         if val_result.warnings:
             warnings.extend(val_result.warnings)
         if val_result.data and val_result.data.get("warnings"):
@@ -162,6 +168,8 @@ def load_system(
         if not tok_result.ok:
             return tok_result
         spec = tok_result.data
+    if color_gates is not None:
+        spec["_meta"]["color_gates"] = color_gates
 
     # Handle extends (inheritance)
     extends_id = (spec.get("system") or {}).get("extends")

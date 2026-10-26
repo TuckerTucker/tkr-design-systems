@@ -1,0 +1,117 @@
+# ADR-0002: Accent-vs-danger hue gate for every design system
+
+- **Status:** Accepted (the Revolt waiver is provisional, see Decision 4)
+- **Date:** 2026-10-26
+- **Deciders:** Tucker Harley Brown
+
+## Context
+
+GitHub issue #8. Every system's token file (`systems/<id>/tokens.json`,
+schema v0.3) names an `accent` (the brand signal: unread counts, selection
+bars, the brand mark), an `action` (the primary action) and a `danger`
+(errors, destructive actions). When accent or action share danger's hue,
+a user who relies on colour cannot tell "this is new / this is the main
+action" from "this is broken / this deletes something". Contrast alone (issue
+#7) does not catch this: two reds can both pass 4.5:1 and still mean opposite
+things.
+
+Measured in OKLCH hue, before this decision:
+
+| System | accent vs danger | action vs danger | Why |
+|--------|------------------|------------------|-----|
+| Swiss | 0° | 0° | danger reuses the accent red `#E3000B` (derived) |
+| Revolt | 0° | 110.6° | danger reuses the accent pink `#FF3366` |
+| Editorial | 1.2° | 1.2° | danger was "Masthead Deep" `#6B1623`, oxblood like the accent `#8B1E2D` |
+| Terminal | 122.7° | 122.7° | green accent, red danger |
+| Prism | 150.2° | exempt (grey glass) | teal accent, pink danger |
+| Sketch | 79.9° | 79.9° | purple accent, brick danger |
+| Wireframe | exempt (grey) | exempt (grey) | the accent is `#424242` |
+| Riso | exempt, 30 modes | exempt, 30 modes | danger is the paper's text ink (grey) |
+
+## Decision
+
+1. **Adopt the gate for all systems.** Per system and per mode combination,
+   `color.accent` and `color.action` must sit at least **40° of OKLCH hue**
+   from `color.danger` whenever both colours carry hue (OKLCH chroma ≥ 0.04;
+   greys have no hue and are exempt). Colours are composited over
+   `color.page_bg` first. Implemented in
+   `tools/design-system-skill/design_system_skill/contrast.py`
+   (`check_hue_gate`), run by `validate_spec` (error `HUE_GATE_FAIL`), the
+   `contrast` CLI command and the MCP tool `ds_check_contrast`, which report
+   every gap.
+2. **Waivers live in the token file and need a reason.**
+   `hue_waivers: [{pair, modes?, reason}]`, the same shape as the contrast
+   waivers; `pair` is `"color.accent vs color.danger"` or
+   `"color.action vs color.danger"`. A waiver that no longer matches a failure
+   is stale and fails, as with `rulebook-exceptions.yaml`.
+3. **Swiss is waived** (the owner's decision): Swiss has exactly one chromatic
+   colour and its danger state is meant to be carried by type and copy, not by
+   a second hue.
+4. **Revolt is waived provisionally, pending the owner's confirmation.** The
+   JSX marks the five-colour palette INVIOLABLE ("No new colors"). Its only
+   chromatic colours are pink (accent) and lime (action, success); any danger
+   40° away from pink would be a sixth colour and change the system's
+   identity, so no fix was made. Revolt distinguishes error states by the
+   uppercase status label (JSX status variants `LIVE / TYPING / OFFLINE /
+   ERROR`) and black text on pink. Action (lime) passes at 110.6°.
+5. **Editorial is fixed, not waived.** Danger is a derived token, not a
+   signature colour, so it moved: `#6B1623` → `#5F1B4F`, hue 17.6° → 338.5°
+   (gap 40.3°), lightness and chroma unchanged. It stays a deep wine on the
+   paper (danger_foreground 10.9:1). The warm side (~59°) was rejected because
+   it lands next to warning `#8A5A12` (~70°). "Masthead Deep" remains available
+   as `extras.color.accent_deep`.
+
+### Does Swiss actually carry danger by typography or shape?
+
+Partly, and only in the showcase JSX:
+
+- The JSX voice table prescribes error copy as a lowercase `Error:` prefix
+  ("Error: send failed."), which is a verbal and typographic marker.
+- The red is bounded to four contexts by `swiss-red-finite-resource` (CTAs,
+  selection bars, user tags, status dots), and the JSX lists "Use red for
+  hover states, warning messages, or decorative underlines" as a Don't. Error
+  and destructive states are not among red's four contexts.
+- **But** `systems/swiss/spec.yaml` defines no error or destructive component,
+  no shape cue and no typographic treatment for danger; `color.danger =
+  #E3000B` is itself a derived value (`notes["color.danger"]`). A red `●` is
+  also Swiss's *active* status dot, so a red danger mark would read as "live".
+
+The waiver therefore rests on the JSX voice table, not on anything the spec
+enforces. Follow-up (not done here): give Swiss's spec an explicit error
+treatment (for example the `Error:` prefix rule and a non-red danger mark)
+so the waiver describes enforced behaviour.
+
+## Alternatives Considered
+
+- **No gate; rely on the contrast gate.** Rejected: contrast measures
+  legibility, not meaning. Swiss, Revolt and Editorial pass contrast while
+  their danger is indistinguishable from their accent by colour.
+- **A smaller threshold (20–30°).** Rejected: neighbouring reds and pinks
+  (Editorial's oxblood vs a crimson, Revolt's pink vs a red at ~29°) are
+  still read as "the same red" at that distance, especially under colour
+  vision deficiencies that compress the red–green axis.
+- **A larger threshold (60°+).** Rejected: it would force danger into
+  orange or magenta in systems whose accent is a warm red, colliding with
+  warning hues, for little extra safety.
+- **Perceptual distance (ΔE OK) instead of hue.** Rejected: two colours of
+  the same hue but different lightness have a large ΔE (Editorial's accent
+  and Masthead Deep) yet still read as one colour family; hue is what makes
+  "brand red" and "error red" confusable.
+- **Per-system opt-in.** Rejected: the collision is a property of the token
+  values, so every system is checked; exceptions are explicit waivers with
+  reasons, visible in review.
+
+## Consequences
+
+- Every system is checked in every mode; a new system that reuses its accent
+  as danger fails validation until it moves danger or adds a reasoned waiver.
+- Editorial's destructive states become plum rather than oxblood; builders
+  and the showcase pick this up from `tokens.json`.
+- Two systems carry waivers. The Revolt waiver needs an owner decision: keep
+  it, or admit a sixth colour for danger.
+- Swiss's waiver documents intent that its spec does not yet enforce (see
+  above).
+- Reversal cost is low: the gate is one function and one key in the token
+  file; removing it is a code change, and waivers can be deleted once a
+  system changes its danger colour (the stale-waiver check forces that
+  clean-up).
