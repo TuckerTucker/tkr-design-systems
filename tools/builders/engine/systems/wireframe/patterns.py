@@ -24,7 +24,7 @@ PATTERNS = {
   <line x1="0" y1="64" x2="280" y2="64" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Search -->
-  <rect x="16" y="80" width="248" height="36" rx="{radius.default}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="16" y="80" width="248" height="36" rx="{radius.input}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <circle cx="32" cy="98" r="5" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
   <line x1="36" y1="102" x2="40" y2="106" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
   <text x="50" y="103" class="text-disabled" font-size="13">Search</text>
@@ -141,7 +141,7 @@ PATTERNS = {
   <text x="32" y="40" class="text-primary" font-size="16" font-weight="700">Brand</text>
 
   <!-- Search bar in center -->
-  <rect x="320" y="14" width="640" height="36" rx="{radius.default}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="320" y="14" width="640" height="36" rx="{radius.input}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <circle cx="338" cy="32" r="6" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
   <line x1="343" y1="37" x2="348" y2="42" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
   <text x="358" y="37" class="text-disabled" font-size="14">Search projects, tasks, people...</text>
@@ -164,10 +164,10 @@ PATTERNS = {
   <text x="372" y="40" class="text-secondary" font-size="14">Team</text>
 
   <!-- Action buttons -->
-  <rect x="1064" y="14" width="100" height="36" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="1064" y="14" width="100" height="36" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="1114" y="36" text-anchor="middle" class="text-secondary" font-size="13" font-weight="500">Invite</text>
 
-  <rect x="1172" y="14" width="80" height="36" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="1172" y="14" width="80" height="36" rx="{radius.input}" fill="{color.accent}"/>
   <text x="1212" y="36" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">+ New</text>
 """),
 
@@ -178,29 +178,29 @@ PATTERNS = {
 
   <!-- Field 1 -->
   <text x="0" y="14" class="text-secondary" font-size="12">Full name</text>
-  <rect y="22" width="480" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="22" width="480" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="52" class="text-primary" font-size="14">Alex Rivera</text>
 
   <!-- Field 2 -->
   <text x="0" y="100" class="text-secondary" font-size="12">Email address</text>
-  <rect y="108" width="480" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="108" width="480" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="138" class="text-primary" font-size="14">alex@example.com</text>
 
   <!-- Field 3 -->
   <text x="0" y="186" class="text-secondary" font-size="12">Role</text>
-  <rect y="194" width="480" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="194" width="480" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="224" class="text-primary" font-size="14">Administrator</text>
   <path d="M 450 216 L 458 224 L 466 216" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
 
   <!-- Field 4 -->
   <text x="0" y="272" class="text-secondary" font-size="12">Bio</text>
-  <rect y="280" width="480" height="96" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="280" width="480" height="96" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="304" class="text-disabled" font-size="14">Tell us about yourself...</text>
 
   <!-- Action row -->
-  <rect x="296" y="408" width="84" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="296" y="408" width="84" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="338" y="438" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
-  <rect x="396" y="408" width="84" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="396" y="408" width="84" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="438" y="438" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Save</text>
 """),
 
@@ -209,53 +209,53 @@ PATTERNS = {
 
   <!-- Row 1: First name | Last name -->
   <text x="0" y="14" class="text-secondary" font-size="12">First name</text>
-  <rect y="22" width="464" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="22" width="464" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="52" class="text-primary" font-size="14">Alex</text>
 
   <text x="496" y="14" class="text-secondary" font-size="12">Last name</text>
-  <rect x="496" y="22" width="464" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="496" y="22" width="464" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="512" y="52" class="text-primary" font-size="14">Rivera</text>
 
   <!-- Row 2: Email | Phone -->
   <text x="0" y="100" class="text-secondary" font-size="12">Email</text>
-  <rect y="108" width="464" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="108" width="464" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="138" class="text-primary" font-size="14">alex@example.com</text>
 
   <text x="496" y="100" class="text-secondary" font-size="12">Phone</text>
-  <rect x="496" y="108" width="464" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="496" y="108" width="464" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="512" y="138" class="text-disabled" font-size="14">+1 (555) 000-0000</text>
 
   <!-- Row 3: Role | Department -->
   <text x="0" y="186" class="text-secondary" font-size="12">Role</text>
-  <rect y="194" width="464" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="194" width="464" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="224" class="text-primary" font-size="14">Administrator</text>
 
   <text x="496" y="186" class="text-secondary" font-size="12">Department</text>
-  <rect x="496" y="194" width="464" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="496" y="194" width="464" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="512" y="224" class="text-primary" font-size="14">Engineering</text>
 
   <!-- Action row -->
-  <rect x="776" y="272" width="84" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="776" y="272" width="84" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="818" y="302" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
-  <rect x="876" y="272" width="84" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="876" y="272" width="84" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="918" y="302" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Save</text>
 """),
 
     "form-inline": (960, 64, """
   <rect width="960" height="64" fill="{color.surface}"/>
 
-  <rect y="8" width="320" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="8" width="320" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="38" class="text-disabled" font-size="14">Search by keyword...</text>
 
-  <rect x="336" y="8" width="200" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="336" y="8" width="200" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="352" y="38" class="text-primary" font-size="14">All categories</text>
   <path d="M 506 30 L 514 38 L 522 30" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
 
-  <rect x="552" y="8" width="200" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="552" y="8" width="200" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="568" y="38" class="text-primary" font-size="14">Last 7 days</text>
   <path d="M 722 30 L 730 38 L 738 30" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
 
-  <rect x="856" y="8" width="104" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="856" y="8" width="104" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="908" y="38" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Apply</text>
 """),
 
@@ -277,22 +277,22 @@ PATTERNS = {
 
   <!-- Form fields for current step -->
   <text x="0" y="120" class="text-secondary" font-size="12">Display name</text>
-  <rect y="128" width="640" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="128" width="640" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="158" class="text-primary" font-size="14">Alex Rivera</text>
 
   <text x="0" y="206" class="text-secondary" font-size="12">Bio</text>
-  <rect y="214" width="640" height="96" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="214" width="640" height="96" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="238" class="text-disabled" font-size="14">Tell us about yourself...</text>
 
   <text x="0" y="342" class="text-secondary" font-size="12">Avatar</text>
-  <rect y="350" width="640" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <rect y="350" width="640" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5" stroke-dasharray="4,4"/>
   <text x="320" y="380" text-anchor="middle" class="text-secondary" font-size="13">+ Upload an image</text>
 
   <!-- Action row: Back | Next -->
-  <rect y="432" width="80" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect y="432" width="80" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="40" y="462" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Back</text>
 
-  <rect x="556" y="432" width="84" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="556" y="432" width="84" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="598" y="462" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Next</text>
 """),
 
@@ -516,9 +516,9 @@ PATTERNS = {
 
   <!-- Action row -->
   <line x1="424" y1="496" x2="856" y2="496" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="672" y="512" width="84" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="672" y="512" width="84" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="714" y="538" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
-  <rect x="772" y="512" width="84" height="40" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="772" y="512" width="84" height="40" rx="{radius.input}" fill="{color.accent}"/>
   <text x="814" y="538" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Confirm</text>
 """),
 
@@ -533,9 +533,9 @@ PATTERNS = {
   <text x="484" y="384" class="text-secondary" font-size="13">This action cannot be undone. The item</text>
   <text x="484" y="402" class="text-secondary" font-size="13">will be permanently removed.</text>
 
-  <rect x="612" y="448" width="84" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="612" y="448" width="84" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="654" y="474" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
-  <rect x="712" y="448" width="84" height="40" rx="{radius.default}" fill="{color.danger}"/>
+  <rect x="712" y="448" width="84" height="40" rx="{radius.input}" fill="{color.danger}"/>
   <text x="754" y="474" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Delete</text>
 """),
 
@@ -551,23 +551,23 @@ PATTERNS = {
 
   <!-- Form body -->
   <text x="384" y="256" class="text-secondary" font-size="12">Project name</text>
-  <rect x="384" y="264" width="512" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="384" y="264" width="512" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="400" y="294" class="text-disabled" font-size="14">e.g. Q1 Marketing Campaign</text>
 
   <text x="384" y="342" class="text-secondary" font-size="12">Description</text>
-  <rect x="384" y="350" width="512" height="96" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="384" y="350" width="512" height="96" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="400" y="374" class="text-disabled" font-size="14">What's this project about?</text>
 
   <text x="384" y="476" class="text-secondary" font-size="12">Visibility</text>
-  <rect x="384" y="484" width="512" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="384" y="484" width="512" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="400" y="514" class="text-primary" font-size="14">Team only</text>
   <path d="M 866 506 L 874 514 L 882 506" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
 
   <!-- Action row -->
   <line x1="384" y1="576" x2="896" y2="576" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="712" y="592" width="84" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="712" y="592" width="84" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="754" y="618" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
-  <rect x="812" y="592" width="84" height="40" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="812" y="592" width="84" height="40" rx="{radius.input}" fill="{color.accent}"/>
   <text x="854" y="618" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Create</text>
 """),
 
@@ -586,9 +586,9 @@ PATTERNS = {
 
   <!-- Action row -->
   <line x1="112" y1="676" x2="1168" y2="676" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="984" y="692" width="84" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="984" y="692" width="84" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="1026" y="718" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
-  <rect x="1084" y="692" width="84" height="40" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="1084" y="692" width="84" height="40" rx="{radius.input}" fill="{color.accent}"/>
   <text x="1126" y="718" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Done</text>
 """),
 
@@ -610,21 +610,21 @@ PATTERNS = {
 
   <!-- Form fields demonstrating content -->
   <text x="904" y="200" class="text-secondary" font-size="12">Status</text>
-  <rect x="904" y="208" width="352" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="904" y="208" width="352" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="920" y="238" class="text-primary" font-size="14">Active</text>
   <path d="M 1226 230 L 1234 238 L 1242 230" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
 
   <text x="904" y="288" class="text-secondary" font-size="12">Assignee</text>
-  <rect x="904" y="296" width="352" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="904" y="296" width="352" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <circle cx="924" cy="320" r="10" fill="{color.border_default}"/>
   <text x="924" y="324" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600">AR</text>
   <text x="944" y="326" class="text-primary" font-size="14">Alex Rivera</text>
 
   <!-- Footer actions -->
   <line x1="880" y1="744" x2="1280" y2="744" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="1072" y="760" width="84" height="32" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="1072" y="760" width="84" height="32" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="1114" y="780" text-anchor="middle" class="text-secondary" font-size="13" font-weight="500">Cancel</text>
-  <rect x="1172" y="760" width="84" height="32" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="1172" y="760" width="84" height="32" rx="{radius.input}" fill="{color.accent}"/>
   <text x="1214" y="780" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save</text>
 """),
 
@@ -690,7 +690,7 @@ PATTERNS = {
   <text x="320" y="232" text-anchor="middle" class="text-secondary" font-size="13">Get started by creating your first project.</text>
   <text x="320" y="252" text-anchor="middle" class="text-secondary" font-size="13">It only takes a minute.</text>
 
-  <rect x="252" y="288" width="136" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="252" y="288" width="136" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="320" y="318" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">+ Create project</text>
 """),
 
@@ -705,7 +705,7 @@ PATTERNS = {
   <text x="320" y="240" text-anchor="middle" class="text-secondary" font-size="13">Try adjusting your search or filters to find</text>
   <text x="320" y="260" text-anchor="middle" class="text-secondary" font-size="13">what you're looking for.</text>
 
-  <rect x="252" y="288" width="136" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="252" y="288" width="136" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="320" y="314" text-anchor="middle" class="text-secondary" font-size="13" font-weight="500">Clear filters</text>
 """),
 
@@ -720,7 +720,7 @@ PATTERNS = {
   <text x="320" y="216" text-anchor="middle" class="text-secondary" font-size="13">Your workspace is ready. Let's set things up</text>
   <text x="320" y="236" text-anchor="middle" class="text-secondary" font-size="13">so the team can get to work.</text>
 
-  <rect x="244" y="280" width="152" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="244" y="280" width="152" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="320" y="310" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Get started</text>
 
   <text x="320" y="356" text-anchor="middle" class="text-secondary" font-size="12">Or take a tour first</text>
@@ -738,7 +738,7 @@ PATTERNS = {
   <text x="320" y="240" text-anchor="middle" class="text-secondary" font-size="13">We couldn't load this content. Check your</text>
   <text x="320" y="260" text-anchor="middle" class="text-secondary" font-size="13">connection and try again.</text>
 
-  <rect x="252" y="288" width="136" height="40" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="252" y="288" width="136" height="40" rx="{radius.input}" fill="{color.accent}"/>
   <text x="320" y="314" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Retry</text>
 """),
 
@@ -860,14 +860,14 @@ PATTERNS = {
 
   <text x="280" y="148" class="text-primary" font-size="14" font-weight="600">Display name</text>
   <text x="280" y="170" class="text-secondary" font-size="13">Shown on your profile and in messages.</text>
-  <rect x="280" y="190" width="480" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="280" y="190" width="480" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="296" y="220" class="text-primary" font-size="14">Alex Rivera</text>
 
   <line x1="280" y1="278" x2="1248" y2="278" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="280" y="322" class="text-primary" font-size="14" font-weight="600">Email address</text>
   <text x="280" y="344" class="text-secondary" font-size="13">Used for account access and notifications.</text>
-  <rect x="280" y="364" width="480" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="280" y="364" width="480" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="296" y="394" class="text-primary" font-size="14">alex@example.com</text>
 
   <line x1="280" y1="452" x2="1248" y2="452" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -876,13 +876,13 @@ PATTERNS = {
   <text x="280" y="518" class="text-secondary" font-size="13">A square image works best.</text>
   <circle cx="304" cy="556" r="24" fill="{color.border_default}"/>
   <text x="304" y="562" text-anchor="middle" class="text-secondary" font-size="14" font-weight="600">AR</text>
-  <rect x="344" y="540" width="100" height="32" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="344" y="540" width="100" height="32" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="394" y="560" text-anchor="middle" class="text-secondary" font-size="13" font-weight="500">Upload</text>
 
   <line x1="280" y1="608" x2="1248" y2="608" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Save action -->
-  <rect x="280" y="640" width="100" height="40" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="280" y="640" width="100" height="40" rx="{radius.input}" fill="{color.accent}"/>
   <text x="330" y="666" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save changes</text>
 """),
 
@@ -920,19 +920,19 @@ PATTERNS = {
   <line x1="280" y1="104" x2="1248" y2="104" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="280" y="148" class="text-primary" font-size="14" font-weight="600">Display name</text>
-  <rect x="280" y="170" width="480" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="280" y="170" width="480" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="296" y="200" class="text-primary" font-size="14">Alex Rivera</text>
 
   <text x="280" y="262" class="text-primary" font-size="14" font-weight="600">Pronouns</text>
-  <rect x="280" y="284" width="480" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="280" y="284" width="480" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="296" y="314" class="text-disabled" font-size="14">they/them</text>
 
   <text x="280" y="376" class="text-primary" font-size="14" font-weight="600">Time zone</text>
-  <rect x="280" y="398" width="480" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="280" y="398" width="480" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="296" y="428" class="text-primary" font-size="14">America/Los_Angeles</text>
   <path d="M 730 420 L 738 428 L 746 420" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
 
-  <rect x="280" y="488" width="100" height="40" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="280" y="488" width="100" height="40" rx="{radius.input}" fill="{color.accent}"/>
   <text x="330" y="514" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save changes</text>
 """),
 
@@ -1134,7 +1134,7 @@ PATTERNS = {
   <line x1="0" y1="64" x2="320" y2="64" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Search -->
-  <rect x="16" y="80" width="288" height="36" rx="{radius.default}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="16" y="80" width="288" height="36" rx="{radius.input}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="32" y="103" class="text-disabled" font-size="13">Search conversations</text>
 
   <!-- Thread list -->
@@ -1185,9 +1185,9 @@ PATTERNS = {
 
   <!-- Composer -->
   <line x1="320" y1="704" x2="1280" y2="704" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="368" y="724" width="864" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="368" y="724" width="864" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="384" y="754" class="text-disabled" font-size="14">Type a message…</text>
-  <rect x="1184" y="730" width="44" height="36" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="1184" y="730" width="44" height="36" rx="{radius.input}" fill="{color.accent}"/>
   <text x="1206" y="754" text-anchor="middle" class="text-inverse" font-size="14">→</text>
 """),
 
@@ -1208,15 +1208,15 @@ PATTERNS = {
   <rect x="240" y="0" width="1040" height="64" fill="{color.surface}"/>
   <line x1="240" y1="63.5" x2="1280" y2="63.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="272" y="40" class="text-primary" font-size="18" font-weight="700">Projects</text>
-  <rect x="1184" y="14" width="80" height="36" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="1184" y="14" width="80" height="36" rx="{radius.input}" fill="{color.accent}"/>
   <text x="1224" y="36" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">+ New</text>
 
   <!-- Filter row -->
-  <rect x="272" y="96" width="320" height="36" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="272" y="96" width="320" height="36" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="288" y="119" class="text-disabled" font-size="13">Search projects</text>
-  <rect x="608" y="96" width="100" height="36" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="608" y="96" width="100" height="36" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="624" y="119" class="text-primary" font-size="13">Status</text>
-  <rect x="724" y="96" width="100" height="36" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="724" y="96" width="100" height="36" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="740" y="119" class="text-primary" font-size="13">Owner</text>
 
   <!-- List of cards -->
@@ -1347,15 +1347,15 @@ PATTERNS = {
   <text x="640" y="276" text-anchor="middle" class="text-secondary" font-size="13">Welcome back. Enter your details below.</text>
 
   <text x="472" y="324" class="text-secondary" font-size="12">Email address</text>
-  <rect x="472" y="332" width="336" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="472" y="332" width="336" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="488" y="362" class="text-disabled" font-size="14">user@example.com</text>
 
   <text x="472" y="404" class="text-secondary" font-size="12">Password</text>
   <text x="808" y="404" text-anchor="end" class="text-secondary" font-size="12">Forgot?</text>
-  <rect x="472" y="412" width="336" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="472" y="412" width="336" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="488" y="442" class="text-disabled" font-size="14">••••••••</text>
 
-  <rect x="472" y="488" width="336" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="472" y="488" width="336" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="640" y="518" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Sign in</text>
 
   <line x1="472" y1="568" x2="808" y2="568" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -1371,22 +1371,22 @@ PATTERNS = {
   <text x="640" y="196" text-anchor="middle" class="text-secondary" font-size="13">Get started — it only takes a minute.</text>
 
   <text x="472" y="244" class="text-secondary" font-size="12">Full name</text>
-  <rect x="472" y="252" width="336" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="472" y="252" width="336" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="488" y="282" class="text-disabled" font-size="14">Alex Rivera</text>
 
   <text x="472" y="324" class="text-secondary" font-size="12">Email address</text>
-  <rect x="472" y="332" width="336" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="472" y="332" width="336" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="488" y="362" class="text-disabled" font-size="14">user@example.com</text>
 
   <text x="472" y="404" class="text-secondary" font-size="12">Password</text>
-  <rect x="472" y="412" width="336" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="472" y="412" width="336" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="488" y="442" class="text-disabled" font-size="14">8+ characters</text>
 
   <!-- Terms checkbox -->
   <rect x="472" y="488" width="20" height="20" rx="{extras.radius.checkbox}" fill="none" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="500" y="503" class="text-secondary" font-size="12">I agree to the <tspan class="text-primary">Terms of Service</tspan></text>
 
-  <rect x="472" y="528" width="336" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="472" y="528" width="336" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="640" y="558" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Create account</text>
 
   <line x1="472" y1="608" x2="808" y2="608" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -1403,10 +1403,10 @@ PATTERNS = {
   <text x="640" y="334" text-anchor="middle" class="text-secondary" font-size="13"></text>
 
   <text x="472" y="368" class="text-secondary" font-size="12">Email address</text>
-  <rect x="472" y="376" width="336" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="472" y="376" width="336" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="488" y="406" class="text-disabled" font-size="14">user@example.com</text>
 
-  <rect x="472" y="448" width="336" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="472" y="448" width="336" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="640" y="478" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Send reset link</text>
 
   <text x="640" y="528" text-anchor="middle" class="text-secondary" font-size="13"><tspan class="text-primary" font-weight="500">← Back to sign in</tspan></text>
@@ -1422,25 +1422,25 @@ PATTERNS = {
   <text x="640" y="302" text-anchor="middle" class="text-primary" font-size="13" font-weight="500">user@example.com</text>
 
   <!-- 6 digit boxes -->
-  <rect x="472" y="356" width="48" height="56" rx="{radius.default}" fill="{color.surface}" stroke="{color.accent}" stroke-width="2"/>
+  <rect x="472" y="356" width="48" height="56" rx="{radius.input}" fill="{color.surface}" stroke="{color.accent}" stroke-width="2"/>
   <text x="496" y="392" text-anchor="middle" class="text-primary" font-size="18" font-weight="600">4</text>
 
-  <rect x="528" y="356" width="48" height="56" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="528" y="356" width="48" height="56" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="552" y="392" text-anchor="middle" class="text-primary" font-size="18" font-weight="600">2</text>
 
-  <rect x="584" y="356" width="48" height="56" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="584" y="356" width="48" height="56" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="608" y="392" text-anchor="middle" class="text-primary" font-size="18" font-weight="600">9</text>
 
-  <rect x="648" y="356" width="48" height="56" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="648" y="356" width="48" height="56" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="672" y="392" text-anchor="middle" class="text-disabled" font-size="18" font-weight="600">_</text>
 
-  <rect x="704" y="356" width="48" height="56" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="704" y="356" width="48" height="56" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="728" y="392" text-anchor="middle" class="text-disabled" font-size="18" font-weight="600">_</text>
 
-  <rect x="760" y="356" width="48" height="56" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="760" y="356" width="48" height="56" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="784" y="392" text-anchor="middle" class="text-disabled" font-size="18" font-weight="600">_</text>
 
-  <rect x="472" y="448" width="336" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="472" y="448" width="336" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="640" y="478" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Verify</text>
 
   <text x="640" y="540" text-anchor="middle" class="text-secondary" font-size="13">Didn't receive it? <tspan class="text-primary" font-weight="500">Resend</tspan></text>
@@ -1469,7 +1469,7 @@ PATTERNS = {
   <line x1="0" y1="55.5" x2="375" y2="55.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Search -->
-  <rect x="16" y="72" width="343" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="72" width="343" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="98" class="text-disabled" font-size="13">Search</text>
 
   <!-- Nav items -->
@@ -1523,28 +1523,28 @@ PATTERNS = {
 
   <!-- Field 1 -->
   <text x="16" y="104" class="text-secondary" font-size="12">Display name</text>
-  <rect x="16" y="112" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="112" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="142" class="text-disabled" font-size="14">Your name</text>
 
   <!-- Field 2 -->
   <text x="16" y="184" class="text-secondary" font-size="12">Email</text>
-  <rect x="16" y="192" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="192" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="222" class="text-disabled" font-size="14">you@example.com</text>
 
   <!-- Field 3 -->
   <text x="16" y="264" class="text-secondary" font-size="12">Role</text>
-  <rect x="16" y="272" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="272" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="302" class="text-primary" font-size="14">Designer</text>
   <text x="343" y="302" text-anchor="end" class="text-secondary" font-size="13">▾</text>
 
   <!-- Field 4 — textarea -->
   <text x="16" y="344" class="text-secondary" font-size="12">About</text>
-  <rect x="16" y="352" width="343" height="120" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="352" width="343" height="120" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="382" class="text-disabled" font-size="14">A few sentences…</text>
 
   <!-- Sticky CTA -->
   <line x1="0" y1="519.5" x2="375" y2="519.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="16" y="536" width="343" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="16" y="536" width="343" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="187.5" y="566" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Continue</text>
 """),
 
@@ -1557,7 +1557,7 @@ PATTERNS = {
   <text x="16" y="60" class="text-secondary" font-size="13">5 of 247</text>
 
   <!-- Filter strip -->
-  <rect x="16" y="80" width="343" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="80" width="343" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="106" class="text-disabled" font-size="13">Search members</text>
 
   <!-- Row cards -->
@@ -1586,7 +1586,7 @@ PATTERNS = {
   <text x="343" y="500" text-anchor="end" class="text-disabled" font-size="11" font-weight="600">INACTIVE</text>
 
   <!-- Load more -->
-  <rect x="16" y="600" width="343" height="48" rx="{radius.default}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="16" y="600" width="343" height="48" rx="{radius.input}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="187.5" y="630" text-anchor="middle" class="text-secondary" font-size="13" font-weight="500">Load more</text>
 
   <text x="187.5" y="688" text-anchor="middle" class="text-disabled" font-size="11">5 of 247</text>
@@ -1608,10 +1608,10 @@ PATTERNS = {
   <text x="16" y="430" class="text-secondary" font-size="13">You can restore it within 30 days.</text>
 
   <!-- Stacked actions -->
-  <rect x="16" y="608" width="343" height="48" rx="{radius.default}" fill="{color.danger}"/>
+  <rect x="16" y="608" width="343" height="48" rx="{radius.input}" fill="{color.danger}"/>
   <text x="187.5" y="638" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Delete</text>
 
-  <rect x="16" y="664" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="664" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="187.5" y="694" text-anchor="middle" class="text-primary" font-size="14" font-weight="500">Cancel</text>
 """),
 
@@ -1638,18 +1638,18 @@ PATTERNS = {
   <text x="232" y="296" text-anchor="middle" class="text-primary" font-size="12">Drafts</text>
 
   <text x="16" y="356" class="text-secondary" font-size="11" font-weight="600">DATE RANGE</text>
-  <rect x="16" y="368" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="368" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="398" class="text-primary" font-size="14">Last 30 days</text>
   <text x="343" y="398" text-anchor="end" class="text-secondary" font-size="13">▾</text>
 
   <text x="16" y="448" class="text-secondary" font-size="11" font-weight="600">PARTICIPANTS</text>
-  <rect x="16" y="460" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="460" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="490" class="text-disabled" font-size="14">Anyone</text>
 
   <!-- Sticky CTA -->
   <line x1="0" y1="639.5" x2="375" y2="639.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="32" y="688" class="text-secondary" font-size="13" font-weight="500">Reset</text>
-  <rect x="159" y="664" width="200" height="40" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="159" y="664" width="200" height="40" rx="{radius.input}" fill="{color.accent}"/>
   <text x="259" y="690" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Apply filters</text>
 """),
 
@@ -1666,7 +1666,7 @@ PATTERNS = {
   <text x="187.5" y="296" text-anchor="middle" class="text-primary" font-size="18" font-weight="700">Nothing here yet</text>
   <text x="187.5" y="320" text-anchor="middle" class="text-secondary" font-size="13">Start a conversation to populate this list.</text>
 
-  <rect x="103.5" y="356" width="168" height="44" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="103.5" y="356" width="168" height="44" rx="{radius.input}" fill="{color.accent}"/>
   <text x="187.5" y="384" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">New thread</text>
 """),
 
@@ -1679,7 +1679,7 @@ PATTERNS = {
   <!-- Search input strip -->
   <rect x="0" y="0" width="375" height="64" fill="{color.surface}"/>
   <text x="16" y="40" class="text-secondary" font-size="14">Cancel</text>
-  <rect x="80" y="16" width="279" height="32" rx="{radius.default}" fill="{color.page_bg}"/>
+  <rect x="80" y="16" width="279" height="32" rx="{radius.input}" fill="{color.page_bg}"/>
   <text x="96" y="36" class="text-primary" font-size="13">archive</text>
   <text x="343" y="36" text-anchor="end" class="text-secondary" font-size="13">×</text>
   <line x1="0" y1="63.5" x2="375" y2="63.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -1729,23 +1729,23 @@ PATTERNS = {
 
   <!-- Field 1 -->
   <text x="16" y="216" class="text-secondary" font-size="12">Display name</text>
-  <rect x="16" y="224" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="224" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="254" class="text-primary" font-size="14">Alex Rivera</text>
 
   <!-- Field 2 -->
   <text x="16" y="296" class="text-secondary" font-size="12">Email address</text>
-  <rect x="16" y="304" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="304" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="334" class="text-primary" font-size="14">alex@example.com</text>
 
   <!-- Field 3 -->
   <text x="16" y="376" class="text-secondary" font-size="12">Time zone</text>
-  <rect x="16" y="384" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="384" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="414" class="text-primary" font-size="14">America/Los_Angeles</text>
   <text x="343" y="414" text-anchor="end" class="text-secondary" font-size="13">▾</text>
 
   <!-- Sticky CTA -->
   <line x1="0" y1="655.5" x2="375" y2="655.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="16" y="672" width="343" height="40" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="16" y="672" width="343" height="40" rx="{radius.input}" fill="{color.accent}"/>
   <text x="187.5" y="698" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save changes</text>
 """),
 
@@ -1865,17 +1865,17 @@ PATTERNS = {
 
   <!-- Email -->
   <text x="16" y="288" class="text-secondary" font-size="12">Email address</text>
-  <rect x="16" y="296" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="296" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="326" class="text-disabled" font-size="14">user@example.com</text>
 
   <!-- Password -->
   <text x="16" y="368" class="text-secondary" font-size="12">Password</text>
   <text x="343" y="368" text-anchor="end" class="text-secondary" font-size="12">Forgot?</text>
-  <rect x="16" y="376" width="343" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="16" y="376" width="343" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="32" y="406" class="text-disabled" font-size="14">••••••••</text>
 
   <!-- Submit -->
-  <rect x="16" y="456" width="343" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="16" y="456" width="343" height="48" rx="{radius.input}" fill="{color.accent}"/>
   <text x="187.5" y="486" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Sign in</text>
 
   <!-- Divider + alternate -->

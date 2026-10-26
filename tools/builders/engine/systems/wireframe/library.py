@@ -18,27 +18,27 @@ COMPONENTS = {
     # ═════════════════════════ PRIMITIVES ═════════════════════════
 
     "button-primary": (160, 48, """
-  <rect width="160" height="48" rx="{radius.default}" fill="{color.action}"/>
+  <rect width="160" height="48" rx="{radius.input}" fill="{color.action}"/>
   <text x="80" y="30" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Primary</text>
 """),
 
     "button-secondary": (160, 48, """
-  <rect width="160" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect width="160" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="80" y="30" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Secondary</text>
 """),
 
     "button-ghost": (160, 48, """
-  <rect width="160" height="48" rx="{radius.default}" fill="transparent"/>
+  <rect width="160" height="48" rx="{radius.input}" fill="transparent"/>
   <text x="80" y="30" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Ghost</text>
 """),
 
     "button-disabled": (160, 48, """
-  <rect width="160" height="48" rx="{radius.default}" fill="{extras.color.disabled_fill}"/>
+  <rect width="160" height="48" rx="{radius.input}" fill="{extras.color.disabled_fill}"/>
   <text x="80" y="30" text-anchor="middle" class="text-disabled" font-size="14" font-weight="500">Disabled</text>
 """),
 
     "button-danger": (160, 48, """
-  <rect width="160" height="48" rx="{radius.default}" fill="{color.danger}"/>
+  <rect width="160" height="48" rx="{radius.input}" fill="{color.danger}"/>
   <text x="80" y="30" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Delete</text>
 """),
 
@@ -53,7 +53,7 @@ COMPONENTS = {
 """),
 
     "button-full-width": (351, 48, """
-  <rect width="351" height="48" rx="{radius.default}" fill="{color.action}"/>
+  <rect width="351" height="48" rx="{radius.input}" fill="{color.action}"/>
   <text x="175.5" y="30" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Full Width Action</text>
 """),
 
@@ -596,25 +596,25 @@ COMPONENTS = {
     # Button group
 
     "button-group-segmented": (360, 40, """
-  <rect x="0" y="0" width="120" height="40" rx="{radius.default}" ry="{radius.default}" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="0" y="0" width="120" height="40" rx="{radius.input}" ry="{radius.input}" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="60" y="26" text-anchor="middle" class="text-primary" font-size="13" font-weight="500">Day</text>
   <rect x="120" y="0" width="120" height="40" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="180" y="26" text-anchor="middle" class="text-secondary" font-size="13">Week</text>
-  <rect x="240" y="0" width="120" height="40" rx="{radius.default}" ry="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="240" y="0" width="120" height="40" rx="{radius.input}" ry="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="300" y="26" text-anchor="middle" class="text-secondary" font-size="13">Month</text>
 """),
 
     "button-group-attached": (320, 48, """
-  <rect x="0" y="0" width="160" height="48" rx="{radius.default}" ry="{radius.default}" fill="{color.action}"/>
+  <rect x="0" y="0" width="160" height="48" rx="{radius.input}" ry="{radius.input}" fill="{color.action}"/>
   <text x="80" y="30" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Save</text>
-  <rect x="160" y="0" width="160" height="48" rx="{radius.default}" ry="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="160" y="0" width="160" height="48" rx="{radius.input}" ry="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="240" y="30" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
 """),
 
     "button-group-spaced": (336, 48, """
-  <rect x="0" y="0" width="160" height="48" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="0" y="0" width="160" height="48" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="80" y="30" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
-  <rect x="176" y="0" width="160" height="48" rx="{radius.default}" fill="{color.action}"/>
+  <rect x="176" y="0" width="160" height="48" rx="{radius.input}" fill="{color.action}"/>
   <text x="256" y="30" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Save</text>
 """),
 
@@ -749,7 +749,7 @@ COMPONENTS = {
     # Dropdown menu (closed + open)
 
     "dropdown-menu-default": (200, 200, """
-  <rect width="200" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect width="200" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="26" class="text-primary" font-size="13">Actions</text>
   <path d="M 174 18 L 178 22 L 182 18" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
   <rect x="0" y="48" width="200" height="148" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -761,7 +761,7 @@ COMPONENTS = {
 """),
 
     "dropdown-menu-with-groups": (200, 240, """
-  <rect width="200" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect width="200" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="26" class="text-primary" font-size="13">Actions</text>
   <path d="M 174 18 L 178 22 L 182 18" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
   <rect x="0" y="48" width="200" height="188" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -776,11 +776,11 @@ COMPONENTS = {
 """),
 
     "dropdown-menu-with-search": (240, 240, """
-  <rect width="240" height="40" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect width="240" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="16" y="26" class="text-primary" font-size="13">Select user</text>
   <path d="M 214 18 L 218 22 L 222 18" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
   <rect x="0" y="48" width="240" height="184" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="8" y="56" width="224" height="32" rx="{radius.default}" fill="{color.surface_selected}"/>
+  <rect x="8" y="56" width="224" height="32" rx="{radius.input}" fill="{color.surface_selected}"/>
   <text x="20" y="76" class="text-disabled" font-size="13">Search users...</text>
   <text x="16" y="116" class="text-primary" font-size="14">Alex Rivera</text>
   <text x="16" y="148" class="text-primary" font-size="14">Jordan Chen</text>
