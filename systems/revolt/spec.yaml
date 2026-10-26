@@ -194,6 +194,15 @@ rulebook:
     check_scope: both
     check_implementation: "Scan SVG text for codepoints in the Unicode emoji blocks (U+1F300-U+1F5FF, U+1F600-U+1F64F, U+1F680-U+1F6FF, U+1F900-U+1F9FF, U+2600-U+26FF, U+2700-U+27BF, U+1FA70-U+1FAFF). Any match is a violation."
 
+  - id: revolt-error-status
+    rule: "An error is labelled, not recoloured: it carries the uppercase status label ERROR (JSX Status Pills variants LIVE / TYPING / OFFLINE / ERROR) in a rectangular bordered pill: 2px solid border, padding 2px 8px, 9px/700 Space Mono uppercase, radius 0. On white or cream the pill is black border + black text. When danger is painted as a fill it is pink (color.danger = color.accent) with black text (color.danger_foreground #111111, 5.3:1), never white text on a pink error fill (3.5:1). Error copy follows the voice table: uppercase, code-like (e.g. ERROR // INVALID), never warm. No sixth colour."
+    rationale: "Owner decision (ADR-0002, 2026-10-26): the five-colour palette is inviolable, so danger reuses pink and the hue gate is waived. Pink alone also means header, user message and unread badge, so the word ERROR in the status-pill grammar is what tells an error apart."
+    severity: required
+    check_method: semantic
+    check_scope: both
+    applies_when: "artifact or component shows an error or failure state"
+    check_implementation: "Judgment: find error or failure states; verify each carries an uppercase ERROR label in the bordered-pill grammar and that any pink error fill uses #111111 text. Not mechanically checked (the revolt ruleset in rulebook_check runs no-emoji only)."
+
 grammar_extensions:
   family: contemporary_clean
   per_system_signature:
@@ -209,6 +218,19 @@ grammar_extensions:
       hover_rotation_deg: -0.5
       transition_ms: "{motion.fast.enter_ms}"
       usage: "sidebar items rotate -0.5deg on hover; static SVG renders without rotation"
+    error_status:
+      # Revolt's error treatment (ADR-0002), rule revolt-error-status.
+      # Grounded in the JSX Status Pills extension (border 2px solid context
+      # colour, padding 2px 8px, micro 9px/700, radius 0, variants LIVE /
+      # TYPING / OFFLINE / ERROR; black border + black text on white/cream)
+      # and the voice table ("UPPERCASE all labels and status"). The JSX's
+      # "white border + white text on accent backgrounds" does not apply to
+      # an error fill: white on pink is 3.5:1, so tokens.json sets
+      # danger_foreground to #111111.
+      label: ERROR
+      pill: { border_px: 2, padding: "2px 8px", font_size: 9, font_weight: 700, case: uppercase, radius: 0 }
+      on_light: { border: "{color.text_primary}", text: "{color.text_primary}" }
+      on_danger_fill: { fill: "{color.danger}", text: "{color.danger_foreground}" }
     pink_lime_pairing:
       pink: "#FF3366"
       lime: "#C8FF00"

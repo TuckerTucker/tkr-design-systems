@@ -305,7 +305,7 @@ chroma. Waivers use the contrast waiver shape under `hue_waivers`, with
 `"color.action vs color.danger"`; a reason is required and a stale waiver
 fails (`HUE_GATE_FAIL`). A fix moves the non-signature colour (normally
 danger) by hue or lightness only. ADR-0002 records the decision, the results
-per system and the waivers (Swiss; Revolt provisionally).
+per system and the waivers (Swiss and Revolt, both owner-confirmed).
 
 ---
 
