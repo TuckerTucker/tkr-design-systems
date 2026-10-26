@@ -8,7 +8,11 @@ over every declared page backdrop:
    plus the file's own ``contrast_pairs`` must reach the WCAG 2.x minimum
    for its kind: ``text`` 4.5:1 (SC 1.4.3), ``large_text`` 3:1 (SC 1.4.3
    large-scale), ``ui`` 3:1 (SC 1.4.11 non-text contrast). ``advisory``
-   pairs are computed and reported but never fail.
+   and ``disabled`` pairs are computed and reported but never fail. A
+   file pair of either kind needs a ``note`` (the reason), and a
+   ``disabled`` pair must name a disabled-role token (a path whose last
+   segment contains ``disabled``) on one side: SC 1.4.3 exempts inactive
+   UI components, not arbitrary low-contrast text (``EXEMPT_KINDS``).
 2. **Hue gate.** ``color.accent`` and ``color.action`` must sit at least
    ``HUE_GAP_MIN`` degrees of OKLCH hue away from ``color.danger`` whenever
    both colours carry hue (OKLCH chroma >= ``HUE_CHROMA_FLOOR``; greys have
@@ -69,6 +73,7 @@ import yaml
 from .contract import (
     CONTRAST_PAIRS,
     PAIR_ADVISORY,
+    PAIR_DISABLED,
     PAIR_LARGE_TEXT,
     PAIR_TEXT,
     PAIR_UI,
@@ -94,6 +99,7 @@ CONTRAST_MINIMUMS: dict[str, float | None] = {
     PAIR_LARGE_TEXT: 3.0,
     PAIR_UI: 3.0,
     PAIR_ADVISORY: None,
+    PAIR_DISABLED: None,
 }
 """WCAG 2.x minimum ratio per pair kind; ``None`` = reported, never fails."""
 
@@ -679,6 +685,43 @@ def declared_pairs(doc: dict[str, Any]) -> list[tuple[str, str, str, str | None]
     return list(pairs.values())
 
 
+EXEMPT_KINDS = frozenset({PAIR_ADVISORY, PAIR_DISABLED})
+"""Kinds that never fail; a token-file pair of these kinds needs a ``note``."""
+
+
+def is_disabled_role(path: str) -> bool:
+    """True when a token path names a disabled-state role (``extras.color.disabled_fill``)."""
+    return "disabled" in path.rsplit(".", 1)[-1]
+
+
+def _validate_exempt_pairs(doc: dict[str, Any]) -> list[Error]:
+    """Check ``advisory`` / ``disabled`` file pairs: a note, and a disabled-role token.
+
+    An exempt pair silences the gate for its colours, so it must say why;
+    ``disabled`` is reserved for inactive components (WCAG 1.4.3's
+    exception), which the token naming makes explicit.
+    """
+    errors = []
+    system = doc.get("system")
+    for i, p in enumerate(doc.get("contrast_pairs") or []):
+        if not isinstance(p, dict) or p.get("kind") not in EXEMPT_KINDS:
+            continue
+        where = f"contrast_pairs[{i}] ({p.get('fg')} on {p.get('bg')})"
+        if not isinstance(p.get("note"), str) or not p["note"].strip():
+            errors.append(Error("CONTRAST_INVALID",
+                                f"tokens: {where} is '{p['kind']}' and needs a 'note' saying why "
+                                f"it may stay below the WCAG minimum",
+                                {"system_id": system}))
+        if p["kind"] == PAIR_DISABLED and not any(
+                isinstance(p.get(side), str) and is_disabled_role(p[side]) for side in ("fg", "bg")):
+            errors.append(Error("CONTRAST_INVALID",
+                                f"tokens: {where} is 'disabled' but neither side is a disabled-role "
+                                f"token (a path ending in '*disabled*'); only inactive components "
+                                f"are exempt (WCAG 1.4.3)",
+                                {"system_id": system}))
+    return errors
+
+
 def _validate_replacements(doc: dict[str, Any]) -> list[Error]:
     """Check ``contrast_pairs[].replaces``: replaceable target, note, non-advisory kind."""
     errors = []
@@ -752,6 +795,7 @@ def check_contrast(doc: dict[str, Any]) -> GateReport:
     report = GateReport(system=str(system), gate="contrast", backdrops=backdrop_paths(doc))
     report.errors.extend(_validate_backdrops(doc))
     report.errors.extend(_validate_replacements(doc))
+    report.errors.extend(_validate_exempt_pairs(doc))
     waivers, werrs = _parse_waivers(doc, "contrast_waivers", kinds, "CONTRAST_INVALID")
     report.errors.extend(werrs)
 
@@ -1024,10 +1068,11 @@ def render_thresholds_table() -> str:
         PAIR_TEXT: "1.4.3 Contrast (Minimum)",
         PAIR_LARGE_TEXT: "1.4.3, large-scale text",
         PAIR_UI: "1.4.11 Non-text Contrast",
-        PAIR_ADVISORY: "reported only",
+        PAIR_ADVISORY: "reported only (placeholders; decorative text, with a note)",
+        PAIR_DISABLED: "reported only: 1.4.3 exempts inactive UI (note + disabled-role token)",
     }
     lines = ["| Kind | Minimum | WCAG 2.x | Waivable |", "|------|---------|----------|----------|"]
-    for kind in (PAIR_TEXT, PAIR_LARGE_TEXT, PAIR_UI, PAIR_ADVISORY):
+    for kind in (PAIR_TEXT, PAIR_LARGE_TEXT, PAIR_UI, PAIR_ADVISORY, PAIR_DISABLED):
         m = CONTRAST_MINIMUMS[kind]
         lines.append(f"| {kind} | {f'{m:g}:1' if m else '—'} | {criteria[kind]} | "
                      f"{'yes, with a reason' if kind in WAIVABLE_KINDS else 'no'} |")

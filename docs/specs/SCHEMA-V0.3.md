@@ -172,7 +172,7 @@ enter), `easing` (`cubic-bezier(x1, y1, x2, y2)`, x in 0-1) and an optional
 The contract declares which foreground/background pairs every system must make
 legible, and of what kind. The contrast gate (§ Colour gates) owns the
 thresholds per kind: `text` 4.5:1, `large_text` 3:1, `ui` 3:1 (non-text
-contrast), `advisory` reported only.
+contrast), `advisory` and `disabled` reported only.
 
 Semi-transparent colours composite over the pair's background; a
 semi-transparent background composites over `color.page_bg`. Pairs are checked
@@ -234,13 +234,20 @@ is 4.48:1 and fails 4.5:1.
 | text | 4.5:1 | 1.4.3 Contrast (Minimum) | no |
 | large_text | 3:1 | 1.4.3, large-scale text | no |
 | ui | 3:1 | 1.4.11 Non-text Contrast | yes, with a reason |
-| advisory | — | reported only | no |
+| advisory | — | reported only (placeholders; decorative text, with a note) | no |
+| disabled | — | reported only: 1.4.3 exempts inactive UI (note + disabled-role token) | no |
 <!-- thresholds-table:end -->
 
 The table is rendered by `contrast.render_thresholds_table()`;
 `test_contrast_docs_match_module` keeps it in sync.
 
-Pairs checked: the contract pairs above plus the file's `contrast_pairs`. A
+Pairs checked: the contract pairs above plus the file's `contrast_pairs`.
+`advisory` and `disabled` file pairs need a `note`; `disabled` (WCAG 1.4.3
+exempts inactive components) also needs a disabled-role token on one side
+(a path whose last segment contains `disabled`, e.g.
+`extras.color.disabled_fill`), so it cannot silence ordinary text. Builder
+templates may only paint text in declared pairs (`TOKENS.md` § 7, Text
+coverage). A
 file pair that repeats a contract pair with a stricter kind supersedes it
 (Prism declares `color.accent` on `color.surface` as `text` because its teal
 numerals are text).

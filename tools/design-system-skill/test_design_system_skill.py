@@ -1131,8 +1131,9 @@ def test_drift_fails_validation_and_cli():
         res = check_drift(spec_path)
         assert_(not res.ok, "check_drift reports the stale literal")
         drift = (res.data or {}).get("drift", [])
-        assert_(any(d["location"] == "tokens.colors.text_muted" and d["token_value"] == "#949494"
-                    for d in drift), f"drift names text_muted vs #949494 ({drift})")
+        muted = json.loads((spec_path.parent / "tokens.json").read_text())["color"]["text_muted"]
+        assert_(any(d["location"] == "tokens.colors.text_muted" and d["token_value"] == muted
+                    for d in drift), f"drift names text_muted vs {muted} ({drift})")
 
         val = validate_spec(spec_path, library_root=str(spec_path.parent))
         assert_(not val.ok and any(e.code == "TOKEN_DRIFT" for e in val.errors),
@@ -1504,6 +1505,31 @@ def test_contrast_pair_replacement():
             "only border_input on surface is replaceable")
 
 
+def test_contrast_exempt_pairs():
+    section("contrast: advisory/disabled file pairs never fail but need a note and a role")
+    from design_system_skill.contrast import check_contrast
+    doc = _minimal_token_doc()
+    doc.setdefault("extras", {})["color"] = {"ghost": "#F0F0F0", "disabled_fill": "#EEEEEE"}
+    doc["contrast_pairs"] = [
+        {"fg": "extras.color.ghost", "bg": "color.page_bg", "kind": "advisory",
+         "note": "Decorative duplicate of the type above it."},
+        {"fg": "extras.color.ghost", "bg": "extras.color.disabled_fill", "kind": "disabled",
+         "note": "Inactive button label."},
+    ]
+    rep = check_contrast(doc)
+    assert_(rep.ok, f"low-contrast exempt pairs with notes pass ({_gate_errors(rep)[:200]})")
+    assert_(any(r["kind"] == "disabled" and r["minimum"] is None for r in rep.results),
+            "disabled pairs are reported with no minimum")
+    doc["contrast_pairs"][0]["note"] = " "
+    assert_(any("needs a 'note'" in e.message for e in check_contrast(doc).errors),
+            "an advisory file pair needs a note")
+    doc["contrast_pairs"][0]["note"] = "x"
+    doc["contrast_pairs"][1]["bg"] = "color.surface"
+    errs = check_contrast(doc).errors
+    assert_(any("disabled-role" in e.message for e in errs),
+            "a disabled pair must name a disabled-role token")
+
+
 def test_contrast_gate_in_validate_and_cli():
     section("contrast: validate_spec, load_system and the CLI expose the gate")
     import contextlib
@@ -1676,6 +1702,7 @@ def main():
     test_contrast_waivers()
     test_contrast_waiver_modes_and_stale_patterns()
     test_contrast_pair_replacement()
+    test_contrast_exempt_pairs()
     test_contrast_gate_in_validate_and_cli()
     test_every_system_passes_color_gates()
     test_contrast_docs_match_module()

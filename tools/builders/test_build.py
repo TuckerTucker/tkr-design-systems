@@ -34,6 +34,7 @@ from engine import (  # noqa: E402
     validate_builder,
 )
 from engine.plugin import builder_of  # noqa: E402
+from engine.text_coverage import check_coverage, scan_builder, scan_template  # noqa: E402
 
 REPO = HERE.parents[1]
 REGISTRY = REPO / "systems" / "registry.yaml"
@@ -238,6 +239,79 @@ def test_radius_rule_rejects_literals_and_wrong_full_sides() -> None:
     assert radius_problems('<path d="M 0 0 L 4 4"/>') == []
     assert radius_problems('<path d="{extras.radius.message|rrect=0,0,40,20}"/>') == []
     assert radius_problems("<div style='border-radius: 6px'/>") == ["border-radius: 6px"]
+
+
+# ─── text-colour coverage (#7) ─────────────────────────────────────────
+
+_COVERAGE_TOKENS: dict[str, Any] = {
+    "system": "t",
+    "color": {"page_bg": "#FFFFFF", "surface": "#FFFFFF", "text_primary": "#000000",
+              "text_muted": "#777777", "text_placeholder": "#AAAAAA"},
+    "extras": {"color": {"note": "#CCCCCC", "disabled_fill": "#EEEEEE"}},
+    "contrast_pairs": [],
+}
+_CLASSES = {"text-primary": "{color.text_primary}"}
+
+
+def _coverage(body: str, pairs: list[dict[str, str]] | None = None):
+    tokens = {**copy.deepcopy(_COVERAGE_TOKENS), "contrast_pairs": pairs or []}
+    usages = scan_template(body, _CLASSES, system="t", kind="library", item="x")
+    return usages, check_coverage("t", usages, tokens)
+
+
+def test_scan_finds_fill_class_background_and_size_class() -> None:
+    body = """
+  <rect x="0" y="0" width="100" height="40" fill="{color.surface}"/>
+  <text x="10" y="25" class="text-primary" font-size="13">Body</text>
+  <g fill="{extras.color.note}"><text x="200" y="25" font-size="24">Big</text></g>
+  <text x="10" y="80" font-size="19" font-weight="700" fill="{color.text_muted}">Bold</text>
+"""
+    usages, _ = _coverage(body)
+    got = [(u.fg, u.bg, u.klass, u.bg_from_shape) for u in usages]
+    assert got == [
+        ("color.text_primary", "color.surface", "text", True),
+        ("extras.color.note", "color.page_bg", "large_text", False),
+        ("color.text_muted", "color.page_bg", "large_text", False),
+    ]
+
+
+def test_coverage_requires_a_pair_for_every_rendered_text_colour() -> None:
+    body = '<text x="0" y="20" font-size="13" fill="{extras.color.note}">your chats</text>'
+    _, report = _coverage(body)
+    assert len(report.problems) == 1 and "extras.color.note on color.page_bg" in report.problems[0]
+    _, report = _coverage(body, [{"fg": "extras.color.note", "bg": "color.page_bg",
+                                  "kind": "large_text"}])
+    assert "declared large_text but rendered as text" in report.problems[0]
+    _, report = _coverage(body, [{"fg": "extras.color.note", "bg": "color.page_bg",
+                                  "kind": "text"}])
+    assert report.ok
+
+
+def test_coverage_caps_at_the_contract_role_and_rejects_template_alpha() -> None:
+    muted = '<text x="0" y="20" font-size="11" fill="{color.text_muted}">2m</text>'
+    _, report = _coverage(muted, [{"fg": "color.text_muted", "bg": "color.page_bg",
+                                   "kind": "large_text"}])
+    assert report.ok and report.capped == ["color.text_muted on color.page_bg"]
+    alpha = '<text x="0" y="20" font-size="11" fill="{color.text_primary|alpha=0.3}">2m</text>'
+    _, report = _coverage(alpha)
+    assert "change the fill's alpha" in report.problems[0]
+    ghost = '<g opacity="0.6"><text x="0" y="20" font-size="11" fill="{extras.color.note}">01</text></g>'
+    _, report = _coverage(ghost, [{"fg": "extras.color.note", "bg": "color.page_bg",
+                                   "kind": "advisory", "note": "ghost"}])
+    assert report.ok
+    unfilled = '<text x="0" y="20" font-size="11">R</text>'
+    _, report = _coverage(unfilled)
+    assert "no token fill" in report.problems[0]
+
+
+@pytest.mark.parametrize("system_id", BUILT_SYSTEMS)
+def test_every_template_text_colour_is_a_checked_contrast_pair(targets, system_id: str) -> None:
+    """A colour a template paints text in must be a contract pair or a contrast_pairs entry."""
+    target = next(t for t in targets if t.id == system_id)
+    usages = scan_builder(system_id, load_plugin(system_id))
+    report = check_coverage(system_id, usages, load_tokens(target))
+    assert usages, system_id
+    assert report.ok, "\n".join(report.problems)
 
 
 def test_full_round_and_rrect_placeholders() -> None:

@@ -7,7 +7,7 @@ Prism grammar:
   Glass elevation: rgba(255,255,255,0.08) default, 0.14 hover/selected, 0.18 user_message
   Glass border: 1px rgba(255,255,255,0.12)
   Gradient bg: 150deg (#4A5D6B → #5A4A5E → #6B5A5A → #4A6058)
-  Text: 0.90 primary, 0.60 secondary, 0.40 muted, 0.30 very-muted (white with opacity)
+  Text: color.text_primary / text_secondary / text_muted (white with opacity; tokens.json)
   Teal accent: #7DDFBE (ONLY for status signals: online dots, unread badges)
   Border radius: radius.default (items, cards), radius.input (44px fields,
   composer), radius.chrome (shell, modals); extras.radius.control for 32px
@@ -215,7 +215,7 @@ COMPONENTS = {
   <text x="31" y="38" text-anchor="middle" class="text-primary" font-size="15" font-weight="500">T</text>
   <circle cx="46" cy="47" r="4" fill="{color.accent}" stroke="{extras.color.status_ring}" stroke-width="2"/>
   <text x="58" y="29" class="text-primary" font-size="12.5" font-weight="500">Tokyo Trip</text>
-  <text x="266" y="29" class="text-very-muted" font-size="10" text-anchor="end">2m</text>
+  <text x="266" y="29" class="text-muted" font-size="10" text-anchor="end">2m</text>
   <text x="58" y="46" class="text-muted" font-size="11">Build day-by-day itinerary…</text>
   <rect x="244" y="38" width="18" height="18" fill="{extras.color.accent_tint}" stroke="{extras.color.accent_border}" stroke-width="1" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="253" y="51" class="text-accent" font-size="9" font-weight="600" text-anchor="middle">2</text>
@@ -227,7 +227,7 @@ COMPONENTS = {
   <text x="31" y="38" text-anchor="middle" class="text-primary" font-size="15" font-weight="500">T</text>
   <circle cx="46" cy="47" r="4" fill="{color.accent}" stroke="{extras.color.status_ring}" stroke-width="2"/>
   <text x="58" y="29" class="text-primary" font-size="12.5" font-weight="500">Tokyo Trip</text>
-  <text x="266" y="29" class="text-very-muted" font-size="10" text-anchor="end">2m</text>
+  <text x="266" y="29" class="text-muted" font-size="10" text-anchor="end">2m</text>
   <text x="58" y="46" class="text-muted" font-size="11">Build day-by-day itinerary…</text>
   <rect x="244" y="38" width="18" height="18" fill="{extras.color.accent_tint}" stroke="{extras.color.accent_border}" stroke-width="1" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="253" y="51" class="text-accent" font-size="9" font-weight="600" text-anchor="middle">2</text>
@@ -237,7 +237,7 @@ COMPONENTS = {
   <rect x="14" y="6" width="34" height="28" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar_small}" ry="{extras.radius.avatar_small}"/>
   <text x="31" y="26" text-anchor="middle" class="text-primary" font-size="13" font-weight="500">R</text>
   <text x="58" y="26" class="text-primary" font-size="12.5" font-weight="500">Recipe ideas</text>
-  <text x="266" y="26" class="text-very-muted" font-size="10" text-anchor="end">1h</text>
+  <text x="266" y="26" class="text-muted" font-size="10" text-anchor="end">1h</text>
 """),
 
     # Form field — label + input + optional help/error

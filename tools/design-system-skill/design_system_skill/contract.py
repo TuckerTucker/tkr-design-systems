@@ -294,9 +294,10 @@ TOKENS_BY_PATH: dict[str, ContractToken] = {t.path: t for t in CONTRACT_TOKENS}
 PAIR_TEXT = "text"              # body-size text
 PAIR_LARGE_TEXT = "large_text"  # >= 18.66px bold / 24px regular, or metadata the system sizes up
 PAIR_UI = "ui"                  # non-text UI: strokes, focus rings, icons
-PAIR_ADVISORY = "advisory"      # reported, never blocking (placeholders)
+PAIR_ADVISORY = "advisory"      # reported, never blocking (placeholders, decorative text)
+PAIR_DISABLED = "disabled"      # reported, never blocking: inactive UI (WCAG 1.4.3 exception)
 
-PAIR_KINDS = frozenset({PAIR_TEXT, PAIR_LARGE_TEXT, PAIR_UI, PAIR_ADVISORY})
+PAIR_KINDS = frozenset({PAIR_TEXT, PAIR_LARGE_TEXT, PAIR_UI, PAIR_ADVISORY, PAIR_DISABLED})
 
 
 @dataclass(frozen=True)

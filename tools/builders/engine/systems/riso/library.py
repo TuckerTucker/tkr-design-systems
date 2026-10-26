@@ -8,7 +8,10 @@ cream paper, classic drums (ink_1 federal blue, ink_2 fluorescent pink).
 
 Riso grammar in SVG:
   Two ink layers: a ghost copy of the type in ink_2, offset +0.4px, under
-  the primary ink_1 layer (the misregistration that reads as print).
+  the primary ink-1 layer (the misregistration that reads as print). The
+  primary type is extras.color.ink_1_text, the legible text shade of the
+  ink-1 drum; the ghost stays the raw drum (an advisory contrast pair:
+  it duplicates the type above it and carries no information).
   Grain: an feTurbulence overlay (``#grain`` in the shared ``<defs>``)
   applied last.
   Corners: square (radius 0 throughout).
@@ -86,7 +89,7 @@ COMPONENTS = {
         font-family="{font.mono}"
         font-size="14"
         font-weight="500"
-        fill="{extras.color.ink_1}"
+        fill="{extras.color.ink_1_text}"
         letter-spacing="1.4">01</text>
 
   <!-- Title — Space Grotesk -->
@@ -94,31 +97,31 @@ COMPONENTS = {
         font-family="{font.body}"
         font-size="14"
         font-weight="500"
-        fill="{extras.color.ink_1}">Tokyo Trip</text>
+        fill="{extras.color.ink_1_text}">Tokyo Trip</text>
 
-  <!-- Timestamp top-right — Space Mono uppercase, 60% density -->
+  <!-- Timestamp top-right — Space Mono uppercase. Full density: a 60%
+       screen of the drum was 2.3:1 on cream; ink_1_text is the legible
+       shade of the ink-1 drum (#7). -->
   <text x="264" y="28"
         font-family="{font.mono}"
         font-size="12"
         font-weight="500"
-        fill="{extras.color.ink_1}"
-        opacity="0.6"
+        fill="{extras.color.ink_1_text}"
         text-anchor="end">2M</text>
 
-  <!-- Preview — Space Grotesk, lighter weight -->
+  <!-- Preview — Space Grotesk, lighter weight (full density, see above) -->
   <text x="46" y="48"
         font-family="{font.body}"
         font-size="12"
         font-weight="400"
-        fill="{extras.color.ink_1}"
-        opacity="0.7">Build day-by-day itinerary?</text>
+        fill="{extras.color.ink_1_text}">Build day-by-day itinerary?</text>
 
   <!-- Unread count — large duotone numeral -->
   <text x="46" y="84"
         font-family="{font.body}"
         font-size="30"
         font-weight="700"
-        fill="{extras.color.ink_1}">02</text>
+        fill="{extras.color.ink_1_text}">02</text>
 
   <!-- ─── GRAIN OVERLAY ───
        feTurbulence noise applied as a multiply layer over everything.
@@ -183,35 +186,33 @@ COMPONENTS = {
         font-family="{font.mono}"
         font-size="14"
         font-weight="500"
-        fill="{extras.color.ink_1}"
+        fill="{extras.color.ink_1_text}"
         letter-spacing="1.4">01</text>
 
   <text x="46" y="28"
         font-family="{font.body}"
         font-size="14"
         font-weight="500"
-        fill="{extras.color.ink_1}">Tokyo Trip</text>
+        fill="{extras.color.ink_1_text}">Tokyo Trip</text>
 
   <text x="264" y="28"
         font-family="{font.mono}"
         font-size="12"
         font-weight="500"
-        fill="{extras.color.ink_1}"
-        opacity="0.6"
+        fill="{extras.color.ink_1_text}"
         text-anchor="end">2M</text>
 
   <text x="46" y="48"
         font-family="{font.body}"
         font-size="12"
         font-weight="400"
-        fill="{extras.color.ink_1}"
-        opacity="0.7">Build day-by-day itinerary?</text>
+        fill="{extras.color.ink_1_text}">Build day-by-day itinerary?</text>
 
   <text x="46" y="84"
         font-family="{font.body}"
         font-size="30"
         font-weight="700"
-        fill="{extras.color.ink_1}">02</text>
+        fill="{extras.color.ink_1_text}">02</text>
 
   <!-- ─── GRAIN OVERLAY ─── -->
   <rect x="0" y="0" width="280" height="96" fill="{extras.color.ink_1}" opacity="0.06"

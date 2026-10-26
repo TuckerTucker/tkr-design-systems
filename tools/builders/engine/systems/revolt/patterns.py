@@ -36,7 +36,7 @@ PATTERNS = {
 
   <!-- Pink brand section at top of form -->
   <rect x="460" y="78" width="352" height="60" fill="{color.accent}"/>
-  <text x="636" y="117" text-anchor="middle" class="text-inverse" font-size="14" font-weight="700" letter-spacing="1.12">REVOLT.chat</text>
+  <text x="636" y="117" text-anchor="middle" class="text-on-accent" font-size="14" font-weight="700" letter-spacing="1.12">REVOLT.chat</text>
 
   <!-- Divider below brand -->
   <line x1="460" y1="138" x2="812" y2="138" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -133,13 +133,13 @@ PATTERNS = {
   <rect x="12" y="108" width="252" height="50" fill="{extras.color.shadow}"/>
   <rect x="8" y="104" width="252" height="50" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="2"/>
   <rect x="22" y="113" width="30" height="30" fill="{color.accent}" stroke="{color.border_default}" stroke-width="2"/>
-  <text x="37" y="134" font-family="{font.body}" font-size="11" font-weight="700" fill="{color.text_inverse}" text-anchor="middle">TT</text>
+  <text x="37" y="134" font-family="{font.body}" font-size="11" font-weight="700" fill="{color.accent_foreground}" text-anchor="middle">TT</text>
   <text x="62" y="125" font-family="{font.body}" font-size="11" font-weight="700" fill="{color.text_primary}" letter-spacing="0.44">TOKYO TRIP</text>
   <text x="252" y="125" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.text_primary}" text-anchor="end">2M</text>
   <text x="62" y="142" font-family="{font.body}" font-size="10" fill="{color.text_primary}">build itinerary?</text>
   <!-- Pink unread badge with 2px border -->
   <rect x="220" y="135" width="24" height="14" fill="{color.accent}" stroke="{color.border_default}" stroke-width="2"/>
-  <text x="232" y="146" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.text_inverse}" text-anchor="middle">2</text>
+  <text x="232" y="146" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}" text-anchor="middle">2</text>
 
   <!-- Recipe Ideas (default) -->
   <rect x="22" y="188" width="30" height="30" fill="{color.surface}" stroke="{color.border_default}" stroke-width="2"/>
@@ -155,7 +155,7 @@ PATTERNS = {
   <text x="266" y="264" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.text_muted}" text-anchor="end">3H</text>
   <text x="62" y="281" font-family="{font.body}" font-size="10" fill="{color.text_secondary}">start with murakami…</text>
   <rect x="220" y="259" width="24" height="14" fill="{color.accent}" stroke="{color.border_default}" stroke-width="2"/>
-  <text x="232" y="270" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.text_inverse}" text-anchor="middle">1</text>
+  <text x="232" y="270" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}" text-anchor="middle">1</text>
 
   <!-- Fitness Plan -->
   <rect x="22" y="316" width="30" height="30" fill="{color.surface}" stroke="{color.border_default}" stroke-width="2"/>
@@ -181,16 +181,16 @@ PATTERNS = {
 
   <!-- Pink header bar with 3px black bottom border -->
   <rect x="280" y="0" width="1000" height="48" fill="{color.accent}"/>
-  <text x="314" y="30" font-family="{font.body}" font-size="14" font-weight="700">TT</text>
+  <text x="314" y="30" font-family="{font.body}" font-size="14" font-weight="700" fill="{color.accent_foreground}">TT</text>
   <text x="344" y="30"
         font-family="{font.body}"
         font-size="12"
         font-weight="700"
-        fill="{color.text_inverse}"
+        fill="{color.accent_foreground}"
         letter-spacing="0.72">TOKYO TRIP</text>
   <!-- LIVE pill — bordered white rectangle in pink header -->
   <rect x="1224" y="14" width="44" height="20" fill="{color.accent}" stroke="{color.text_inverse}" stroke-width="2"/>
-  <text x="1246" y="28" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.text_inverse}" text-anchor="end">LIVE</text>
+  <text x="1246" y="28" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}" text-anchor="end">LIVE</text>
   <line x1="280" y1="46.5" x2="1280" y2="46.5" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
 
   <!-- ─── Messages: rectangles with 2px border + 4px hard shadow ─── -->
@@ -198,7 +198,7 @@ PATTERNS = {
   <!-- Message 01 — USER (pink fill, right-aligned) -->
   <rect x="824" y="100" width="436" height="44" fill="{extras.color.shadow}"/>
   <rect x="820" y="96" width="436" height="44" fill="{color.accent}" stroke="{color.border_default}" stroke-width="2"/>
-  <text x="836" y="123" font-family="{font.body}" font-size="11.5" fill="{color.text_inverse}">Hey, can you help me plan a trip to Tokyo?</text>
+  <text x="836" y="123" font-family="{font.body}" font-size="11.5" fill="{color.accent_foreground}">Hey, can you help me plan a trip to Tokyo?</text>
   <text x="1256" y="156" font-family="{font.body}" font-size="8" font-weight="700" fill="{color.text_muted}" letter-spacing="0.8" text-anchor="end">YOU // 00:1</text>
 
   <!-- Message 02 — AI (white fill, left-aligned) -->
@@ -211,7 +211,7 @@ PATTERNS = {
   <!-- Message 03 — USER -->
   <rect x="864" y="284" width="396" height="44" fill="{extras.color.shadow}"/>
   <rect x="860" y="280" width="396" height="44" fill="{color.accent}" stroke="{color.border_default}" stroke-width="2"/>
-  <text x="876" y="307" font-family="{font.body}" font-size="11.5" fill="{color.text_inverse}">Definitely a mix — temples in the morning, ramen at night.</text>
+  <text x="876" y="307" font-family="{font.body}" font-size="11.5" fill="{color.accent_foreground}">Definitely a mix — temples in the morning, ramen at night.</text>
   <text x="1256" y="340" font-family="{font.body}" font-size="8" font-weight="700" fill="{color.text_muted}" letter-spacing="0.8" text-anchor="end">YOU // 00:3</text>
 
   <!-- Message 04 — AI -->

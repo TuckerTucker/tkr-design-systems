@@ -185,7 +185,7 @@ PATTERNS = {
         font-family="{font.body}"
         font-size="12"
         font-weight="400"
-        fill="{extras.color.icon_muted}">Search...</text>
+        fill="{color.text_placeholder}">Search...</text>
 
   <!-- Caveat section header rotated -->
   <g transform="rotate(-1.5, 14, 100)">
@@ -199,25 +199,25 @@ PATTERNS = {
   <!-- ─── Selected list item (Tokyo Trip) ─── -->
   <rect x="6" y="116" width="268" height="56" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <rect x="20" y="125" width="34" height="34" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
-  <text x="37" y="148" font-family="{font.body}" font-size="14" font-weight="600" text-anchor="middle">T</text>
+  <text x="37" y="148" font-family="{font.body}" font-size="14" font-weight="600" fill="{color.text_primary}" text-anchor="middle">T</text>
   <text x="64" y="139" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Tokyo Trip</text>
-  <text x="260" y="139" font-family="{font.body}" font-size="10" fill="{color.text_placeholder}" text-anchor="end">2m</text>
+  <text x="260" y="139" font-family="{font.body}" font-size="10" fill="{color.text_muted}" text-anchor="end">2m</text>
   <text x="64" y="156" font-family="{font.body}" font-size="11" fill="{color.text_muted}">Build itinerary?</text>
   <rect x="238" y="148" width="18" height="18" fill="{color.accent}" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="247" y="161" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}" text-anchor="middle">2</text>
 
   <!-- ─── Recipe Ideas ─── -->
   <rect x="14" y="190" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
-  <text x="31" y="213" font-family="{font.body}" font-size="14" font-weight="600" text-anchor="middle">R</text>
+  <text x="31" y="213" font-family="{font.body}" font-size="14" font-weight="600" fill="{color.text_primary}" text-anchor="middle">R</text>
   <text x="58" y="204" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Recipe Ideas</text>
-  <text x="266" y="204" font-family="{font.body}" font-size="10" fill="{color.text_placeholder}" text-anchor="end">1h</text>
+  <text x="266" y="204" font-family="{font.body}" font-size="10" fill="{color.text_muted}" text-anchor="end">1h</text>
   <text x="58" y="221" font-family="{font.body}" font-size="11" fill="{color.text_muted}">Here are 5 ramen variations…</text>
 
   <!-- ─── Book Club ─── -->
   <rect x="14" y="252" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
-  <text x="31" y="275" font-family="{font.body}" font-size="14" font-weight="600" text-anchor="middle">B</text>
+  <text x="31" y="275" font-family="{font.body}" font-size="14" font-weight="600" fill="{color.text_primary}" text-anchor="middle">B</text>
   <text x="58" y="266" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Book Club</text>
-  <text x="266" y="266" font-family="{font.body}" font-size="10" fill="{color.text_placeholder}" text-anchor="end">3h</text>
+  <text x="266" y="266" font-family="{font.body}" font-size="10" fill="{color.text_muted}" text-anchor="end">3h</text>
   <text x="58" y="283" font-family="{font.body}" font-size="11" fill="{color.text_muted}">Start with Murakami…</text>
   <rect x="244" y="275" width="18" height="18" fill="{color.accent}" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="253" y="288" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}" text-anchor="middle">1</text>
@@ -281,7 +281,7 @@ PATTERNS = {
   <!-- Composer: rounded input + Caveat send label -->
   <line x1="320" y1="664" x2="1264" y2="664" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <rect x="320" y="684" width="944" height="40" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
-  <text x="338" y="709" font-family="{font.body}" font-size="13" fill="{extras.color.icon_muted}">Type here...</text>
+  <text x="338" y="709" font-family="{font.body}" font-size="13" fill="{color.text_placeholder}">Type here...</text>
   <g transform="rotate(-1.5, 1244, 700)">
     <text x="1244" y="709" font-family="{extras.font.annotation}" font-size="17" font-weight="700" fill="{color.accent}" text-anchor="end">go</text>
   </g>
