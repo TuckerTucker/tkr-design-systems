@@ -11,7 +11,7 @@
   <!-- ==================== RADIO-SELECTED ==================== -->
 
   <rect x="0" y="0" width="20" height="20" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="6" ry="6"/>
-  <rect x="6" y="6" width="8" height="8" fill="#2C2C2C" rx="3" ry="3"/>
+  <rect x="6" y="6" width="8" height="8" fill="#2C2C2C" rx="4" ry="4"/>
   <text x="32" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Selected</text>
 
 </svg>

@@ -15,7 +15,7 @@
   <!-- AVATAR-WITH-STATUS -->
   <rect x="0" y="0" width="34" height="34" fill="url(#prism-bg-strip)"/>
 
-  <rect x="0" y="0" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="8" ry="8"/>
+  <rect x="0" y="0" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
   <text x="17" y="24" text-anchor="middle" class="text-primary" font-size="15" font-weight="500">T</text>
   <circle cx="28" cy="28" r="4" fill="#7DDFBE" stroke="rgba(74,93,107,0.8)" stroke-width="1.5"/>
 

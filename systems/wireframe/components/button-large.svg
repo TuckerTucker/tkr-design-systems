@@ -13,7 +13,7 @@
   </defs>
   <!-- ==================== BUTTON-LARGE ==================== -->
 
-  <rect width="200" height="56" rx="8" fill="#424242"/>
+  <rect width="200" height="56" rx="6" fill="#424242"/>
   <text x="100" y="34" text-anchor="middle" class="text-inverse" font-size="16" font-weight="500">Large</text>
 
 </svg>

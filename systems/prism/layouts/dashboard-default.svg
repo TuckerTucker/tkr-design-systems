@@ -72,48 +72,24 @@
   <!-- ════════════ MAIN CONTENT ════════════ -->
 
   <!-- Header panel -->
-  <rect x="312" y="14" width="952" height="56" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="14" ry="14"/>
+  <rect x="312" y="14" width="952" height="56" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="12" ry="12"/>
   <text x="328" y="46" class="text-primary" font-size="16" font-weight="700">T</text>
   <text x="354" y="44" class="text-primary" font-size="13.5" font-weight="500">Tokyo Trip</text>
   <text x="354" y="60" class="text-muted" font-size="10">active session</text>
 
   <!-- Message 1 — USER (right, 0.18 opacity) -->
-  <path d="M 780,108
-           L 1240,108
-           Q 1252,108 1252,120
-           L 1252,140
-           Q 1252,152 1240,152
-           L 800,152
-           Q 788,152 788,140
-           L 788,116
-           Q 788,108 800,108 Z"
+  <path d="M 804 108 H 1236 A 16 16 0 0 1 1252 124 V 148 A 4 4 0 0 1 1248 152 H 804 A 16 16 0 0 1 788 136 V 124 A 16 16 0 0 1 804 108 Z"
         fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
   <text x="800" y="135" class="text-primary" font-size="13">Hey, can you plan my Tokyo trip?</text>
 
   <!-- Message 2 — AI (left, 0.08 opacity) -->
-  <path d="M 320,180
-           L 940,180
-           Q 952,180 952,192
-           L 952,238
-           Q 952,250 940,250
-           L 332,250
-           Q 320,250 320,238
-           L 320,184
-           Q 320,180 320,180 Z"
+  <path d="M 336 180 H 936 A 16 16 0 0 1 952 196 V 234 A 16 16 0 0 1 936 250 H 324 A 4 4 0 0 1 320 246 V 196 A 16 16 0 0 1 336 180 Z"
         fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
   <text x="338" y="208" class="text-secondary" font-size="13">Absolutely! Tokyo is incredible. I'd suggest</text>
   <text x="338" y="232" class="text-secondary" font-size="13">starting with Asakusa temples.</text>
 
   <!-- Message 3 — USER -->
-  <path d="M 836,278
-           L 1240,278
-           Q 1252,278 1252,290
-           L 1252,310
-           Q 1252,322 1240,322
-           L 856,322
-           Q 844,322 844,310
-           L 844,286
-           Q 844,278 856,278 Z"
+  <path d="M 860 278 H 1236 A 16 16 0 0 1 1252 294 V 318 A 4 4 0 0 1 1248 322 H 860 A 16 16 0 0 1 844 306 V 294 A 16 16 0 0 1 860 278 Z"
         fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
   <text x="856" y="305" class="text-primary" font-size="13">Perfect! Temples + food.</text>
 

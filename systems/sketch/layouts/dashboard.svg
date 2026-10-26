@@ -81,7 +81,7 @@
   <!-- ════════════ MAIN AREA ════════════ -->
 
   <!-- Header: monogram + title + Caveat 'active' annotation -->
-  <rect x="320" y="12" width="32" height="32" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="6" ry="6"/>
+  <rect x="320" y="12" width="32" height="32" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="8" ry="8"/>
   <text x="336" y="32" text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="13" font-weight="600" fill="#2C2C2C">T</text>
   <text x="368" y="32" font-family="'IBM Plex Sans', sans-serif" font-size="13.5" font-weight="600" fill="#2C2C2C">Tokyo Trip</text>
   <g transform="rotate(-2, 1240, 32)">

@@ -31,7 +31,7 @@
   <rect x="0" y="0" width="1280" height="800" fill="rgba(0,0,0,0.3)"/>
 
   <!-- Centered modal panel: 480×320 -->
-  <rect x="400" y="240" width="480" height="320" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="14" ry="14"/>
+  <rect x="400" y="240" width="480" height="320" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="20" ry="20"/>
 
   <!-- Header -->
   <text x="416" y="272" class="text-secondary" font-size="9" font-weight="600">CONFIRM</text>

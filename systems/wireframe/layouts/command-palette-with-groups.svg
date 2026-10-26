@@ -25,7 +25,7 @@
 
   <!-- Group: Recent -->
   <text x="396" y="184" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">RECENT</text>
-  <rect x="396" y="196" width="488" height="40" rx="4" fill="#F5F5F5"/>
+  <rect x="396" y="196" width="488" height="40" rx="6" fill="#F5F5F5"/>
   <text x="412" y="220" class="text-primary" font-size="14" font-weight="500">Create new project</text>
 
   <text x="412" y="260" class="text-primary" font-size="14">Create new task</text>

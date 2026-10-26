@@ -15,7 +15,7 @@
   <!-- TABLE-HEADER-DEFAULT -->
   <rect x="0" y="0" width="480" height="32" fill="url(#prism-bg-strip)"/>
 
-  <rect x="0" y="0" width="480" height="32" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="8" ry="8"/>
+  <rect x="0" y="0" width="480" height="32" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="12" ry="12"/>
   <text x="12" y="21" class="text-secondary" font-size="10" font-weight="600">Name</text>
   <text x="200" y="21" class="text-secondary" font-size="10" font-weight="600">Email</text>
   <text x="380" y="21" class="text-secondary" font-size="10" font-weight="600">Role</text>

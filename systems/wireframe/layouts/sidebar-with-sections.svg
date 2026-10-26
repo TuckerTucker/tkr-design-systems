@@ -21,7 +21,7 @@
 
   <!-- Workspace section -->
   <text x="16" y="98" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">WORKSPACE</text>
-  <rect x="8" y="112" width="264" height="32" rx="4" fill="#F5F5F5"/>
+  <rect x="8" y="112" width="264" height="32" rx="6" fill="#F5F5F5"/>
   <text x="20" y="132" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
   <text x="20" y="164" class="text-secondary" font-size="14">Projects</text>
   <text x="20" y="196" class="text-secondary" font-size="14">Reports</text>

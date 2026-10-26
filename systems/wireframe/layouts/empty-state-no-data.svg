@@ -16,7 +16,7 @@
   <rect width="640" height="400" fill="#FFFFFF"/>
 
   <!-- Illustration placeholder -->
-  <rect x="288" y="80" width="64" height="64" rx="8" fill="none" stroke="#BDBDBD" stroke-width="2" stroke-dasharray="4,4"/>
+  <rect x="288" y="80" width="64" height="64" rx="6" fill="none" stroke="#BDBDBD" stroke-width="2" stroke-dasharray="4,4"/>
   <line x1="296" y1="100" x2="344" y2="100" stroke="#BDBDBD" stroke-width="1.5"/>
   <line x1="296" y1="116" x2="344" y2="116" stroke="#BDBDBD" stroke-width="1.5"/>
   <line x1="296" y1="132" x2="320" y2="132" stroke="#BDBDBD" stroke-width="1.5"/>

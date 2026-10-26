@@ -16,7 +16,7 @@
   <rect x="0" y="0" width="240" height="28" fill="url(#prism-bg-strip)"/>
 
   <text x="0" y="20" class="text-secondary" font-size="10">1 of 12</text>
-  <rect x="160" y="8" width="20" height="20" fill="rgba(125,223,190,0.25)" stroke="rgba(125,223,190,0.4)" stroke-width="1" rx="4" ry="4"/>
+  <rect x="160" y="8" width="20" height="20" fill="rgba(125,223,190,0.25)" stroke="rgba(125,223,190,0.4)" stroke-width="1" rx="6" ry="6"/>
   <text x="170" y="22" text-anchor="middle" class="text-accent" font-size="10" font-weight="600">2</text>
   <text x="196" y="20" class="text-secondary" font-size="10">›</text>
 

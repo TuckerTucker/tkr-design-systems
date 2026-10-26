@@ -15,7 +15,7 @@
   <!-- TABLE-ROW-SELECTED -->
   <rect x="0" y="0" width="480" height="40" fill="url(#prism-bg-strip)"/>
 
-  <rect x="0" y="0" width="480" height="40" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="8" ry="8"/>
+  <rect x="0" y="0" width="480" height="40" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="12" ry="12"/>
   <text x="12" y="28" class="text-primary" font-size="12.5" font-weight="500">Alex Rivera</text>
   <text x="200" y="28" class="text-secondary" font-size="12">alex@northwind.com</text>
   <text x="380" y="28" class="text-secondary" font-size="12">Administrator</text>

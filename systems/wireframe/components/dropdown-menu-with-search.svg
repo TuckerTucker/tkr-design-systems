@@ -17,7 +17,7 @@
   <text x="16" y="26" class="text-primary" font-size="13">Select user</text>
   <path d="M 214 18 L 218 22 L 222 18" fill="none" stroke="#757575" stroke-width="1.5" stroke-linecap="round"/>
   <rect x="0" y="48" width="240" height="184" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
-  <rect x="8" y="56" width="224" height="32" rx="4" fill="#F5F5F5"/>
+  <rect x="8" y="56" width="224" height="32" rx="6" fill="#F5F5F5"/>
   <text x="20" y="76" class="text-disabled" font-size="13">Search users...</text>
   <text x="16" y="116" class="text-primary" font-size="14">Alex Rivera</text>
   <text x="16" y="148" class="text-primary" font-size="14">Jordan Chen</text>

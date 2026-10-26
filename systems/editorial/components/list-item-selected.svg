@@ -1,6 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 90" width="280" height="90">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: 'Fraunces', Georgia, serif; }
+      .text-secondary { fill: #5C4F44; font-family: 'Fraunces', Georgia, serif; }
+      .text-metadata { fill: #8B7D6F; font-family: 'Inter', sans-serif; }
+      .text-metadata-accent { fill: #8B1E2D; font-family: 'Inter', sans-serif; }
+      .text-accent { fill: #8B1E2D; font-family: 'Fraunces', Georgia, serif; }
+      .text-muted { fill: #8B7D6F; font-family: 'Inter', sans-serif; }
+      .text-display { fill: #1A1614; font-family: 'Fraunces', Georgia, serif; }
+    </style>
+  </defs>
+  <!-- ==================== LIST-ITEM-SELECTED ==================== -->
+
   <!-- Editorial list item — selected state
-       Per editorial paper-tier elevation: background fills with #F1ECDF (paper_elevated)
+       Per editorial paper-tier elevation: background fills with color.surface_selected (paper_elevated)
        Title weight bumps from 600 to 700.
        NO accent bar, NO border highlight.
   -->
@@ -10,7 +23,7 @@
 
   <!-- Timestamp + emoji overline -->
   <text x="16" y="22"
-        font-family="Inter, system-ui, sans-serif"
+        font-family="'Inter', sans-serif"
         font-size="9"
         font-weight="600"
         fill="#8B7D6F"
@@ -18,7 +31,7 @@
 
   <!-- Unread "2 new" — Fraunces burgundy -->
   <text x="264" y="22"
-        font-family="Fraunces, Georgia, serif"
+        font-family="'Fraunces', Georgia, serif"
         font-size="11"
         font-weight="700"
         fill="#8B1E2D"
@@ -26,7 +39,7 @@
 
   <!-- Title: Fraunces 15px weight 700 (bumped from 600 for selection) -->
   <text x="16" y="46"
-        font-family="Fraunces, Georgia, serif"
+        font-family="'Fraunces', Georgia, serif"
         font-size="15"
         font-weight="700"
         fill="#1A1614"
@@ -34,7 +47,7 @@
 
   <!-- Preview: Inter italic 11px -->
   <text x="16" y="66"
-        font-family="Inter, system-ui, sans-serif"
+        font-family="'Inter', sans-serif"
         font-size="11"
         font-style="italic"
         font-weight="400"
@@ -42,4 +55,5 @@
 
   <!-- Hairline rule below -->
   <line x1="0" y1="89" x2="280" y2="89" stroke="#E8DFCA" stroke-width="1"/>
+
 </svg>

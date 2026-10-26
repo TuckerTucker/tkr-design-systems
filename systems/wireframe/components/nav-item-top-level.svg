@@ -13,7 +13,7 @@
   </defs>
   <!-- ==================== NAV-ITEM-TOP-LEVEL ==================== -->
 
-  <rect width="240" height="32" rx="4" fill="#F5F5F5"/>
+  <rect width="240" height="32" rx="6" fill="#F5F5F5"/>
   <rect x="8" y="8" width="16" height="16" rx="2" fill="none" stroke="#424242" stroke-width="1.5"/>
   <text x="32" y="21" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
 

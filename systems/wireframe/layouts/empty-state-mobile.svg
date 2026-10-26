@@ -16,7 +16,7 @@
   <rect width="375" height="600" fill="#FFFFFF"/>
 
   <!-- Illustration placeholder -->
-  <rect x="151.5" y="184" width="72" height="72" rx="8" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+  <rect x="151.5" y="184" width="72" height="72" rx="6" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
   <line x1="167.5" y1="220" x2="207.5" y2="220" stroke="#BDBDBD" stroke-width="1.5"/>
   <line x1="187.5" y1="200" x2="187.5" y2="240" stroke="#BDBDBD" stroke-width="1.5"/>
 
