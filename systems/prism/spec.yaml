@@ -141,6 +141,23 @@ components:
       - "All surfaces use glass treatment (semi-transparent + border) — no solid fills except the gradient bg"
       - "Online indicators are solid teal dots with a dark border to read on glass"
       - "Preview text yields horizontal space to unread_badge: minimum 8px gap before the badge's left edge. Truncate the preview content (do not let SVG text overflow). See SCHEMA v0.2 finding 11.5 for the formal yields_to constraint this rule encodes."
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 70
+        note: "JSX .ci fadeSlideUp 0.3s ease, 6px travel."
+      - trigger: select
+        tier: moderate
+        properties: [background-color, border-color, box-shadow, backdrop-filter]
+        reduced: keep
+        note: "JSX glass tier shift base → elevated, 'transition: all 0.25s'. A whole row changes material, so moderate rather than fast."
+      - trigger: hover
+        tier: moderate
+        properties: [opacity]
+        reduced: keep
+        note: "JSX .ci:hover opacity 0.88, carried by the row's 'all 0.25s'."
 
 rulebook:
   # NEW IN v0.2: every rule annotates check_method (Change 9) and
@@ -208,3 +225,25 @@ grammar_extensions:
         - { x_anchor: top-right, y_offset_px: -60, x_offset_px: 60, size_px: 200, color_ref: "soft_lavender", opacity: 0.20 }
         - { x_anchor: bottom-left, y_offset_px: 60, x_offset_px: -60, size_px: 160, color_ref: "soft_teal", opacity: 0.18 }
       role: "creates implied light source; non-interactive; behind all glass panels"
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 100
+        note: "JSX .mi fadeSlideUp 0.35s ease (doc row: 500ms ease-out)."
+    send_button:
+      - trigger: hover
+        tier: fast
+        properties: [transform]
+        reduced: none
+        note: "JSX .snd scale(1.05), transform 0.1s."

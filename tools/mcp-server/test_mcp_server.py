@@ -35,6 +35,7 @@ from server import (  # noqa: E402
     wf_apply_substitutions,
     wf_assemble_from_blueprint,
     wf_select_layout,
+    wf_get_tokens,
 )
 
 
@@ -606,6 +607,21 @@ def test_wf_assemble_with_output_dir():
                     "components_used populated in spec.yaml")
 
 
+# ─── wf_get_tokens: motion (issue #10) ────────────────────────────────
+
+def test_wf_get_tokens_motion():
+    section("wf_get_tokens returns the motion vocabulary")
+    result = wf_get_tokens("editorial")
+    assert_(result.get("ok") is True, "wf_get_tokens('editorial') ok")
+    motion = result.get("motion") or {}
+    assert_(motion.get("tiers", {}).get("slow", {}).get("enter_ms") == 450,
+            f"editorial slow tier enter_ms 450 (got {motion.get('tiers', {}).get('slow')})")
+    assert_(motion.get("reduced_motion") == "fade", "editorial reduced-motion policy is fade")
+    assert_("message" in motion.get("declarations", {}),
+            "motion.elements.message declaration returned")
+    assert_("motion" in result.get("contract", {}), "contract carries the motion group")
+
+
 # ─── Run all tests ────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -636,6 +652,7 @@ if __name__ == "__main__":
     test_wf_generate_layout_id()
     test_wf_select_layout()
     test_wf_assemble_with_output_dir()
+    test_wf_get_tokens_motion()
 
     print(f"\n{'='*50}")
     print(f"  {PASSED} passed, {FAILED} failed")

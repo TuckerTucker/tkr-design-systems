@@ -11,8 +11,10 @@ wireframe-skill and a future contrast gate can all import it without
 cycles.
 
 The human-readable contract table in ``docs/specs/SCHEMA-V0.3.md`` is
-rendered from ``CONTRACT_TOKENS`` by ``render_contract_table()``; a test
-asserts the document and this module agree, so neither can drift.
+rendered from ``CONTRACT_TOKENS`` by ``render_contract_table()`` (and the
+pairs / motion tier tables by ``render_pairs_table()`` /
+``render_motion_table()``); a test asserts the document and this module
+agree, so neither can drift.
 """
 
 from __future__ import annotations
@@ -39,6 +41,8 @@ KIND_TYPE_ROLE = "type_role"      # mapping, see TYPE_ROLE_FIELDS
 KIND_SHADOW = "shadow"            # CSS box-shadow string, or "none"
 KIND_BLUR = "blur"                # CSS length string such as "20px", or "none"
 KIND_ELEVATION_STRATEGY = "elevation_strategy"  # non-empty identifier string
+KIND_MOTION_TIER = "motion_tier"  # mapping, see MOTION_TIER_FIELDS
+KIND_REDUCED_MOTION = "reduced_motion_policy"  # one of REDUCED_MOTION_POLICIES
 
 TYPE_ROLE_FIELDS: tuple[str, ...] = (
     "size", "weight", "line_height", "tracking", "family", "case",
@@ -51,6 +55,87 @@ TYPE_ROLE_FIELDS: tuple[str, ...] = (
 """
 
 VALID_TYPE_CASES = frozenset({"none", "uppercase", "lowercase", "sentence"})
+
+
+# ─── Motion (issue #10) ─────────────────────────────────────────────
+
+MOTION_TIER_FIELDS: tuple[str, ...] = ("enter_ms", "exit_ms", "easing")
+"""Required fields of every ``motion.<tier>`` token.
+
+``enter_ms`` / ``exit_ms`` are durations in milliseconds (exit never
+slower than enter); ``easing`` is a CSS ``cubic-bezier(x1, y1, x2, y2)``
+string. An optional ``spring`` mapping (``SPRING_FIELDS``) gives the
+tier's spring for platforms that animate with springs.
+"""
+
+SPRING_FIELDS: tuple[str, ...] = ("duration_ms", "bounce")
+"""Fields of an optional ``spring``: perceived duration (ms) and bounce (0 <= b < 1)."""
+
+REDUCED_MOTION_POLICIES = frozenset({"fade", "none"})
+"""System-wide ``motion.reduced_motion`` values (``prefers-reduced-motion: reduce``).
+
+``fade``: drop travel, scale and rotation; keep opacity cross-fades at the
+tier's duration; stop loops. ``none``: every transition is instant.
+"""
+
+REDUCED_MOTION_BEHAVIOURS = frozenset({"fade", "none", "keep"})
+"""Per-animation ``reduced`` values in spec.yaml motion declarations.
+
+``fade`` and ``none`` as in ``REDUCED_MOTION_POLICIES``; ``keep`` leaves a
+non-vestibular animation (opacity / colour only) unchanged. Under a
+system policy of ``none`` every declaration must say ``none``.
+"""
+
+MOTION_TRIGGERS = frozenset({
+    "enter", "exit", "hover", "press", "focus", "select", "expand", "loop",
+})
+"""What starts an animation in a spec.yaml motion declaration."""
+
+VESTIBULAR_PROPERTIES = frozenset({
+    "transform", "translate", "scale", "rotate", "position", "size",
+})
+"""Animated properties that move or resize; never allowed with ``reduced: keep``."""
+
+
+@dataclass(frozen=True)
+class MotionTier:
+    """One named motion tier and the rule for what belongs in it.
+
+    Attributes:
+        name: Tier name; also the token name (``motion.<name>``).
+        moves: What kind of change uses this tier.
+        examples: Typical components / triggers.
+        prior_art: Fine-design reference values (enter / exit, spring).
+    """
+
+    name: str
+    moves: str
+    examples: str
+    prior_art: str
+
+
+MOTION_TIERS: tuple[MotionTier, ...] = (
+    MotionTier("fast", "Feedback on a control or glyph: colour, opacity or a small scale, no travel.",
+               "hover, press, focus, toggle thumb, send affordance, cursor",
+               "80 / 60 ms"),
+    MotionTier("moderate", "A small element appearing, leaving or changing material in place.",
+               "list rows, menus, toasts, accordion content, row selection",
+               "160 / 120 ms"),
+    MotionTier("slow", "A large surface, or content that travels into the reading flow.",
+               "messages, panels, drawers, modals, section content",
+               "240 / 160 ms, spring bounce .12"),
+    MotionTier("expressive", "Brand or one-off motion, at most once per view.",
+               "hero entrances, empty-state illustration, celebration",
+               "420 ms, spring bounce .28"),
+)
+"""Motion tiers in ascending order. Bigger thing, slower tier.
+
+Tier ``enter_ms`` values must be non-decreasing in this order (a system
+with no expressive motion repeats its slow values), so a consumer can
+always pick a tier by the size of what moves.
+"""
+
+MOTION_TIER_NAMES: tuple[str, ...] = tuple(t.name for t in MOTION_TIERS)
 
 
 @dataclass(frozen=True)
@@ -180,6 +265,22 @@ CONTRACT_TOKENS: tuple[ContractToken, ...] = (
                   "modals, dropdowns"),
     ContractToken("elevation", "backdrop_blur", KIND_BLUR, "backdrop-filter blur radius, or none.",
                   "glass surfaces"),
+    # Motion (issue #10): tiers ascend by the size of what moves
+    ContractToken("motion", "fast", KIND_MOTION_TIER,
+                  "Feedback on a control or glyph (colour, opacity, small scale).",
+                  "hover, press, focus; spec.yaml motion declarations"),
+    ContractToken("motion", "moderate", KIND_MOTION_TIER,
+                  "Small element entering, leaving or changing material in place.",
+                  "list rows, menus, toasts; spec.yaml motion declarations"),
+    ContractToken("motion", "slow", KIND_MOTION_TIER,
+                  "Large surface or content travelling into the reading flow.",
+                  "messages, panels, modals; spec.yaml motion declarations"),
+    ContractToken("motion", "expressive", KIND_MOTION_TIER,
+                  "Brand / one-off motion, at most once per view (may equal slow).",
+                  "hero entrances; spec.yaml motion declarations"),
+    ContractToken("motion", "reduced_motion", KIND_REDUCED_MOTION,
+                  "What the system does under prefers-reduced-motion: fade or none.",
+                  "every animation; ceiling for per-animation reduced behaviour"),
 )
 
 CONTRACT_GROUPS: tuple[str, ...] = tuple(dict.fromkeys(t.group for t in CONTRACT_TOKENS))
@@ -253,6 +354,11 @@ _RGB_RE = re.compile(
 )
 _BLUR_RE = re.compile(r"^\d+(?:\.\d+)?px$")
 _IDENT_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+_NUM = r"\s*(-?\d+(?:\.\d+)?|-?\.\d+)\s*"
+_CUBIC_BEZIER_RE = re.compile(r"^cubic-bezier\(" + ",".join([_NUM] * 4) + r"\)$")
+_STEPS_RE = re.compile(
+    r"^steps\(\s*[1-9]\d*\s*(?:,\s*(?:jump-start|jump-end|jump-none|jump-both|start|end)\s*)?\)$"
+)
 
 
 def parse_color(value: Any) -> tuple[int, int, int, float] | None:
@@ -344,7 +450,81 @@ def check_value(kind: str, value: Any, font_keys: Iterable[str] = ()) -> str | N
         return None if isinstance(value, str) and _IDENT_RE.match(value) else f"expected an identifier, got {value!r}"
     if kind == KIND_TYPE_ROLE:
         return _check_type_role(value, set(font_keys))
+    if kind == KIND_MOTION_TIER:
+        return _check_motion_tier(value)
+    if kind == KIND_REDUCED_MOTION:
+        return None if value in REDUCED_MOTION_POLICIES else (
+            f"expected one of {sorted(REDUCED_MOTION_POLICIES)}, got {value!r}")
     return f"unknown kind {kind!r}"
+
+
+def parse_cubic_bezier(value: Any) -> tuple[float, float, float, float] | None:
+    """Parse a CSS ``cubic-bezier()`` easing.
+
+    Args:
+        value: Candidate easing string, e.g. ``cubic-bezier(0.2, 0, 0, 1)``.
+
+    Returns:
+        ``(x1, y1, x2, y2)``, or ``None`` when the value is not a valid
+        cubic-bezier (the x control points must lie in 0-1).
+    """
+    if not isinstance(value, str):
+        return None
+    m = _CUBIC_BEZIER_RE.match(value.strip())
+    if not m:
+        return None
+    x1, y1, x2, y2 = (float(m.group(i)) for i in range(1, 5))
+    if not (0.0 <= x1 <= 1.0 and 0.0 <= x2 <= 1.0):
+        return None
+    return x1, y1, x2, y2
+
+
+def is_timing_function(value: Any) -> bool:
+    """Return True for a CSS timing function a motion override may use.
+
+    Accepts ``cubic-bezier()``, ``linear``, ``steps()``, ``step-start`` and
+    ``step-end``. Tier easings are stricter (cubic-bezier only); stepped
+    timing is for declarations such as a blinking cursor.
+
+    Args:
+        value: Candidate timing function string.
+
+    Returns:
+        Whether the value is accepted.
+    """
+    if parse_cubic_bezier(value) is not None:
+        return True
+    if not isinstance(value, str):
+        return False
+    v = value.strip()
+    return v in ("linear", "step-start", "step-end") or bool(_STEPS_RE.match(v))
+
+
+def _check_motion_tier(value: Any) -> str | None:
+    if not isinstance(value, dict):
+        return f"expected a mapping with {list(MOTION_TIER_FIELDS)}, got {value!r}"
+    missing = [f for f in MOTION_TIER_FIELDS if f not in value]
+    if missing:
+        return f"missing fields {missing}"
+    unknown = sorted(set(value) - set(MOTION_TIER_FIELDS) - {"spring"})
+    if unknown:
+        return f"unknown fields {unknown}"
+    for field in ("enter_ms", "exit_ms"):
+        if not (_is_number(value[field]) and value[field] >= 0):
+            return f"{field} must be a non-negative number of milliseconds, got {value[field]!r}"
+    if value["exit_ms"] > value["enter_ms"]:
+        return f"exit_ms ({value['exit_ms']}) must not exceed enter_ms ({value['enter_ms']})"
+    if parse_cubic_bezier(value["easing"]) is None:
+        return f"easing must be 'cubic-bezier(x1, y1, x2, y2)' with x in 0-1, got {value['easing']!r}"
+    spring = value.get("spring")
+    if spring is not None:
+        if not isinstance(spring, dict) or set(spring) != set(SPRING_FIELDS):
+            return f"spring must be a mapping with exactly {list(SPRING_FIELDS)}, got {spring!r}"
+        if not (_is_number(spring["duration_ms"]) and spring["duration_ms"] > 0):
+            return f"spring.duration_ms must be a positive number, got {spring['duration_ms']!r}"
+        if not (_is_number(spring["bounce"]) and 0 <= spring["bounce"] < 1):
+            return f"spring.bounce must be in [0, 1), got {spring['bounce']!r}"
+    return None
 
 
 def _check_type_role(value: Any, font_keys: set[str]) -> str | None:
@@ -382,6 +562,21 @@ def render_contract_table() -> str:
     ]
     for t in CONTRACT_TOKENS:
         lines.append(f"| {t.group} | `{t.name}` | {t.kind} | {t.meaning} | {t.used_by} |")
+    return "\n".join(lines)
+
+
+def render_motion_table() -> str:
+    """Render the motion tiers and their size rule as a Markdown table.
+
+    Returns:
+        A Markdown table (tier | what moves | examples | prior art).
+    """
+    lines = [
+        "| Tier | What moves | Examples | Fine-design prior art (enter / exit) |",
+        "|------|------------|----------|--------------------------------------|",
+    ]
+    for t in MOTION_TIERS:
+        lines.append(f"| `{t.name}` | {t.moves} | {t.examples} | {t.prior_art} |")
     return "\n".join(lines)
 
 

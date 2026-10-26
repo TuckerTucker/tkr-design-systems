@@ -718,6 +718,13 @@ components:
     donts:
       - "Wrap messages in bubbles, cards, or bordered containers"
       - "Apply full ink bleed (1x) to body — illegible above 0.8px"
+    motion:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 80
+        note: "JSX .mi fadeSlideUp 0.4s ease-out: the one-time entrance riso-no-dissolve allows."
 
   PortraitCarousel:
     tier: composite
@@ -741,6 +748,12 @@ components:
     donts:
       - "Auto-advance images on a timer — the user is in control of the press"
       - "Animate transitions with fades or slides — riso cuts, it does not dissolve"
+    motion:
+      - trigger: hover
+        tier: fast
+        properties: [background-color]
+        reduced: none
+        note: "JSX .riso-nav-btn 'transition: background 0.12s' on prev/next. A fade the rule riso-no-dissolve forbids; recorded as implemented."
 
   PaperSelector:
     tier: composite
@@ -818,6 +831,13 @@ components:
       - "Never use a solid ink block as a selection background — selection is a text treatment"
       - "Metadata (index, timestamp) is InkTag and never receives the duotone ghost"
       - "Preview text yields to unread_count per anatomy.preview.yields_to (8px min gap)"
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 60
+        note: "JSX .ci fadeSlideUp 0.3s ease-out. Selection cuts."
 
 # ────────────────────────────────────────────────────────────────────
 # PATTERNS — composition rules
@@ -1154,3 +1174,18 @@ grammar_extensions:
         All components inherit the active paper, inks, halftone params, grain,
         and bleed from the theme root's CSS custom properties. No component
         overrides these — a component that hardcodes an ink is a bug.
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    send_button:
+      - trigger: hover
+        tier: fast
+        properties: [opacity]
+        reduced: none
+        note: "JSX .snd opacity 0.7 on hover, 0.15s."

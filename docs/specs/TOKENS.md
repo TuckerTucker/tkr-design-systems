@@ -49,6 +49,11 @@ library. JSON has no comments, so explanations live in the `notes` object.
                     "title": {…}, "body": {…}, "small": {…}, "label": {…} },
   "elevation":    { "strategy": "typographic", "raised": "none",
                     "overlay": "none", "backdrop_blur": "none" },
+  "motion":       { "fast":       { "enter_ms": 120, "exit_ms": 0,
+                                    "easing": "cubic-bezier(0.25, 0.1, 0.25, 1)" },
+                    "moderate": {…}, "slow": {…},
+                    "expressive": { …, "spring": { "duration_ms": 500, "bounce": 0.2 } },
+                    "reduced_motion": "none" },          // fade | none
 
   // ── system-specific ──
   "extras": { "color": { "rule_hairline": "#F0F0F0", … }, "type": {…}, "font": {…}, … },
@@ -61,7 +66,9 @@ library. JSON has no comments, so explanations live in the `notes` object.
 ```
 
 Units: `radius`, `border_width`, `space`, `type.*.size` are CSS pixels as
-numbers; `type.*.tracking` is em; `type.*.line_height` is unitless. Colours are
+numbers; `type.*.tracking` is em; `type.*.line_height` is unitless;
+`motion.*.enter_ms` / `exit_ms` / `spring.duration_ms` are milliseconds and
+`motion.*.easing` is a `cubic-bezier()` string. Colours are
 CSS strings (`#RRGGBB`, `#RRGGBBAA`, `rgba()`); translucent values are meant to
 composite over the surface they sit on.
 
@@ -71,7 +78,49 @@ in systems that have none). `"derived": false` notes explain a JSX value
 (where it is used, or a discrepancy inside the JSX). Treat derived values as
 proposals a designer may revise.
 
-Token paths are dotted: `color.page_bg`, `type.label`, `extras.color.ink_1`.
+Token paths are dotted: `color.page_bg`, `type.label`, `extras.color.ink_1`,
+`motion.slow.enter_ms`.
+
+### Motion
+
+The `motion` group (issue #10; rules in SCHEMA-V0.3.md § Motion) holds four
+tiers, ordered by the size of what moves, and the system's reduced-motion
+policy. Values come from the JSX's `transition` / `animation` declarations;
+every tier carries a `notes` entry naming its JSX source, and tiers the JSX
+does not use are `"derived": true`. No JSX file has exit animations, so
+`exit_ms` is derived everywhere (0 where the grammar cuts).
+
+| System | fast | moderate | slow | expressive | reduced |
+|--------|------|----------|------|------------|---------|
+| `swiss` | 120/0 ease | 200/0 ease | 200/0 ease | 200/0 ease (derived) | none |
+| `terminal` | 0/0 linear (derived) | 200/0 linear | 250/0 linear | 250/0 linear (derived) | none |
+| `editorial` | 150/110 ease | 350/250 ease-out | 450/320 ease-out | 600/420 ease-out (derived) | fade |
+| `sketch` | 100/70 ease | 200/140 linear | 250/170 linear | 400/280 ease, spring .2 (derived) | fade |
+| `prism` | 100/70 ease | 300/210 ease | 350/250 ease | 500/350 ease-out, spring .2 (derived) | fade |
+| `revolt` | 120/80 linear | 200/140 linear | 250/170 linear | 300/210 linear (derived) | none |
+| `riso` | 120/0 ease | 300/0 ease-out | 400/0 ease-out | 400/0 ease-out (derived) | none |
+| `wireframe` | 120/90 ease | 200/140 ease | 200/140 ease | 300/210 ease-out (derived) | fade |
+
+Which component animates at which tier is declared in spec.yaml
+(`components.<id>.motion`, `motion.elements.<id>`), not here.
+
+JSX consumption (for the migration agent): read durations and easings from the
+token file, and gate them on the media query; none of the JSX files does this
+today. The declaration's `reduced` value decides what happens under the query
+(`fade` → opacity-only keyframes, `none` → no animation, `keep` → unchanged).
+
+```jsx
+const m = tokens.motion;
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+// @keyframes fadeSlideUp animates opacity + translateY; fadeOnly animates opacity.
+const enter = (tier, reduced) => {
+  const t = `${m[tier].enter_ms}ms ${m[tier].easing} both`;
+  if (!reduce || reduced === "keep") return `fadeSlideUp ${t}`;
+  return reduced === "fade" ? `fadeOnly ${t}` : "none";
+};
+// list_item: { trigger: enter, tier: moderate, reduced: fade }
+<div style={{ animation: enter("moderate", "fade") }} />
+```
 
 ---
 
@@ -311,4 +360,6 @@ FONT = get_token(T, "font.body")
 | `get_token(doc, "color.page_bg")` | token_file | read a dotted path |
 | `resolve_mode(doc, sel)` / `iter_mode_selections(doc)` | token_file | per-mode values; every combination |
 | `CONTRACT_TOKENS`, `CONTRAST_PAIRS`, `parse_color`, `normalize_color` | contract | contract data and colour helpers (contrast gate) |
+| `MOTION_TIERS`, `parse_cubic_bezier`, `is_timing_function` | contract | motion tiers and easing helpers |
+| `validate_motion_declarations(spec, doc)` / `iter_motion_declarations(spec)` | token_file | spec.yaml motion declarations |
 | `check_drift(spec_path)` / `check_drift_all()` / `find_drift(spec, doc)` | drift | spec ↔ token-file agreement |

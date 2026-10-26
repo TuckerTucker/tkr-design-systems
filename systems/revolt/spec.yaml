@@ -117,6 +117,18 @@ components:
       - "All shadows are 4px 4px 0 #111 — zero blur. Never use blur."
       - "All borders are 2px solid #111 (or 3px for major dividers). Never thin or colored borders."
       - "Preview text yields horizontal space to unread_badge: minimum 6px gap before the badge's left edge. Truncate the preview content (do not let SVG text overflow). See SCHEMA v0.2 finding 11.5 for the formal yields_to constraint this rule encodes."
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 50
+        note: "JSX .ci fadeSlideUp 0.2s linear."
+      - trigger: hover
+        tier: fast
+        properties: [transform]
+        reduced: none
+        note: "JSX Hover Rotation: rotate(-0.5deg), 120ms linear (grammar_extensions.per_system_signature.rotation_interaction)."
 
 rulebook:
   # NEW IN v0.2: every rule annotates check_method (Change 9) and
@@ -194,10 +206,32 @@ grammar_extensions:
     rotation_interaction:
       enabled: true
       hover_rotation_deg: -0.5
-      transition_ms: 120
+      transition_ms: "{motion.fast.enter_ms}"
       usage: "sidebar items rotate -0.5deg on hover; static SVG renders without rotation"
     pink_lime_pairing:
       pink: "#FF3366"
       lime: "#C8FF00"
       pink_uses: [header_bar, user_message_fill, unread_badge, selected_avatar_bg]
       lime_uses: [brand_bar, selected_list_item_bg, send_button_fill]
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 60
+        note: "JSX .mi fadeSlideUp 0.25s linear (doc row: 300ms)."
+    send_button:
+      - trigger: hover
+        tier: fast
+        properties: [transform]
+        reduced: none
+        note: "JSX .snd scale(1.05), transform 0.1s."

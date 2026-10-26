@@ -309,7 +309,7 @@ The Python implementation lives at `design_system_skill/` (package) with these m
 | `loader.py` | `load_system()`; checksum-cached spec loading + SVG path resolution |
 | `registry.py` | `Registry` class wrapping `registry.yaml`; `list_systems()`, `register_system()`, `unregister_system()` |
 | `validation.py` | `validate_spec()`; hand-rolled schema checks against v0.1, v0.2 and v0.3 (token contract + drift) |
-| `contract.py` | The v0.3 semantic token contract (`CONTRACT_TOKENS`, `CONTRAST_PAIRS`), colour parsing — `docs/specs/SCHEMA-V0.3.md` |
+| `contract.py` | The v0.3 semantic token contract (`CONTRACT_TOKENS`, `CONTRAST_PAIRS`, `MOTION_TIERS`), colour and easing parsing — `docs/specs/SCHEMA-V0.3.md` |
 | `token_file.py` | Canonical `systems/<id>/tokens.json`: load, validate, modes, aliases, projection into the spec — `docs/specs/TOKENS.md` |
 | `drift.py` | `check_drift()` / `check_drift_all()`: spec.yaml vs tokens.json (`drift` CLI subcommand) |
 | `rulebook.py` | `get_rulebook()`, `check_compliance()`; delegates mechanical checks to `tools/builders/rulebook_check.py` |

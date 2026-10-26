@@ -136,6 +136,12 @@ components:
     constraints:
       - "Never wrap button labels in pill or rounded backgrounds"
       - "Send/submit buttons always use red (accent); other actions use black"
+    motion:
+      - trigger: hover
+        tier: fast
+        properties: [opacity]
+        reduced: none
+        note: "JSX .snd 'Send →': opacity 0.75 on hover, 0.12s."
 
   card:
     anatomy:
@@ -188,6 +194,13 @@ components:
       - "Index numbers always zero-padded to 2 digits"
       - "Unread counts are display type (32px red), never a circular badge"
       - "Selection bar is exactly 2px red, exactly on the left edge"
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 40
+        note: "JSX .ci fadeSlideUp 0.2s ease, 6px travel. Selection is instant."
 
   badge:
     anatomy: []
@@ -413,3 +426,19 @@ grammar_extensions:
       color: ref:tokens.colors.accent
       position: left
       role: "the only selection treatment; no checkmarks, no fills, no shadows"
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 70
+        note: "JSX .mi fadeSlideUp 0.2s ease, 6px travel."

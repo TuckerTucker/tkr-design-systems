@@ -9,7 +9,8 @@ This module owns:
   - parsing and validating a token document against the contract,
   - reading token paths (``color.page_bg``, ``extras.color.rule_hairline``),
   - resolving per-mode overrides (``modes``),
-  - resolving ``{group.token}`` aliases inside spec.yaml.
+  - resolving ``{group.token}`` aliases inside spec.yaml,
+  - validating spec.yaml motion declarations against the motion tiers.
 
 All functions are pure apart from ``load_token_file``; callers inject the
 document they loaded, which keeps the loader, validator, drift check and
@@ -34,9 +35,15 @@ from .contract import (
     CONTRACT_VERSION,
     KIND_COLOR,
     KIND_FONT_STACK,
+    KIND_MOTION_TIER,
+    MOTION_TIER_NAMES,
+    MOTION_TRIGGERS,
     PAIR_KINDS,
+    REDUCED_MOTION_BEHAVIOURS,
+    VESTIBULAR_PROPERTIES,
     TOKENS_BY_PATH,
     check_value,
+    is_timing_function,
     normalize_color,
     parse_color,
 )
@@ -154,8 +161,8 @@ def has_token(doc: dict[str, Any], path: str) -> bool:
 def iter_leaf_tokens(doc: dict[str, Any]) -> Iterator[tuple[str, Any]]:
     """Yield ``(path, value)`` for every leaf under contract groups and extras.
 
-    ``type`` roles are yielded whole (they are leaves of the contract), as
-    are lists such as ``space.steps``.
+    ``type`` roles and ``motion`` tiers are yielded whole (they are leaves
+    of the contract), as are lists such as ``space.steps``.
 
     Args:
         doc: Token document.
@@ -165,7 +172,9 @@ def iter_leaf_tokens(doc: dict[str, Any]) -> Iterator[tuple[str, Any]]:
     """
     def walk(prefix: str, node: Any) -> Iterator[tuple[str, Any]]:
         is_type_role = prefix.startswith(("type.", "extras.type."))
-        if isinstance(node, dict) and not is_type_role:
+        token = TOKENS_BY_PATH.get(prefix)
+        is_mapping_leaf = is_type_role or (token is not None and token.kind == KIND_MOTION_TIER)
+        if isinstance(node, dict) and not is_mapping_leaf:
             for key, val in node.items():
                 yield from walk(f"{prefix}.{key}", val)
         else:
@@ -298,6 +307,8 @@ def validate_token_document(doc: dict[str, Any], source: str = "") -> tuple[list
         override value of the wrong kind, default option disagreeing with
         the base value).
       - ``notes`` / ``contrast_pairs`` referencing unknown token paths.
+      - ``motion`` tiers whose ``enter_ms`` decreases from ``fast`` to
+        ``expressive`` (bigger thing, slower tier).
 
     Args:
         doc: Parsed token document.
@@ -353,7 +364,26 @@ def validate_token_document(doc: dict[str, Any], source: str = "") -> tuple[list
     _validate_modes(doc, err)
     _validate_notes(doc, err)
     _validate_pairs(doc, err)
+    _validate_motion_order(doc, err)
     return errors, warnings
+
+
+def _validate_motion_order(doc: dict[str, Any], err) -> None:
+    """Fail when a slower tier has a shorter entrance than a faster one."""
+    motion = doc.get("motion")
+    if not isinstance(motion, dict):
+        return
+    previous: tuple[str, float] | None = None
+    for name in MOTION_TIER_NAMES:
+        tier = motion.get(name)
+        enter = tier.get("enter_ms") if isinstance(tier, dict) else None
+        if not isinstance(enter, (int, float)) or isinstance(enter, bool):
+            continue  # shape errors are reported per token
+        if previous and enter < previous[1]:
+            err(f"tokens: motion.{name}.enter_ms ({enter}) is shorter than "
+                f"motion.{previous[0]}.enter_ms ({previous[1]}); tiers must not get faster "
+                f"from fast to expressive", token=f"motion.{name}")
+        previous = (name, enter)
 
 
 def _kind_of(path: str, doc: dict[str, Any]) -> str | None:
@@ -695,3 +725,144 @@ def resolve_aliases(obj: Any, doc: dict[str, Any]) -> tuple[Any, list[str]]:
         return node
 
     return sub(obj), unresolved
+
+
+# ─── Motion declarations in spec.yaml (issue #10) ───────────────────
+
+MOTION_DECLARATION_FIELDS = frozenset({
+    "trigger", "tier", "reduced", "properties", "stagger_ms", "timing", "derived", "note",
+})
+"""Keys a single motion declaration may carry (see SCHEMA-V0.3.md § Motion)."""
+
+
+def iter_motion_declarations(spec: dict[str, Any]) -> Iterator[tuple[str, Any]]:
+    """Yield ``(location, motion_value)`` for every motion block in a spec.
+
+    Motion is declared on component entries (``components.<id>.motion``)
+    and, for animated elements the spec does not model as components (a
+    chat message, a send affordance), under ``motion.elements.<id>``.
+
+    Args:
+        spec: Parsed spec mapping.
+
+    Yields:
+        Dotted location and the raw ``motion`` value (normally a list).
+    """
+    components = spec.get("components") if isinstance(spec, dict) else None
+    if isinstance(components, dict):
+        for comp_id, comp_def in components.items():
+            if isinstance(comp_def, dict) and "motion" in comp_def:
+                yield f"components.{comp_id}.motion", comp_def["motion"]
+    block = spec.get("motion") if isinstance(spec, dict) else None
+    if isinstance(block, dict):
+        for el_id, decls in (block.get("elements") or {}).items():
+            yield f"motion.elements.{el_id}", decls
+
+
+def validate_motion_declarations(
+    spec: dict[str, Any], doc: dict[str, Any] | None = None,
+) -> list[Error]:
+    """Validate spec.yaml motion declarations.
+
+    Every animated component names, per animation: the ``trigger`` that
+    starts it, the contract ``tier`` it runs at, the animated
+    ``properties`` and its ``reduced`` (prefers-reduced-motion) behaviour.
+
+    Errors:
+      - ``motion`` is not a non-empty list of mappings, or a declaration
+        has unknown keys / missing ``trigger``, ``tier``, ``properties``
+        or ``reduced``;
+      - ``tier`` is not a contract motion tier, ``trigger`` /
+        ``reduced`` not a known value;
+      - ``reduced: keep`` on an animation that moves (``transform`` ...),
+        or on a ``loop``;
+      - ``reduced`` other than ``none`` when the token file's
+        ``motion.reduced_motion`` is ``none``;
+      - malformed ``stagger_ms`` / ``timing`` overrides;
+      - a ``motion.elements`` id that is also a component id (declare it
+        on the component instead).
+
+    Args:
+        spec: Parsed spec mapping.
+        doc: The spec's token document, when it has one; enables the
+            reduced-motion policy check.
+
+    Returns:
+        Blocking errors (empty when valid).
+    """
+    errors: list[Error] = []
+
+    def err(msg: str, location: str) -> None:
+        errors.append(Error("SCHEMA_VALIDATION_FAILED", msg, {"location": location}))
+
+    policy = get_token(doc, "motion.reduced_motion", None) if doc else None
+    block = spec.get("motion") if isinstance(spec, dict) else None
+    if block is not None:
+        if not isinstance(block, dict) or set(block) - {"elements"}:
+            err("motion: top-level spec block may only contain 'elements'", "motion")
+        else:
+            components = spec.get("components") or {}
+            for el_id in block.get("elements") or {}:
+                if el_id in components:
+                    err(f"motion.elements.{el_id}: '{el_id}' is a component; declare its motion "
+                        f"on components.{el_id}.motion", f"motion.elements.{el_id}")
+
+    for location, decls in iter_motion_declarations(spec):
+        if not isinstance(decls, list) or not decls:
+            err(f"{location}: must be a non-empty list of motion declarations", location)
+            continue
+        for i, decl in enumerate(decls):
+            _check_declaration(decl, f"{location}[{i}]", policy, err)
+    return errors
+
+
+def _check_declaration(decl: Any, loc: str, policy: str | None, err) -> None:
+    if not isinstance(decl, dict):
+        err(f"{loc}: must be a mapping", loc)
+        return
+    unknown = sorted(set(decl) - MOTION_DECLARATION_FIELDS)
+    if unknown:
+        err(f"{loc}: unknown keys {unknown}", loc)
+    missing = [k for k in ("trigger", "tier", "properties", "reduced") if k not in decl]
+    if missing:
+        err(f"{loc}: missing {missing}", loc)
+        return
+    if decl["trigger"] not in MOTION_TRIGGERS:
+        err(f"{loc}: trigger {decl['trigger']!r} not in {sorted(MOTION_TRIGGERS)}", loc)
+    if decl["tier"] not in MOTION_TIER_NAMES:
+        err(f"{loc}: tier {decl['tier']!r} is not a contract motion tier "
+            f"{list(MOTION_TIER_NAMES)}", loc)
+    props = decl["properties"]
+    if not (isinstance(props, list) and props and all(isinstance(p, str) and p for p in props)):
+        err(f"{loc}: properties must be a non-empty list of property names", loc)
+        props = []
+    reduced = decl["reduced"]
+    if reduced not in REDUCED_MOTION_BEHAVIOURS:
+        err(f"{loc}: reduced {reduced!r} not in {sorted(REDUCED_MOTION_BEHAVIOURS)}", loc)
+    elif reduced == "keep":
+        moving = sorted(set(props) & VESTIBULAR_PROPERTIES)
+        if moving:
+            err(f"{loc}: reduced 'keep' is not allowed for an animation that moves {moving}; "
+                f"use 'fade' or 'none'", loc)
+        if decl["trigger"] == "loop":
+            err(f"{loc}: a loop must stop under reduced motion (reduced 'fade' or 'none')", loc)
+    if policy == "none" and reduced not in (None, "none"):
+        err(f"{loc}: reduced {reduced!r} conflicts with the system policy "
+            f"motion.reduced_motion = 'none' (every animation becomes instant)", loc)
+    stagger = decl.get("stagger_ms")
+    if stagger is not None and not (isinstance(stagger, (int, float))
+                                    and not isinstance(stagger, bool) and stagger >= 0):
+        err(f"{loc}: stagger_ms must be a non-negative number, got {stagger!r}", loc)
+    timing = decl.get("timing")
+    if timing is not None:
+        if not isinstance(timing, dict) or not timing or set(timing) - {"duration_ms", "easing"}:
+            err(f"{loc}: timing must be a mapping of 'duration_ms' and/or 'easing'", loc)
+        else:
+            dur = timing.get("duration_ms")
+            if dur is not None and not (isinstance(dur, (int, float))
+                                        and not isinstance(dur, bool) and dur > 0):
+                err(f"{loc}: timing.duration_ms must be a positive number, got {dur!r}", loc)
+            if "easing" in timing and not is_timing_function(timing["easing"]):
+                err(f"{loc}: timing.easing {timing['easing']!r} is not a CSS timing function", loc)
+    if "derived" in decl and not isinstance(decl["derived"], bool):
+        err(f"{loc}: derived must be a boolean", loc)

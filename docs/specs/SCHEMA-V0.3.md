@@ -13,7 +13,8 @@ remain valid; the contract is only *required* for specs that declare
 
 Source of truth for the contract is
 `tools/design-system-skill/design_system_skill/contract.py`. The tables below
-are rendered from it by `render_contract_table()` / `render_pairs_table()`,
+are rendered from it by `render_contract_table()` / `render_pairs_table()` /
+`render_motion_table()`,
 and `test_contract_doc_matches_module` fails if this document and the module
 disagree. Change the module, then paste the rendered tables here.
 
@@ -21,7 +22,8 @@ Related documents:
 
 - `docs/specs/TOKENS.md` — token file format in full, and exactly how JSX and
   builders consume it.
-- GitHub issue #6 (this contract) and #4 (single source of truth).
+- GitHub issue #6 (this contract), #4 (single source of truth) and #10
+  (motion).
 
 ---
 
@@ -76,7 +78,9 @@ For a v0.3 spec, `validate_spec` fails when:
 - a contract group contains a non-contract key (extras go under `extras`);
 - `modes` is malformed (see below), or `notes` / `contrast_pairs` reference
   unknown tokens;
-- spec.yaml **drifts** from the token file (see `TOKENS.md` § Drift check).
+- spec.yaml **drifts** from the token file (see `TOKENS.md` § Drift check);
+- motion tiers are out of order, or a motion declaration names an unknown
+  tier or a reduced-motion behaviour the policy forbids (see § Motion).
 
 v0.1/v0.2 specs may opt in by declaring `system.tokens_file`; the same checks
 then apply.
@@ -91,7 +95,11 @@ list of px; `font_stack` = CSS `font-family` string; `type_role` = object with
 `size` (px), `weight` (100-900), `line_height` (unitless), `tracking` (em),
 `family` (a key of the `font` group), `case` (`none | uppercase | lowercase |
 sentence`); `shadow` = CSS `box-shadow` or `none`; `blur` = `NNpx` or `none`;
-`elevation_strategy` = identifier (see `KNOWN_ELEVATION_STRATEGIES`).
+`elevation_strategy` = identifier (see `KNOWN_ELEVATION_STRATEGIES`);
+`motion_tier` = object with `enter_ms`, `exit_ms` (milliseconds, exit ≤
+enter), `easing` (`cubic-bezier(x1, y1, x2, y2)`, x in 0-1) and an optional
+`spring` (`duration_ms` > 0, `bounce` in [0, 1)); `reduced_motion_policy` =
+`fade | none` (see § Motion).
 
 <!-- contract-table:begin -->
 | Group | Token | Kind | Meaning | Used by |
@@ -147,6 +155,11 @@ sentence`); `shadow` = CSS `box-shadow` or `none`; `blur` = `NNpx` or `none`;
 | elevation | `raised` | shadow | box-shadow of a raised element, or none. | cards, message bubbles |
 | elevation | `overlay` | shadow | box-shadow of overlays (modal, menu), or none. | modals, dropdowns |
 | elevation | `backdrop_blur` | blur | backdrop-filter blur radius, or none. | glass surfaces |
+| motion | `fast` | motion_tier | Feedback on a control or glyph (colour, opacity, small scale). | hover, press, focus; spec.yaml motion declarations |
+| motion | `moderate` | motion_tier | Small element entering, leaving or changing material in place. | list rows, menus, toasts; spec.yaml motion declarations |
+| motion | `slow` | motion_tier | Large surface or content travelling into the reading flow. | messages, panels, modals; spec.yaml motion declarations |
+| motion | `expressive` | motion_tier | Brand / one-off motion, at most once per view (may equal slow). | hero entrances; spec.yaml motion declarations |
+| motion | `reduced_motion` | reduced_motion_policy | What the system does under prefers-reduced-motion: fade or none. | every animation; ceiling for per-animation reduced behaviour |
 <!-- contract-table:end -->
 
 ### Required contrast pairs
@@ -184,6 +197,122 @@ their own pairs in the token file's `contrast_pairs` list (e.g. Swiss declares
 | `color.focus_ring` | `color.surface` | ui |
 | `color.focus_ring` | `color.page_bg` | ui |
 <!-- pairs-table:end -->
+
+---
+
+## Motion
+
+GitHub issue #10. The UX philosophy (`claude.md`) says the system adapts to the
+user's motion preference; that needs every system to say *how fast* things move
+and *what happens* under `prefers-reduced-motion`, under shared names. Motion
+has two halves: **tiers** (values, in `tokens.json`, contract group `motion`)
+and **declarations** (which component animates at which tier, in spec.yaml).
+
+### Tiers — bigger thing, slower tier
+
+Four named tiers, each `{enter_ms, exit_ms, easing, spring?}`. Pick the tier by
+the size of what moves, not by taste:
+
+<!-- motion-table:begin -->
+| Tier | What moves | Examples | Fine-design prior art (enter / exit) |
+|------|------------|----------|--------------------------------------|
+| `fast` | Feedback on a control or glyph: colour, opacity or a small scale, no travel. | hover, press, focus, toggle thumb, send affordance, cursor | 80 / 60 ms |
+| `moderate` | A small element appearing, leaving or changing material in place. | list rows, menus, toasts, accordion content, row selection | 160 / 120 ms |
+| `slow` | A large surface, or content that travels into the reading flow. | messages, panels, drawers, modals, section content | 240 / 160 ms, spring bounce .12 |
+| `expressive` | Brand or one-off motion, at most once per view. | hero entrances, empty-state illustration, celebration | 420 ms, spring bounce .28 |
+<!-- motion-table:end -->
+
+Rules (enforced by `validate_token_document`):
+
+- Tier `enter_ms` never decreases from `fast` to `expressive`. A system with
+  no expressive motion repeats its slow values; a system whose controls give
+  instant feedback sets `fast` to 0.
+- `exit_ms` ≤ `enter_ms`: things leave faster than they arrive. `0` means the
+  element cuts out (Swiss, Terminal, Riso).
+- `easing` is a `cubic-bezier()`; CSS keywords are spelled out
+  (`ease` = `cubic-bezier(0.25, 0.1, 0.25, 1)`, `ease-out` =
+  `cubic-bezier(0, 0, 0.58, 1)`, `linear` = `cubic-bezier(0, 0, 1, 1)`).
+- `spring` is optional, for platforms that animate with springs; its
+  `duration_ms` is the perceived duration.
+
+Fine-design prior art (the values in the table) is a reference point, not a
+default: each system's values come from its JSX, and tiers the JSX does not
+use are derived and marked `"derived": true` in `notes`.
+
+### Reduced motion
+
+`motion.reduced_motion` is the system's policy when the user asks for reduced
+motion:
+
+| Policy | Meaning |
+|--------|---------|
+| `fade` | Drop travel, scale and rotation; keep opacity cross-fades at the tier's duration; stop loops. |
+| `none` | Every transition is instant; loops stop. |
+
+### Per-component declarations (spec.yaml)
+
+Each animated component lists its animations under `motion` on its own
+component entry. Animated elements the spec does not model as components (the
+chat message, the send affordance, Terminal's cursor) are declared under the
+top-level `motion.elements` block, keyed by a stable id:
+
+```yaml
+components:
+  list_item:
+    motion:
+      - trigger: enter            # enter | exit | hover | press | focus | select | expand | loop
+        tier: moderate            # a contract tier
+        properties: [opacity, transform]
+        reduced: fade             # fade | none | keep
+        stagger_ms: 40            # optional, per-item delay in a list
+        note: "JSX .ci fadeSlideUp 0.2s ease"
+
+motion:
+  elements:
+    cursor:
+      - trigger: loop
+        tier: fast
+        properties: [opacity]
+        reduced: none
+        timing: { duration_ms: 1000, easing: step-end }   # optional override
+        derived: false            # optional; true = not in the JSX, derived from grammar
+```
+
+Validation (`token_file.validate_motion_declarations`, run by
+`validate_spec`) fails when:
+
+- `motion` is not a non-empty list, or a declaration lacks `trigger`, `tier`,
+  `properties` or `reduced`, or carries an unknown key;
+- `tier` is not a contract tier, or `trigger` / `reduced` is not a known value;
+- `reduced: keep` is used on an animation that moves (`transform`,
+  `translate`, `scale`, `rotate`, `position`, `size`) or on a `loop`;
+- the system policy is `none` and a declaration says anything but `none`;
+- `stagger_ms` or `timing` is malformed (`timing.easing` may be any CSS timing
+  function, including `steps()` / `step-end`);
+- a `motion.elements` id is also a component id.
+
+A state change with no declaration is instant. Durations live only in
+`tokens.json`; spec.yaml may reference them with an alias
+(`transition_ms: "{motion.fast.enter_ms}"` in Revolt's rotation signature).
+
+### Findings from the JSX (issue #10 audit)
+
+None of the eight showcase JSX files honours `prefers-reduced-motion`: every
+entrance and hover transition plays regardless of the user setting. Each token
+file records this in `notes["motion.reduced_motion"]`. Other discrepancies, kept
+as notes rather than fixed here:
+
+- Prism, Revolt and Sketch document message entrances (500ms ease-out, 300ms,
+  400ms ease) that differ from their CSS (350ms ease, 250ms linear, 250ms
+  linear). The token files use the CSS values; the documented values became
+  the derived `expressive` tier where one was needed.
+- Terminal's prose allows "no transitions longer than 150ms" while its message
+  entrance runs 250ms; its cursor blinks unfocused, although the spec says it
+  should blink only when the input is focused.
+- Riso's rule `riso-no-dissolve` forbids fades, but the send affordance and the
+  carousel buttons fade (150ms / 120ms).
+- The showcase's documentation chrome (section `fadeIn 0.2s`, the nav chevron
+  `0.15s`) is shared by every file and is not system motion.
 
 ---
 
@@ -290,8 +419,11 @@ ADDED:
   - spec_version "0.3"
   - system.tokens_file: path to the canonical token file (required in v0.3)
   - token file format (contract_version "1.0"): contract groups color, radius,
-    border_width, space, font, type, elevation; extras; modes; notes;
+    border_width, space, font, type, elevation, motion; extras; modes; notes;
     contrast_pairs (docs/specs/TOKENS.md)
+  - motion (issue #10): tiers fast/moderate/slow/expressive and
+    reduced_motion in tokens.json; components.<id>.motion and
+    motion.elements declarations in spec.yaml
   - tokens.colors.palette[].token: token path in place of value
   - "{group.token}" aliases anywhere in spec.yaml
   - load_system: tokens.contract, _meta.tokens_path/tokens_checksum/contract_version

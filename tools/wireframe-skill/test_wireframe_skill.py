@@ -1091,6 +1091,30 @@ def test_export_tokens_without_contract_keeps_defaults():
     css = out["typography"]["css_class_block"]
     assert_("fill: #212121" in css and "fill: #B71C1C" in css, "legacy defaults retained")
     assert_("contract" not in out, "no contract key when the spec has none")
+    assert_("motion" not in out, "no motion key when the spec has no contract")
+
+
+def test_export_tokens_includes_motion():
+    section("export_tokens_for_authoring: motion tiers and declarations (issue #10)")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    from design_system_skill.loader import load_system
+    res = load_system("terminal")
+    assert_(res.ok, "load_system('terminal') ok")
+    if not res.ok:
+        return
+    motion = export_tokens_for_authoring(res.data).get("motion") or {}
+    assert_(set(motion.get("tiers", {})) == {"fast", "moderate", "slow", "expressive"},
+            f"all four tiers exported ({sorted(motion.get('tiers', {}))})")
+    assert_(motion["tiers"]["slow"]["css_enter"] == "250ms cubic-bezier(0, 0, 1, 1)",
+            f"slow tier CSS shorthand (got {motion['tiers']['slow'].get('css_enter')})")
+    assert_(motion.get("reduced_motion") == "none", "terminal reduced-motion policy is none")
+    cursor = motion.get("declarations", {}).get("cursor") or [{}]
+    assert_(cursor[0].get("timing", {}).get("easing") == "step-end",
+            "motion.elements.cursor declaration exported with its step-end timing")
+    assert_("list_item" in motion["declarations"], "component declarations exported")
+    css = motion.get("css_custom_properties", "")
+    assert_("--motion-fast-enter: 0ms;" in css and "prefers-reduced-motion: reduce" in css,
+            "CSS custom properties with a reduced-motion override")
 
 
 def main():
@@ -1143,6 +1167,7 @@ def main():
     test_full_composition_e2e()
     test_export_tokens_uses_system_contract()
     test_export_tokens_without_contract_keeps_defaults()
+    test_export_tokens_includes_motion()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

@@ -766,6 +766,9 @@ def _minimal_token_doc(system_id: str = "synthetic") -> dict:
         c.KIND_SHADOW: "none",
         c.KIND_BLUR: "none",
         c.KIND_ELEVATION_STRATEGY: "borders_only",
+        c.KIND_MOTION_TIER: {"enter_ms": 160, "exit_ms": 120,
+                             "easing": "cubic-bezier(0.2, 0, 0, 1)"},
+        c.KIND_REDUCED_MOTION: "fade",
     }
     doc: dict = {"contract_version": c.CONTRACT_VERSION, "system": system_id}
     for token in c.CONTRACT_TOKENS:
@@ -773,7 +776,7 @@ def _minimal_token_doc(system_id: str = "synthetic") -> dict:
             value = {"size": 14, "weight": 400, "line_height": 1.5,
                      "tracking": 0, "family": "body", "case": "none"}
         else:
-            value = defaults[token.kind]
+            value = json.loads(json.dumps(defaults[token.kind]))  # no shared mappings
         doc.setdefault(token.group, {})[token.name] = value
     return doc
 
@@ -797,12 +800,16 @@ def _write_v03_spec(dir_path: Path, doc: dict | None, system_id: str = "syntheti
 
 def test_contract_doc_matches_module():
     section("contract: SCHEMA-V0.3.md tables match contract.py")
-    from design_system_skill.contract import render_contract_table, render_pairs_table
+    from design_system_skill.contract import (
+        render_contract_table, render_motion_table, render_pairs_table,
+    )
     doc = (HERE.parents[1] / "docs" / "specs" / "SCHEMA-V0.3.md").read_text()
     assert_(render_contract_table() in doc,
             "contract table in SCHEMA-V0.3.md equals render_contract_table()")
     assert_(render_pairs_table() in doc,
             "pairs table in SCHEMA-V0.3.md equals render_pairs_table()")
+    assert_(render_motion_table() in doc,
+            "motion tier table in SCHEMA-V0.3.md equals render_motion_table()")
 
 
 def test_contract_pairs_reference_contract_tokens():
@@ -1114,6 +1121,179 @@ def test_drift_fails_validation_and_cli():
         assert_("text_muted" in out.getvalue(), "CLI output names the drifting key")
 
 
+# ─── test: motion (issue #10) ─────────────────────────────────────
+
+def _motion_errors(doc: dict) -> str:
+    from design_system_skill.token_file import validate_token_document
+    errors, _ = validate_token_document(doc)
+    return " | ".join(e.message for e in errors)
+
+
+def test_motion_tokens_valid_with_spring():
+    section("motion: complete tiers (with an optional spring) validate")
+    doc = _minimal_token_doc()
+    doc["motion"] = {
+        "fast": {"enter_ms": 80, "exit_ms": 60, "easing": "cubic-bezier(0.2, 0, 0, 1)"},
+        "moderate": {"enter_ms": 160, "exit_ms": 120, "easing": "cubic-bezier(0.2, 0, 0, 1)"},
+        "slow": {"enter_ms": 240, "exit_ms": 160, "easing": "cubic-bezier(0.2, 0, 0, 1)",
+                 "spring": {"duration_ms": 240, "bounce": 0.12}},
+        "expressive": {"enter_ms": 420, "exit_ms": 240, "easing": "cubic-bezier(.34,1.56,.64,1)",
+                       "spring": {"duration_ms": 420, "bounce": 0.28}},
+        "reduced_motion": "fade",
+    }
+    msgs = _motion_errors(doc)
+    assert_(msgs == "", "fine-design prior-art tiers validate", msgs[:300])
+
+
+def test_motion_tokens_missing_fail():
+    section("motion: a missing tier or policy fails")
+    doc = _minimal_token_doc()
+    del doc["motion"]["slow"]
+    del doc["motion"]["reduced_motion"]
+    msgs = _motion_errors(doc)
+    assert_("motion.slow" in msgs, f"error names motion.slow ({msgs[:200]})")
+    assert_("motion.reduced_motion" in msgs, f"error names motion.reduced_motion ({msgs[:200]})")
+    doc = _minimal_token_doc()
+    del doc["motion"]
+    msgs = _motion_errors(doc)
+    assert_("motion.fast" in msgs and "motion.expressive" in msgs,
+            f"a token file without a motion group fails ({msgs[:200]})")
+
+
+def test_motion_tokens_malformed_fail():
+    section("motion: malformed tiers, policy and ordering fail")
+    cases = {
+        "exit slower than enter": ("fast", {"enter_ms": 80, "exit_ms": 120,
+                                            "easing": "cubic-bezier(0.2, 0, 0, 1)"}, "exit_ms"),
+        "keyword easing": ("fast", {"enter_ms": 80, "exit_ms": 60, "easing": "ease-out"}, "easing"),
+        "x out of range": ("fast", {"enter_ms": 80, "exit_ms": 60,
+                                    "easing": "cubic-bezier(1.5, 0, 0, 1)"}, "easing"),
+        "negative duration": ("fast", {"enter_ms": -1, "exit_ms": -2,
+                                       "easing": "cubic-bezier(0, 0, 1, 1)"}, "enter_ms"),
+        "missing field": ("fast", {"enter_ms": 80, "easing": "cubic-bezier(0, 0, 1, 1)"}, "exit_ms"),
+        "unknown field": ("fast", {"enter_ms": 80, "exit_ms": 60, "delay_ms": 10,
+                                   "easing": "cubic-bezier(0, 0, 1, 1)"}, "delay_ms"),
+        "bounce >= 1": ("expressive", {"enter_ms": 420, "exit_ms": 240,
+                                       "easing": "cubic-bezier(0, 0, 1, 1)",
+                                       "spring": {"duration_ms": 420, "bounce": 1.2}}, "bounce"),
+        "not a mapping": ("slow", "240ms", "motion.slow"),
+        "bad policy": ("reduced_motion", "reduce", "reduced_motion"),
+    }
+    for label, (name, value, needle) in cases.items():
+        doc = _minimal_token_doc()
+        doc["motion"]["fast"]["enter_ms"] = 0   # keep the order check out of the way
+        doc["motion"][name] = value
+        msgs = _motion_errors(doc)
+        assert_(needle in msgs, f"{label}: error mentions {needle} ({msgs[:200]})")
+
+    doc = _minimal_token_doc()
+    doc["motion"]["slow"] = {"enter_ms": 100, "exit_ms": 80, "easing": "cubic-bezier(0, 0, 1, 1)"}
+    msgs = _motion_errors(doc)
+    assert_("motion.slow.enter_ms" in msgs and "shorter" in msgs,
+            f"slow faster than moderate fails (bigger thing, slower tier) ({msgs[:200]})")
+
+
+_MOTION_SPEC = '''spec_version: "0.3"
+system:
+  id: synthetic
+  name: Synthetic
+  tokens_file: tokens.json
+tokens: {}
+components:
+  list_item:
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 40
+      - trigger: select
+        tier: fast
+        properties: [background-color]
+        reduced: keep
+motion:
+  elements:
+    cursor:
+      - trigger: loop
+        tier: fast
+        properties: [opacity]
+        reduced: none
+        timing: { duration_ms: 1000, easing: step-end }
+'''
+
+
+def _validate_motion_spec(spec_text: str, doc: dict | None = None):
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        (td_path / "spec.yaml").write_text(spec_text)
+        (td_path / "tokens.json").write_text(json.dumps(doc or _minimal_token_doc()))
+        res = validate_spec(td_path / "spec.yaml")
+    return res, " | ".join(e.message for e in (res.errors or []))
+
+
+def test_motion_declarations_valid():
+    section("motion: component + element declarations validate against the tiers")
+    res, msgs = _validate_motion_spec(_MOTION_SPEC)
+    assert_(res.ok, "well-formed motion declarations validate", msgs[:300])
+
+
+def test_motion_declarations_invalid():
+    section("motion: unknown tier and illegal reduced-motion behaviour fail")
+    cases = {
+        "unknown tier": (("tier: moderate", "tier: medium"), "medium"),
+        "unknown trigger": (("trigger: select", "trigger: wiggle"), "wiggle"),
+        "keep on travel": (("reduced: fade\n        stagger_ms", "reduced: keep\n        stagger_ms"),
+                           "keep"),
+        "loop kept": (("reduced: none\n        timing", "reduced: keep\n        timing"), "loop"),
+        "bad timing easing": (("easing: step-end", "easing: wobble"), "timing.easing"),
+        "bad stagger": (("stagger_ms: 40", "stagger_ms: -5"), "stagger_ms"),
+        "missing reduced": (("        reduced: keep\n", ""), "missing"),
+        "unknown key": (("stagger_ms: 40", "stagger_ms: 40\n        delay: 3"), "unknown keys"),
+        "element shadows component": (("    cursor:", "    list_item:"), "is a component"),
+        "empty motion list": (("  list_item:\n    motion:\n", "  list_item:\n    motion: []\n    old:\n"),
+                              "non-empty list"),
+    }
+    for label, ((old, new), needle) in cases.items():
+        assert_(old in _MOTION_SPEC, f"{label}: fixture contains the text to replace")
+        res, msgs = _validate_motion_spec(_MOTION_SPEC.replace(old, new, 1))
+        assert_(not res.ok and needle in msgs, f"{label}: fails mentioning {needle!r} ({msgs[:200]})")
+
+    doc = _minimal_token_doc()
+    doc["motion"]["reduced_motion"] = "none"
+    res, msgs = _validate_motion_spec(_MOTION_SPEC, doc)
+    assert_(not res.ok and "conflicts with the system policy" in msgs,
+            f"policy 'none' rejects fade/keep declarations ({msgs[:200]})")
+
+
+def test_every_system_declares_motion():
+    section("motion: every registered system loads tiers, notes and declarations")
+    from design_system_skill.contract import MOTION_TIER_NAMES
+    from design_system_skill.token_file import iter_motion_declarations
+    clear_cache()
+    for sys_id in ALL_REGISTERED:
+        res = load_system(sys_id)
+        assert_(res.ok, f"load_system('{sys_id}') ok")
+        if not res.ok:
+            continue
+        motion = res.data["tokens"]["contract"].get("motion") or {}
+        assert_(all(isinstance(motion.get(t), dict) for t in MOTION_TIER_NAMES),
+                f"{sys_id}: tokens.contract.motion has every tier")
+        assert_(motion.get("reduced_motion") in ("fade", "none"),
+                f"{sys_id}: reduced_motion policy is fade|none ({motion.get('reduced_motion')})")
+        notes = res.data["tokens"]["contract"].get("notes") or {}
+        unnoted = [f"motion.{t}" for t in (*MOTION_TIER_NAMES, "reduced_motion")
+                   if f"motion.{t}" not in notes]
+        assert_(not unnoted, f"{sys_id}: every motion token has a note ({unnoted})")
+        decls = [d for _, ds in iter_motion_declarations(res.data) for d in ds]
+        assert_(len(decls) >= 2, f"{sys_id}: declares motion for its animated elements ({len(decls)})")
+        assert_(all(d["tier"] in MOTION_TIER_NAMES for d in decls),
+                f"{sys_id}: every declaration names a contract tier")
+    revolt = load_system("revolt").data
+    rot = revolt["grammar_extensions"]["per_system_signature"]["rotation_interaction"]
+    assert_(rot["transition_ms"] == revolt["tokens"]["contract"]["motion"]["fast"]["enter_ms"] == 120,
+            "revolt rotation_interaction.transition_ms aliases motion.fast.enter_ms")
+
+
 # ─── runner ─────────────────────────────────────────────────────────
 
 def main():
@@ -1156,6 +1336,12 @@ def main():
     test_find_drift_kinds()
     test_drift_clean_for_all_registered_systems()
     test_drift_fails_validation_and_cli()
+    test_motion_tokens_valid_with_spring()
+    test_motion_tokens_missing_fail()
+    test_motion_tokens_malformed_fail()
+    test_motion_declarations_valid()
+    test_motion_declarations_invalid()
+    test_every_system_declares_motion()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

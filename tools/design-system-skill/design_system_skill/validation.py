@@ -9,6 +9,8 @@ The validator's job:
   - Required top-level fields are present (`spec_version`, `system`, `tokens`).
   - v0.3 specs declare `system.tokens_file`, and that file supplies every
     contract token in a valid shape (see contract.py / token_file.py).
+  - Motion declarations name a contract motion tier and a reduced-motion
+    behaviour the system's policy allows.
   - Enum values are within their allowed range (`grammar_family`,
     `severity`, `check_method`, `check_scope`, `selection_signal`).
   - Referenced SVG paths actually exist on disk.
@@ -33,7 +35,12 @@ import yaml
 
 from .errors import Error, Result
 from .drift import find_drift
-from .token_file import load_token_file, token_file_path, validate_token_document
+from .token_file import (
+    load_token_file,
+    token_file_path,
+    validate_motion_declarations,
+    validate_token_document,
+)
 
 import structlog
 
@@ -261,7 +268,10 @@ def _check_token_contract(
     v0.3 specs must declare ``system.tokens_file``; earlier versions may.
     When declared, the file must exist, parse, name the same system, and
     supply every contract token (``token_file.validate_token_document``),
-    and spec.yaml must not drift from it (``drift.find_drift``).
+    and spec.yaml must not drift from it (``drift.find_drift``). Motion
+    declarations (``components.<id>.motion``, ``motion.elements``) are
+    checked against the contract tiers and the file's reduced-motion
+    policy (``token_file.validate_motion_declarations``).
 
     Args:
         data: Parsed spec mapping.
@@ -281,6 +291,7 @@ def _check_token_contract(
                 f"(the canonical token file, conventionally 'tokens.json')",
                 {"missing": "system.tokens_file"},
             ))
+        errors.extend(validate_motion_declarations(data))
         return
 
     loaded = load_token_file(tok_path)
@@ -288,6 +299,7 @@ def _check_token_contract(
         errors.extend(loaded.errors)
         return
     doc = loaded.data
+    errors.extend(validate_motion_declarations(data, doc))
 
     tok_errors, tok_warnings = validate_token_document(doc, str(tok_path))
     errors.extend(tok_errors)

@@ -29,7 +29,10 @@ def export_tokens_for_authoring(spec: dict) -> dict[str, Any]:
 
     Returns:
         Dict with system_id, palette, drawing_rules, typography, and
-        layout sections — each formatted for direct use in SVG attributes.
+        layout sections — each formatted for direct use in SVG attributes —
+        plus ``contract`` (the token document) and ``motion`` (tiers,
+        reduced-motion policy, per-component declarations) when the spec
+        carries a token contract.
     """
     tokens = spec.get("tokens", {})
     system_id = spec.get("system", {}).get("id", "unknown")
@@ -50,7 +53,69 @@ def export_tokens_for_authoring(spec: dict) -> dict[str, Any]:
         # names, so an agent can author against color.danger, type.label ...
         # without knowing the system's private vocabulary.
         result["contract"] = contract
+    if isinstance(contract.get("motion"), dict):
+        result["motion"] = _build_motion_section(spec, contract["motion"])
     return result
+
+
+_MOTION_TIER_ORDER = ("fast", "moderate", "slow", "expressive")
+
+
+def _build_motion_section(spec: dict, motion: dict) -> dict[str, Any]:
+    """Collect motion tiers and per-component declarations (issue #10).
+
+    Static SVG does not animate, but agents producing prototypes or
+    annotated wireframes need the system's motion vocabulary: which tier
+    each component runs at and what it does under reduced motion.
+
+    Args:
+        spec: Loaded system spec dict (from load_system).
+        motion: The token contract's ``motion`` group.
+
+    Returns:
+        Dict with ``tiers`` (contract values plus a CSS ``transition``
+        shorthand per tier), ``reduced_motion`` (the system policy),
+        ``declarations`` (``{component_or_element_id: [declaration, ...]}``)
+        and ``css_custom_properties`` (a ``:root`` block with a
+        ``prefers-reduced-motion`` override).
+    """
+    tiers: dict[str, Any] = {}
+    for name in _MOTION_TIER_ORDER:
+        tier = motion.get(name)
+        if not isinstance(tier, dict):
+            continue
+        tiers[name] = {
+            **tier,
+            "css_enter": f"{tier.get('enter_ms', 0)}ms {tier.get('easing', 'ease')}",
+            "css_exit": f"{tier.get('exit_ms', 0)}ms {tier.get('easing', 'ease')}",
+        }
+    policy = motion.get("reduced_motion", "fade")
+
+    declarations: dict[str, list[Any]] = {}
+    for comp_id, comp_def in (spec.get("components") or {}).items():
+        if isinstance(comp_def, dict) and isinstance(comp_def.get("motion"), list):
+            declarations[comp_id] = comp_def["motion"]
+    elements = (spec.get("motion") or {}).get("elements") if isinstance(spec.get("motion"), dict) else None
+    for el_id, decls in (elements or {}).items():
+        if isinstance(decls, list):
+            declarations[el_id] = decls
+
+    root = [f"  --motion-{n}-enter: {t['enter_ms']}ms;\n"
+            f"  --motion-{n}-exit: {t['exit_ms']}ms;\n"
+            f"  --motion-{n}-easing: {t['easing']};" for n, t in tiers.items()]
+    reduced = [f"    --motion-{n}-enter: 0ms;\n    --motion-{n}-exit: 0ms;" for n in tiers]
+    css = ":root {\n" + "\n".join(root) + "\n}"
+    if policy == "none" and reduced:
+        css += ("\n@media (prefers-reduced-motion: reduce) {\n  :root {\n"
+                + "\n".join(reduced) + "\n  }\n}")
+    logger.debug("motion_exported", system_id=spec.get("system", {}).get("id"),
+                 tiers=len(tiers), declarations=sum(len(d) for d in declarations.values()))
+    return {
+        "tiers": tiers,
+        "reduced_motion": policy,
+        "declarations": declarations,
+        "css_custom_properties": css,
+    }
 
 
 def _build_palette(colors: dict) -> list[dict[str, str]]:

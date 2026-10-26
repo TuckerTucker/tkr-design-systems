@@ -503,7 +503,10 @@ def wf_get_tokens(system_id: str) -> dict[str, Any]:
     Returns the system's visual vocabulary restructured for direct use
     in SVG: palette colors with roles, drawing rules as SVG attribute
     strings (e.g. stroke='#E0E0E0' stroke-width='1'), typography scale,
-    CSS class block for <defs><style>, and layout constants.
+    CSS class block for <defs><style>, and layout constants. v0.3 systems
+    also return their token contract under ``contract`` and their motion
+    vocabulary under ``motion`` (tiers, reduced-motion policy, and which
+    tier each component animates at).
 
     Use this before drawing custom SVG to ensure all fills, strokes,
     font sizes, and radii come from the system's token set.

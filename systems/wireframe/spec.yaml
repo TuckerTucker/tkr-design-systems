@@ -182,6 +182,12 @@ components:
       - "Primary button is the screen's PRIMARY action — only one per screen"
       - "Danger button is for irreversible destructive actions only (delete, discard)"
       - "Disabled button is visually distinct from ghost button (filled #E0E0E0 vs transparent)"
+    motion:
+      - trigger: hover
+        tier: fast
+        properties: [opacity]
+        reduced: keep
+        note: "Neutral JSX .snd send: opacity 0.75 on hover, 0.12s."
 
   input:
     tier: primitive
@@ -263,6 +269,13 @@ components:
         svg: components/toggle-default.svg
         rendering_notes: "44x24 track with 12px radius. When off: fill #E0E0E0, thumb on left. When on: fill #424242, thumb on right. Thumb is 20x20 white circle."
         states: [off, on, disabled]
+    motion:
+      - trigger: select
+        tier: fast
+        properties: [transform, background-color]
+        reduced: none
+        derived: true
+        note: "Thumb travel is a small move on a control."
 
   label:
     tier: primitive
@@ -428,6 +441,13 @@ components:
     constraints:
       - "Preview text yields horizontal space to badge: minimum 12px gap before badge's left edge. Truncate with ellipsis."
       - "Selection signaled by background surface fill (#F5F5F5), never by colored accent bar (wireframes have no accent color)"
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 40
+        note: "Neutral JSX .ci fadeSlideUp 0.2s ease. Selection is instant."
 
   form_field:
     tier: composite
@@ -580,6 +600,19 @@ components:
         svg: components/toast-error.svg
         rendering_notes: "Same as info but icon in #B71C1C (danger). Border may also be #B71C1C for stronger emphasis."
         states: [default]
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "A small element appearing."
+      - trigger: exit
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "Leaves at exit_ms."
 
   stat:
     tier: composite
@@ -692,6 +725,13 @@ components:
         svg: components/accordion-item-expanded.svg
         rendering_notes: "Trigger same as collapsed but chevron rotated 90° down (▼). Content area below at variable height."
         states: [expanded]
+    motion:
+      - trigger: expand
+        tier: moderate
+        properties: [size, opacity]
+        reduced: none
+        derived: true
+        note: "Content height change in place; reduced motion snaps open."
 
   stepper:
     tier: composite
@@ -728,6 +768,13 @@ components:
         svg: components/dropdown-menu-with-search.svg
         rendering_notes: "Same as default with search input at top of panel above items."
         states: [open]
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "A small surface anchored to its trigger."
 
 
   # ═══════════════════════ PATTERNS (12) ═══════════════════════
@@ -833,6 +880,19 @@ components:
         svg: layouts/modal-wide.svg
         rendering_notes: "Up to 90% of viewport width. Used for content that needs space (table edits, image previews)."
         states: [default]
+    motion:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "A large surface over the page."
+      - trigger: exit
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "Leaves at exit_ms."
 
   drawer:
     tier: pattern
@@ -851,6 +911,19 @@ components:
         svg: layouts/drawer-bottom.svg
         rendering_notes: "Slide-up panel from bottom edge. Used on mobile for action sheets and contextual menus."
         states: [open]
+    motion:
+      - trigger: enter
+        tier: slow
+        properties: [transform]
+        reduced: fade
+        derived: true
+        note: "Slides in from its edge; reduced motion fades."
+      - trigger: exit
+        tier: slow
+        properties: [transform]
+        reduced: fade
+        derived: true
+        note: "Leaves at exit_ms."
 
   empty_state:
     tier: pattern
@@ -891,6 +964,13 @@ components:
         svg: layouts/command-palette-with-recent.svg
         rendering_notes: "Same as default with 'Recent Commands' section pinned above results when search is empty."
         states: [open_empty_search]
+    motion:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "A modal-sized overlay."
 
   settings_layout:
     tier: pattern
@@ -1106,3 +1186,19 @@ grammar_extensions:
         - { name: "centered_constrained", max_width_px: 640 }
         - { name: "left_sidebar", sidebar_width_px: [200, 280] }
       role: "When adapting a mobile wireframe to desktop, choose one of these patterns"
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 70
+        note: "Neutral JSX .mi fadeSlideUp 0.2s ease."
