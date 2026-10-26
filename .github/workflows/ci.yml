@@ -35,6 +35,24 @@ jobs:
       - name: Check SVG libraries match their token files
         run: uv run python tools/builders/build.py --check
 
+      - name: Check specs agree with their token files
+        run: uv run python tools/design-system-skill drift --all
+
+      - name: Check colour contrast and accent/danger hue gates
+        run: uv run python tools/design-system-skill contrast --all
+
+      - name: Rulebook-check every system library
+        run: |
+          status=0
+          for dir in systems/*/; do
+            id=$(basename "$dir")
+            for kind in components layouts; do
+              [ -d "$dir$kind" ] || continue
+              uv run python tools/builders/rulebook_check.py --batch "$dir$kind" --ruleset "$id" || status=1
+            done
+          done
+          exit $status
+
   e2e:
     name: End-to-end consumer check (all systems)
     runs-on: ubuntu-latest
