@@ -261,7 +261,7 @@ def test_get_rulebook():
     res = get_rulebook("swiss")
     assert_(res.ok, "get_rulebook('swiss') returns ok=True")
     rules = res.data
-    assert_(len(rules) == 13, f"swiss has 13 rulebook entries (got {len(rules)})")
+    assert_(len(rules) == 14, f"swiss has 14 rulebook entries (got {len(rules)})")
     rule_ids = {r["id"] for r in rules}
     assert_("swiss-red-finite-resource" in rule_ids,
             "swiss rulebook includes red-finite-resource")
@@ -377,6 +377,42 @@ def test_swiss_library_follows_error_treatment():
         assert_(prefix["passed"] and prefix["error_component"],
                 f"{name} carries 'Error:' copy (got {prefix['violations']})")
         assert_(rb.check_error_not_red(svg)["passed"], f"{name} error copy is not red")
+
+
+def test_swiss_warning_not_red_rule():
+    section("swiss-warning-not-red: warning labels and copy are never red")
+    rb = _rb()
+    grey = _swiss_svg('<text class="text-primary">ATTENTION</text>'
+                      '<text class="text-primary">Your trial ends in 3 days.</text>'
+                      '<text class="text-accent">Upgrade →</text>', "BANNER-WARNING")
+    res = rb.check_warning_not_red(grey)
+    assert_(res["passed"] and res["warning_component"],
+            f"ink warning with a red CTA passes (got {res})")
+    red_label = _swiss_svg('<text class="text-accent">ATTENTION</text>', "BANNER-WARNING")
+    res = rb.check_warning_not_red(red_label)
+    assert_(not res["passed"] and res["rule_id"] == "swiss-warning-not-red",
+            f"a red ATTENTION label fails (got {res})")
+    for word in ("Warning: disk almost full.", "CAUTION", "alert — quota"):
+        res = rb.check_warning_not_red(_swiss_svg(f'<text fill="#E3000B">{word}</text>'))
+        assert_(not res["passed"], f"a red severity word fails outside warning components: {word!r}")
+    red_copy = _swiss_svg('<text class="text-accent">Your trial ends in 3 days.</text>',
+                          "BANNER-WARNING")
+    assert_(not rb.check_warning_not_red(red_copy)["passed"],
+            "red message copy in a warning component fails")
+    cta = _swiss_svg('<text class="text-accent">Sign in →</text>', "AUTH-SIGN-IN")
+    assert_(rb.check_warning_not_red(cta)["passed"], "a red CTA elsewhere is not a warning")
+    ids = {fn.__name__ for fn, _ in rb.CHECKS_BY_RULESET["swiss"]}
+    assert_("check_warning_not_red" in ids, "the swiss ruleset runs the warning check")
+    rule_ids = {r["id"] for r in get_rulebook("swiss").data}
+    assert_("swiss-warning-not-red" in rule_ids, "spec.yaml rulebook declares the warning rule")
+    svg = (SYSTEMS_DIR / "swiss" / "components" / "banner-warning.svg").read_text()
+    res = rb.check_warning_not_red(svg)
+    assert_(res["passed"] and res["warning_component"],
+            f"the library banner-warning follows the rule (got {res['violations']})")
+    for name in ("dropdown-default", "dropdown-with-groups"):
+        svg = (SYSTEMS_DIR / "swiss" / "components" / f"{name}.svg").read_text()
+        assert_("Sign out" in svg and 'class="text-accent" font-size="13">Sign out' not in svg,
+                f"{name}: Sign out is ink, not red")
 
 
 _REVOLT_STYLE = (

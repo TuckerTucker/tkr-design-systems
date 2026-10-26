@@ -571,6 +571,58 @@ def check_error_not_red(svg_text: str) -> dict:
     }
 
 
+# Swiss warnings (spec rulebook swiss-warning-not-red): the JSX lists "Use red
+# for hover states, warning messages, or decorative underlines" as a Don't.
+SWISS_SEVERITY_WORDS = frozenset({"attention", "warning", "caution", "alert", "notice"})
+
+
+def _is_warning_component(svg_text: str) -> bool:
+    """True when the builder banner comment names a warning component (``*-WARNING``)."""
+    return any("WARNING" in re.split(r"[-_ ]+", name)
+               for name in _BANNER_COMMENT.findall(svg_text))
+
+
+def check_warning_not_red(svg_text: str) -> dict:
+    """Rule swiss-warning-not-red: warning copy and labels are never red.
+
+    The JSX one-accent rule gives red four contexts (CTA labels, selection
+    bar, user-message tag, status dot + unread count) and lists "Use red
+    for hover states, warning messages, or decorative underlines" as a
+    Don't; the spec's warning treatment mirrors ``error_message`` (ink
+    copy, grey label). Two mechanical checks follow:
+
+    1. A red ``<text>`` whose first word is a severity word (ATTENTION,
+       WARNING, CAUTION, ALERT, NOTICE; any case) fails anywhere.
+    2. In a component whose builder banner names it a warning component
+       (``*-WARNING``), every red ``<text>`` must be a CTA label (content
+       ending in ``→``); the label and message are not.
+
+    Args:
+        svg_text: SVG source.
+
+    Returns:
+        Result dict; ``violations`` lists each red warning text.
+    """
+    css_class_fills = _extract_css_class_fills(svg_text)
+    warning_component = _is_warning_component(svg_text)
+    violations = []
+    for attrs, content in _text_elements(svg_text):
+        if not content or _resolve_text_fill(attrs, css_class_fills) != SWISS_RED:
+            continue
+        first = re.split(r"[\s:·—-]+", content.strip(), maxsplit=1)[0].lower()
+        if first in SWISS_SEVERITY_WORDS:
+            violations.append(f"{content!r} (red severity label)")
+        elif warning_component and not content.endswith("→"):
+            violations.append(f"{content!r} (red text in a warning component)")
+    return {
+        "rule_id": "swiss-warning-not-red",
+        "passed": not violations,
+        "violations": violations,
+        "warning_component": warning_component,
+        "expected": "warning label grey, warning copy ink; red only on a CTA label (→)",
+    }
+
+
 # ──────────────────────────────────────────────────────────────────────
 # REVOLT CHECKS (spec rulebook revolt-pink-not-text / revolt-error-status)
 # ──────────────────────────────────────────────────────────────────────
@@ -921,6 +973,7 @@ SWISS_CHECKS = [
     (check_grid_alignment,       "both"),
     (check_error_prefix,         "both"),
     (check_error_not_red,        "both"),
+    (check_warning_not_red,      "both"),
     (check_no_emoji,             "both"),
 ]
 

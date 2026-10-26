@@ -97,6 +97,13 @@ grounded in that table and in the JSX's red budget:
   copy is ink. A recovery action inside an error surface ("Retry →") is a
   CTA label and counts toward the four-use red budget
   (`swiss-red-finite-resource`).
+- **Warnings follow suit** (#8 follow-up). `components.warning_message`
+  gives warnings the same typographic treatment without inventing a prefix
+  (the voice table defines none): a grey 9px label, an ink message, red only
+  on a CTA label. The builder's `banner-warning` had a red `ATTENTION`
+  label and is now grey, checked mechanically by `swiss-warning-not-red`.
+  Its dropdowns' red "Sign out" was in none of red's four contexts (a menu
+  item, not a CTA label) and is now ink.
 
 Enforcement: `swiss-error-prefix` and `swiss-error-not-red` are mechanical
 (`tools/builders/rulebook_check.py`, swiss ruleset): any text starting with

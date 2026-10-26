@@ -230,6 +230,28 @@ components:
       - "A recovery action inside an error surface (e.g. 'Retry →') is a CTA and may be red as a CTA label; it counts toward the 4-use red budget"
       - "Never use ● for errors: the red ● is the active-status dot and would read as 'live'"
 
+  warning_message:
+    # Swiss's warning treatment (#8 follow-up). The JSX lists "Use red for
+    # hover states, warning messages, or decorative underlines" as a Don't,
+    # and its voice table defines no warning copy form, so no prefix is
+    # invented: a warning is the error_message treatment without the
+    # 'Error:' prefix. The grey 9px tracked label carries the word, the copy
+    # is ink, and nothing is red except an optional CTA label.
+    anatomy:
+      - label
+      - message
+      - action
+    variants:
+      - id: banner
+        svg: components/banner-warning.svg
+        rendering_notes: "Banner grammar unchanged (1px black top rule, hairline below). Left: 9px tracked uppercase label 'ATTENTION' in grey (color.text_secondary), like every banner label. Middle: 13px ink message (color.text_primary) as a declarative sentence with a period: 'Your trial ends in 3 days.' Right: the action 'Upgrade →' in ink at weight 500."
+        states: [default]
+    constraints:
+      - "The label and message are never red: a red severity label or warning line is a JSX Don't and is not one of red's four contexts (swiss-warning-not-red, swiss-red-finite-resource)"
+      - "Typographic only, as error_message: no icon, glyph, shape, fill, tint or border change"
+      - "Copy follows the voice table: declarative sentence ending with a period, never an exclamation point"
+      - "An action may be a red CTA label ('Upgrade →'); it counts toward the 4-use red budget"
+
   badge:
     anatomy: []
     variants: []
@@ -442,6 +464,14 @@ rulebook:
     check_method: mechanical
     check_scope: both
     check_implementation: "tools/builders/rulebook_check.py check_error_not_red: the inline or CSS-class fill of each 'Error:' <text> must not resolve to color.accent."
+
+  - id: swiss-warning-not-red
+    rule: "Warnings are typographic, like errors: the severity label is grey and the message ink; neither is red. A red text whose first word is a severity word (ATTENTION, WARNING, CAUTION, ALERT, NOTICE) fails anywhere, and inside a warning component red is allowed only on a CTA label ending in →."
+    rationale: "The JSX lists 'Use red for hover states, warning messages, or decorative underlines' as a Don't, and red's four contexts (swiss-red-finite-resource) do not include warnings. With danger sharing the accent red, a red warning label would also read as the brand signal."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "tools/builders/rulebook_check.py check_warning_not_red: a <text> whose fill resolves to color.accent fails when its first word is a severity word; in an SVG whose builder banner names it a warning component (*-WARNING) any red <text> not ending in → fails."
 
   - id: swiss-error-typographic
     rule: "Error states are carried by copy and type alone: no icon, glyph, shape, badge, pill, fill, coloured or thickened border, and no ● (the red ● is the active-status dot). After the 'Error:' prefix the message is a lowercase sentence (proper nouns excepted) naming what failed. A recovery action in an error surface is an ordinary CTA label and counts toward the 4-use red budget."

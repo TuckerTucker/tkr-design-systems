@@ -488,8 +488,10 @@ COMPONENTS = {
 """),
 
     # Banner — full-width thin band. Hairlines top and bottom, 9px tracked
-    # uppercase severity label on the left, body 13px in middle, optional
-    # action button on the right (red text → for primary).
+    # uppercase grey label on the left, body 13px ink in middle, optional
+    # action on the right (red text → for primary). A warning is typographic
+    # like error_message: grey label, ink copy, no red (the JSX lists red
+    # warning messages as a Don't; spec components.warning_message).
     "banner-info": (640, 56, """
   <line x1="0" y1="0" x2="640" y2="0" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
   <text x="0" y="34" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">UPDATE</text>
@@ -500,7 +502,7 @@ COMPONENTS = {
 
     "banner-warning": (640, 56, """
   <line x1="0" y1="0" x2="640" y2="0" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
-  <text x="0" y="34" class="text-accent" font-size="9" font-weight="500" letter-spacing="1.44">ATTENTION</text>
+  <text x="0" y="34" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">ATTENTION</text>
   <text x="96" y="34" class="text-primary" font-size="13">Your trial ends in 3 days.</text>
   <text x="624" y="34" text-anchor="end" class="text-primary" font-size="13" font-weight="500">Upgrade →</text>
   <line x1="0" y1="55.5" x2="640" y2="55.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
@@ -549,13 +551,16 @@ COMPONENTS = {
 
     # Dropdown menu — vertical list of actions, hairline separators. No
     # surrounding box (the dropdown sits on the page surface), no shadow.
+    # Every item is ink, Sign out included: a menu item is not one of red's
+    # four contexts (it is no CTA label, and a red exit would read as a
+    # warning, which the JSX forbids in red).
     "dropdown-default": (240, 144, """
   <line x1="0" y1="0" x2="240" y2="0" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
   <text x="16" y="32" class="text-primary" font-size="13">Edit profile</text>
   <line x1="0" y1="47.5" x2="240" y2="47.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
   <text x="16" y="80" class="text-primary" font-size="13">Notifications</text>
   <line x1="0" y1="95.5" x2="240" y2="95.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
-  <text x="16" y="128" class="text-accent" font-size="13">Sign out</text>
+  <text x="16" y="128" class="text-primary" font-size="13">Sign out</text>
   <line x1="0" y1="143.5" x2="240" y2="143.5" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
 """),
 
@@ -569,7 +574,7 @@ COMPONENTS = {
   <text x="16" y="136" class="text-primary" font-size="13">Switch team</text>
   <text x="16" y="160" class="text-primary" font-size="13">Members</text>
   <line x1="0" y1="175.5" x2="240" y2="175.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
-  <text x="16" y="192" class="text-accent" font-size="13">Sign out</text>
+  <text x="16" y="192" class="text-primary" font-size="13">Sign out</text>
   <line x1="0" y1="199.5" x2="240" y2="199.5" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
 """),
 
