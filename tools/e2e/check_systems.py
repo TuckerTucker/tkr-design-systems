@@ -107,7 +107,7 @@ class ConsumerTools:
         generate: ``wf_generate(brief, platform=, system=, compose=, ...)``.
         read_component: ``wf_read_component(system_id, component_id=)``.
         assemble: ``wf_assemble_from_blueprint(blueprint, system_id,
-            output_dir=, filename_stem=)``.
+            output_dir=, filename_stem=, brief=, platform=)``.
         check_compliance: ``ds_check_compliance(system_id, artifact_path,
             scope=)``.
         render: ``render(src, dst) -> Path``.
@@ -396,7 +396,8 @@ def _generate(system_id: str, platform: str, out_dir: Path,
     blueprint = build_reference_blueprint(placeables, decomposition["canvas"])
     assembled = tools.assemble(
         blueprint, system_id=system_id, output_dir=str(out_dir),
-        filename_stem=f"reference-{platform}",
+        filename_stem=f"reference-{platform}", brief=REFERENCE_BRIEF,
+        platform=platform,
     )
     if not assembled.get("ok") or not assembled.get("svg_path"):
         result.generate = StageResult(False, "FAIL (assemble)", _errors_of(assembled))

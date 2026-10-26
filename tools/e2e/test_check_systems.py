@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -53,6 +54,8 @@ def test_real_run_terminal_passes(tmp_path: Path, real_tools: ConsumerTools,
         assert p["compliance"]["ruleset"] == "terminal"
         assert p["compliance"]["failed"] == 0
         assert Path(p["svg_path"]).is_file()
+        spec = yaml.safe_load(Path(p["svg_path"]).with_suffix(".spec.yaml").read_text())
+        assert spec["wireframe"]["platform"] == p["platform"]
         png = Path(p["png_path"])
         assert png.parent == tmp_path / "terminal"
         assert png.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
@@ -103,7 +106,7 @@ def _fake_tools(**overrides: Any) -> ConsumerTools:
                                                       "canvas": canvas}}
 
     def assemble(blueprint: dict[str, Any], system_id: str, output_dir: str,
-                 filename_stem: str) -> dict[str, Any]:
+                 filename_stem: str, brief: str, platform: str) -> dict[str, Any]:
         path = Path(output_dir) / f"{filename_stem}.svg"
         path.write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"/>')
         return {"ok": True, "svg_path": str(path), "warnings": []}

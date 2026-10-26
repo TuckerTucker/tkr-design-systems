@@ -408,6 +408,8 @@ def wf_assemble_from_blueprint(
     system_id: str,
     output_dir: str | None = None,
     filename_stem: str = "wireframe",
+    brief: str = "assembled from blueprint",
+    platform: str = "desktop",
 ) -> dict[str, Any]:
     """Validate and assemble a component layout blueprint into a composited SVG.
 
@@ -418,7 +420,8 @@ def wf_assemble_from_blueprint(
 
     When output_dir is provided, writes SVG + spec.yaml with components_used
     extracted from the blueprint. Returns svg_path and spec_path in addition
-    to svg_text.
+    to svg_text. brief and platform ("mobile" or "desktop") are recorded in
+    that spec.yaml.
 
     Validation runs first: unknown component_ids and out-of-bounds placements
     block assembly. Returns {ok, svg_text, validation_errors, warnings}.
@@ -474,8 +477,8 @@ def wf_assemble_from_blueprint(
             svg_path, spec_path = emit_artifact(
                 Path(output_dir),
                 svg_text,
-                brief="assembled from blueprint",
-                platform="desktop",
+                brief=brief,
+                platform=platform,
                 spec=spec,
                 selection=None,
                 compliance=None,
