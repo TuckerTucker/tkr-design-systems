@@ -1,11 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
+import tokens from "@systems/prism/tokens.json";
+import { motion, reducedMotionCss, px, em, lh } from "../tokens.js";
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — PRISM
    Liquid Glass + Bento · Single-theme standalone spec + live preview
    ═══════════════════════════════════════════════════════════════ */
 
-const TM = { name: "Prism", tag: "Liquid Glass + Bento", color: "#7DDFBE" };
+/* Every design value comes from systems/prism/tokens.json (docs/specs/TOKENS.md § 4). */
+const { color: C, font: F, radius: rad, border_width: bw, elevation: E } = tokens;
+const X_ = tokens.extras;
+const X = tokens.extras.color;
+const XR = tokens.extras.radius;
+const XBL = tokens.extras.blur;
+const T = { ...tokens.type, ...tokens.extras.type };
+const rule = (w, col) => `${w}px solid ${col}`;
+/* Glass tiers are white at an opacity; the spec pages print just the opacity. */
+const opacity = (col) => col.match(/,\s*([\d.]+)\)$/)[1];
+const short = (col) => `rgba(…,${opacity(col)})`;
+
+const TM = { name: "Prism", tag: "Liquid Glass + Bento", color: C.accent };
 
 const chatList = [
   { id: 1, name: "Tokyo Trip", preview: "Want me to build a day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
@@ -54,33 +68,33 @@ const CBox = ({ title, parts, contract, specs, dos, donts, accent }) => {
    LIVE CHAT DASHBOARD
    ═══════════════════════════════════════════════════════════════ */
 function PrismChat({ sel, setSel }) {
-  const g = { backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" };
-  const gs = { ...g, background: "rgba(255,255,255,0.14)" };
+  const g = { backdropFilter: `blur(${E.backdrop_blur})`, WebkitBackdropFilter: `blur(${E.backdrop_blur})`, background: C.surface, border: rule(bw.default, C.border_default) };
+  const gs = { ...g, background: C.surface_selected };
   return (
-    <div className="app-sh" style={{ background: "linear-gradient(150deg,#4A5D6B 0%,#5A4A5E 40%,#6B5A5A 70%,#4A6058 100%)", fontFamily: "'Outfit',sans-serif", borderRadius: 20, position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, background: "radial-gradient(circle,rgba(180,160,210,0.2) 0%,transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, background: "radial-gradient(circle,rgba(130,200,180,0.18) 0%,transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
-      <div className="sb" style={{ borderRight: "1px solid rgba(255,255,255,0.1)", position: "relative", zIndex: 1 }}>
-        <div style={{ padding: "18px 14px 12px" }}><div style={{ fontSize: 16, fontWeight: 500, color: "rgba(255,255,255,0.9)", letterSpacing: "-0.02em", marginBottom: 14 }}>Prism</div><div style={{ ...g, borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>⌕</span><input placeholder="Search..." className="si gi" style={{ fontFamily: "'Outfit',sans-serif", color: "rgba(255,255,255,0.8)" }} /></div></div>
+    <div className="app-sh" style={{ background: X_.page_gradient, fontFamily: F.body, borderRadius: rad.chrome, position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, background: `radial-gradient(circle,${X.orb_lavender} 0%,transparent 70%)`, borderRadius: "50%", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, background: `radial-gradient(circle,${X.orb_mint} 0%,transparent 70%)`, borderRadius: "50%", pointerEvents: "none" }} />
+      <div className="sb" style={{ borderRight: rule(bw.default, X.divider), position: "relative", zIndex: 1 }}>
+        <div style={{ padding: "18px 14px 12px" }}><div style={{ fontSize: 16, fontWeight: 500, color: X.text_title, letterSpacing: "-0.02em", marginBottom: 14 }}>Prism</div><div style={{ ...g, border: rule(bw.default, C.border_input), borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 12, color: X.text_faint }}>⌕</span><input placeholder="Search..." className="si gi" style={{ fontFamily: F.body, color: C.text_secondary }} /></div></div>
         <div className="cl">{chatList.map((c, i) => (
-          <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "10px 12px", cursor: "pointer", borderRadius: 12, margin: "0 6px 3px", ...(sel===c.id?gs:{}), transition: "all 0.25s", animationDelay: `${i*70}ms` }}>
+          <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "10px 12px", cursor: "pointer", borderRadius: rad.default, margin: "0 6px 3px", ...(sel===c.id?gs:{}), transition: `all ${motion(tokens, "moderate")}`, animationDelay: `${i*70}ms` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 10, ...g, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, position: "relative" }}>{c.avatar}{c.online&&<div style={{ position: "absolute", bottom: -1, right: -1, width: 7, height: 7, borderRadius: "50%", background: "#7DDFBE", border: "2px solid rgba(74,93,107,0.8)" }} />}</div>
-              <div style={{ flex: 1, minWidth: 0 }}><div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 12.5, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>{c.name}</span><span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{c.time}</span></div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{c.preview}</div></div>
-              {c.unread > 0 && <div style={{ width: 18, height: 18, borderRadius: 6, background: "rgba(125,223,190,0.25)", border: "1px solid rgba(125,223,190,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 600, color: "#7DDFBE" }}>{c.unread}</div>}
+              <div style={{ width: 34, height: 34, borderRadius: XR.avatar, ...g, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, position: "relative" }}>{c.avatar}{c.online&&<div style={{ position: "absolute", bottom: -1, right: -1, width: 7, height: 7, borderRadius: "50%", background: C.accent, border: `2px solid ${X.status_ring}` }} />}</div>
+              <div style={{ flex: 1, minWidth: 0 }}><div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 12.5, fontWeight: 500, color: X.text_item }}>{c.name}</span><span style={{ fontSize: 10, color: X.text_timestamp }}>{c.time}</span></div><div style={{ fontSize: 11, color: C.text_muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{c.preview}</div></div>
+              {c.unread > 0 && <div style={{ width: 18, height: 18, borderRadius: XR.badge, background: X.accent_tint, border: rule(bw.default, X.accent_border), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 600, color: C.accent }}>{c.unread}</div>}
             </div>
           </div>
         ))}</div>
-        <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(255,255,255,0.08)" }}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 28, height: 28, borderRadius: 8, ...g, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "rgba(255,255,255,0.6)" }}>◈</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>You · active</div></div></div>
+        <div style={{ padding: "12px 14px", borderTop: rule(bw.default, X.divider_subtle) }}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><div style={{ width: 28, height: 28, borderRadius: 8, ...g, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: X.icon }}>◈</div><div style={{ fontSize: 11, color: X.text_meta }}>You · active</div></div></div>
       </div>
       <div className="ca" style={{ position: "relative", zIndex: 1 }}>
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", padding: "14px 20px", ...g }}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 16 }}>🗼</span><div><div style={{ fontSize: 13.5, fontWeight: 500, color: "rgba(255,255,255,0.9)" }}>Tokyo Trip</div><div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>active session</div></div></div></div>
+        <div style={{ borderBottom: rule(bw.default, X.divider), padding: "14px 20px", ...g }}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 16 }}>🗼</span><div><div style={{ fontSize: 13.5, fontWeight: 500, color: X.text_title }}>Tokyo Trip</div><div style={{ fontSize: 10, color: X.text_faint }}>active session</div></div></div></div>
         <div className="ma" style={{ padding: 16 }}>
           {msgs.map((m, i) => (<div key={m.id} className="mi" style={{ alignSelf: m.sender==="user"?"flex-end":"flex-start", maxWidth: "78%", animationDelay: `${i*100}ms` }}>
-            <div style={{ padding: "12px 16px", borderRadius: m.sender==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px", fontSize: 13, lineHeight: 1.6, ...g, ...(m.sender==="user"?{ background: "rgba(255,255,255,0.18)", color: "rgba(255,255,255,0.95)" }:{ color: "rgba(255,255,255,0.8)" }) }}>{m.text}</div>
+            <div style={{ padding: "12px 16px", borderRadius: m.sender==="user"?`${XR.message}px ${XR.message}px 4px ${XR.message}px`:`${XR.message}px ${XR.message}px ${XR.message}px 4px`, fontSize: 13, lineHeight: 1.6, ...g, ...(m.sender==="user"?{ background: C.surface_inverse, color: C.text_primary }:{ color: C.text_secondary }) }}>{m.text}</div>
           </div>))}
         </div>
-        <div style={{ padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.08)" }}><div style={{ ...g, borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}><input placeholder="Message..." className="si gi" style={{ fontFamily: "'Outfit',sans-serif", color: "rgba(255,255,255,0.85)" }} /><div className="snd" style={{ width: 30, height: 30, borderRadius: 10, ...g, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>↑</div></div></div>
+        <div style={{ padding: "14px 16px", borderTop: rule(bw.default, X.divider_subtle) }}><div style={{ ...g, border: rule(bw.default, C.border_input), borderRadius: rad.input, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}><input placeholder="Message..." className="si gi" style={{ fontFamily: F.body, color: X.text_item }} /><div className="snd" style={{ width: 30, height: 30, borderRadius: 10, ...g, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: C.action_foreground }}>↑</div></div></div>
       </div>
     </div>
   );
@@ -94,7 +108,7 @@ function PreviewView({ sel, setSel }) {
     "Ambient light orbs (radial-gradient divs) behind glass layers",
     "No timestamps or sender labels — atmospheric minimalism",
     "Icon-only send button (↑) in glass container",
-    "Online indicators use solid teal (#7DDFBE) accent",
+    `Online indicators use solid teal (${C.accent}) accent`,
     "Selected sidebar item: elevated glass tier (0.14 opacity)",
   ];
   return (<div>
@@ -124,7 +138,7 @@ function prismSpec(a) { return {
     <P>The system's identity comes from its materiality — interfaces that feel like looking through layered glass panes in a dimly lit architectural space.</P>
     <H3>Core Principles</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-      {[["Transparency is structure","Glass opacity tiers replace traditional backgrounds. Higher opacity = higher hierarchy. The environment always bleeds through."],["The gradient is the canvas","The multi-stop background gradient isn't decorative — it's required. Glass panels over a solid color are just semi-transparent rectangles."],["Blur carries elevation","Instead of box-shadows, Prism uses backdrop-filter blur. More blur = further from surface."],["Light as accent","Ambient light orbs and subtle luminance shifts replace traditional accent colors. Teal (#7DDFBE) used sparingly."]].map(([t,d],i) => (
+      {[["Transparency is structure","Glass opacity tiers replace traditional backgrounds. Higher opacity = higher hierarchy. The environment always bleeds through."],["The gradient is the canvas","The multi-stop background gradient isn't decorative — it's required. Glass panels over a solid color are just semi-transparent rectangles."],["Blur carries elevation","Instead of box-shadows, Prism uses backdrop-filter blur. More blur = further from surface."],["Light as accent",`Ambient light orbs and subtle luminance shifts replace traditional accent colors. Teal (${C.accent}) used sparingly.`]].map(([t,d],i) => (
         <div key={i} style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}><div style={{ fontSize: 11, fontWeight: 700, color: "#DDD", marginBottom: 3 }}>{t}</div><div style={{ fontSize: 10.5, color: "#888", lineHeight: 1.5 }}>{d}</div></div>))}
     </div>
     <H3>When to Use Prism</H3>
@@ -135,26 +149,26 @@ function prismSpec(a) { return {
   color: () => (<div>
     <P>Nearly every color is RGBA with alpha channels. Colors are context-dependent — the gradient behind the glass affects appearance.</P>
     <H3>Background Gradient</H3>
-    <div style={{ height: 40, borderRadius: 6, background: "linear-gradient(150deg,#4A5D6B 0%,#5A4A5E 40%,#6B5A5A 70%,#4A6058 100%)", marginBottom: 6, border: "1px solid rgba(255,255,255,0.1)" }} />
+    <div style={{ height: 40, borderRadius: 6, background: X_.page_gradient, marginBottom: 6, border: "1px solid rgba(255,255,255,0.1)" }} />
     <Tk n="gradient.angle" v="150deg" d="Diagonal" a={a} />
-    <Tk n="gradient.stops" v="#4A5D6B → #5A4A5E → #6B5A5A → #4A6058" a={a} />
+    <Tk n="gradient.stops" v={`${X.gradient_stop_1} → ${X.gradient_stop_2} → ${X.gradient_stop_3} → ${X.gradient_stop_4}`} a={a} />
     <H3>Glass Surfaces</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="rgba(255,255,255,0.08)" n="Base" v="rgba(…,0.08)" />
-      <Sw c="rgba(255,255,255,0.14)" n="Elevated" v="rgba(…,0.14)" />
-      <Sw c="rgba(255,255,255,0.18)" n="Strong" v="rgba(…,0.18)" />
+      <Sw c={C.surface} n="Base" v={short(C.surface)} />
+      <Sw c={C.surface_elevated} n="Elevated" v={short(C.surface_elevated)} />
+      <Sw c={C.surface_inverse} n="Strong" v={short(C.surface_inverse)} />
     </div>
     <H3>Text (opacity-based)</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="rgba(255,255,255,0.95)" n="Primary" v="0.95" b="1px solid rgba(255,255,255,0.2)" />
-      <Sw c="rgba(255,255,255,0.8)" n="Secondary" v="0.80" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="rgba(255,255,255,0.4)" n="Tertiary" v="0.40" b="1px solid rgba(255,255,255,0.1)" />
+      <Sw c={C.text_primary} n="Primary" v={(+opacity(C.text_primary)).toFixed(2)} b="1px solid rgba(255,255,255,0.2)" />
+      <Sw c={C.text_secondary} n="Secondary" v={(+opacity(C.text_secondary)).toFixed(2)} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.text_muted} n="Tertiary" v={(+opacity(C.text_muted)).toFixed(2)} b="1px solid rgba(255,255,255,0.1)" />
     </div>
     <H3>Accent — Teal</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#7DDFBE" n="Solid" v="#7DDFBE" />
-      <Sw c="rgba(125,223,190,0.25)" n="Tinted" v="rgba(…,0.25)" />
-      <Sw c="rgba(125,223,190,0.4)" n="Border" v="rgba(…,0.4)" />
+      <Sw c={C.accent} n="Solid" v={C.accent} />
+      <Sw c={X.accent_tint} n="Tinted" v={short(X.accent_tint)} />
+      <Sw c={X.accent_border} n="Border" v={short(X.accent_border)} />
     </div>
     <H3>Contrast Notes</H3>
     <P>Glass interfaces are inherently low-contrast. Ratios measured against darkest gradient stop:</P>
@@ -172,13 +186,13 @@ function prismSpec(a) { return {
   typography: () => (<div>
     <P>Single font — Outfit — in varying weights. No dual-font system. Hierarchy via weight, size, and opacity.</P>
     <div style={{ padding: "14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", marginBottom: 12 }}>
-      <div style={{ fontFamily: "'Outfit'", fontSize: 20, fontWeight: 300, color: "rgba(255,255,255,0.9)", marginBottom: 4 }}>Outfit</div>
-      <div style={{ fontFamily: "'Outfit'", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Light 300 · Regular 400 · Medium 500 · Semibold 600</div>
+      <div style={{ fontFamily: F.body, fontSize: 20, fontWeight: 300, color: X.text_title, marginBottom: 4 }}>Outfit</div>
+      <div style={{ fontFamily: F.body, fontSize: 13, fontWeight: 500, color: X.text_meta, marginBottom: 6 }}>Light 300 · Regular 400 · Medium 500 · Semibold 600</div>
       <div style={{ fontSize: 10.5, color: "#999" }}>Geometric sans-serif with soft, rounded feel. Light weights add airiness matching the glass aesthetic.</div>
     </div>
     <H3>Type Scale</H3>
     <div style={{ borderRadius: 6, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["display","16px","500","1.3","-0.02em","App name"],["title","13.5px","500","1.3","-0.01em","Headers"],["body","13px","400","1.6","0","Messages"],["label","12.5px","500","1.3","0","Sidebar items"],["caption","11px","400","1.4","0","Previews"],["micro","10px","500","1.3","0.03em","Status"],["micro-sm","9px","600","1.3","0","Badges"]].map((t,i) => (
+      {[["display",T.display,"App name"],["title",T.title,"Headers"],["body",T.body,"Messages"],["label",{ size: 12.5, weight: 500, line_height: 1.3, tracking: 0 },"Sidebar items"],["caption",T.small,"Previews"],["micro",T.label,"Status"],["micro-sm",{ size: 9, weight: 600, line_height: 1.3, tracking: 0 },"Badges"]].map(([n,t,use]) => [n,px(t.size),String(t.weight),lh(t.line_height),em(t.tracking),use]).map((t,i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "70px 48px 42px 38px 50px 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <code className="mn" style={{ fontSize: 10, color: "#CCC" }}>{t[0]}</code>
           {t.slice(1).map((v,vi) => <span key={vi} style={{ fontSize: 10, color: vi < 4 ? "#999" : "#666" }}>{v}</span>)}
@@ -191,13 +205,13 @@ function prismSpec(a) { return {
   elevation: () => (<div>
     <P>The Glass Composition System — three independent axes that combine to create translucent, layered surfaces. No box-shadows. Depth = blur + opacity.</P>
     <H3>Blur Tiers</H3>
-    <Tk n="blur.subtle" v="backdrop-filter: blur(12px)" d="Decorative panels, avatars" a={a} />
-    <Tk n="blur.standard" v="backdrop-filter: blur(20px)" d="Default glass surfaces" a={a} />
-    <Tk n="blur.heavy" v="backdrop-filter: blur(24px)" d="Headers, overlays" a={a} />
+    <Tk n="blur.subtle" v={`backdrop-filter: blur(${XBL.subtle})`} d="Decorative panels, avatars" a={a} />
+    <Tk n="blur.standard" v={`backdrop-filter: blur(${XBL.standard})`} d="Default glass surfaces" a={a} />
+    <Tk n="blur.heavy" v={`backdrop-filter: blur(${XBL.heavy})`} d="Headers, overlays" a={a} />
     <H3>Opacity Tiers</H3>
-    <Tk n="opacity.base" v="rgba(255,255,255,0.08)" d="Default panels" a={a} />
-    <Tk n="opacity.elevated" v="rgba(255,255,255,0.14)" d="Selected/active" a={a} />
-    <Tk n="opacity.strong" v="rgba(255,255,255,0.18)" d="User messages" a={a} />
+    <Tk n="opacity.base" v={C.surface} d="Default panels" a={a} />
+    <Tk n="opacity.elevated" v={C.surface_elevated} d="Selected/active" a={a} />
+    <Tk n="opacity.strong" v={C.surface_inverse} d="User messages" a={a} />
     <H3>Composition Table</H3>
     <div style={{ borderRadius: 6, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
       {[["Sidebar item (default)","None","transparent","None"],["Sidebar item (selected)","None","0.14","0.12"],["Avatar","blur(12px)","0.08","0.12"],["Chat header","blur(24px)","0.08","0.12"],["AI message","blur(20px)","0.08","0.12"],["User message","blur(20px)","0.18","0.12"],["Text input","blur(12px)","0.08","0.12"],["Send button","None","0.14","0.18"]].map((c,i) => (
@@ -212,9 +226,9 @@ function prismSpec(a) { return {
     <Dont>Apply blur to frequently re-rendered elements (animated lists)</Dont>
     <H3>Border Radius</H3>
     <div style={{ display: "flex", gap: 12 }}>
-      {[{r:6,l:"Badge"},{r:10,l:"Avatar"},{r:12,l:"Item"},{r:14,l:"Input"},{r:16,l:"Message"},{r:20,l:"Shell"}].map(x => (
+      {[{r:XR.badge,l:"Badge"},{r:XR.avatar,l:"Avatar"},{r:rad.default,l:"Item"},{r:rad.input,l:"Input"},{r:XR.message,l:"Message"},{r:rad.chrome,l:"Shell"}].map(x => (
         <div key={x.l} style={{ textAlign: "center" }}>
-          <div style={{ width: 38, height: 38, borderRadius: x.r, border: "1px solid rgba(125,223,190,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 38, height: 38, borderRadius: x.r, border: `1px solid ${X.accent_tint}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <code className="mn" style={{ fontSize: 7, color: "#888" }}>{x.r}</code>
           </div>
           <div style={{ fontSize: 8, color: "#999", marginTop: 2 }}>{x.l}</div>
@@ -226,27 +240,27 @@ function prismSpec(a) { return {
     <P>Each component specifies glass composition, token values, and accessibility considerations. Click to expand.</P>
     <CBox title="ChatBubble" parts={["glass-panel","text","tail-radius"]} accent={a}
       contract="Must distinguish user from AI through glass opacity tier. Must support multi-line wrapping. No visible metadata — Prism keeps conversations clean and atmospheric."
-      specs={[["padding","12px 16px"],["border-radius.user","16px 16px 4px 16px","Tail bottom-right"],["border-radius.ai","16px 16px 16px 4px","Tail bottom-left"],["user.opacity","rgba(…,0.18)","Glass strong"],["ai.opacity","rgba(…,0.08)","Glass base"],["blur","blur(20px)","Standard"],["border","1px solid rgba(…,0.12)"],["user.text","rgba(…,0.95)","Primary"],["ai.text","rgba(…,0.8)","Secondary"],["font","body (13px/1.6)"]]}
+      specs={[["padding","12px 16px"],["border-radius.user","16px 16px 4px 16px","Tail bottom-right"],["border-radius.ai","16px 16px 16px 4px","Tail bottom-left"],["user.opacity",short(C.surface_inverse),"Glass strong"],["ai.opacity",short(C.surface),"Glass base"],["blur",`blur(${XBL.standard})`,"Standard"],["border",`1px solid ${short(C.border_default)}`],["user.text",short(C.text_primary),"Primary"],["ai.text",short(C.text_secondary),"Secondary"],["font","body (13px/1.6)"]]}
       dos={["Differentiate user/AI solely through opacity tier","Keep metadata-free for atmospheric feel"]}
       donts={["Add timestamps or sender labels","Use solid background fills"]} />
     <CBox title="SidebarItem" parts={["container","glass-avatar","title","preview","time","badge"]} accent={a}
       contract="Must show selected state through elevated glass. Must truncate preview. Must support unread badge with accent teal."
-      specs={[["padding","10px 12px"],["border-radius","12px"],["selected.bg","rgba(…,0.14)","Glass elevated"],["selected.border","1px solid rgba(…,0.12)"],["avatar.size","34px"],["avatar.radius","10px"],["avatar.composition","blur(12px) + base + border"],["online.color","#7DDFBE"],["online.size","7px circle"],["title.color","rgba(…,0.85)"],["preview.color","rgba(…,0.4)"],["badge.bg","rgba(125,223,190,0.25)"],["badge.border","rgba(125,223,190,0.4)"],["badge.color","#7DDFBE","Solid accent"]]}
+      specs={[["padding","10px 12px"],["border-radius","12px"],["selected.bg",short(C.surface_elevated),"Glass elevated"],["selected.border",`1px solid ${short(C.border_default)}`],["avatar.size","34px"],["avatar.radius","10px"],["avatar.composition","blur(12px) + base + border"],["online.color",C.accent],["online.size","7px circle"],["title.color",short(X.text_item)],["preview.color",short(C.text_muted)],["badge.bg",X.accent_tint],["badge.border",X.accent_border],["badge.color",C.accent,"Solid accent"]]}
       dos={["Use glass composition for selected state"]}
       donts={["Use hard borders for selection","Use solid fills"]} />
     <CBox title="TextInput" parts={["glass-container","input","placeholder","glass-button"]} accent={a}
       contract="Must have visible glass boundary. Focus state. Send button uses elevated glass."
-      specs={[["padding","10px 14px"],["border-radius","14px"],["composition","blur(12px) + base + border"],["placeholder.color","rgba(…,0.3)"],["text.color","rgba(…,0.85)"],["button.size","30px"],["button.radius","10px"],["button.composition","elevated + strong border"],["button.icon","↑ at rgba(…,0.7)"]]}
+      specs={[["padding","10px 14px"],["border-radius","14px"],["composition","blur(12px) + base + border"],["placeholder.color",short(C.text_placeholder)],["text.color",short(X.text_item)],["button.size","30px"],["button.radius","10px"],["button.composition","elevated + strong border"],["button.icon",`↑ at ${short(C.action_foreground)}`]]}
       dos={["Use icon-only send button (↑)"]}
       donts={["Use text labels like 'Send' or 'go →'"]} />
     <CBox title="Badge" parts={["glass-container","count"]} accent={a}
       contract="Must use accent teal. Must be visible against glass surfaces."
-      specs={[["size","18px height"],["border-radius","6px"],["background","rgba(125,223,190,0.25)","Tinted glass"],["border","1px solid rgba(125,223,190,0.4)"],["color","#7DDFBE","Solid accent"],["font","micro-sm (9px/600)"]]}
+      specs={[["size","18px height"],["border-radius","6px"],["background",X.accent_tint,"Tinted glass"],["border",`1px solid ${X.accent_border}`],["color",C.accent,"Solid accent"],["font","micro-sm (9px/600)"]]}
       dos={["Use tinted glass for badges"]}
       donts={["Use solid color fills"]} />
     <CBox title="Header" parts={["glass-panel","icon","title","subtitle"]} accent={a}
       contract="Must separate from content via glass + border. Must show context and status."
-      specs={[["padding","14px 20px"],["composition","blur(24px) + base + border","Heavy blur"],["border-bottom","rgba(…,0.1)"],["title.color","rgba(…,0.9)"],["title.font","title (13.5px/500)"],["subtitle.color","rgba(…,0.35)"],["subtitle.text","'active session'"]]}
+      specs={[["padding","14px 20px"],["composition","blur(24px) + base + border","Heavy blur"],["border-bottom",short(X.divider)],["title.color",short(X.text_title)],["title.font","title (13.5px/500)"],["subtitle.color",short(X.text_faint)],["subtitle.text","'active session'"]]}
       dos={["Use heaviest blur tier (24px)"]}
       donts={["Fill with solid accent color","Use cursive fonts for status"]} />
   </div>),
@@ -254,7 +268,7 @@ function prismSpec(a) { return {
   patterns: () => (<div>
     <P>Composition rules for Prism layouts.</P>
     {[
-      { n: "Sidebar + Main", rows: [["Sidebar width","260px fixed"],["Divider","1px solid rgba(…,0.1)"],["Sidebar bg","Inherits page gradient — no separate bg"],["Content order","Brand → Search → Chat list → User panel"]] },
+      { n: "Sidebar + Main", rows: [["Sidebar width","260px fixed"],["Divider",`1px solid ${short(X.divider)}`],["Sidebar bg","Inherits page gradient — no separate bg"],["Content order","Brand → Search → Chat list → User panel"]] },
       { n: "Chat Message Flow", rows: [["Alignment","User → right, AI → left"],["Max width","78%"],["Gap","12px"],["Entrance","fadeSlideUp, 500ms ease-out, 100ms stagger"],["Metadata","Hidden — no timestamps, no sender labels"]] },
       { n: "Active Selection", rows: [["Model","Single select"],["Visual","Glass tier shift: base → elevated"],["Transition","250ms ease-out"]] },
       { n: "Ambient Background", rows: [["Gradient","4-stop, 150deg diagonal"],["Orb count","2–3 per viewport"],["Orb size","120–200px diameter"],["Orb opacity","0.15–0.25"],["Orb interaction","pointer-events: none"]] },
@@ -287,7 +301,7 @@ function prismSpec(a) { return {
     <H3>3. Performance Budget</H3>
     <Tk n="max.blur.layers" v="6" d="Simultaneous visible" a={a} />
     <Tk n="fallback.strategy" v="@supports query" a={a} />
-    <Tk n="fallback.bg" v="rgba(40,50,55,0.85)" d="Solid for non-supporting" a={a} />
+    <Tk n="fallback.bg" v={X.glass_fallback} d="Solid for non-supporting" a={a} />
     <Do>{"Provide pre-blurred fallback for older browsers"}</Do>
     <H3>4. Multi-Stop Gradient Background</H3>
     <P>The page gradient is structural, not decorative. Glass over a solid color is visually meaningless. The gradient makes transparency legible.</P>
@@ -307,7 +321,7 @@ function prismSpec(a) { return {
       {[["Chat input","Message...","Single word, no preamble"],["Search","Search...","Identical to Sketch"],["Status","active session","Lowercase, descriptive"],["User panel","You · active","Dot separator"],["Empty state","No conversations yet","Plain, no emoji"]].map((p,i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "110px 1fr 1fr", padding: "5px 10px", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{p[0]}</span>
-          <span style={{ fontSize: 10.5, color: "#7DDFBE" }}>{p[1]}</span>
+          <span style={{ fontSize: 10.5, color: C.accent }}>{p[1]}</span>
           <span style={{ fontSize: 9.5, color: "#666" }}>{p[2]}</span>
         </div>))}
     </div>
@@ -372,11 +386,12 @@ export default function App() {
         .ma { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px }
         .si { border: none; outline: none; background: transparent; flex: 1; font-size: 11px; width: 100% }
         input::placeholder { opacity: 0.4 }
-        .gi::placeholder { color: rgba(255,255,255,0.25) }
-        .snd { cursor: pointer; transition: transform 0.1s; flex-shrink: 0 }
+        .gi::placeholder { color: ${C.text_placeholder} }
+        .snd { cursor: pointer; transition: transform ${motion(tokens, "fast")}; flex-shrink: 0 }
         .snd:hover { transform: scale(1.05) }
-        .mi { animation: fadeSlideUp 0.35s ease both }
-        .ci { animation: fadeSlideUp 0.3s ease both }
+        .mi { animation: fadeSlideUp ${motion(tokens, "slow")} both }
+        .ci { animation: fadeSlideUp ${motion(tokens, "moderate")} both }
+        ${reducedMotionCss(tokens, { scope: ".app-sh", animated: [".mi", ".ci"], transforms: [".snd:hover"] })}
         .ci:hover { opacity: 0.88 }
       `}</style>
 

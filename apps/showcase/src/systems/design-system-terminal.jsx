@@ -1,11 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
+import tokens from "@systems/terminal/tokens.json";
+import { alpha, motion, reducedMotionCss, contrastRatio, contrastText, wcagLevel, px, em, lh } from "../tokens.js";
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — TERMINAL
    CLI + Phosphor Heritage · Single-theme standalone spec + live preview
    ═══════════════════════════════════════════════════════════════ */
 
-const TM = { name: "Terminal", tag: "CLI + Phosphor Heritage", color: "#00FF66" };
+/* Every design value comes from systems/terminal/tokens.json (docs/specs/TOKENS.md § 4). */
+const { color: C, font: F, radius: rad, border_width: bw } = tokens;
+const X = tokens.extras.color;
+const T = { ...tokens.type, ...tokens.extras.type };
+
+const TM = { name: "Terminal", tag: "CLI + Phosphor Heritage", color: C.accent };
 
 const chatList = [
   { id: 1, name: "tokyo_trip", preview: "build day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
@@ -55,85 +62,85 @@ const CBox = ({ title, parts, contract, specs, dos, donts, accent }) => {
    ═══════════════════════════════════════════════════════════════ */
 function TerminalChat({ sel, setSel }) {
   return (
-    <div className="app-sh" style={{ background: "#0A0F0A", fontFamily: "'JetBrains Mono', monospace", borderRadius: 0, border: "1px solid #1F2F1F", color: "#C8F7C5" }}>
+    <div className="app-sh" style={{ background: C.page_bg, fontFamily: F.body, borderRadius: rad.chrome, border: `${bw.default}px solid ${C.border_default}`, color: C.text_primary }}>
       {/* Sidebar */}
-      <div className="sb" style={{ borderRight: "1px solid #1F2F1F" }}>
-        <div style={{ padding: "12px 14px", borderBottom: "1px dashed #1F2F1F" }}>
-          <div style={{ color: "#00FF66", fontSize: 11, fontWeight: 700 }}>terminal@chat:~$</div>
-          <div style={{ color: "#5EAA66", fontSize: 10, marginTop: 2 }}>// {chatList.length} sessions · 3 active</div>
+      <div className="sb" style={{ borderRight: `1px solid ${C.border_default}` }}>
+        <div style={{ padding: "12px 14px", borderBottom: `1px dashed ${C.border_default}` }}>
+          <div style={{ color: C.accent, fontSize: 11, fontWeight: 700 }}>terminal@chat:~$</div>
+          <div style={{ color: C.text_secondary, fontSize: 10, marginTop: 2 }}>// {chatList.length} sessions · 3 active</div>
         </div>
-        <div style={{ padding: "10px 14px", borderBottom: "1px dashed #1F2F1F" }}>
+        <div style={{ padding: "10px 14px", borderBottom: `1px dashed ${C.border_default}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#5EAA66", fontSize: 10 }}>$ grep</span>
-            <input placeholder="..." className="si" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#C8F7C5", fontSize: 11 }} />
+            <span style={{ color: C.text_secondary, fontSize: 10 }}>$ grep</span>
+            <input placeholder="..." className="si" style={{ fontFamily: F.body, color: C.text_primary, fontSize: 11 }} />
           </div>
         </div>
         <div className="cl">
-          <div style={{ padding: "8px 14px 4px", color: "#3D7044", fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em" }}>// sessions</div>
+          <div style={{ padding: "8px 14px 4px", color: C.text_muted, fontSize: 9, textTransform: "uppercase", letterSpacing: "0.12em" }}>// sessions</div>
           {chatList.map((c, i) => (
             <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "5px 14px", cursor: "pointer", animationDelay: `${i * 40}ms` }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                <span style={{ color: sel === c.id ? "#00FF66" : "#3D7044", fontSize: 11, width: 10 }}>{sel === c.id ? ">" : " "}</span>
-                <span style={{ color: sel === c.id ? "#C8F7C5" : "#5EAA66", fontSize: 11, fontWeight: sel === c.id ? 700 : 400, flex: 1 }}>{c.name}</span>
-                {c.unread > 0 && <span style={{ color: "#FFB000", fontSize: 10 }}>[{c.unread}]</span>}
-                <span style={{ color: "#3D7044", fontSize: 9 }}>{c.time}</span>
+                <span style={{ color: sel === c.id ? C.accent : C.text_muted, fontSize: 11, width: 10 }}>{sel === c.id ? ">" : " "}</span>
+                <span style={{ color: sel === c.id ? C.text_primary : C.text_secondary, fontSize: 11, fontWeight: sel === c.id ? 700 : 400, flex: 1 }}>{c.name}</span>
+                {c.unread > 0 && <span style={{ color: C.warning, fontSize: 10 }}>[{c.unread}]</span>}
+                <span style={{ color: C.text_muted, fontSize: 9 }}>{c.time}</span>
               </div>
-              <div style={{ paddingLeft: 14, fontSize: 10, color: "#3D7044", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 1 }}>// {c.preview}</div>
+              <div style={{ paddingLeft: 14, fontSize: 10, color: C.text_muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 1 }}>// {c.preview}</div>
             </div>
           ))}
         </div>
-        <div style={{ padding: "10px 14px", borderTop: "1px dashed #1F2F1F" }}>
-          <div style={{ fontSize: 10, color: "#5EAA66" }}>$ whoami</div>
-          <div style={{ fontSize: 10, color: "#C8F7C5", marginTop: 2 }}>tucker<span style={{ color: "#3D7044" }}>@local</span></div>
+        <div style={{ padding: "10px 14px", borderTop: `1px dashed ${C.border_default}` }}>
+          <div style={{ fontSize: 10, color: C.text_secondary }}>$ whoami</div>
+          <div style={{ fontSize: 10, color: C.text_primary, marginTop: 2 }}>tucker<span style={{ color: C.text_muted }}>@local</span></div>
         </div>
       </div>
 
       {/* Main */}
       <div className="ca">
-        <div style={{ padding: "10px 16px", borderBottom: "1px dashed #1F2F1F" }}>
-          <div style={{ color: "#5EAA66", fontSize: 10 }}>┌─ SESSION · tokyo_trip · active ─────────────────────┐</div>
+        <div style={{ padding: "10px 16px", borderBottom: `1px dashed ${C.border_default}` }}>
+          <div style={{ color: C.text_secondary, fontSize: 10 }}>┌─ SESSION · tokyo_trip · active ─────────────────────┐</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 2, marginTop: 2 }}>
-            <span style={{ color: "#00FF66", fontSize: 12, fontWeight: 700 }}>│</span>
-            <span style={{ color: "#C8F7C5", fontSize: 12 }}>Tokyo Trip</span>
-            <span style={{ color: "#3D7044", fontSize: 10 }}>// 4 exchanges · connected</span>
-            <span style={{ marginLeft: "auto", color: "#FFB000", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em" }}>● LIVE</span>
+            <span style={{ color: C.accent, fontSize: 12, fontWeight: 700 }}>│</span>
+            <span style={{ color: C.text_primary, fontSize: 12 }}>Tokyo Trip</span>
+            <span style={{ color: C.text_muted, fontSize: 10 }}>// 4 exchanges · connected</span>
+            <span style={{ marginLeft: "auto", color: C.warning, fontSize: 9, fontWeight: 700, letterSpacing: "0.08em" }}>● LIVE</span>
           </div>
-          <div style={{ color: "#5EAA66", fontSize: 10 }}>└─────────────────────────────────────────────────────┘</div>
+          <div style={{ color: C.text_secondary, fontSize: 10 }}>└─────────────────────────────────────────────────────┘</div>
         </div>
 
         <div className="ma" style={{ padding: "14px 16px" }}>
           {msgs.map((m, i) => (
             <div key={m.id} className="mi" style={{ maxWidth: "100%", animationDelay: `${i * 60}ms` }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                <span style={{ color: m.sender === "user" ? "#A9FF47" : "#00FF66", fontSize: 10, fontWeight: 700 }}>
+                <span style={{ color: m.sender === "user" ? X.accent_alt : C.accent, fontSize: 10, fontWeight: 700 }}>
                   {m.sender === "user" ? "user@local>" : "ai@system>"}
                 </span>
-                <span style={{ color: "#3D7044", fontSize: 9 }}>[00:{String(i + 1).padStart(2, '0')}:{String((i * 17) % 60).padStart(2, '0')}]</span>
+                <span style={{ color: C.text_muted, fontSize: 9 }}>[00:{String(i + 1).padStart(2, '0')}:{String((i * 17) % 60).padStart(2, '0')}]</span>
               </div>
-              <div style={{ color: m.sender === "user" ? "#C8F7C5" : "#DDFFDA", fontSize: 12, paddingLeft: 14, lineHeight: 1.55, marginTop: 1 }}>
+              <div style={{ color: m.sender === "user" ? C.text_primary : X.text_ai_output, fontSize: 12, paddingLeft: 14, lineHeight: 1.55, marginTop: 1 }}>
                 {m.text}
               </div>
             </div>
           ))}
           <div className="mi" style={{ maxWidth: "100%", animationDelay: "320ms" }}>
-            <div style={{ color: "#3D7044", fontSize: 10, marginBottom: 4 }}>// pick a vibe — type number or label</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, border: "1px dashed #1F2F1F" }}>
+            <div style={{ color: C.text_muted, fontSize: 10, marginBottom: 4 }}>// pick a vibe — type number or label</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, border: `1px dashed ${C.border_default}` }}>
               {[["[1]", "temples"], ["[2]", "ramen"], ["[3]", "culture"], ["[4]", "parks"]].map((t, ti) => (
-                <div key={ti} className="bc-term" style={{ padding: "6px 10px", borderRight: ti % 2 === 0 ? "1px dashed #1F2F1F" : "none", borderBottom: ti < 2 ? "1px dashed #1F2F1F" : "none", fontSize: 11, cursor: "pointer" }}>
-                  <span style={{ color: "#FFB000" }}>{t[0]}</span> <span style={{ color: "#C8F7C5" }}>{t[1]}</span>
+                <div key={ti} className="bc-term" style={{ padding: "6px 10px", borderRight: ti % 2 === 0 ? `1px dashed ${C.border_default}` : "none", borderBottom: ti < 2 ? `1px dashed ${C.border_default}` : "none", fontSize: 11, cursor: "pointer" }}>
+                  <span style={{ color: C.warning }}>{t[0]}</span> <span style={{ color: C.text_primary }}>{t[1]}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div style={{ padding: "10px 16px", borderTop: "1px dashed #1F2F1F" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#00FF66", fontSize: 11, fontWeight: 700 }}>$</span>
-            <input placeholder="type command or message..." className="si" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#C8F7C5", fontSize: 12 }} />
-            <span className="term-cursor" style={{ color: "#00FF66", fontSize: 12, fontWeight: 700 }}>█</span>
+        <div style={{ padding: "10px 16px", borderTop: `1px dashed ${C.border_default}` }}>
+          <div className="term-prompt" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: C.accent, fontSize: 11, fontWeight: 700 }}>$</span>
+            <input placeholder="type command or message..." className="si" style={{ fontFamily: F.body, color: C.text_primary, fontSize: 12 }} />
+            <span className="term-cursor" style={{ color: C.accent, fontSize: 12, fontWeight: 700 }}>█</span>
           </div>
-          <div style={{ marginTop: 4, color: "#3D7044", fontSize: 9 }}>// /help · /clear · ⏎ send</div>
+          <div style={{ marginTop: 4, color: C.text_muted, fontSize: 9 }}>// /help · /clear · ⏎ send</div>
         </div>
       </div>
     </div>
@@ -146,10 +153,10 @@ function PreviewView({ sel, setSel }) {
     "ASCII box-drawings (┌─┐ └─┘) frame session context — no rounded borders",
     "`user@local>` / `ai@system>` prefixes replace chat-bubble anatomy entirely",
     "Timestamp format [00:01:17] inline with sender tag — not a separate column",
-    "Phosphor green (#00FF66) sole accent — amber (#FFB000) for counts, red for errors",
+    `Phosphor green (${C.accent}) sole accent — amber (${C.warning}) for counts, red for errors`,
     "JetBrains Mono only — no secondary typeface anywhere in the system",
     "Blinking █ cursor on active input (1s step-end) — signature motion",
-    "Border-radius: 0 everywhere. All borders 1px dashed or solid #1F2F1F",
+    `Border-radius: 0 everywhere. All borders 1px dashed or solid ${C.border_default}`,
     "Suggestion chips numbered [1][2][3] — type number to select, not click",
   ];
   return (<div>
@@ -182,8 +189,8 @@ function terminalSpec(a) { return {
       {[
         ["Typeable hierarchy","Every visual indicator corresponds to a character you could type: > for active, $ for prompt, // for comments, [n] for selection. No abstract UI-only symbols."],
         ["Monospace is the grid","JetBrains Mono is the only font family. Column alignment replaces grid systems. Everything snaps to character widths — there is no intermediate spacing scale."],
-        ["Color as signal, not decoration","Phosphor green = standard. Amber = attention/count. Red = error. Muted greens (#3D7044, #5EAA66) = metadata. Never decorative, always diagnostic."],
-        ["Box-drawings as chrome","Structural borders use ┌ ─ ┐ │ └ ┘ characters. Solid CSS borders are dashed #1F2F1F when used at all. This is the single strongest identity moment."],
+        ["Color as signal, not decoration",`Phosphor green = standard. Amber = attention/count. Red = error. Muted greens (${C.text_muted}, ${C.text_secondary}) = metadata. Never decorative, always diagnostic.`],
+        ["Box-drawings as chrome",`Structural borders use ┌ ─ ┐ │ └ ┘ characters. Solid CSS borders are dashed ${C.border_default} when used at all. This is the single strongest identity moment.`],
       ].map(([t, d], i) => (
         <div key={i} style={{ padding: "10px 12px", borderRadius: 0, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#DDD", marginBottom: 3 }}>{t}</div>
@@ -201,34 +208,34 @@ function terminalSpec(a) { return {
     <P>Terminal uses a phosphor-heritage palette. Near-black surfaces, a narrow band of greens for content, amber for attention, red for error. Every color has a diagnostic meaning — no purely decorative hues.</P>
     <H3>Background Surfaces</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#0A0F0A" n="Page" v="#0A0F0A" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#111811" n="Surface" v="#111811" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#151D15" n="Elevated" v="#151D15" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#1F2F1F" n="Border" v="#1F2F1F" />
-      <Sw c="#000000" n="Void" v="#000000" b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.page_bg} n="Page" v={C.page_bg} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.surface} n="Surface" v={C.surface} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.surface_elevated} n="Elevated" v={C.surface_elevated} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.border_default} n="Border" v={C.border_default} />
+      <Sw c={X.void} n="Void" v={X.void} b="1px solid rgba(255,255,255,0.15)" />
     </div>
     <H3>Phosphor Greens (Primary Spectrum)</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#C8F7C5" n="Text Primary" v="#C8F7C5" />
-      <Sw c="#DDFFDA" n="Text AI Output" v="#DDFFDA" />
-      <Sw c="#00FF66" n="Accent / Prompt" v="#00FF66" />
-      <Sw c="#A9FF47" n="Accent Alt / User Tag" v="#A9FF47" />
-      <Sw c="#5EAA66" n="Text Secondary" v="#5EAA66" />
-      <Sw c="#3D7044" n="Text Muted" v="#3D7044" />
+      <Sw c={C.text_primary} n="Text Primary" v={C.text_primary} />
+      <Sw c={X.text_ai_output} n="Text AI Output" v={X.text_ai_output} />
+      <Sw c={C.accent} n="Accent / Prompt" v={C.accent} />
+      <Sw c={X.accent_alt} n="Accent Alt / User Tag" v={X.accent_alt} />
+      <Sw c={C.text_secondary} n="Text Secondary" v={C.text_secondary} />
+      <Sw c={C.text_muted} n="Text Muted" v={C.text_muted} />
     </div>
     <H3>Signal Colors</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#FFB000" n="Amber / Count" v="#FFB000" />
-      <Sw c="#FF4E4E" n="Red / Error" v="#FF4E4E" />
-      <Sw c="#4EB3FF" n="Blue / Link" v="#4EB3FF" />
+      <Sw c={C.warning} n="Amber / Count" v={C.warning} />
+      <Sw c={C.danger} n="Red / Error" v={C.danger} />
+      <Sw c={X.link} n="Blue / Link" v={X.link} />
     </div>
-    <Do>Use amber <code>#FFB000</code> only for counts, warnings, and attention indicators</Do>
-    <Do>Use red <code>#FF4E4E</code> only for errors, destructive actions, failed states</Do>
+    <Do>Use amber <code>{C.warning}</code> only for counts, warnings, and attention indicators</Do>
+    <Do>Use red <code>{C.danger}</code> only for errors, destructive actions, failed states</Do>
     <Dont>Use colors outside the palette — especially no purples, pinks, or gradients</Dont>
-    <Dont>Use pure white (#FFFFFF) — text primary is off-white-green (#C8F7C5)</Dont>
+    <Dont>{`Use pure white (#FFFFFF) — text primary is off-white-green (${C.text_primary})`}</Dont>
     <H3>Contrast Ratios</H3>
     <div style={{ borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["Text primary on Page","15.2:1","AAA"],["Accent green on Page","14.1:1","AAA"],["Text secondary on Page","7.8:1","AAA"],["Text muted on Page","4.6:1","AA"],["Amber on Page","11.9:1","AAA"],["Red on Page","6.7:1","AA"]].map((r, i) => (
+      {[["Text primary on Page", C.text_primary], ["Accent green on Page", C.accent], ["Text secondary on Page", C.text_secondary], ["Text muted on Page", C.text_muted], ["Amber on Page", C.warning], ["Red on Page", C.danger]].map(([n, fg]) => [n, contrastText(fg, C.page_bg), wcagLevel(contrastRatio(fg, C.page_bg))]).map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 70px 55px", padding: "5px 10px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
           <code className="mn" style={{ fontSize: 10, color: "#999" }}>{r[1]}</code>
@@ -241,7 +248,7 @@ function terminalSpec(a) { return {
     <P>Terminal uses a single monospace family for the entire system. There is no secondary typeface, no editorial escape hatch, no serif fallback. Typography is the grid.</P>
     <H3>Font Family</H3>
     <div style={{ padding: 14, borderRadius: 0, border: `1px solid ${a}30`, background: `${a}04`, marginBottom: 12 }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 22, color: a, marginBottom: 4, fontWeight: 700 }}>JetBrains Mono</div>
+      <div style={{ fontFamily: F.body, fontSize: 22, color: a, marginBottom: 4, fontWeight: 700 }}>JetBrains Mono</div>
       <div style={{ fontSize: 10, fontWeight: 600, color: a, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>The only family</div>
       <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>Used for navigation, body text, headings, timestamps, prompts, commands, metadata, and labels. Zero exceptions. Alternatives in fallback order: Berkeley Mono → IBM Plex Mono → Menlo → Courier.</div>
     </div>
@@ -250,7 +257,7 @@ function terminalSpec(a) { return {
     <Dont>Use italic — monospace italic variants render poorly and read as glitch</Dont>
     <H3>Type Scale</H3>
     <div style={{ borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["display","14px","700","1.3","0","Session headers, brand"],["body","12px","400","1.55","0","Message text"],["label","11px","700","1.3","0","Session names, prompts"],["meta","10px","400","1.4","0","Timestamps, file paths"],["micro","9px","600","1.4","0.08em","Status tags (LIVE, TYPING)"],["comment","10px","400","1.4","0","// prefixed secondaries"]].map((t, i) => (
+      {[["display", T.display, "Session headers, brand"], ["body", T.body, "Message text"], ["label", T.session_label, "Session names, prompts"], ["meta", T.small, "Timestamps, file paths"], ["micro", T.label, "Status tags (LIVE, TYPING)"], ["comment", T.small, "// prefixed secondaries"]].map(([n, t, use]) => [n, px(t.size), String(t.weight), lh(t.line_height), em(t.tracking), use]).map((t, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "70px 48px 42px 38px 50px 1fr", padding: "5px 10px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <code className="mn" style={{ fontSize: 10, color: "#CCC" }}>{t[0]}</code>
           {t.slice(1).map((v, vi) => <span key={vi} style={{ fontSize: 10, color: vi < 4 ? "#999" : "#666" }}>{v}</span>)}
@@ -259,7 +266,7 @@ function terminalSpec(a) { return {
     <H3>Prefix Convention</H3>
     <P>Terminal replaces icon affordances with typeable character prefixes. This is the core typographic grammar of the system.</P>
     <div style={{ borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["$","Shell prompt — input fields, user actions","#00FF66"],[">","AI / system output, selected state","#00FF66"],["<","User-originated message (alternative form)","#A9FF47"],["//","Comment / secondary metadata","#3D7044"],["[n]","Numbered selection (chips, menus)","#FFB000"],["●","Active status indicator","#FFB000"]].map((r, i) => (
+      {[["$","Shell prompt — input fields, user actions",C.accent],[">","AI / system output, selected state",C.accent],["<","User-originated message (alternative form)",X.accent_alt],["//","Comment / secondary metadata",C.text_muted],["[n]","Numbered selection (chips, menus)",C.warning],["●","Active status indicator",C.warning]].map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "50px 1fr", padding: "6px 10px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <code className="mn" style={{ fontSize: 13, color: r[2], fontWeight: 700 }}>{r[0]}</code>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[1]}</span>
@@ -270,14 +277,14 @@ function terminalSpec(a) { return {
   elevation: () => (<div>
     <P>Terminal has no elevation system in the conventional sense. There are no shadows, no blurs, no translucency, and border-radius is 0 everywhere. Depth is communicated through prefix characters, indentation, and color temperature.</P>
     <H3>Border Tokens</H3>
-    <Tk n="border.width.default" v="1px" d="All component boundaries" a={a} />
+    <Tk n="border.width.default" v={px(bw.default)} d="All component boundaries" a={a} />
     <Tk n="border.style.default" v="dashed" d="Dashed borders for soft boundaries — signature" a={a} />
     <Tk n="border.style.strong" v="solid" d="Reserved for focus / error states" a={a} />
-    <Tk n="border.color.default" v="#1F2F1F" d="Dark green-black, low contrast" a={a} />
-    <Tk n="border.color.accent" v="#00FF66" d="Phosphor green — focus + active" a={a} />
+    <Tk n="border.color.default" v={C.border_default} d="Dark green-black, low contrast" a={a} />
+    <Tk n="border.color.accent" v={C.accent} d="Phosphor green — focus + active" a={a} />
     <H3>Border Radius</H3>
     <div style={{ display: "flex", gap: 14, marginBottom: 10 }}>
-      {[{ r: 0, l: "All elements", t: "radius.none" }].map(item => (
+      {[{ r: rad.default, l: "All elements", t: "radius.none" }].map(item => (
         <div key={item.t} style={{ textAlign: "center" }}>
           <div style={{ width: 44, height: 44, borderRadius: item.r, border: `2px solid ${a}55`, background: "rgba(255,255,255,0.02)", marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <code className="mn" style={{ fontSize: 9, color: "#999" }}>{item.r}px</code>
@@ -288,8 +295,8 @@ function terminalSpec(a) { return {
     </div>
     <H3>ASCII Box-Drawings (Structural Chrome)</H3>
     <P>Terminal's signature elevation moment is ASCII box-drawings rendered as text, not CSS borders. They frame sessions, contexts, and grouped content.</P>
-    <div style={{ padding: "12px 14px", border: "1px dashed #1F2F1F", background: "rgba(0,255,102,0.03)", marginBottom: 10 }}>
-      <pre className="mn" style={{ fontSize: 10, color: "#5EAA66", lineHeight: 1.4, margin: 0 }}>{`┌─ SESSION · tokyo_trip · active ─┐
+    <div style={{ padding: "12px 14px", border: `1px dashed ${C.border_default}`, background: alpha(C.accent, 0.03), marginBottom: 10 }}>
+      <pre className="mn" style={{ fontSize: 10, color: C.text_secondary, lineHeight: 1.4, margin: 0 }}>{`┌─ SESSION · tokyo_trip · active ─┐
 │  Tokyo Trip — 4 exchanges       │
 └─────────────────────────────────┘`}</pre>
     </div>
@@ -302,38 +309,38 @@ function terminalSpec(a) { return {
   components: () => (<div>
     <P>Each component specifies anatomy, behavioral contract, exact token values, and do/don't rules. Click to expand.</P>
     <CBox title="MessageLine" parts={["prefix", "sender-tag", "timestamp", "body"]} accent={a}
-      contract="Replace chat-bubble anatomy with prefixed text. Must visually distinguish user (yellow-green #A9FF47) from AI (phosphor #00FF66) via the sender-tag color. Must render timestamp inline, not above or beside."
-      specs={[["font-family", "'JetBrains Mono'"], ["body.font-size", "12px"], ["body.color.user", "#C8F7C5"], ["body.color.ai", "#DDFFDA"], ["body.line-height", "1.55"], ["body.padding-left", "14px", "Indents under prefix"], ["sender-tag.font-size", "10px"], ["sender-tag.font-weight", "700"], ["user.prefix", "'user@local>'"], ["ai.prefix", "'ai@system>'"], ["timestamp.format", "'[HH:MM:SS]'"], ["timestamp.color", "#3D7044"]]}
+      contract={`Replace chat-bubble anatomy with prefixed text. Must visually distinguish user (yellow-green ${X.accent_alt}) from AI (phosphor ${C.accent}) via the sender-tag color. Must render timestamp inline, not above or beside.`}
+      specs={[["font-family", "'JetBrains Mono'"], ["body.font-size", "12px"], ["body.color.user", C.text_primary], ["body.color.ai", X.text_ai_output], ["body.line-height", "1.55"], ["body.padding-left", "14px", "Indents under prefix"], ["sender-tag.font-size", "10px"], ["sender-tag.font-weight", "700"], ["user.prefix", "'user@local>'"], ["ai.prefix", "'ai@system>'"], ["timestamp.format", "'[HH:MM:SS]'"], ["timestamp.color", C.text_muted]]}
       dos={["Use the prefix format 'sender@scope>' — shell-login convention", "Keep timestamps inline with the sender tag, not as separate metadata columns"]}
       donts={["Wrap messages in bordered containers — no chat bubbles ever", "Right-align user messages — both senders left-align; distinction is by prefix + color"]} />
 
     <CBox title="SidebarItem" parts={["selection-marker", "name", "unread-count", "timestamp", "preview"]} accent={a}
       contract="Single selection via '>' marker character (not background fill). Must truncate preview with ellipsis. Unread count rendered as [n] in amber."
-      specs={[["padding", "5px 14px"], ["selection-marker.char", "'>'"], ["selection-marker.color", "#00FF66"], ["unselected-marker", "' '", "Empty space, maintains alignment"], ["name.font-size", "11px"], ["name.color.selected", "#C8F7C5"], ["name.color.unselected", "#5EAA66"], ["unread.format", "'[n]'"], ["unread.color", "#FFB000"], ["preview.prefix", "'// '"], ["preview.color", "#3D7044"]]}
+      specs={[["padding", "5px 14px"], ["selection-marker.char", "'>'"], ["selection-marker.color", C.accent], ["unselected-marker", "' '", "Empty space, maintains alignment"], ["name.font-size", "11px"], ["name.color.selected", C.text_primary], ["name.color.unselected", C.text_secondary], ["unread.format", "'[n]'"], ["unread.color", C.warning], ["preview.prefix", "'// '"], ["preview.color", C.text_muted]]}
       dos={["Use '>' prefix character for selection — not a left bar or background fill", "Render unread counts as [2], [1] in amber — bracket notation is signature"]}
       donts={["Use background-color fills for selection (that's Sketch / Swiss pattern)", "Show avatars — Terminal does not have user avatars, only text"]} />
 
     <CBox title="TextInput" parts={["prompt", "input", "cursor", "hint"]} accent={a}
       contract="Must display '$' prompt prefix. Must show a blinking █ cursor after the input value. Must include a /command hint line below."
-      specs={[["padding", "10px 16px"], ["prompt.char", "'$'"], ["prompt.color", "#00FF66"], ["prompt.font-weight", "700"], ["input.font-size", "12px"], ["input.color", "#C8F7C5"], ["cursor.char", "'█'"], ["cursor.animation", "blink 1s step-end infinite"], ["hint.format", "'// /help · /clear · ⏎ send'"], ["hint.color", "#3D7044"], ["hint.font-size", "9px"]]}
+      specs={[["padding", "10px 16px"], ["prompt.char", "'$'"], ["prompt.color", C.accent], ["prompt.font-weight", "700"], ["input.font-size", "12px"], ["input.color", C.text_primary], ["cursor.char", "'█'"], ["cursor.animation", "blink 1s step-end infinite"], ["hint.format", "'// /help · /clear · ⏎ send'"], ["hint.color", C.text_muted], ["hint.font-size", "9px"]]}
       dos={["Show the blinking █ cursor only when input is focused", "Support slash commands (/help, /clear) alongside regular input"]}
       donts={["Render a send button as a separate clickable element — use '⏎ send' hint instead", "Use placeholder text that looks like commands ('Type message') — use '...' or blank"]} />
 
     <CBox title="SessionHeader" parts={["top-rule", "title-line", "bottom-rule", "status-pill"]} accent={a}
       contract="Must render ASCII box-drawing top and bottom rules. Title line shows session name and exchange count. Optional LIVE status pill in amber."
-      specs={[["top-rule.format", "'┌─ SESSION · <name> · <state> ─┐'"], ["rule.color", "#5EAA66"], ["title.color", "#C8F7C5"], ["exchange-count.prefix", "'// '"], ["exchange-count.color", "#3D7044"], ["status-pill.format", "'● LIVE'"], ["status-pill.color", "#FFB000"], ["status-pill.font-size", "9px"], ["status-pill.letter-spacing", "0.08em"]]}
+      specs={[["top-rule.format", "'┌─ SESSION · <name> · <state> ─┐'"], ["rule.color", C.text_secondary], ["title.color", C.text_primary], ["exchange-count.prefix", "'// '"], ["exchange-count.color", C.text_muted], ["status-pill.format", "'● LIVE'"], ["status-pill.color", C.warning], ["status-pill.font-size", "9px"], ["status-pill.letter-spacing", "0.08em"]]}
       dos={["Use literal ┌─┐ characters — this is the signature chrome moment", "Include exchange count in the title line as '// N exchanges'"]}
       donts={["Replace the box-drawings with CSS borders — defeats the identity", "Add an icon/avatar next to the title — Terminal has no icons"]} />
 
     <CBox title="SuggestionGrid" parts={["comment-intro", "numbered-cells", "dashed-frame"]} accent={a}
       contract="Render suggestion options as numbered [1]-[4] cells in a 2×2 grid with dashed borders. Introduced by a '//' comment line."
-      specs={[["intro.prefix", "'// '"], ["intro.color", "#3D7044"], ["grid.columns", "2"], ["grid.frame", "1px dashed #1F2F1F"], ["cell.padding", "6px 10px"], ["cell.number.format", "'[1]', '[2]', etc."], ["cell.number.color", "#FFB000"], ["cell.label.color", "#C8F7C5"], ["selection-method", "Type number key OR click"]]}
+      specs={[["intro.prefix", "'// '"], ["intro.color", C.text_muted], ["grid.columns", "2"], ["grid.frame", `1px dashed ${C.border_default}`], ["cell.padding", "6px 10px"], ["cell.number.format", "'[1]', '[2]', etc."], ["cell.number.color", C.warning], ["cell.label.color", C.text_primary], ["selection-method", "Type number key OR click"]]}
       dos={["Number options [1] [2] [3] [4] — enables keyboard selection", "Use dashed borders for the grid frame — signature soft chrome"]}
       donts={["Use more than 4 options — Terminal grids cap at 2×2", "Use emoji as primary label — numbered text is the Terminal convention"]} />
 
     <CBox title="StatusIndicator" parts={["dot-char", "label"]} accent={a}
       contract="Render status as a Unicode bullet (●) followed by an uppercase tracked label. Color communicates state."
-      specs={[["dot.char", "'●'"], ["label.text-transform", "uppercase"], ["label.letter-spacing", "0.08em"], ["label.font-size", "9px"], ["label.font-weight", "700"], ["states", "LIVE (#FFB000) · IDLE (#5EAA66) · ERROR (#FF4E4E)"]]}
+      specs={[["dot.char", "'●'"], ["label.text-transform", "uppercase"], ["label.letter-spacing", "0.08em"], ["label.font-size", "9px"], ["label.font-weight", "700"], ["states", `LIVE (${C.warning}) · IDLE (${C.text_secondary}) · ERROR (${C.danger})`]]}
       dos={["Use ● character for status bullets, not colored div circles"]}
       donts={["Use background-pill containers around status — use color + character only"]} />
   </div>),
@@ -341,9 +348,9 @@ function terminalSpec(a) { return {
   patterns: () => (<div>
     <P>Composition rules for Terminal layouts.</P>
     {[
-      { n: "Sidebar + Main", rows: [["Sidebar width", "260px fixed"], ["Main area", "Fluid, fills remaining"], ["Sidebar order", "Prompt brand → Search → // sessions → List → $ whoami"], ["Vertical divider", "1px solid #1F2F1F"], ["Background", "#0A0F0A for both panes"]] },
+      { n: "Sidebar + Main", rows: [["Sidebar width", "260px fixed"], ["Main area", "Fluid, fills remaining"], ["Sidebar order", "Prompt brand → Search → // sessions → List → $ whoami"], ["Vertical divider", `1px solid ${C.border_default}`], ["Background", `${C.page_bg} for both panes`]] },
       { n: "Message Flow", rows: [["Direction", "Vertical stack, chronological"], ["Alignment", "ALL messages left-aligned — distinction via prefix color"], ["Max width", "100% (no indent)"], ["Gap", "12px between messages"], ["Entrance", "fadeSlideUp, 250ms linear, 60ms stagger"], ["Metadata", "Inline with sender tag — never below or right"]] },
-      { n: "Active Selection", rows: [["Model", "Single selection only"], ["Trigger", "Click or keyboard number [1-9]"], ["Visual", "'>' marker character prepended, name color shift"], ["Transition", "Instant — no animation"], ["Focus outline", "2px solid #00FF66"]] },
+      { n: "Active Selection", rows: [["Model", "Single selection only"], ["Trigger", "Click or keyboard number [1-9]"], ["Visual", "'>' marker character prepended, name color shift"], ["Transition", "Instant — no animation"], ["Focus outline", `${bw.focus}px solid ${C.focus_ring}`]] },
       { n: "Search / Input", rows: [["Prompt prefix", "$ grep (search) / $ (input)"], ["Cursor", "Blinking █, 1s step-end"], ["Placeholder", "'...' or empty — never descriptive"], ["Keyboard", "/commands supported alongside text"]] },
     ].map((p, pi) => (<div key={pi} style={{ marginBottom: 14 }}><H4>{p.n}</H4>
       <div style={{ borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
@@ -369,7 +376,7 @@ function terminalSpec(a) { return {
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
       <div style={{ padding: "10px 12px", borderRadius: 0, border: "1px solid rgba(52,211,153,0.12)", background: "rgba(52,211,153,0.04)" }}>
         <div style={{ fontSize: 9, fontWeight: 600, color: "#34D399", marginBottom: 5 }}>GOOD COPY</div>
-        {["$ search sessions", "// 4 exchanges · connected", "> type command or message...", "[1] temples  [2] ramen", "// /help · /clear · ⏎ send", "● LIVE"].map(x => <div key={x} className="mn" style={{ fontSize: 11, color: "#C8F7C5", marginBottom: 2 }}>{x}</div>)}
+        {["$ search sessions", "// 4 exchanges · connected", "> type command or message...", "[1] temples  [2] ramen", "// /help · /clear · ⏎ send", "● LIVE"].map(x => <div key={x} className="mn" style={{ fontSize: 11, color: C.text_primary, marginBottom: 2 }}>{x}</div>)}
       </div>
       <div style={{ padding: "10px 12px", borderRadius: 0, border: "1px solid rgba(255,107,107,0.12)", background: "rgba(255,107,107,0.04)" }}>
         <div style={{ fontSize: 9, fontWeight: 600, color: "#FF6B6B", marginBottom: 5 }}>BAD COPY</div>
@@ -381,8 +388,8 @@ function terminalSpec(a) { return {
     <P>Box-drawing Unicode characters (U+2500 range) replace CSS-drawn borders for session framing and context isolation. This is the single most distinct visual moment of the system.</P>
     <Tk n="characters" v="┌ ─ ┐ │ └ ┘ ┏ ┓ ╭ ╮ ╰ ╯" d="U+2500 to U+257F range" a={a} />
     <Tk n="usage" v="Session headers, quote blocks" a={a} />
-    <Tk n="color" v="#5EAA66 or #3D7044" d="Secondary greens" a={a} />
-    <Tk n="CSS alternative" v="1px dashed #1F2F1F" d="When Unicode unavailable" a={a} />
+    <Tk n="color" v={`${C.text_secondary} or ${C.text_muted}`} d="Secondary greens" a={a} />
+    <Tk n="CSS alternative" v={`1px dashed ${C.border_default}`} d="When Unicode unavailable" a={a} />
     <Do>Use ┌─┐ └─┘ for major session framing — replaces traditional card borders</Do>
     <Do>Use ───── as full-width dividers between sections</Do>
     <Dont>Mix CSS borders and ASCII box-drawings in the same container</Dont>
@@ -393,7 +400,7 @@ function terminalSpec(a) { return {
     <Tk n="character" v="'█' (U+2588)" a={a} />
     <Tk n="animation" v="blink 1s step-end infinite" a={a} />
     <Tk n="keyframes" v="0%,50%: opacity 1; 51%,100%: opacity 0" a={a} />
-    <Tk n="color" v="#00FF66" d="Phosphor green — never other colors" a={a} />
+    <Tk n="color" v={C.accent} d="Phosphor green — never other colors" a={a} />
     <Tk n="scope" v="Active/focused input only" a={a} />
     <Do>Show cursor only when input is focused — never as persistent decoration</Do>
     <Dont>Use ease-in-out timing — cursors must hard-flip, not fade</Dont>
@@ -428,7 +435,7 @@ function terminalSpec(a) { return {
       ].map((p, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "130px 1fr 1fr", padding: "5px 10px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{p[0]}</span>
-          <code className="mn" style={{ fontSize: 10.5, color: "#C8F7C5" }}>{p[1]}</code>
+          <code className="mn" style={{ fontSize: 10.5, color: C.text_primary }}>{p[1]}</code>
           <span style={{ fontSize: 9.5, color: "#666" }}>{p[2]}</span>
         </div>))}
     </div>
@@ -507,13 +514,17 @@ export default function App() {
         .ma { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px }
         .si { border: none; outline: none; background: transparent; flex: 1; font-size: 11px; width: 100% }
         input::placeholder { opacity: 0.4 }
-        .snd { cursor: pointer; transition: transform 0.1s; flex-shrink: 0 }
+        .snd { cursor: pointer; transition: transform ${motion(tokens, "fast")}; flex-shrink: 0 }
         .snd:hover { transform: scale(1.05) }
-        .mi { animation: fadeSlideUp 0.25s linear both }
-        .ci { animation: fadeSlideUp 0.2s linear both }
-        .ci:hover { background: rgba(0,255,102,0.04) }
-        .bc-term:hover { background: rgba(0,255,102,0.08) !important }
-        .term-cursor { animation: blink 1s step-end infinite }
+        .mi { animation: fadeSlideUp ${motion(tokens, "slow")} both }
+        .ci { animation: fadeSlideUp ${motion(tokens, "moderate")} both }
+        .ci:hover { background: ${alpha(C.accent, 0.04)} }
+        .bc-term:hover { background: ${alpha(C.accent, 0.08)} !important }
+        /* Cursor: shown and blinking only while the prompt has focus (spec: "Show cursor only when
+           input is focused"). 1s step-end is the spec's motion.elements.cursor timing override. */
+        .term-cursor { visibility: hidden }
+        .term-prompt:focus-within .term-cursor { visibility: visible; animation: blink 1s step-end infinite }
+        ${reducedMotionCss(tokens, { scope: ".app-sh" })}
       `}</style>
 
       {/* TOP NAV */}

@@ -1,11 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
+import tokens from "@systems/sketch/tokens.json";
+import { alpha, motion, reducedMotionCss, contrastRatio, contrastText, wcagLevel, px, em, lh } from "../tokens.js";
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — SKETCH
    Linear + Hand-Drawn · Single-theme standalone spec + live preview
    ═══════════════════════════════════════════════════════════════ */
 
-const TM = { name: "Sketch", tag: "Linear + Hand-Drawn", color: "#B8A9C8" };
+/* Every design value comes from systems/sketch/tokens.json (docs/specs/TOKENS.md § 4). */
+const { color: C, font: F, radius: rad, border_width: bw } = tokens;
+const X = tokens.extras.color;
+const XF = tokens.extras.font;
+const XR = tokens.extras.radius;
+const T = { ...tokens.type, ...tokens.extras.type };
+const rule = (w, col) => `${w}px solid ${col}`;
+
+const TM = { name: "Sketch", tag: "Linear + Hand-Drawn", color: C.accent };
 
 const chatList = [
   { id: 1, name: "Tokyo Trip", preview: "Want me to build a day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
@@ -55,74 +65,74 @@ const CBox = ({ title, parts, contract, specs, dos, donts, accent }) => {
    ═══════════════════════════════════════════════════════════════ */
 function SketchChat({ sel, setSel }) {
   return (
-    <div className="app-sh" style={{ background: "#FAFAF8", fontFamily: "'IBM Plex Sans',sans-serif", borderRadius: 14, border: "1px solid #E5E3DE" }}>
-      <div className="sb" style={{ borderRight: "1px solid #E5E3DE" }}>
+    <div className="app-sh" style={{ background: C.page_bg, fontFamily: F.body, borderRadius: rad.chrome, border: rule(bw.default, C.border_default) }}>
+      <div className="sb" style={{ borderRight: rule(bw.default, C.border_default) }}>
         <div style={{ padding: "16px 14px 10px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: "#2C2C2C", letterSpacing: "-0.02em" }}>Sketch</span>
-            <span style={{ fontFamily: "'Caveat',cursive", fontSize: 14, color: "#B8A9C8", fontWeight: 700, transform: "rotate(-3deg)", display: "inline-block" }}>✦ AI</span>
+            <span style={{ fontSize: 15, fontWeight: 600, color: C.text_primary, letterSpacing: "-0.02em" }}>Sketch</span>
+            <span style={{ fontFamily: XF.annotation, fontSize: 14, color: C.accent, fontWeight: 700, transform: "rotate(-3deg)", display: "inline-block" }}>✦ AI</span>
           </div>
-          <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, border: "1px solid #E5E3DE", display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 13, color: "#C0BCB6" }}>⌕</span>
-            <input placeholder="Search..." className="si" style={{ fontFamily: "'IBM Plex Sans',sans-serif", color: "#2C2C2C" }} />
+          <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: rad.input, border: rule(bw.default, C.border_input), display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 13, color: X.icon_muted }}>⌕</span>
+            <input placeholder="Search..." className="si" style={{ fontFamily: F.body, color: C.text_primary }} />
           </div>
         </div>
         <div style={{ padding: "0 14px 8px" }}>
-          <div style={{ fontFamily: "'Caveat',cursive", fontSize: 13, color: "#C4B8D4", fontWeight: 700, transform: "rotate(-1.5deg)" }}>↓ your chats</div>
+          <div style={{ fontFamily: XF.annotation, fontSize: 13, color: X.accent_light, fontWeight: 700, transform: "rotate(-1.5deg)" }}>↓ your chats</div>
         </div>
         <div className="cl">
           {chatList.map((c, i) => (
-            <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "10px 14px", cursor: "pointer", borderRadius: 10, margin: "0 6px 3px", background: sel === c.id ? "#F0EDE8" : "transparent", border: sel === c.id ? "1px solid #E5E3DE" : "1px solid transparent", animationDelay: `${i * 60}ms` }}>
+            <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "10px 14px", cursor: "pointer", borderRadius: rad.default, margin: "0 6px 3px", background: sel === c.id ? C.surface_selected : "transparent", border: sel === c.id ? rule(bw.default, C.border_default) : "1px solid transparent", animationDelay: `${i * 60}ms` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: 8, background: "#F0EDE8", border: "1px solid #E5E3DE", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>{c.avatar}</div>
+                <div style={{ width: 34, height: 34, borderRadius: XR.avatar, background: C.surface, border: rule(bw.default, C.border_default), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>{c.avatar}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 600, color: "#2C2C2C" }}>{c.name}</span>
-                    <span style={{ fontSize: 10, color: "#B0ADA8" }}>{c.time}</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: C.text_primary }}>{c.name}</span>
+                    <span style={{ fontSize: 10, color: C.text_placeholder }}>{c.time}</span>
                   </div>
-                  <div style={{ fontSize: 11, color: "#8A8680", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{c.preview}</div>
+                  <div style={{ fontSize: 11, color: C.text_muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{c.preview}</div>
                 </div>
-                {c.unread > 0 && <div style={{ width: 18, height: 18, borderRadius: 6, background: "#B8A9C8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: "#FFF" }}>{c.unread}</div>}
+                {c.unread > 0 && <div style={{ width: 18, height: 18, borderRadius: XR.badge, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: C.accent_foreground }}>{c.unread}</div>}
               </div>
             </div>
           ))}
         </div>
-        <div style={{ padding: "10px 14px", borderTop: "1px solid #E5E3DE" }}>
+        <div style={{ padding: "10px 14px", borderTop: rule(bw.default, C.border_default) }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 7, background: "#F0EDE8", border: "1px solid #E5E3DE", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#8A8680" }}>Y</div>
-            <div style={{ fontSize: 11.5, fontWeight: 500, color: "#555" }}>Your account</div>
+            <div style={{ width: 28, height: 28, borderRadius: XR.avatar_small, background: C.surface, border: rule(bw.default, C.border_default), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: C.text_muted }}>Y</div>
+            <div style={{ fontSize: 11.5, fontWeight: 500, color: C.text_secondary }}>Your account</div>
           </div>
         </div>
       </div>
 
       <div className="ca">
-        <div style={{ borderBottom: "1px solid #E5E3DE", padding: "12px 20px" }}>
+        <div style={{ borderBottom: rule(bw.default, C.border_default), padding: "12px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 16 }}>🗼</span>
-            <div style={{ fontSize: 13.5, fontWeight: 600, color: "#2C2C2C" }}>Tokyo Trip</div>
-            <div style={{ marginLeft: "auto", fontFamily: "'Caveat',cursive", fontSize: 13, color: "#B8A9C8", fontWeight: 700 }}>✎ active</div>
+            <div style={{ fontSize: 13.5, fontWeight: 600, color: C.text_primary }}>Tokyo Trip</div>
+            <div style={{ marginLeft: "auto", fontFamily: XF.annotation, fontSize: 13, color: C.accent, fontWeight: 700 }}>✎ active</div>
           </div>
         </div>
         <div className="ma" style={{ padding: 16 }}>
           {msgs.map((m, i) => (
             <div key={m.id} className="mi" style={{ alignSelf: m.sender === "user" ? "flex-end" : "flex-start", maxWidth: "78%", animationDelay: `${i * 80}ms` }}>
-              {m.sender === "ai" && i === 1 && <div style={{ fontFamily: "'Caveat',cursive", fontSize: 13, color: "#B8A9C8", fontWeight: 700, marginBottom: 3, paddingLeft: 4, transform: "rotate(-1.5deg)" }}>↓ ooh fun one!</div>}
-              <div style={{ padding: "11px 15px", borderRadius: 12, fontSize: 13, lineHeight: 1.55, ...(m.sender === "user" ? { background: "#2C2C2C", color: "#FAFAF8" } : { background: "#F0EDE8", color: "#2C2C2C", border: "1px solid #E5E3DE" }) }}>{m.text}</div>
+              {m.sender === "ai" && i === 1 && <div style={{ fontFamily: XF.annotation, fontSize: 13, color: C.accent, fontWeight: 700, marginBottom: 3, paddingLeft: 4, transform: "rotate(-1.5deg)" }}>↓ ooh fun one!</div>}
+              <div style={{ padding: "11px 15px", borderRadius: XR.message, fontSize: 13, lineHeight: 1.55, ...(m.sender === "user" ? { background: C.surface_inverse, color: C.text_inverse } : { background: C.surface, color: C.text_primary, border: rule(bw.default, C.border_default) }) }}>{m.text}</div>
             </div>
           ))}
           <div className="mi" style={{ alignSelf: "flex-start", maxWidth: "85%", animationDelay: "400ms" }}>
-            <div style={{ fontFamily: "'Caveat',cursive", fontSize: 13, color: "#C4B8D4", fontWeight: 700, marginBottom: 6, transform: "rotate(-1deg)" }}>pick a vibe ~</div>
+            <div style={{ fontFamily: XF.annotation, fontSize: 13, color: X.accent_light, fontWeight: 700, marginBottom: 6, transform: "rotate(-1deg)" }}>pick a vibe ~</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
               {["🏯 Temples", "🍜 Ramen", "🎌 Culture", "🌸 Parks"].map(t => (
-                <div key={t} className="bc" style={{ padding: "10px", borderRadius: 8, background: "#F7F5F0", border: "1px solid #E5E3DE", fontSize: 11.5, color: "#555", textAlign: "center", cursor: "pointer" }}>{t}</div>
+                <div key={t} className="bc" style={{ padding: "10px", borderRadius: 8, background: X.surface_subtle, border: rule(bw.default, C.border_default), fontSize: 11.5, color: C.text_secondary, textAlign: "center", cursor: "pointer" }}>{t}</div>
               ))}
             </div>
           </div>
         </div>
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #E5E3DE" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 10, border: "1px solid #E5E3DE", background: "#FFF" }}>
-            <input placeholder="Type here..." className="si" style={{ fontFamily: "'IBM Plex Sans',sans-serif", color: "#2C2C2C" }} />
-            <div className="snd" style={{ fontFamily: "'Caveat',cursive", fontSize: 17, color: "#B8A9C8", fontWeight: 700 }}>go →</div>
+        <div style={{ padding: "12px 16px", borderTop: rule(bw.default, C.border_default) }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: rad.default, border: rule(bw.default, C.border_input), background: C.surface_elevated }}>
+            <input placeholder="Type here..." className="si" style={{ fontFamily: F.body, color: C.text_primary }} />
+            <div className="snd" style={{ fontFamily: XF.annotation, fontSize: 17, color: C.accent, fontWeight: 700 }}>go →</div>
           </div>
         </div>
       </div>
@@ -135,7 +145,7 @@ function PreviewView({ sel, setSel }) {
   const notes = [
     "Caveat cursive annotations above AI messages at -1.5° rotation",
     "1px solid borders define all boundaries — zero box-shadows",
-    "Purple (#B8A9C8) accent exclusively on annotation layer elements",
+    `Purple (${C.accent}) accent exclusively on annotation layer elements`,
     "Bento suggestion chips in 2-column grid with emoji prefix",
     "Cursive send label ('go →') — key Sketch identity moment",
     "IBM Plex Sans for all structural text, Caveat for editorial only",
@@ -172,7 +182,7 @@ function sketchSpec(a) { return {
         ["Precision first", "Every structural element aligns to a 4px grid. Borders are exactly 1px. Radius is consistent at 8–12px. No visual ambiguity in the foundation layer."],
         ["Warmth second", "The annotation layer adds humanity — but sparingly. It appears in metadata, status, and editorial moments. Never in navigation, form inputs, or body text."],
         ["No shadows, ever", "Sketch defines all boundaries with 1px borders. Zero box-shadows anywhere in the system. Depth is communicated through background color separation, not elevation."],
-        ["One accent, one role", "Muted purple (#B8A9C8) is the only accent color. It is reserved exclusively for the annotation/editorial layer. Structural elements use the neutral palette only."],
+        ["One accent, one role", `Muted purple (${C.accent}) is the only accent color. It is reserved exclusively for the annotation/editorial layer. Structural elements use the neutral palette only.`],
       ].map(([t, d], i) => (
         <div key={i} style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#DDD", marginBottom: 3 }}>{t}</div>
@@ -191,41 +201,41 @@ function sketchSpec(a) { return {
     <P>Sketch uses a deliberately restrained palette. Five neutral tones form the structural foundation. A single muted purple serves as the accent, reserved exclusively for the annotation layer.</P>
     <H3>Background Surfaces</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#FAFAF8" n="Page" v="#FAFAF8" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#F0EDE8" n="Surface" v="#F0EDE8" b="1px solid rgba(255,255,255,0.12)" />
-      <Sw c="#F7F5F0" n="Surface Subtle" v="#F7F5F0" b="1px solid rgba(255,255,255,0.12)" />
-      <Sw c="#FFFFFF" n="Elevated" v="#FFFFFF" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#2C2C2C" n="Inverse" v="#2C2C2C" />
-      <Sw c="#E5E3DE" n="Muted" v="#E5E3DE" b="1px solid rgba(255,255,255,0.12)" />
+      <Sw c={C.page_bg} n="Page" v={C.page_bg} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.surface} n="Surface" v={C.surface} b="1px solid rgba(255,255,255,0.12)" />
+      <Sw c={X.surface_subtle} n="Surface Subtle" v={X.surface_subtle} b="1px solid rgba(255,255,255,0.12)" />
+      <Sw c={C.surface_elevated} n="Elevated" v={C.surface_elevated} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.surface_inverse} n="Inverse" v={C.surface_inverse} />
+      <Sw c={C.border_default} n="Muted" v={C.border_default} b="1px solid rgba(255,255,255,0.12)" />
     </div>
     <H3>Text</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#2C2C2C" n="Primary" v="#2C2C2C" />
-      <Sw c="#555555" n="Secondary" v="#555555" />
-      <Sw c="#8A8680" n="Tertiary" v="#8A8680" />
-      <Sw c="#B0ADA8" n="Placeholder" v="#B0ADA8" />
-      <Sw c="#FAFAF8" n="On Inverse" v="#FAFAF8" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#FFFFFF" n="On Accent" v="#FFFFFF" b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.text_primary} n="Primary" v={C.text_primary} />
+      <Sw c={C.text_secondary} n="Secondary" v={C.text_secondary} />
+      <Sw c={C.text_muted} n="Tertiary" v={C.text_muted} />
+      <Sw c={C.text_placeholder} n="Placeholder" v={C.text_placeholder} />
+      <Sw c={C.text_inverse} n="On Inverse" v={C.text_inverse} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.accent_foreground} n="On Accent" v={C.accent_foreground} b="1px solid rgba(255,255,255,0.15)" />
     </div>
     <H3>Accent — Annotation Purple</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#B8A9C8" n="Primary" v="#B8A9C8" />
-      <Sw c="#C4B8D4" n="Light" v="#C4B8D4" />
-      <Sw c="#9A8BAA" n="Dark (hover)" v="#9A8BAA" />
+      <Sw c={C.accent} n="Primary" v={C.accent} />
+      <Sw c={X.accent_light} n="Light" v={X.accent_light} />
+      <Sw c={X.accent_hover} n="Dark (hover)" v={X.accent_hover} />
     </div>
     <Do>Use accent purple only for: annotations, status text, editorial labels, send button, unread badges</Do>
     <Dont>Use purple for body text, headings, borders, backgrounds, or structural elements</Dont>
     <H3>Contrast Ratios</H3>
     <div style={{ borderRadius: 6, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
       {[
-        ["Primary text on Page", "12.8:1", "AAA"],
-        ["Primary text on Surface", "10.4:1", "AAA"],
-        ["Secondary text on Page", "7.2:1", "AAA"],
-        ["Tertiary text on Page", "4.7:1", "AA"],
-        ["Accent purple on Page", "3.6:1", "AA (lg)"],
-        ["On-inverse on Inverse bg", "12.8:1", "AAA"],
-        ["White on Accent badge", "4.1:1", "AA"],
-      ].map((r, i) => (
+        ["Primary text on Page", C.text_primary, C.page_bg],
+        ["Primary text on Surface", C.text_primary, C.surface],
+        ["Secondary text on Page", C.text_secondary, C.page_bg],
+        ["Tertiary text on Page", C.text_muted, C.page_bg],
+        ["Accent purple on Page", C.accent, C.page_bg],
+        ["On-inverse on Inverse bg", C.text_inverse, C.surface_inverse],
+        ["White on Accent badge", C.accent_foreground, C.accent],
+      ].map(([n, fg, bg]) => [n, contrastText(fg, bg), wcagLevel(contrastRatio(fg, bg))]).map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 70px 55px", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
           <code className="mn" style={{ fontSize: 10, color: "#999" }}>{r[1]}</code>
@@ -240,33 +250,34 @@ function sketchSpec(a) { return {
     <H3>Font Families</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
       <div style={{ padding: "14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ fontFamily: "'IBM Plex Sans'", fontSize: 18, color: "#EEE", marginBottom: 4 }}>IBM Plex Sans</div>
+        <div style={{ fontFamily: F.body, fontSize: 18, color: "#EEE", marginBottom: 4 }}>IBM Plex Sans</div>
         <div style={{ fontSize: 10, fontWeight: 600, color: "#34D399", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Structural — the grid</div>
         <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>All navigation, body text, headings, form inputs, labels, buttons (except send), metadata, timestamps. Everything that carries functional meaning.</div>
       </div>
-      <div style={{ padding: "14px", borderRadius: 8, border: "1px solid rgba(184,169,200,0.2)", background: "rgba(184,169,200,0.04)" }}>
-        <div style={{ fontFamily: "'Caveat'", fontSize: 22, color: "#B8A9C8", marginBottom: 4 }}>Caveat</div>
-        <div style={{ fontSize: 10, fontWeight: 600, color: "#B8A9C8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Editorial — the wink</div>
+      <div style={{ padding: "14px", borderRadius: 8, border: `1px solid ${alpha(C.accent, 0.2)}`, background: alpha(C.accent, 0.04) }}>
+        <div style={{ fontFamily: XF.annotation, fontSize: 22, color: C.accent, marginBottom: 4 }}>Caveat</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: C.accent, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Editorial — the wink</div>
         <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>Annotations above AI messages, status indicators, section labels, empty state messages, the send button label, whimsical editorial asides.</div>
       </div>
     </div>
-    <Do>Use Caveat exclusively with color.accent.primary (#B8A9C8 or #C4B8D4)</Do>
+    <Do>{`Use Caveat exclusively with color.accent.primary (${C.accent} or ${X.accent_light})`}</Do>
     <Dont>Use Caveat for headings, body text, navigation labels, form inputs, or error messages</Dont>
     <Dont>Use IBM Plex Sans for annotations, status indicators, or editorial asides</Dont>
     <H3>Type Scale</H3>
     <div style={{ borderRadius: 6, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
       {[
-        ["display", "18px", "600", "1.3", "-0.02em", "Page titles"],
-        ["heading", "15px", "600", "1.3", "-0.02em", "Section headings"],
-        ["title", "13.5px", "600", "1.3", "-0.01em", "Chat headers, card titles"],
-        ["body", "13px", "400", "1.55", "0", "Message text"],
-        ["label", "12.5px", "600", "1.3", "0", "Sidebar item names"],
-        ["caption", "11px", "400", "1.4", "0", "Preview text"],
-        ["micro", "10px", "500", "1.3", "0", "Timestamps, meta"],
-        ["annotation", "13px", "700", "1.3", "0", "Caveat only"],
-      ].map((t, i) => (
-        <div key={i} style={{ display: "grid", gridTemplateColumns: "75px 48px 42px 38px 50px 1fr", padding: "5px 10px", borderBottom: i < 7 ? "1px solid rgba(255,255,255,0.025)" : "none", background: t[0] === "annotation" ? "rgba(184,169,200,0.04)" : "transparent" }}>
-          <code className="mn" style={{ fontSize: 10, color: t[0] === "annotation" ? "#B8A9C8" : "#CCC" }}>{t[0]}</code>
+        ["display", T.display, "Page titles"],
+        /* heading and label have no type role in the token file (one-off sizes in the preview) */
+        ["heading", { size: 15, weight: 600, line_height: 1.3, tracking: -0.02 }, "Section headings"],
+        ["title", T.title, "Chat headers, card titles"],
+        ["body", T.body, "Message text"],
+        ["label", { size: 12.5, weight: 600, line_height: 1.3, tracking: 0 }, "Sidebar item names"],
+        ["caption", T.small, "Preview text"],
+        ["micro", T.label, "Timestamps, meta"],
+        ["annotation", T.annotation, "Caveat only"],
+      ].map(([n, t, use]) => [n, px(t.size), String(t.weight), lh(t.line_height), em(t.tracking), use]).map((t, i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "75px 48px 42px 38px 50px 1fr", padding: "5px 10px", borderBottom: i < 7 ? "1px solid rgba(255,255,255,0.025)" : "none", background: t[0] === "annotation" ? alpha(C.accent, 0.04) : "transparent" }}>
+          <code className="mn" style={{ fontSize: 10, color: t[0] === "annotation" ? C.accent : "#CCC" }}>{t[0]}</code>
           {t.slice(1).map((v, vi) => <span key={vi} style={{ fontSize: 10, color: vi < 4 ? "#999" : "#666" }}>{v}</span>)}
         </div>
       ))}
@@ -276,20 +287,20 @@ function sketchSpec(a) { return {
   elevation: () => (<div>
     <P>Sketch uses borders as its sole boundary mechanism. There are no box-shadows in the system. Every container, card, and component boundary is defined by a 1px solid border.</P>
     <H3>Border Tokens</H3>
-    <Tk n="border.width.default" v="1px" d="All component boundaries" a={a} />
+    <Tk n="border.width.default" v={px(bw.default)} d="All component boundaries" a={a} />
     <Tk n="border.style" v="solid" d="Always solid (except annotation callouts: dashed)" a={a} />
-    <Tk n="border.color.default" v="#E5E3DE" d="Standard boundary" a={a} />
-    <Tk n="border.color.strong" v="#D5CFC8" d="Structural dividers" a={a} />
+    <Tk n="border.color.default" v={C.border_default} d="Standard boundary" a={a} />
+    <Tk n="border.color.strong" v={C.border_strong} d="Structural dividers" a={a} />
     <H3>Border Radius</H3>
     <div style={{ display: "flex", gap: 14, marginBottom: 10 }}>
       {[
-        { r: 8, l: "Component", t: "radius.sm" },
-        { r: 10, l: "Container", t: "radius.md" },
-        { r: 12, l: "Message", t: "radius.lg" },
-        { r: 16, l: "App shell", t: "radius.xl" },
+        { r: rad.input, l: "Component", t: "radius.sm" },
+        { r: rad.default, l: "Container", t: "radius.md" },
+        { r: XR.message, l: "Message", t: "radius.lg" },
+        { r: XR.app_shell_doc, l: "App shell", t: "radius.xl" },
       ].map(item => (
         <div key={item.t} style={{ textAlign: "center" }}>
-          <div style={{ width: 44, height: 44, borderRadius: item.r, border: "2px solid rgba(184,169,200,0.35)", background: "rgba(255,255,255,0.02)", marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 44, height: 44, borderRadius: item.r, border: `2px solid ${alpha(C.accent, 0.35)}`, background: "rgba(255,255,255,0.02)", marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <code className="mn" style={{ fontSize: 9, color: "#999" }}>{item.r}px</code>
           </div>
           <div style={{ fontSize: 9.5, color: "#CCC", fontWeight: 600 }}>{item.l}</div>
@@ -313,11 +324,11 @@ function sketchSpec(a) { return {
         ["font-size", "13px (body)"],
         ["line-height", "1.55"],
         ["max-width", "78%", "Of chat container"],
-        ["user.background", "#2C2C2C", "Inverse surface"],
-        ["user.color", "#FAFAF8", "On-inverse text"],
-        ["ai.background", "#F0EDE8", "Surface"],
-        ["ai.color", "#2C2C2C", "Primary text"],
-        ["ai.border", "1px solid #E5E3DE"],
+        ["user.background", C.surface_inverse, "Inverse surface"],
+        ["user.color", C.text_inverse, "On-inverse text"],
+        ["ai.background", C.surface, "Surface"],
+        ["ai.color", C.text_primary, "Primary text"],
+        ["ai.border", rule(bw.default, C.border_default)],
       ]}
       dos={[
         "Add cursive annotations above AI messages for editorial moments ('ooh fun one!', '↓ great question')",
@@ -335,15 +346,15 @@ function sketchSpec(a) { return {
         ["padding", "10px 14px"],
         ["border-radius", "10px"],
         ["margin", "0 6px 3px", "Inset from sidebar edge"],
-        ["selected.bg", "#F0EDE8", "Surface color"],
-        ["selected.border", "1px solid #E5E3DE"],
+        ["selected.bg", C.surface_selected, "Surface color"],
+        ["selected.border", rule(bw.default, C.border_default)],
         ["avatar.size", "34px"],
         ["avatar.radius", "8px"],
-        ["avatar.bg", "#F0EDE8"],
-        ["avatar.border", "1px solid #E5E3DE"],
+        ["avatar.bg", C.surface],
+        ["avatar.border", rule(bw.default, C.border_default)],
         ["title.font", "label (12.5px/600)"],
         ["preview.font", "caption (11px/400)"],
-        ["preview.color", "#8A8680", "Tertiary text"],
+        ["preview.color", C.text_muted, "Tertiary text"],
       ]}
       dos={[
         "Use background color + border for selected state — never shadow",
@@ -359,12 +370,12 @@ function sketchSpec(a) { return {
       specs={[
         ["padding", "9px 14px"],
         ["border-radius", "10px"],
-        ["border", "1px solid #E5E3DE"],
-        ["background", "#FFFFFF", "Elevated surface"],
+        ["border", rule(bw.default, C.border_default)],
+        ["background", C.surface_elevated, "Elevated surface"],
         ["font", "body (13px/400)", "IBM Plex Sans"],
-        ["placeholder.color", "#B0ADA8", "45% opacity"],
+        ["placeholder.color", C.text_placeholder, "45% opacity"],
         ["action.font", "Caveat 17px/700", "Annotation font"],
-        ["action.color", "#B8A9C8", "Accent purple"],
+        ["action.color", C.accent, "Accent purple"],
         ["action.label", "'go →'", "Cursive send label"],
       ]}
       dos={[
@@ -381,8 +392,8 @@ function sketchSpec(a) { return {
       specs={[
         ["size", "18px height, min 18px width"],
         ["border-radius", "6px"],
-        ["background", "#B8A9C8", "Accent purple"],
-        ["color", "#FFFFFF", "On-accent"],
+        ["background", C.accent, "Accent purple"],
+        ["color", C.accent_foreground, "On-accent"],
         ["font", "micro (9px/700)"],
       ]}
       dos={["Use solid fill for badge background"]}
@@ -392,11 +403,11 @@ function sketchSpec(a) { return {
       contract="Must identify the current chat context. Must separate from content area below."
       specs={[
         ["padding", "12px 20px"],
-        ["border-bottom", "1px solid #E5E3DE"],
+        ["border-bottom", rule(bw.default, C.border_default)],
         ["background", "transparent", "Inherits page bg"],
         ["title.font", "title (13.5px/600)"],
         ["status.font", "Caveat 13px/700", "Annotation"],
-        ["status.color", "#B8A9C8"],
+        ["status.color", C.accent],
         ["status.text", "'✎ active'"],
       ]}
       dos={[
@@ -413,12 +424,12 @@ function sketchSpec(a) { return {
       specs={[
         ["padding", "10px"],
         ["border-radius", "8px"],
-        ["background", "#F7F5F0", "Surface subtle"],
-        ["border", "1px solid #E5E3DE"],
+        ["background", X.surface_subtle, "Surface subtle"],
+        ["border", rule(bw.default, C.border_default)],
         ["font", "caption (11.5px/400)"],
-        ["color", "#555555", "Secondary text"],
+        ["color", C.text_secondary, "Secondary text"],
         ["text-align", "center"],
-        ["hover.bg", "#EDE9E2"],
+        ["hover.bg", X.chip_hover],
         ["grid.columns", "2", "Always 2"],
         ["grid.gap", "6px"],
       ]}
@@ -439,8 +450,8 @@ function sketchSpec(a) { return {
         ["Sidebar width", "260px fixed"],
         ["Main area", "Fluid, fills remaining"],
         ["Sidebar order", "Brand → Search → Section label (cursive) → Chat list → User panel"],
-        ["Vertical divider", "1px solid #E5E3DE"],
-        ["Background", "#FAFAF8 for both panes"],
+        ["Vertical divider", rule(bw.default, C.border_default)],
+        ["Background", `${C.page_bg} for both panes`],
       ]},
       { n: "Chat Message Flow", rows: [
         ["Direction", "Vertical stack, chronological"],
@@ -454,14 +465,14 @@ function sketchSpec(a) { return {
       { n: "Active Selection", rows: [
         ["Model", "Single selection only"],
         ["Trigger", "Click or Enter/Space"],
-        ["Visual", "bg: #F0EDE8, border: 1px solid #E5E3DE"],
+        ["Visual", `bg: ${C.surface}, border: ${rule(bw.default, C.border_default)}`],
         ["Transition", "200ms ease"],
         ["Avatar change", "None — stays consistent"],
       ]},
       { n: "Search", rows: [
         ["Position", "Top of sidebar, below brand"],
         ["Container", "1px border, white bg, 8px radius"],
-        ["Icon", "⌕ prefix, #C0BCB6"],
+        ["Icon", `⌕ prefix, ${X.icon_muted}`],
         ["Placeholder", "'Search...' — sentence case"],
       ]},
     ].map((p, pi) => (
@@ -483,7 +494,7 @@ function sketchSpec(a) { return {
     <H3>1. Annotation System</H3>
     <P>Sketch's defining feature. Cursive text overlays that provide editorial commentary, status, and human warmth.</P>
     <Tk n="font" v="Caveat, 700 weight" a={a} />
-    <Tk n="color" v="#B8A9C8 or #C4B8D4" d="Accent purple only" a={a} />
+    <Tk n="color" v={`${C.accent} or ${X.accent_light}`} d="Accent purple only" a={a} />
     <Tk n="rotation" v="-1° to -3°" d="Always counterclockwise" a={a} />
     <Tk n="max-rotation" v="-3°" d="Never exceed" a={a} />
     <Tk n="transform-origin" v="left center" a={a} />
@@ -504,13 +515,13 @@ function sketchSpec(a) { return {
       <div style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid rgba(52,211,153,0.12)", background: "rgba(52,211,153,0.04)" }}>
         <div style={{ fontSize: 9, fontWeight: 600, color: "#34D399", marginBottom: 5 }}>GOOD ANNOTATIONS</div>
         {["↓ ooh fun one!", "pick a vibe ~", "✎ sketching ideas...", "✦ nice choice!", "↓ your chats", "go →"].map(x => (
-          <div key={x} style={{ fontFamily: "'Caveat'", fontSize: 13, color: "#B8A9C8", fontWeight: 700, marginBottom: 1 }}>{x}</div>
+          <div key={x} style={{ fontFamily: XF.annotation, fontSize: 13, color: C.accent, fontWeight: 700, marginBottom: 1 }}>{x}</div>
         ))}
       </div>
       <div style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid rgba(255,107,107,0.12)", background: "rgba(255,107,107,0.04)" }}>
         <div style={{ fontSize: 9, fontWeight: 600, color: "#FF6B6B", marginBottom: 5 }}>BAD ANNOTATIONS</div>
         {["Processing your request...", "Click here to continue", "ERROR: Invalid input", "Navigation Menu", "Submit Form", "IMPORTANT NOTICE"].map(x => (
-          <div key={x} style={{ fontFamily: "'Caveat'", fontSize: 13, color: "#FF6B6B", fontWeight: 700, marginBottom: 1, textDecoration: "line-through", opacity: 0.5 }}>{x}</div>
+          <div key={x} style={{ fontFamily: XF.annotation, fontSize: 13, color: "#FF6B6B", fontWeight: 700, marginBottom: 1, textDecoration: "line-through", opacity: 0.5 }}>{x}</div>
         ))}
       </div>
     </div>
@@ -531,10 +542,10 @@ function sketchSpec(a) { return {
         ["Empty state messages", "Caveat", "Annotation"],
         ["Chip introductions", "Caveat", "Annotation"],
       ].map((r, i) => (
-        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 110px 80px", padding: "5px 10px", borderBottom: i < 10 ? "1px solid rgba(255,255,255,0.025)" : "none", background: r[2] === "Annotation" ? "rgba(184,169,200,0.03)" : "transparent" }}>
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 110px 80px", padding: "5px 10px", borderBottom: i < 10 ? "1px solid rgba(255,255,255,0.025)" : "none", background: r[2] === "Annotation" ? alpha(C.accent, 0.03) : "transparent" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
-          <span style={{ fontSize: 10.5, color: r[2] === "Annotation" ? "#B8A9C8" : "#999", fontFamily: r[2] === "Annotation" ? "'Caveat'" : "'IBM Plex Sans'", fontWeight: r[2] === "Annotation" ? 700 : 400 }}>{r[1]}</span>
-          <span style={{ fontSize: 9.5, color: r[2] === "Annotation" ? "#B8A9C8" : "#666", fontWeight: 500 }}>{r[2]}</span>
+          <span style={{ fontSize: 10.5, color: r[2] === "Annotation" ? C.accent : "#999", fontFamily: r[2] === "Annotation" ? XF.annotation : F.body, fontWeight: r[2] === "Annotation" ? 700 : 400 }}>{r[1]}</span>
+          <span style={{ fontSize: 9.5, color: r[2] === "Annotation" ? C.accent : "#666", fontWeight: 500 }}>{r[2]}</span>
         </div>
       ))}
     </div>
@@ -548,7 +559,7 @@ function sketchSpec(a) { return {
 
     <H3>4. No-Shadow Rule</H3>
     <P>Zero box-shadows anywhere. All visual hierarchy through background color separation and 1px borders. This is what fundamentally separates Sketch from neumorphic systems.</P>
-    <Do>Use background tiers: page (#FAFAF8) → surface (#F0EDE8) → elevated (#FFFFFF)</Do>
+    <Do>{`Use background tiers: page (${C.page_bg}) → surface (${C.surface}) → elevated (${C.surface_elevated})`}</Do>
     <Dont>Use box-shadow, drop-shadow, text-shadow, or any shadow property for any purpose</Dont>
   </div>),
 
@@ -570,7 +581,7 @@ function sketchSpec(a) { return {
       ].map((p, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "130px 1fr 60px", padding: "5px 10px", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{p[0]}</span>
-          <span style={{ fontSize: 10.5, color: p[2] === "Caveat" ? "#B8A9C8" : "#999", fontFamily: p[2] === "Caveat" ? "'Caveat'" : "'IBM Plex Sans'", fontWeight: p[2] === "Caveat" ? 700 : 400 }}>{p[1]}</span>
+          <span style={{ fontSize: 10.5, color: p[2] === "Caveat" ? C.accent : "#999", fontFamily: p[2] === "Caveat" ? XF.annotation : F.body, fontWeight: p[2] === "Caveat" ? 700 : 400 }}>{p[1]}</span>
           <span style={{ fontSize: 9.5, color: "#666" }}>{p[2]}</span>
         </div>
       ))}
@@ -593,7 +604,7 @@ function sketchSpec(a) { return {
         ["!", "Enthusiasm (sparingly)"],
       ].map(([s, u]) => (
         <div key={s} style={{ padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.05)" }}>
-          <span style={{ fontSize: 16, fontFamily: "'Caveat'", color: a, fontWeight: 700 }}>{s}</span>
+          <span style={{ fontSize: 16, fontFamily: XF.annotation, color: a, fontWeight: 700 }}>{s}</span>
           <div style={{ fontSize: 9.5, color: "#777", marginTop: 1 }}>{u}</div>
         </div>
       ))}
@@ -658,12 +669,13 @@ export default function App() {
         .ma { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px }
         .si { border: none; outline: none; background: transparent; flex: 1; font-size: 11px; width: 100% }
         input::placeholder { opacity: 0.4 }
-        .snd { cursor: pointer; transition: transform 0.1s; flex-shrink: 0 }
+        .snd { cursor: pointer; transition: transform ${motion(tokens, "fast")}; flex-shrink: 0 }
         .snd:hover { transform: scale(1.05) }
-        .mi { animation: fadeSlideUp 0.25s linear both }
-        .ci { animation: fadeSlideUp 0.2s linear both }
-        .ci:hover { background: rgba(184,169,200,0.04) }
-        .bc:hover { background: #EDE9E2 !important }
+        .mi { animation: fadeSlideUp ${motion(tokens, "slow")} both }
+        .ci { animation: fadeSlideUp ${motion(tokens, "moderate")} both }
+        .ci:hover { background: ${alpha(C.accent, 0.04)} }
+        .bc:hover { background: ${X.chip_hover} !important }
+        ${reducedMotionCss(tokens, { scope: ".app-sh", animated: [".mi", ".ci"], transforms: [".snd:hover"] })}
       `}</style>
 
       {/* TOP NAV */}

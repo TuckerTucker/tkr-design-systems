@@ -3,6 +3,8 @@ import portrait1 from "../../images/portraits/pexels-isabel-ponce-2161054782-371
 import portrait2 from "../../images/portraits/pexels-esrakorkmaz-17191688.jpg";
 import portrait3 from "../../images/portraits/pexels-matvalina-16059612.jpg";
 import portrait4 from "../../images/portraits/pexels-enesbeydilli-26733191.jpg";
+import tokens from "@systems/riso/tokens.json";
+import { resolveMode, modeOptions, motion, reducedMotionCss, contrastRatio, contrastText, wcagLevel, px, em, lh } from "../tokens.js";
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — RISO
@@ -29,7 +31,18 @@ function hexToRgb(hex) {
   };
 }
 
-const TM = { name: "Riso", tag: "Duotone Print + Tweakable Press", color: "#FF48B0" };
+/* Every design value comes from systems/riso/tokens.json (docs/specs/TOKENS.md § 4).
+   Base values are the default press (cream paper, classic inks); the paper × ink
+   modes re-resolve them (resolveMode) from the tweak panel's selection. */
+const { color: C, font: F, radius: rad, border_width: bw } = tokens;
+const X = tokens.extras.color;
+const T = { ...tokens.type, ...tokens.extras.type };
+const rule = (w, col) => `${w}px solid ${col}`;
+
+/* The showcase chrome is tinted with the default ink-2 drum (the system's signature
+   pink): color.accent is the contrast-checked shade for text on paper, too dark for
+   the dark spec viewer. */
+const TM = { name: "Riso", tag: "Duotone Print + Tweakable Press", color: X.ink_2 };
 
 const chatList = [
   { id: 1, name: "Tokyo Trip", preview: "Want me to build a day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
@@ -46,28 +59,42 @@ const msgs = [
 ];
 
 /* ═══════════════════════════════════════════════════════════════
-   PAPER + INK PRESETS — bundled parameter sets
+   PAPER + INK PRESETS — the token file's mode axes (paper × ink)
+   Values come from tokens.modes via resolveMode; only the selector labels
+   (prose from spec.yaml press_presets) live here.
    ═══════════════════════════════════════════════════════════════ */
-const paperPresets = {
-  cream:     { label: "Cream",     paper: "#F4EFE4", blend: "multiply",   density: 0.92, textInk: "#1A1614" },
-  kraft:     { label: "Kraft",     paper: "#D4BE94", blend: "multiply",   density: 0.85, textInk: "#2A1F12" },
-  white:     { label: "White",     paper: "#FDFCF8", blend: "multiply",   density: 0.98, textInk: "#151515" },
-  gray:      { label: "Gray",      paper: "#BFBDB5", blend: "darken",     density: 0.82, textInk: "#141414" },
-  newsprint: { label: "Newsprint", paper: "#E4DCC9", blend: "color-burn", density: 0.78, textInk: "#2B2620" },
-};
+const paperLabels = { cream: "Cream", kraft: "Kraft", white: "White", gray: "Gray", newsprint: "Newsprint" };
+const inkLabels = { classic: "Blue + Pink", electric: "Pink + Green", sunset: "Red + Yellow", forest: "Teal + Green", spritz: "Blue + Yellow", ink: "Black + Pink" };
 
-const inkPresets = {
-  classic:  { label: "Blue + Pink",   c1: "#3255A4", c2: "#FF48B0" },
-  electric: { label: "Pink + Green",  c1: "#FF48B0", c2: "#00A95C" },
-  sunset:   { label: "Red + Yellow",  c1: "#FF665E", c2: "#E8C700" },
-  forest:   { label: "Teal + Green",  c1: "#00838F", c2: "#00A95C" },
-  spritz:   { label: "Blue + Yellow", c1: "#3255A4", c2: "#E8C700" },
-  ink:      { label: "Black + Pink",  c1: "#1A1A1A", c2: "#FF48B0" },
-};
+/**
+ * The press bundle a resolved token document describes.
+ * @param {object} t token document after resolveMode
+ * c1/c2 are the drum colours (duotone, halftone, ghost layers); text set in an
+ * ink uses the contrast-checked roles instead: ink1Text (extras.color.ink_1_text)
+ * and action (color.action, ink-2 InkTag text). accent is the ink-2 badge fill,
+ * focus the focus ring.
+ * @returns {{paper: string, textInk: string, blend: string, density: number, c1: string, c2: string,
+ *   ink1Text: string, action: string, accent: string, focus: string}}
+ */
+const pressOf = (t) => ({
+  paper: t.extras.color.paper, textInk: t.extras.color.text_ink, blend: t.extras.press.blend, density: t.extras.press.density,
+  c1: t.extras.color.ink_1, c2: t.extras.color.ink_2,
+  ink1Text: t.extras.color.ink_1_text, action: t.color.action, accent: t.color.accent, focus: t.color.focus_ring,
+});
+
+/** Per-option bundles for the selectors and the spec tables (each axis resolved on its own). */
+const paperPresets = Object.fromEntries(modeOptions(tokens, "paper").map(k => {
+  const { paper, blend, density, textInk } = pressOf(resolveMode(tokens, { paper: k }));
+  return [k, { label: paperLabels[k] ?? k, paper, blend, density, textInk }];
+}));
+const inkPresets = Object.fromEntries(modeOptions(tokens, "ink").map(k => {
+  const { c1, c2 } = pressOf(resolveMode(tokens, { ink: k }));
+  return [k, { label: inkLabels[k] ?? k, c1, c2 }];
+}));
 
 const tweakDefaults = {
-  paperKey: "cream",
-  inkKey: "classic",
+  paperKey: tokens.modes.axes.find(a => a.id === "paper").default,
+  inkKey: tokens.modes.axes.find(a => a.id === "ink").default,
   offsetX: 2,
   offsetY: -1,
   dotSize: 6,
@@ -119,8 +146,10 @@ const CBox = ({ title, parts, contract, specs, dos, donts, accent }) => {
    RISO PROVIDER — maps tweak state to CSS custom properties
    ═══════════════════════════════════════════════════════════════ */
 function RisoProvider({ children, tweaks, setTweaks }) {
-  const paper = paperPresets[tweaks.paperKey];
-  const ink = inkPresets[tweaks.inkKey];
+  // The active press: one resolved token document for the paper × ink selection.
+  const press = pressOf(resolveMode(tokens, { paper: tweaks.paperKey, ink: tweaks.inkKey }));
+  const paper = { paper: press.paper, textInk: press.textInk, blend: press.blend, density: press.density };
+  const ink = { c1: press.c1, c2: press.c2 };
   const rawId = useId();
   const safeId = rawId.replace(/:/g, "-");
   const filterPrimary = `${safeId}-duo-primary`;
@@ -130,6 +159,10 @@ function RisoProvider({ children, tweaks, setTweaks }) {
     "--riso-text":         paper.textInk,
     "--riso-ink-1":        ink.c1,
     "--riso-ink-2":        ink.c2,
+    "--riso-ink-1-text":   press.ink1Text,
+    "--riso-action":       press.action,
+    "--riso-accent":       press.accent,
+    "--riso-focus":        press.focus,
     "--riso-blend":        paper.blend,
     "--riso-ink-density":  String(paper.density),
     "--riso-off-x":        `${tweaks.offsetX}px`,
@@ -143,7 +176,7 @@ function RisoProvider({ children, tweaks, setTweaks }) {
   };
   return (
     <RisoContext.Provider value={{ tweaks, setTweaks, paper, ink, filterPrimary, filterGhost }}>
-      <div style={{ ...vars, background: "var(--riso-paper)", color: "var(--riso-text)", position: "relative", width: "100%" }}>
+      <div className="riso-root" style={{ ...vars, background: "var(--riso-paper)", color: "var(--riso-text)", position: "relative", width: "100%" }}>
         <RisoFilters primaryId={filterPrimary} ghostId={filterGhost} ink={ink} paper={paper} />
         {children}
       </div>
@@ -239,10 +272,11 @@ function HalftoneStrip({ height = 14, ink = 1, opacity = 1, style = {} }) {
 }
 
 function InkTag({ children, ink = 1, size = 9 }) {
-  const color = ink === 1 ? "var(--riso-ink-1)" : "var(--riso-ink-2)";
+  // Text, so the contrast-checked text roles rather than the raw drum colours.
+  const color = ink === 1 ? "var(--riso-ink-1-text)" : "var(--riso-action)";
   return (
     <span style={{
-      fontFamily: "'JetBrains Mono', monospace",
+      fontFamily: F.label,
       fontSize: size,
       letterSpacing: "0.16em",
       textTransform: "uppercase",
@@ -305,7 +339,7 @@ function RisoImage({ src, alt = "", width = 260, aspectRatio = "4/5", style = {}
       <div aria-hidden style={{
         position: "absolute", inset: 0,
         pointerEvents: "none",
-        backgroundImage: `radial-gradient(circle, rgba(0,0,0,0.38) calc(28% - (var(--riso-ht-softness) * 14%)), transparent calc(30% + (var(--riso-ht-softness) * 14%)))`,
+        backgroundImage: `radial-gradient(circle, ${X.halftone_dot} calc(28% - (var(--riso-ht-softness) * 14%)), transparent calc(30% + (var(--riso-ht-softness) * 14%)))`,
         backgroundSize: "var(--riso-ht-size) var(--riso-ht-size)",
         mixBlendMode: "overlay",
         opacity: 0.45,
@@ -322,10 +356,10 @@ function PortraitCarousel({ portraits: list }) {
   return (
     <div style={{
       padding: "20px 24px 22px",
-      borderTop: "1px solid rgba(0,0,0,0.15)",
+      borderTop: rule(bw.default, X.rule_vertical),
       position: "relative",
       overflow: "hidden",
-      fontFamily: "'Space Grotesk', sans-serif",
+      fontFamily: F.body,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
@@ -348,7 +382,7 @@ function PortraitCarousel({ portraits: list }) {
           <button key={i} onClick={() => setIdx(i)} aria-label={`Go to portrait ${i + 1}`} style={{
             width: 22,
             height: 3,
-            background: i === idx ? "var(--riso-ink-2)" : "rgba(0,0,0,0.18)",
+            background: i === idx ? "var(--riso-ink-2)" : X.tick_inactive,
             border: "none",
             padding: 0,
             cursor: "pointer",
@@ -366,9 +400,9 @@ function PortraitCarousel({ portraits: list }) {
    ═══════════════════════════════════════════════════════════════ */
 function RisoChat({ sel, setSel }) {
   return (
-    <div className="app-sh riso-shell" style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif", borderRadius: 0, border: "1px solid rgba(0,0,0,0.15)", overflow: "hidden", position: "relative" }}>
+    <div className="app-sh riso-shell" style={{ fontFamily: F.body, borderRadius: rad.chrome, border: rule(bw.default, X.rule_vertical), overflow: "hidden", position: "relative" }}>
       {/* Sidebar */}
-      <div className="sb" style={{ borderRight: "1px solid rgba(0,0,0,0.15)", position: "relative", zIndex: 2 }}>
+      <div className="sb" style={{ borderRight: rule(bw.default, X.rule_vertical), position: "relative", zIndex: 2 }}>
         <div style={{ padding: "18px 16px 8px" }}>
           <DuotoneText size={28} weight={700} style={{ letterSpacing: "-0.04em" }}>RISO</DuotoneText>
           <div style={{ marginTop: 6 }}>
@@ -383,14 +417,14 @@ function RisoChat({ sel, setSel }) {
 
         <div className="cl">
           {chatList.map((c, i) => (
-            <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "10px 16px", cursor: "pointer", borderTop: i === 0 ? "1px solid var(--riso-text)" : "1px solid rgba(0,0,0,0.1)", background: sel === c.id ? "rgba(0,0,0,0.03)" : "transparent", animationDelay: `${i * 60}ms`, position: "relative" }}>
+            <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "10px 16px", cursor: "pointer", borderTop: i === 0 ? "1px solid var(--riso-text)" : rule(bw.default, C.border_default), background: sel === c.id ? C.surface_selected : "transparent", animationDelay: `${i * 60}ms`, position: "relative" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 2 }}>
                 <InkTag size={8.5}>№{String(i + 1).padStart(2, "0")} · {c.time}</InkTag>
                 {c.unread > 0 && (
-                  <span style={{ padding: "1px 6px", background: "var(--riso-ink-2)", color: "var(--riso-paper)", fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", mixBlendMode: "var(--riso-blend)", opacity: "var(--riso-ink-density)" }}>{c.unread}</span>
+                  <span style={{ padding: "1px 6px", background: "var(--riso-accent)", color: "var(--riso-paper)", fontFamily: F.label, fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", mixBlendMode: "var(--riso-blend)", opacity: "var(--riso-ink-density)" }}>{c.unread}</span>
                 )}
               </div>
-              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: sel === c.id ? 700 : 600, color: "var(--riso-text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
+              <div style={{ fontFamily: F.body, fontSize: 14, fontWeight: sel === c.id ? 700 : 600, color: "var(--riso-text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
                 {sel === c.id ? <DuotoneText size={14} weight={700}>{c.name}</DuotoneText> : c.name}
               </div>
               <div style={{ fontSize: 11, color: "var(--riso-text)", opacity: 0.65, lineHeight: 1.4, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.preview}</div>
@@ -400,7 +434,7 @@ function RisoChat({ sel, setSel }) {
 
         <div style={{ padding: "12px 16px", borderTop: "1px solid var(--riso-text)" }}>
           <InkTag size={8.5}>Press Operator</InkTag>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, color: "var(--riso-text)", marginTop: 2 }}>T. Harris</div>
+          <div style={{ fontFamily: F.body, fontSize: 13, fontWeight: 600, color: "var(--riso-text)", marginTop: 2 }}>T. Harris</div>
         </div>
       </div>
 
@@ -414,7 +448,7 @@ function RisoChat({ sel, setSel }) {
           <div style={{ marginTop: 6 }}>
             <DuotoneText size={30} weight={700} style={{ letterSpacing: "-0.03em" }}>Tokyo Trip</DuotoneText>
           </div>
-          <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: "var(--riso-text)", opacity: 0.75, marginTop: 6, lineHeight: 1.4, fontStyle: "italic" }}>A printed correspondence on temples, ramen, and the after-hours food scene in Shibuya.</div>
+          <div style={{ fontFamily: F.body, fontSize: 12, color: "var(--riso-text)", opacity: 0.75, marginTop: 6, lineHeight: 1.4, fontStyle: "italic" }}>A printed correspondence on temples, ramen, and the after-hours food scene in Shibuya.</div>
         </div>
         <HalftoneStrip height={12} ink={2} opacity={0.85} style={{ margin: 0 }} />
 
@@ -427,7 +461,7 @@ function RisoChat({ sel, setSel }) {
                 </InkTag>
                 <InkTag size={8.5}>14:{String(23 + i).padStart(2, "0")}</InkTag>
               </div>
-              <div className="riso-body" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "var(--riso-text)", lineHeight: 1.55, letterSpacing: "-0.005em", filter: "blur(calc(var(--riso-bleed) * 0.4))" }}>
+              <div className="riso-body" style={{ fontFamily: F.body, fontSize: 14, color: "var(--riso-text)", lineHeight: 1.55, letterSpacing: "-0.005em", filter: "blur(calc(var(--riso-bleed) * 0.4))" }}>
                 {m.text}
               </div>
             </div>
@@ -439,16 +473,16 @@ function RisoChat({ sel, setSel }) {
               {[["I", "Temples"], ["II", "Ramen"], ["III", "Culture"], ["IV", "Parks"]].map(([n, l], ti) => (
                 <div key={ti} className="bc-riso" style={{ padding: "10px 12px", borderRight: "1px solid var(--riso-text)", borderBottom: "1px solid var(--riso-text)", cursor: "pointer", position: "relative" }}>
                   <InkTag ink={1} size={10}>{n}.</InkTag>
-                  <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600, color: "var(--riso-text)", letterSpacing: "-0.01em", marginTop: 3 }}>{l}</div>
+                  <div style={{ fontFamily: F.body, fontSize: 13, fontWeight: 600, color: "var(--riso-text)", letterSpacing: "-0.01em", marginTop: 3 }}>{l}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div style={{ padding: "14px 24px", borderTop: "1px solid var(--riso-text)", background: "rgba(0,0,0,0.02)" }}>
+        <div style={{ padding: "14px 24px", borderTop: "1px solid var(--riso-text)", background: X.composer_fill }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <input placeholder="Compose your reply…" className="si riso-input" style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: "var(--riso-text)", fontStyle: "italic" }} />
+            <input placeholder="Compose your reply…" className="si riso-input" style={{ fontFamily: F.body, fontSize: 14, color: "var(--riso-text)", fontStyle: "italic" }} />
             <div className="snd" style={{ cursor: "pointer" }}>
               <InkTag ink={2} size={10}>File Reply →</InkTag>
             </div>
@@ -610,7 +644,7 @@ function PreviewView({ sel, setSel }) {
           <div style={{ height: 540, overflow: "hidden", boxShadow: "0 16px 60px rgba(0,0,0,0.35)" }}>
             <RisoChat sel={sel} setSel={setSel} />
           </div>
-          <div style={{ boxShadow: "0 16px 60px rgba(0,0,0,0.35)", border: "1px solid rgba(0,0,0,0.15)", position: "relative" }}>
+          <div style={{ boxShadow: "0 16px 60px rgba(0,0,0,0.35)", border: rule(bw.default, X.rule_vertical), position: "relative" }}>
             <PortraitCarousel portraits={portraits} />
             <GrainLayer />
           </div>
@@ -696,7 +730,7 @@ function risoSpec(a) { return {
 
     <H3>Contrast Ratios (Default Preset)</H3>
     <div style={{ borderRadius: 4, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["Text ink on Cream paper","9.6:1","AAA"],["Ink-1 (Blue) on Cream","7.2:1","AAA"],["Ink-2 (Pink) on Cream","3.4:1","AA (lg)"],["Duotone composite on Cream","~5.8:1","AA"],["Body text through 0.35 grain","reduced ~12%","Verify per preset"]].map((r, i) => (
+      {[["Text ink on Cream paper", C.text_primary], ["Ink-1 (Blue) on Cream", X.ink_1], ["Ink-2 (Pink) on Cream", X.ink_2]].map(([n, fg]) => [n, contrastText(fg, C.page_bg), wcagLevel(contrastRatio(fg, C.page_bg))]).concat([["Duotone composite on Cream","~5.8:1","AA"],["Body text through 0.35 grain","reduced ~12%","Verify per preset"]]).map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px 110px", padding: "5px 10px", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
           <code className="mn" style={{ fontSize: 10, color: "#999" }}>{r[1]}</code>
@@ -710,12 +744,12 @@ function risoSpec(a) { return {
     <H3>Font Families</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
       <div style={{ padding: 14, borderRadius: 4, border: `1px solid ${a}25`, background: `${a}04` }}>
-        <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 22, color: a, marginBottom: 4, fontWeight: 700, letterSpacing: "-0.02em" }}>Space Grotesk</div>
+        <div style={{ fontFamily: F.body, fontSize: 22, color: a, marginBottom: 4, fontWeight: 700, letterSpacing: "-0.02em" }}>Space Grotesk</div>
         <div style={{ fontSize: 10, fontWeight: 600, color: a, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Content — the page</div>
         <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>Body text, titles, messages, replies, navigation, labels above 11px. Slightly quirky grotesk that pairs well with print textures. Fallbacks: system-ui → sans-serif.</div>
       </div>
       <div style={{ padding: 14, borderRadius: 4, border: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, color: "#EEE", marginBottom: 4, fontWeight: 600, letterSpacing: "-0.01em" }}>JetBrains Mono</div>
+        <div style={{ fontFamily: F.label, fontSize: 16, color: "#EEE", marginBottom: 4, fontWeight: 600, letterSpacing: "-0.01em" }}>JetBrains Mono</div>
         <div style={{ fontSize: 10, fontWeight: 600, color: "#34D399", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Metadata — the colophon</div>
         <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>Tracked uppercase labels at ≤10px: timestamps, issue numbers, sender tags, section headers. The monospace width gives the printed-catalog rhythm.</div>
       </div>
@@ -724,15 +758,15 @@ function risoSpec(a) { return {
     <H3>Type Scale</H3>
     <div style={{ borderRadius: 4, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
       {[
-        ["masthead","30px","700","1.0","-0.03em","Space Grotesk","Duotone"],
-        ["brand","28px","700","0.95","-0.04em","Space Grotesk","Duotone"],
-        ["title","16px","700","1.1","-0.02em","Space Grotesk","Selected item"],
-        ["body","14px","500","1.55","-0.005em","Space Grotesk","Messages"],
-        ["item","14px","600","1.2","-0.01em","Space Grotesk","Sidebar names"],
-        ["preview","11px","400","1.4","0","Space Grotesk","Preview text"],
-        ["label","9px","700","1.3","0.16em UPPER","JetBrains Mono","InkTag"],
-        ["micro","8.5px","700","1.3","0.14em UPPER","JetBrains Mono","Tiny meta"],
-      ].map((t, i) => (
+        ["masthead", T.display, "Space Grotesk", "Duotone"],
+        ["brand", T.brand, "Space Grotesk", "Duotone"],
+        ["title", T.title, "Space Grotesk", "Selected item"],
+        ["body", T.body, "Space Grotesk", "Messages"],
+        ["item", T.item, "Space Grotesk", "Sidebar names"],
+        ["preview", T.small, "Space Grotesk", "Preview text"],
+        ["label", T.label, "JetBrains Mono", "InkTag"],
+        ["micro", T.micro, "JetBrains Mono", "Tiny meta"],
+      ].map(([n, t, family, use]) => [n, px(t.size), String(t.weight), lh(t.line_height), em(t.tracking) + (t.case === "uppercase" ? " UPPER" : ""), family, use]).map((t, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "75px 48px 42px 38px 80px 110px 1fr", padding: "5px 10px", borderBottom: i < 7 ? "1px solid rgba(255,255,255,0.025)" : "none", background: t[5].includes("Mono") ? "rgba(52,211,153,0.04)" : `${a}04` }}>
           <code className="mn" style={{ fontSize: 10, color: "#CCC" }}>{t[0]}</code>
           {t.slice(1, 5).map((v, vi) => <span key={vi} style={{ fontSize: 10, color: "#999" }}>{v}</span>)}
@@ -760,13 +794,13 @@ function risoSpec(a) { return {
     <Tk n="layer.grain" v="z: 100" d="Overlay-blend noise, always top" a={a} />
     <Tk n="blend.mode" v="var(--riso-blend)" d="multiply / darken / color-burn by paper" a={a} />
     <H3>Structural Rules</H3>
-    <Tk n="rule.hairline" v="1px solid rgba(0,0,0,0.1)" d="Between items within sidebar" a={a} />
+    <Tk n="rule.hairline" v={rule(bw.default, C.border_default)} d="Between items within sidebar" a={a} />
     <Tk n="rule.strong" v="1px solid var(--riso-text)" d="Section separators" a={a} />
     <Tk n="rule.grid" v="1px solid var(--riso-text)" d="Option-grid internal and outer rules" a={a} />
 
     <H3>Border Radius</H3>
     <div style={{ display: "flex", gap: 14, marginBottom: 10 }}>
-      {[{ r: 0, l: "Structural", t: "radius.none" }, { r: 4, l: "Spec chrome only", t: "radius.sm" }].map(item => (
+      {[{ r: rad.default, l: "Structural", t: "radius.none" }, { r: tokens.extras.radius.spec_chrome, l: "Spec chrome only", t: "radius.sm" }].map(item => (
         <div key={item.t} style={{ textAlign: "center" }}>
           <div style={{ width: 44, height: 44, borderRadius: item.r, border: `2px solid ${a}40`, background: "rgba(255,255,255,0.02)", marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <code className="mn" style={{ fontSize: 9, color: "#999" }}>{item.r}px</code>
@@ -818,13 +852,13 @@ function risoSpec(a) { return {
 
     <CBox title="PortraitCarousel" parts={["header", "prev-btn", "image-slot", "next-btn", "position-ticks"]} accent={a}
       contract="Single-focal carousel of RisoImage items with prev/next controls and a tick strip indicating position. All tweaks propagate to the currently-displayed image via context. Navigation is keyboard-accessible (buttons with visible focus)."
-      specs={[["padding", "20px 24px 22px"], ["border-top", "1px solid rgba(0,0,0,0.15)"], ["header.components", "InkTag kicker + №-index + credit"], ["prev/next.style", "InkTag inside a bordered button"], ["image.width", "260px"], ["image.aspect-ratio", "4/5"], ["ticks.size", "22×3 px bars"], ["tick.active", "var(--riso-ink-2)"], ["tick.inactive", "rgba(0,0,0,0.18)"], ["keyboard", "prev/next focusable; tick buttons labeled"]]}
+      specs={[["padding", "20px 24px 22px"], ["border-top", rule(bw.default, X.rule_vertical)], ["header.components", "InkTag kicker + №-index + credit"], ["prev/next.style", "InkTag inside a bordered button"], ["image.width", "260px"], ["image.aspect-ratio", "4/5"], ["ticks.size", "22×3 px bars"], ["tick.active", "var(--riso-ink-2)"], ["tick.inactive", X.tick_inactive], ["keyboard", "prev/next focusable; tick buttons labeled"]]}
       dos={["Always display a position indicator — carousels without feedback feel broken", "Credit each image visibly — riso-tradition inherits the zine convention of naming the source"]}
       donts={["Auto-advance images on a timer — the user's in control of the press", "Animate transitions with fades or slides — riso cuts, it does not dissolve"]} />
 
     <CBox title="InkTag" parts={["label-text"]} accent={a}
       contract="Render a small uppercase tracked monospace label in one of the two inks. Carries all metadata (timestamps, section labels, sender tags, counts). Always Mix-blends with the paper."
-      specs={[["font-family", "'JetBrains Mono', monospace"], ["font-size", "8.5–10px"], ["font-weight", "700"], ["text-transform", "uppercase"], ["letter-spacing", "0.14–0.16em"], ["color.ink-1", "var(--riso-ink-1)"], ["color.ink-2", "var(--riso-ink-2)"], ["mix-blend-mode", "var(--riso-blend)"], ["opacity", "var(--riso-ink-density)"]]}
+      specs={[["font-family", F.label], ["font-size", "8.5–10px"], ["font-weight", "700"], ["text-transform", "uppercase"], ["letter-spacing", "0.14–0.16em"], ["color.ink-1", "var(--riso-ink-1-text)"], ["color.ink-2", "var(--riso-action)"], ["mix-blend-mode", "var(--riso-blend)"], ["opacity", "var(--riso-ink-density)"]]}
       dos={["Use ink-1 for structural metadata (issue numbers, section labels), ink-2 for status and action cues"]}
       donts={["Use InkTag at sizes above 11px — use DuotoneText or plain text instead"]} />
 
@@ -850,9 +884,9 @@ function risoSpec(a) { return {
   patterns: () => (<div>
     <P>Composition rules for Riso layouts.</P>
     {[
-      { n: "Sidebar + Main", rows: [["Sidebar width", "260px fixed"], ["Main area", "Fluid, fills remaining"], ["Sidebar order", "Brand (duotone) → halftone strip → Section label → Items → Press Operator"], ["Vertical divider", "1px solid rgba(0,0,0,0.15)"], ["Background (both)", "var(--riso-paper)"]] },
+      { n: "Sidebar + Main", rows: [["Sidebar width", "260px fixed"], ["Main area", "Fluid, fills remaining"], ["Sidebar order", "Brand (duotone) → halftone strip → Section label → Items → Press Operator"], ["Vertical divider", rule(bw.default, X.rule_vertical)], ["Background (both)", "var(--riso-paper)"]] },
       { n: "Message Flow", rows: [["Direction", "Vertical stack, chronological"], ["Alignment", "AI → left (84%), user → right (70%)"], ["Gap", "18px between messages"], ["Entrance", "fadeSlideUp, 400ms ease-out, 80ms stagger"], ["Sender row", "InkTag (ink-1 for AI, ink-2 for user) + timestamp"], ["Body filter", "blur(calc(var(--riso-bleed) * 0.4))"]] },
-      { n: "Active Selection", rows: [["Model", "Single selection only"], ["Trigger", "Click or Enter/Space"], ["Visual", "Background: rgba(0,0,0,0.03); name wraps in DuotoneText"], ["Transition", "Instant"], ["Focus outline", "2px solid var(--riso-ink-2) offset 2px"]] },
+      { n: "Active Selection", rows: [["Model", "Single selection only"], ["Trigger", "Click or Enter/Space"], ["Visual", `Background: ${C.surface_selected}; name wraps in DuotoneText`], ["Transition", "Instant"], ["Focus outline", `${bw.focus}px solid var(--riso-focus) offset 2px`]] },
       { n: "Grain + Halftone Composition", rows: [["Grain scope", "Theme root only — one layer"], ["Halftone scope", "Explicit strips and blocks, never full-page"], ["Rotation policy", "Halftone rotates; grain does not"], ["Blend stacking", "Paper → ink-1 → ink-2 (duotone) → halftone → grain"]] },
       { n: "Tweakability", rows: [["Scope", "Global — one press, one configuration per session"], ["Persistence", "Settings panel state; serializable to JSON"], ["Preset bundles", "Paper {color, blend, density, textInk}; Ink {c1, c2}"], ["Slider constraints", "Snap to taste-appropriate steps (0.5px, 5°, 1px)"], ["Randomize range", "Offset ±3px, angle ∈ {0,15,45,75}, grain 0.2–0.6"]] },
       { n: "Image Composition", rows: [["Wrapper", "RisoImage — required for every raster asset"], ["Layer stack", "primary duotone → ghost (offset) → halftone overlay → container blend"], ["Filter source", "SVG feColorMatrix defs, scoped per provider (useId)"], ["Registration", "Ghost layer offset uses same --riso-off-x / --riso-off-y as text"], ["Halftone", "Same dot pitch + softness vars as decorative strips, at reduced opacity"], ["Bleed", "container filter: blur(calc(var(--riso-bleed) * 0.5))"]] },
@@ -869,13 +903,13 @@ function risoSpec(a) { return {
   extensions: () => (<div>
     <H3>1. Paper Stock System</H3>
     <P>Paper is a first-class design token that bundles <em>four</em> values: paper color, blend mode, ink density, and text-ink color. Changing paper changes all four at once. This models the physical reality of riso: different paper stocks absorb ink differently and show it differently.</P>
-    <Tk n="paper.color" v="#F4EFE4 (Cream default)" d="Base background color" a={a} />
+    <Tk n="paper.color" v={`${paperPresets.cream.paper} (Cream default)`} d="Base background color" a={a} />
     <Tk n="paper.blend" v="multiply | darken | color-burn" d="Ink-on-paper composite mode" a={a} />
-    <Tk n="paper.density" v="0.78–0.98" d="Effective ink opacity" a={a} />
-    <Tk n="paper.textInk" v="#1A1614 (cream) / #2A1F12 (kraft)" d="Neutral reading color" a={a} />
+    <Tk n="paper.density" v={`${Math.min(...Object.values(paperPresets).map(p => p.density))}–${Math.max(...Object.values(paperPresets).map(p => p.density))}`} d="Effective ink opacity" a={a} />
+    <Tk n="paper.textInk" v={`${paperPresets.cream.textInk} (cream) / ${paperPresets.kraft.textInk} (kraft)`} d="Neutral reading color" a={a} />
     <H4>Paper Presets</H4>
     <div style={{ borderRadius: 4, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["Cream","Multiply, 0.92","Default. Warm, forgiving. The benchmark."],["Kraft","Multiply, 0.85","Earthier. Colors shift toward muddy."],["White","Multiply, 0.98","Clinical. Maximum ink saturation."],["Gray","Darken, 0.82","Industrial zine feel. Ink darkens, not multiplies."],["Newsprint","Color-burn, 0.78","Bleached, grainy. The most 'printed'-feeling."]].map((p, i) => (
+      {[["cream","Default. Warm, forgiving. The benchmark."],["kraft","Earthier. Colors shift toward muddy."],["white","Clinical. Maximum ink saturation."],["gray","Industrial zine feel. Ink darkens, not multiplies."],["newsprint","Bleached, grainy. The most 'printed'-feeling."]].map(([k, d]) => { const p = paperPresets[k]; return [p.label, `${p.blend[0].toUpperCase()}${p.blend.slice(1)}, ${p.density}`, d]; }).map((p, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "90px 130px 1fr", padding: "5px 10px", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#DDD", fontWeight: 600 }}>{p[0]}</span>
           <code className="mn" style={{ fontSize: 10, color: a }}>{p[1]}</code>
@@ -897,7 +931,7 @@ function risoSpec(a) { return {
     <Tk n="--riso-ink-density" v="Effective ink opacity" d="From paper preset" a={a} />
     <Tk n="--riso-tremor" v="Type position jitter" d="0–3 px, display-only" a={a} />
     <Do>Constrain slider step values to prevent out-of-taste outputs (0.5px for offset, 5° for angle)</Do>
-    <Do>Bundle correlated parameters (paper → {color, blend, density}) behind preset selectors</Do>
+    <Do>{"Bundle correlated parameters (paper → {color, blend, density}) behind preset selectors"}</Do>
     <Dont>Expose grain frequency as a CSS variable — SVG feTurbulence cannot read CSS custom properties; read from context in the GrainLayer directly</Dont>
 
     <H3>3. Misregistration System</H3>
@@ -959,7 +993,7 @@ function risoSpec(a) { return {
       ].map((p, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "140px 1fr 130px", padding: "5px 10px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{p[0]}</span>
-          <span style={{ fontSize: 11, color: "#DDD", fontFamily: p[2].includes("Mono") || p[2].includes("InkTag") ? "'JetBrains Mono', monospace" : "'Space Grotesk', sans-serif", fontStyle: p[2].includes("italic") ? "italic" : "normal", textTransform: p[2].includes("InkTag") ? "uppercase" : "none", letterSpacing: p[2].includes("InkTag") ? "0.16em" : "0" }}>{p[1]}</span>
+          <span style={{ fontSize: 11, color: "#DDD", fontFamily: p[2].includes("Mono") || p[2].includes("InkTag") ? F.label : F.body, fontStyle: p[2].includes("italic") ? "italic" : "normal", textTransform: p[2].includes("InkTag") ? "uppercase" : "none", letterSpacing: p[2].includes("InkTag") ? "0.16em" : "0" }}>{p[1]}</span>
           <span style={{ fontSize: 9.5, color: "#666" }}>{p[2]}</span>
         </div>))}
     </div>
@@ -981,7 +1015,7 @@ function risoSpec(a) { return {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
       {[["№", "Issue/edition prefix"], ["·", "Middle dot separator"], ["—", "Em dash / range"], ["→", "Forward action (File Reply →)"], ["●", "Status indicator"], ["↻", "Reprint/randomize"], ["I.", "Section numeral"], ["/", "Pair separator (01 / 05)"], ["…", "Continuation only"]].map(([s, u]) => (
         <div key={s} style={{ padding: "6px 8px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.05)" }}>
-          <span style={{ fontSize: 16, fontFamily: "'Space Grotesk', sans-serif", color: a, fontWeight: 700 }}>{s}</span>
+          <span style={{ fontSize: 16, fontFamily: F.body, color: a, fontWeight: 700 }}>{s}</span>
           <div style={{ fontSize: 9.5, color: "#777", marginTop: 1 }}>{u}</div>
         </div>))}
     </div>
@@ -1045,16 +1079,17 @@ export default function App() {
         .si { border: none; outline: none; background: transparent; flex: 1; font-size: 11px; width: 100% }
         .riso-input::placeholder { opacity: 0.45 }
         input::placeholder { opacity: 0.5 }
-        .snd { cursor: pointer; transition: opacity 0.15s; flex-shrink: 0 }
+        .snd { cursor: pointer; transition: opacity ${motion(tokens, "fast")}; flex-shrink: 0 }
         .snd:hover { opacity: 0.7 }
-        .mi { animation: fadeSlideUp 0.4s ease-out both }
-        .ci { animation: fadeSlideUp 0.3s ease-out both }
-        .ci:hover { background: rgba(0,0,0,0.04) }
-        .bc-riso:hover { background: rgba(0,0,0,0.03) !important }
+        .mi { animation: fadeSlideUp ${motion(tokens, "slow")} both }
+        .ci { animation: fadeSlideUp ${motion(tokens, "moderate")} both }
+        .ci:hover { background: ${X.row_hover} }
+        .bc-riso:hover { background: ${C.surface_selected} !important }
         .riso-shell { min-height: 540px }
-        .riso-nav-btn { background: transparent; border: 1px solid rgba(0,0,0,0.15); padding: 6px 10px; cursor: pointer; font-family: inherit; transition: background 0.12s }
-        .riso-nav-btn:hover { background: rgba(0,0,0,0.04) }
-        .riso-nav-btn:focus-visible { outline: 2px solid var(--riso-ink-2); outline-offset: 2px }
+        .riso-nav-btn { background: transparent; border: ${rule(bw.default, X.rule_vertical)}; padding: 6px 10px; cursor: pointer; font-family: inherit; transition: background ${motion(tokens, "fast")} }
+        .riso-nav-btn:hover { background: ${X.row_hover} }
+        ${reducedMotionCss(tokens, { scope: ".riso-root" })}
+        .riso-nav-btn:focus-visible { outline: ${bw.focus}px solid var(--riso-focus); outline-offset: 2px }
         input[type="range"] { height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.08); border-radius: 0 }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: ${TM.color}; border-radius: 0; cursor: pointer }
         input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; background: ${TM.color}; border-radius: 0; cursor: pointer; border: none }

@@ -11,6 +11,7 @@ Public API:
         get_rulebook, check_compliance,
         check_drift, check_drift_all, read_spec_with_tokens,
         check_color_gates_for_spec, check_color_gates_all,
+        check_jsx_drift,
         Result,
     )
 
@@ -37,6 +38,7 @@ from .rulebook import get_rulebook, check_compliance
 from .drift import check_drift, check_drift_all
 from .contrast import check_color_gates_all, check_color_gates_for_spec
 from .token_file import read_spec_with_tokens
+from .jsx_drift import check_jsx_drift
 
 __all__ = [
     "Result",
@@ -53,4 +55,5 @@ __all__ = [
     "check_color_gates_for_spec",
     "check_color_gates_all",
     "read_spec_with_tokens",
+    "check_jsx_drift",
 ]

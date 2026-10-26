@@ -319,10 +319,28 @@ as `apps/showcase/src/tokens.js`.
 
 ### 4.5 Verifying
 
-A later check should fail when a hex/rgba literal inside a system's live
-preview is not a value of its token file (in any mode). Until it exists, grep
-the component after migration: `grep -nE "#[0-9A-Fa-f]{3,8}|rgba\(" <file>`
-should only hit documentation chrome.
+All eight pages are migrated. `python3 tools/design-system-skill jsx-drift`
+(`design_system_skill/jsx_drift.py`, run in CI with
+`tools/design-system-skill/test_jsx_drift.py`) scans every page for colour
+literals (`#hex`, `rgb[a]()`, `hsl[a]()`, prose included) and fails when one
+
+- equals a value of the page's token file in any mode (`token_literal`:
+  reference the token instead), or
+- is not covered by `apps/showcase/jsx-color-allowlist.yaml` (`unlisted`).
+
+The allow-list holds the documentation chrome and deliberate one-offs, each
+with a `reason`. An entry whose value equals a token of a system it applies to
+must be narrowed with `regions` (top-level declarations such as `Tk`, `CBox`,
+`ThemeView`, or `<name>Spec.<section>`) and/or `context` (a regex the line must
+match); entries that match nothing are stale and fail. A one-off design value
+of a system's own UI belongs in `extras`, not in the allow-list.
+
+Shared helpers live in `apps/showcase/src/tokens.js`: `resolveMode`,
+`modeOptions`, `typeStyle`, `alpha` (a token colour at another opacity),
+`contrastRatio` / `contrastText` / `wcagLevel` (contrast tables computed from
+the tokens), `motion(doc, tier)` (duration + easing of a motion tier) and
+`reducedMotionCss(doc, …)` (the system's `motion.reduced_motion` policy under
+`prefers-reduced-motion: reduce`).
 
 ---
 
