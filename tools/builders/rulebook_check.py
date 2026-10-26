@@ -62,6 +62,7 @@ Exit status: 0 when nothing fails, 1 on rule failures or stale exceptions,
 2 when the exceptions file is invalid.
 """
 
+import json
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -108,15 +109,50 @@ SWISS_GRID = {0, 1, 2, 8, 16, 24, 32, 40, 48, 64, 72, 80, 96, 104, 112, 120, 128
 # Note: 0/1/2 allowed as base values; 1192/1208 for right-edge alignment of accent dot
 # 0.5 offsets (e.g. y=95.5) for 1px crisp lines are a separate concern
 
-SWISS_RED = "#E3000B"
-SWISS_INK = "#000000"
-SWISS_PAPER = "#FFFFFF"
-SWISS_GRAY_SURFACE = "#F5F5F5"
-SWISS_GRAY_METADATA = "#666666"
-SWISS_RULE_HAIRLINE = "#F0F0F0"
-SWISS_RULE_DEFAULT = "#E0E0E0"
+SWISS_TOKENS_PATH = Path(__file__).resolve().parents[2] / "systems" / "swiss" / "tokens.json"
+
+
+def _swiss_color(tokens: dict, path: str, fallback: str) -> str:
+    """Read a colour from the Swiss token document, upper-cased.
+
+    Args:
+        tokens: Parsed ``systems/swiss/tokens.json`` (may be empty).
+        path: Dotted token path, e.g. ``color.accent``.
+        fallback: Value used when the file or token is unavailable.
+
+    Returns:
+        The colour as upper-case hex.
+    """
+    node: Any = tokens
+    for part in path.split("."):
+        node = node.get(part) if isinstance(node, dict) else None
+    return (node if isinstance(node, str) else fallback).upper()
+
+
+def _load_swiss_tokens() -> dict:
+    """Parse the Swiss token file; empty when it is missing or invalid."""
+    try:
+        return json.loads(SWISS_TOKENS_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+# The Swiss palette comes from the canonical token file (issue #4), so the
+# rulebook and the generated library agree when a token value changes.
+_SWISS_TOKENS = _load_swiss_tokens()
+SWISS_RED = _swiss_color(_SWISS_TOKENS, "color.accent", "#E3000B")
+SWISS_INK = _swiss_color(_SWISS_TOKENS, "color.text_primary", "#000000")
+SWISS_PAPER = _swiss_color(_SWISS_TOKENS, "color.surface", "#FFFFFF")
+SWISS_GRAY_SURFACE = _swiss_color(_SWISS_TOKENS, "color.surface_elevated", "#F5F5F5")
+SWISS_GRAY_METADATA = _swiss_color(_SWISS_TOKENS, "color.text_secondary", "#5A5A5A")
+SWISS_GRAY_TERTIARY = _swiss_color(_SWISS_TOKENS, "color.text_muted", "#949494")
+SWISS_RULE_HAIRLINE = _swiss_color(_SWISS_TOKENS, "extras.color.rule_hairline", "#F0F0F0")
+SWISS_RULE_DEFAULT = _swiss_color(_SWISS_TOKENS, "color.border_default", "#E0E0E0")
 SWISS_ALLOWED_COLORS = {SWISS_RED, SWISS_INK, SWISS_PAPER, SWISS_GRAY_SURFACE,
-                        SWISS_GRAY_METADATA, SWISS_RULE_HAIRLINE, SWISS_RULE_DEFAULT}
+                        SWISS_GRAY_METADATA, SWISS_GRAY_TERTIARY, SWISS_RULE_HAIRLINE,
+                        SWISS_RULE_DEFAULT}
+# Colours a 9px metadata label may use: the two greys, red, ink.
+SWISS_METADATA_COLORS = (SWISS_GRAY_METADATA, SWISS_GRAY_TERTIARY, SWISS_RED, SWISS_INK)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -316,7 +352,8 @@ def _extract_css_class_fills(svg_text):
 
 def check_metadata_uppercase(svg_text):
     """Rule: 9px text must be uppercase, tracked >= 1.44em (0.16em * 9px ≈ 1.44px),
-       color #666 (or #E3000B / #000000 in permitted contexts).
+       color secondary/tertiary grey (or red / ink in permitted contexts),
+       all read from systems/swiss/tokens.json.
 
        Vacuous-pass: if no 9px <text> element exists in the fragment, the rule
        passes (component-scoped, applies_when font-size==9).
@@ -336,8 +373,9 @@ def check_metadata_uppercase(svg_text):
         color = _resolve_text_fill(attrs, css_class_fills)
         if spacing < 1.4:
             failures.append(f"9px text with letter-spacing={spacing} (expected >= 1.44)")
-        if color and color not in (SWISS_GRAY_METADATA, SWISS_RED, SWISS_INK):
-            failures.append(f"9px text with fill={color} (expected #666666 / #E3000B / #000000)")
+        if color and color not in SWISS_METADATA_COLORS:
+            failures.append(f"9px text with fill={color} "
+                            f"(expected {' / '.join(SWISS_METADATA_COLORS)})")
         if not color:
             failures.append("9px text with no resolvable fill (no inline fill or known class)")
     return {

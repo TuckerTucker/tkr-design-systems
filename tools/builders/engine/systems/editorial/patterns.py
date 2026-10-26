@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 """
-Build Editorial patterns (Tier 3 layout-level components).
+Editorial pattern templates (Tier 3 layout-level components).
 
 Editorial's distinctive grammar at the pattern level:
   - Cream paper background (#F8F4EC), warm and inviting
@@ -18,33 +17,11 @@ Patterns (4 core patterns per Editorial's content-heavy nature):
   - form (640×800): single-column fields with Editorial form_field grammar
   - auth (1280×800): centered narrow form (320px), masthead brand at top
 
-Output goes to systems/editorial/layouts/.
+Rendered by tools/builders/build.py into systems/editorial/layouts/.
+Colours, fonts, radii and border widths are {token.path} placeholders
+resolved from systems/editorial/tokens.json, which is authoritative;
+values quoted above describe the grammar and may lag the token file.
 """
-
-import sys
-from pathlib import Path
-
-STANDARD_DEFS = """  <defs>
-    <style>
-      .text-primary { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
-      .text-secondary { fill: #5C4F44; font-family: Fraunces, Georgia, serif; }
-      .text-metadata { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
-      .text-metadata-accent { fill: #8B1E2D; font-family: Inter, system-ui, sans-serif; }
-      .text-accent { fill: #8B1E2D; font-family: Fraunces, Georgia, serif; }
-      .text-muted { fill: #8B7D6F; font-family: Inter, system-ui, sans-serif; }
-      .text-display { fill: #1A1614; font-family: Fraunces, Georgia, serif; }
-    </style>
-  </defs>"""
-
-
-def wrap_svg(width: int, height: int, body: str, comment: str = "") -> str:
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">
-{STANDARD_DEFS}
-  {comment}
-{body}
-</svg>
-"""
-
 
 PATTERNS = {
 
@@ -54,7 +31,7 @@ PATTERNS = {
     # on first paragraph + footnote rule at bottom
 
     "article-default": (1040, 800, """
-  <rect width="1040" height="800" fill="#F8F4EC"/>
+  <rect width="1040" height="800" fill="{color.surface}"/>
 
   <!-- Masthead: title + byline metadata + divider -->
   <text x="48" y="60"
@@ -76,7 +53,7 @@ PATTERNS = {
         letter-spacing="1.26"
         text-anchor="end">FILED 14:23 · 5 MIN READ</text>
 
-  <line x1="48" y1="108" x2="992" y2="108" stroke="#1A1614" stroke-width="1"/>
+  <line x1="48" y1="108" x2="992" y2="108" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
 
   <!-- Body text with drop cap -->
   <!-- Drop cap: 54px Fraunces 700 burgundy, floated left -->
@@ -118,7 +95,7 @@ PATTERNS = {
         letter-spacing="-0.14">exploration. Each day is timed for sunrise to evening, with ramen breaks built in.</text>
 
   <!-- Section divider -->
-  <line x1="48" y1="290" x2="992" y2="290" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="48" y1="290" x2="992" y2="290" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Next section: Day 1 -->
   <text x="48" y="328"
@@ -146,7 +123,7 @@ PATTERNS = {
         letter-spacing="-0.14">By afternoon, head to nearby Roppongi for museums and garden walks.</text>
 
   <!-- Footnote section -->
-  <line x1="48" y1="720" x2="992" y2="720" stroke="#1A1614" stroke-width="1"/>
+  <line x1="48" y1="720" x2="992" y2="720" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
 
   <text x="48" y="750"
         class="text-metadata"
@@ -171,7 +148,7 @@ PATTERNS = {
     # hairline divider between fields. Submit CTA in burgundy.
 
     "form-default": (640, 800, """
-  <rect width="640" height="800" fill="#F8F4EC"/>
+  <rect width="640" height="800" fill="{color.surface}"/>
 
   <!-- Form header -->
   <text x="32" y="52"
@@ -184,7 +161,7 @@ PATTERNS = {
         class="text-secondary"
         font-size="13">Share a thought, idea, or question with the editorial voice.</text>
 
-  <line x1="32" y1="100" x2="608" y2="100" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="32" y1="100" x2="608" y2="100" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Field 1: Title -->
   <text x="32" y="132"
@@ -193,13 +170,13 @@ PATTERNS = {
         font-weight="600"
         letter-spacing="1.44">TITLE</text>
 
-  <line x1="32" y1="138" x2="608" y2="138" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="32" y1="138" x2="608" y2="138" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="32" y="160"
         class="text-primary"
         font-size="14">Tokyo Trip Planning</text>
 
-  <line x1="32" y1="190" x2="608" y2="190" stroke="#E8DFCA" stroke-width="1"/>
+  <line x1="32" y1="190" x2="608" y2="190" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
 
   <!-- Field 2: Category -->
   <text x="32" y="222"
@@ -208,13 +185,13 @@ PATTERNS = {
         font-weight="600"
         letter-spacing="1.44">CATEGORY</text>
 
-  <line x1="32" y1="228" x2="608" y2="228" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="32" y1="228" x2="608" y2="228" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="32" y="250"
         class="text-primary"
         font-size="14">Travel</text>
 
-  <line x1="32" y1="280" x2="608" y2="280" stroke="#E8DFCA" stroke-width="1"/>
+  <line x1="32" y1="280" x2="608" y2="280" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
 
   <!-- Field 3: Body (textarea) -->
   <text x="32" y="312"
@@ -223,7 +200,7 @@ PATTERNS = {
         font-weight="600"
         letter-spacing="1.44">BODY TEXT</text>
 
-  <line x1="32" y1="318" x2="608" y2="318" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="32" y1="318" x2="608" y2="318" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="32" y="342"
         class="text-primary"
@@ -233,7 +210,7 @@ PATTERNS = {
         class="text-primary"
         font-size="13">for long-form content and editorial voice.</text>
 
-  <line x1="32" y1="448" x2="608" y2="448" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="32" y1="448" x2="608" y2="448" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Field 4: Tags -->
   <text x="32" y="480"
@@ -242,13 +219,13 @@ PATTERNS = {
         font-weight="600"
         letter-spacing="1.44">TAGS (OPTIONAL)</text>
 
-  <line x1="32" y1="486" x2="608" y2="486" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="32" y1="486" x2="608" y2="486" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="32" y="508"
         class="text-secondary"
         font-size="13" font-style="italic">add tags…</text>
 
-  <line x1="32" y1="538" x2="608" y2="538" stroke="#E8DFCA" stroke-width="1"/>
+  <line x1="32" y1="538" x2="608" y2="538" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
 
   <!-- Action buttons: Cancel (secondary) | Submit (primary burgundy) -->
   <text x="480" y="600"
@@ -267,7 +244,7 @@ PATTERNS = {
     # Masthead brand at top, stacked fields, Sign in CTA in burgundy
 
     "auth-sign-in": (1280, 800, """
-  <rect width="1280" height="800" fill="#F8F4EC"/>
+  <rect width="1280" height="800" fill="{color.surface}"/>
 
   <!-- Brand masthead centered at top -->
   <text x="640" y="160"
@@ -283,8 +260,8 @@ PATTERNS = {
         font-size="13">Enter the newsroom.</text>
 
   <!-- Double rule: masthead style (burgundy, 3px) -->
-  <line x1="520" y1="220" x2="760" y2="220" stroke="#8B1E2D" stroke-width="1"/>
-  <line x1="520" y1="224" x2="760" y2="224" stroke="#8B1E2D" stroke-width="1"/>
+  <line x1="520" y1="220" x2="760" y2="220" stroke="{color.accent}" stroke-width="1"/>
+  <line x1="520" y1="224" x2="760" y2="224" stroke="{color.accent}" stroke-width="1"/>
 
   <!-- Email field -->
   <text x="480" y="270"
@@ -293,7 +270,7 @@ PATTERNS = {
         font-weight="600"
         letter-spacing="1.44">EMAIL ADDRESS</text>
 
-  <line x1="480" y1="276" x2="800" y2="276" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="480" y1="276" x2="800" y2="276" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="480" y="298"
         class="text-primary"
@@ -311,7 +288,7 @@ PATTERNS = {
         class="text-secondary"
         font-size="11">Forgot?</text>
 
-  <line x1="480" y1="346" x2="800" y2="346" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="480" y1="346" x2="800" y2="346" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="480" y="368"
         class="text-primary"
@@ -319,7 +296,7 @@ PATTERNS = {
         letter-spacing="2">••••••••</text>
 
   <!-- Sign in button (burgundy CTA) -->
-  <line x1="480" y1="420" x2="800" y2="420" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="480" y1="420" x2="800" y2="420" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="800" y="452"
         text-anchor="end"
@@ -340,7 +317,7 @@ PATTERNS = {
     # (dashboard-narrow) for completeness — 1024×600 mobile-oriented version.
 
     "dashboard-narrow": (1024, 600, """
-  <rect x="0" y="0" width="1024" height="600" fill="#F8F4EC"/>
+  <rect x="0" y="0" width="1024" height="600" fill="{color.surface}"/>
 
   <!-- Sidebar: 240px (narrower for mobile) -->
   <!-- Brand -->
@@ -357,15 +334,15 @@ PATTERNS = {
         letter-spacing="1.44">VOL. I · NO. 04</text>
 
   <!-- Masthead rule -->
-  <line x1="16" y1="72" x2="224" y2="72" stroke="#8B1E2D" stroke-width="1"/>
-  <line x1="16" y1="76" x2="224" y2="76" stroke="#8B1E2D" stroke-width="1"/>
+  <line x1="16" y1="72" x2="224" y2="72" stroke="{color.accent}" stroke-width="1"/>
+  <line x1="16" y1="76" x2="224" y2="76" stroke="{color.accent}" stroke-width="1"/>
 
   <!-- Search -->
   <text x="16" y="100"
         class="text-muted"
         font-size="11"
         font-style="italic">Search…</text>
-  <line x1="16" y1="108" x2="224" y2="108" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="16" y1="108" x2="224" y2="108" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Recent Dispatches -->
   <text x="16" y="132"
@@ -374,10 +351,10 @@ PATTERNS = {
         font-weight="600"
         letter-spacing="1.62">RECENT</text>
 
-  <line x1="0" y1="144" x2="240" y2="144" stroke="#1A1614" stroke-width="1"/>
+  <line x1="0" y1="144" x2="240" y2="144" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
 
   <!-- Dispatch 01: Selected -->
-  <rect x="0" y="144" width="240" height="72" fill="#F1ECDF"/>
+  <rect x="0" y="144" width="240" height="72" fill="{color.surface_selected}"/>
   <text x="16" y="162"
         class="text-metadata"
         font-size="9"
@@ -396,7 +373,7 @@ PATTERNS = {
         class="text-secondary"
         font-size="11"
         font-style="italic">Plan a trip…</text>
-  <line x1="0" y1="215" x2="240" y2="215" stroke="#E8DFCA" stroke-width="1"/>
+  <line x1="0" y1="215" x2="240" y2="215" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
 
   <!-- Dispatch 02 -->
   <text x="16" y="238"
@@ -412,10 +389,10 @@ PATTERNS = {
         class="text-secondary"
         font-size="11"
         font-style="italic">Ramen variations…</text>
-  <line x1="0" y1="291" x2="240" y2="291" stroke="#E8DFCA" stroke-width="1"/>
+  <line x1="0" y1="291" x2="240" y2="291" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
 
   <!-- Byline footer -->
-  <line x1="0" y1="552" x2="240" y2="552" stroke="#1A1614" stroke-width="1"/>
+  <line x1="0" y1="552" x2="240" y2="552" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
   <text x="16" y="568"
         class="text-metadata"
         font-size="9"
@@ -427,7 +404,7 @@ PATTERNS = {
         font-weight="600">T. Harris</text>
 
   <!-- Divider between sidebar and main -->
-  <line x1="240" y1="0" x2="240" y2="600" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="240" y1="0" x2="240" y2="600" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Main area: masthead + conversation (simplified for narrow layout) -->
   <!-- Masthead -->
@@ -450,7 +427,7 @@ PATTERNS = {
         font-weight="600"
         letter-spacing="1.26">FILED 14:23</text>
 
-  <line x1="272" y1="82" x2="1000" y2="82" stroke="#1A1614" stroke-width="1"/>
+  <line x1="272" y1="82" x2="1000" y2="82" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
 
   <!-- Message 01: User (right-aligned) -->
   <text x="272" y="116"
@@ -459,7 +436,7 @@ PATTERNS = {
         font-weight="600"
         letter-spacing="1.44">YOU · 14:23</text>
 
-  <line x1="480" y1="126" x2="480" y2="152" stroke="#8B1E2D" stroke-width="2"/>
+  <line x1="480" y1="126" x2="480" y2="152" stroke="{color.accent}" stroke-width="2"/>
 
   <text x="498" y="144"
         class="text-primary"
@@ -487,7 +464,7 @@ PATTERNS = {
         font-size="12">I'll build you a perfect itinerary.</text>
 
   <!-- Composer -->
-  <line x1="272" y1="552" x2="1000" y2="552" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="272" y1="552" x2="1000" y2="552" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <text x="272" y="580"
         class="text-muted"
@@ -503,29 +480,3 @@ PATTERNS = {
 """),
 
 }
-
-
-def main():
-    only = None
-    if len(sys.argv) > 2 and sys.argv[1] == "--only":
-        only = sys.argv[2]
-
-    # Script lives in tooling/; output goes up one level into the project root.
-    out_dir = Path(__file__).resolve().parents[2] / "systems" / "editorial" / "layouts"
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    written = []
-    for pattern_id, (width, height, body) in PATTERNS.items():
-        if only and pattern_id != only:
-            continue
-        path = out_dir / f"{pattern_id}.svg"
-        comment = f"<!-- ==================== {pattern_id.upper()} ==================== -->"
-        svg = wrap_svg(width, height, body, comment)
-        path.write_text(svg)
-        written.append(path)
-
-    print(f"Wrote {len(written)} Editorial pattern SVGs to {out_dir}")
-
-
-if __name__ == "__main__":
-    main()

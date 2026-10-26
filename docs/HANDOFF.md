@@ -100,15 +100,8 @@ All scripts live under `tools/builders/` and are invoked from the project root, 
 | `tools/builders/rulebook_check.py` | Mechanical compliance verification. Supports `--ruleset wireframe\|swiss`, `--scope component\|artifact\|all`, and `--batch <directory>` modes. Per-system allow-list `systems/<id>/rulebook-exceptions.yaml` (file + rule + optional match + required reason) waives deliberate deviations; stale entries fail the run (exit 1) |
 | `tools/builders/tracking_conversion.py` | em-to-SVG-letter-spacing converter with per-typeface calibration (Inter verified for Chrome) |
 | `tools/builders/calibration/calibrate_tracking.py` / `calibrate_tracking_v2.py` | Calibration test generators (per-typeface verification helpers) |
-| `tools/builders/build_wireframe_library.py` | Generator for wireframe library Primitives + Composites → `systems/wireframe/components/` |
-| `tools/builders/build_wireframe_patterns.py` | Generator for wireframe library Patterns (desktop + mobile) → `systems/wireframe/layouts/` |
-| `tools/builders/build_swiss_library.py` | Generator for Swiss components → `systems/swiss/components/` |
-| `tools/builders/build_swiss_patterns.py` | Generator for Swiss patterns → `systems/swiss/layouts/` |
-| `tools/builders/build_editorial_library.py` / `build_editorial_patterns.py` | Generators for Editorial components + layouts (Phase 4) |
-| `tools/builders/build_sketch_library.py` / `build_sketch_patterns.py` | Generators for Sketch components + layouts (Phase 4) |
-| `tools/builders/build_prism_library.py` / `build_prism_patterns.py` | Generators for Prism components + layouts (Phase 4) |
-| `tools/builders/build_revolt_library.py` / `build_revolt_patterns.py` | Generators for Revolt components + layouts (Phase 4) |
-| `tools/builders/build_terminal_library.py` / `build_terminal_patterns.py` | Generators for Terminal components + layouts (Phase 4) |
+| `tools/builders/build.py` | The one SVG library builder for every system (issue #5): discovers systems from `systems/registry.yaml`, renders `components/` and `layouts/` from `tools/builders/engine/systems/<id>/` templates with every colour, font and radius taken from `systems/<id>/tokens.json`. `--system ID`, `--kind library\|patterns`, `--check` (CI: exit 1 when a committed SVG is stale), `--png` (refresh existing previews) |
+| `tools/builders/engine/` | The engine behind `build.py`: `discovery`, `plugin` (per-system `BUILDER` data + shape validation), `templates` (`{token.path}` placeholders, `<defs>`, envelope), `runner` (render / write / check); per-system templates in `engine/systems/<id>/{library,patterns}.py` |
 | `tools/builders/build_contact_sheet.py` | Generates the wireframe library's contact sheet (Primitives + Composites + Patterns) → `systems/wireframe/contact-sheet.svg` |
 
 ### Directory layout
@@ -268,7 +261,7 @@ Verification: all 8 active specs parse via PyYAML; every rulebook entry has chec
 
 #### 5. Mobile (375px) variants of wireframe library patterns — **DONE**
 
-**Resolved.** 12 mobile variants added — one per base pattern — to `build_wireframe_patterns.py`:
+**Resolved.** 12 mobile variants added — one per base pattern — to the wireframe patterns (now `tools/builders/engine/systems/wireframe/patterns.py`):
 
 - sidebar-mobile, header-mobile, form-mobile, data-table-mobile, modal-mobile (bottom-sheet), drawer-mobile (bottom-anchored), empty-state-mobile, command-palette-mobile (full-bleed search overlay), settings-layout-mobile (top-tab strip replacing sidebar), article-mobile, dashboard-mobile (vertical stat stack + list rows + bottom tab bar), auth-mobile.
 
@@ -310,7 +303,7 @@ The contact sheet now reads as a single document showing the full library: 12 pr
 
 **Why:** wireframe-skill convention is mobile (375px) + desktop (1280px) pairs. Currently only desktop variants exist for the 12 patterns. Mobile is the canonical layout per the methodology — desktop expands mobile.
 
-**What to do:** For each of the 12 wireframe patterns, author a 375px-wide mobile variant in `build_wireframe_patterns.py`. The compositions will be vertical-stacked instead of side-by-side, sidebars become drawers or top nav, etc.
+**What to do:** For each of the 12 wireframe patterns, author a 375px-wide mobile variant in `tools/builders/engine/systems/wireframe/patterns.py`. The compositions will be vertical-stacked instead of side-by-side, sidebars become drawers or top nav, etc.
 
 **Scope:** involves authoring 12 mobile variant patterns (375px width, vertical stacking) alongside the existing 12 desktop base patterns. Mobile vocabulary is established (sidebar → drawer/top-nav, side-by-side → vertical stacking, full-width CTAs).
 
@@ -473,7 +466,7 @@ rm -rf tkr-kit/design-system-skill-draft/   # superseded; this HANDOFF.md is the
 
 Five systems (Editorial, Sketch, Prism, Revolt, Terminal) brought from signature-only (~3 SVGs each) to full LIBRARY-SPEC coverage in their respective grammars. Authored in parallel via 5 subagents.
 
-**New build scripts (10 total):**
+**New build scripts (10 total; since replaced by `tools/builders/build.py` and `tools/builders/engine/systems/<id>/`, issue #5):**
 - `tools/builders/build_editorial_library.py` + `build_editorial_patterns.py`
 - `tools/builders/build_sketch_library.py` + `build_sketch_patterns.py`
 - `tools/builders/build_prism_library.py` + `build_prism_patterns.py`
@@ -573,9 +566,9 @@ Phase 1 + Phase 2 are complete. Next up: **Phase 3 implementation** — items 8 
 
 ### Step 4: Use the existing patterns
 
-- Add new components to `tools/builders/build_swiss_library.py` (or the relevant generator)
-- Add new patterns to `tools/builders/build_swiss_patterns.py`
-- Re-run the generator to produce SVGs (it writes to the project root, not tools/builders/)
+- Add new components to `tools/builders/engine/systems/<id>/library.py` (colours, fonts and radii as `{token.path}` placeholders; never literals)
+- Add new patterns to `tools/builders/engine/systems/<id>/patterns.py`
+- Re-run `uv run python tools/builders/build.py --system <id>` (it writes to `systems/<id>/`); `--check` confirms nothing is stale
 - Render via `tools/builders/render_preview.py`
 - Verify via `tools/builders/rulebook_check.py --batch`
 - Copy to workspace folder
@@ -588,9 +581,9 @@ This pattern was established in the wireframe library work and has proven reliab
 
 **If you want to understand the architecture:** `docs/UNIFIED-FOUNDATION.md`, `docs/SCHEMA-V0.2.md`, `docs/LIBRARY-SPEC.md`
 
-**If you want to author a new component:** look at `tools/builders/build_wireframe_library.py` for the pattern, then add to `tools/builders/build_swiss_library.py` (or create `tools/builders/build_<system>_library.py`)
+**If you want to author a new component:** look at `tools/builders/engine/systems/wireframe/library.py` for the pattern, then add to `tools/builders/engine/systems/<system>/library.py` (or create a new `engine/systems/<system>/` package with a `BUILDER`) and run `tools/builders/build.py`
 
-**If you want to author a new pattern:** look at `tools/builders/build_wireframe_patterns.py` for the pattern, then add to `tools/builders/build_swiss_patterns.py`
+**If you want to author a new pattern:** look at `tools/builders/engine/systems/wireframe/patterns.py` for the pattern, then add to `tools/builders/engine/systems/<system>/patterns.py`
 
 **If you want to verify compliance:** `python3 tools/builders/rulebook_check.py --batch <dir> --ruleset wireframe|swiss`
 

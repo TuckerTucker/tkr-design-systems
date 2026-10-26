@@ -30,6 +30,10 @@ jobs:
           tools/wireframe-skill/test_wireframe_skill.py
           tools/mcp-server/test_mcp_server.py
           tools/e2e/test_check_systems.py
+          tools/builders/test_build.py
+
+      - name: Check SVG libraries match their token files
+        run: uv run python tools/builders/build.py --check
 
   e2e:
     name: End-to-end consumer check (all systems)
