@@ -32,7 +32,9 @@ logger = structlog.get_logger(__name__)
 # checks (palette, type-scale, etc.) live in tools/builders/rulebook_check.py
 # alongside the no-emoji check; systems without per-system mechanical
 # checks beyond no-emoji still route through their own ruleset name so
-# the count is accurate.
+# the count is accurate. A registry alias (e.g. `neutral`, which points at
+# wireframe/spec.yaml) has no entry of its own; it resolves through the
+# id its spec declares (see _ruleset_for).
 _RULESET_BY_SYSTEM = {
     "swiss": "swiss",
     "wireframe": "wireframe",
@@ -127,7 +129,7 @@ def check_compliance(
     if not sys_result.ok:
         return sys_result
 
-    ruleset = _RULESET_BY_SYSTEM.get(system_id)
+    ruleset = _ruleset_for(system_id, sys_result.data)
     if ruleset is None:
         return Result.success({
             "system_id": system_id,
@@ -228,6 +230,27 @@ def check_compliance(
         "mechanical_only": True,
         "exceptions_file": str(exceptions.source) if exceptions.source else None,
     })
+
+
+def _ruleset_for(system_id: str, spec: dict[str, Any]) -> str | None:
+    """Resolve the mechanical ruleset for a registry id.
+
+    Registry aliases share another system's spec (``neutral`` →
+    wireframe/spec.yaml), so they are checked against the ruleset of the
+    system id that spec declares.
+
+    Args:
+        system_id: The registry id passed to check_compliance.
+        spec: The loaded spec for that id.
+
+    Returns:
+        The ruleset name, or None when neither id has one.
+    """
+    ruleset = _RULESET_BY_SYSTEM.get(system_id)
+    if ruleset is None:
+        spec_id = (spec.get("system") or {}).get("id")
+        ruleset = _RULESET_BY_SYSTEM.get(spec_id) if spec_id else None
+    return ruleset
 
 
 # ─── Internal: import tools/builders/rulebook_check.py ──────────────
