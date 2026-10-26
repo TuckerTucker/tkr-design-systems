@@ -183,9 +183,13 @@ def ds_check_compliance(
 ) -> dict[str, Any]:
     """Check an SVG artifact against a design system's mechanical rulebook.
 
-    Returns {passed, failed, advisory, results} where results is a list of
-    {rule_id, status, detail}. Scope auto-detects from the artifact path
-    (component vs artifact); pass scope explicitly to override.
+    Returns {passed, failed, advisory, waived, results} where results is a
+    list of {rule_id, status, detail}. Scope auto-detects from the artifact
+    path (component vs artifact); pass scope explicitly to override.
+    Violations allow-listed in systems/<id>/rulebook-exceptions.yaml come
+    back as status "waived" with their reasons; an allow-list entry for
+    this artifact that matched nothing is a failing
+    "rulebook-exception-stale" result.
     """
     try:
         return check_compliance(system_id, artifact_path, scope=scope).to_dict()

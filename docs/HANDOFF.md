@@ -97,7 +97,7 @@ All scripts live under `tools/builders/` and are invoked from the project root, 
 | File | Purpose |
 |------|---------|
 | `tools/builders/render_preview.py` | The canonical SVG-to-PNG renderer (CairoSVG; matches Chrome rendering closely). **Always use this for previews.** |
-| `tools/builders/rulebook_check.py` | Mechanical compliance verification. Supports `--ruleset wireframe\|swiss`, `--scope component\|artifact\|all`, and `--batch <directory>` modes |
+| `tools/builders/rulebook_check.py` | Mechanical compliance verification. Supports `--ruleset wireframe\|swiss`, `--scope component\|artifact\|all`, and `--batch <directory>` modes. Per-system allow-list `systems/<id>/rulebook-exceptions.yaml` (file + rule + optional match + required reason) waives deliberate deviations; stale entries fail the run (exit 1) |
 | `tools/builders/tracking_conversion.py` | em-to-SVG-letter-spacing converter with per-typeface calibration (Inter verified for Chrome) |
 | `tools/builders/calibration/calibrate_tracking.py` / `calibrate_tracking_v2.py` | Calibration test generators (per-typeface verification helpers) |
 | `tools/builders/build_wireframe_library.py` | Generator for wireframe library Primitives + Composites → `systems/wireframe/components/` |

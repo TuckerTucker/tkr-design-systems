@@ -10,6 +10,8 @@ They confirm:
   - get_rulebook returns scoped rulebook entries
   - check_compliance against the Swiss + wireframe libraries reports
     the same clean counts as `tooling/rulebook_check.py --batch`
+  - rulebook exceptions: waivers pass and are reported, reasons are
+    required, stale entries fail, out-of-run entries are ignored
   - register/unregister round-trip preserves the registry
   - validate_spec catches obvious schema violations on a synthetic bad spec
 """
@@ -308,6 +310,183 @@ def test_check_compliance_unknown_artifact():
     assert_(not res.ok, "check_compliance returns ok=False on missing artifact")
 
 
+# ─── test: rulebook exceptions allow-list ──────────────────────────
+
+_CLEAN_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40">'
+              '<rect x="0" y="0" width="200" height="40" fill="#FFFFFF"/></svg>')
+_OFF_PALETTE_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40">'
+                    '<rect x="0" y="0" width="200" height="40" fill="#7B1FA2"/></svg>')
+_TWO_OFF_PALETTE_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 40">'
+                        '<rect x="0" y="0" width="100" height="40" fill="#7B1FA2"/>'
+                        '<rect x="100" y="0" width="100" height="40" fill="#00ACC1"/></svg>')
+
+
+def _exceptions_fixture(tmp: Path, entries_yaml: str) -> Path:
+    """Build a throwaway system dir: spec.yaml, components/, exceptions file."""
+    (tmp / "spec.yaml").write_text("# fixture\n")
+    comp = tmp / "components"
+    comp.mkdir()
+    (comp / "clean.svg").write_text(_CLEAN_SVG)
+    (comp / "accent.svg").write_text(_OFF_PALETTE_SVG)
+    (comp / "two-accents.svg").write_text(_TWO_OFF_PALETTE_SVG)
+    exc = tmp / "rulebook-exceptions.yaml"
+    exc.write_text("version: 1\nexceptions:\n" + entries_yaml)
+    return exc
+
+
+def _rb():
+    from design_system_skill.rulebook import _import_rulebook_check_module
+    return _import_rulebook_check_module()
+
+
+def test_exception_waives_violation():
+    section("rulebook exceptions: waived violation passes, reported as waived")
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        exc = _exceptions_fixture(tmp, (
+            "  - file: components/accent.svg\n"
+            "    rule: wireframe-palette\n"
+            "    match: '#7B1FA2'\n"
+            "    reason: Fixture accent kept to exercise the allow-list.\n"
+        ))
+        res = check_compliance("wireframe", tmp / "components" / "accent.svg",
+                               exceptions_path=exc)
+        assert_(res.ok, "check_compliance ok with valid exceptions file", str(res.errors))
+        data = res.data
+        assert_(data["failed"] == 0, f"waived violation does not fail (failed={data['failed']})")
+        assert_(data["waived"] == 1, f"one rule reported as waived (got {data['waived']})")
+        waived = [r for r in data["results"] if r["status"] == "waived"]
+        assert_(len(waived) == 1 and waived[0]["rule_id"] == "wireframe-palette",
+                "wireframe-palette carries status=waived")
+        reasons = [w["reason"] for w in waived[0]["detail"].get("waivers", [])] if waived else []
+        assert_(reasons == ["Fixture accent kept to exercise the allow-list."],
+                f"waiver reason reported (got {reasons})")
+        assert_(data["exceptions_file"] == str(exc.resolve()),
+                "exceptions_file names the file used")
+
+
+def test_exception_match_does_not_cover_new_violation():
+    section("rulebook exceptions: match token only covers matching violations")
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        exc = _exceptions_fixture(tmp, (
+            "  - file: components/*.svg\n"
+            "    rule: wireframe-palette\n"
+            "    match: '#7B1FA2'\n"
+            "    reason: Fixture accent kept to exercise the allow-list.\n"
+        ))
+        res = check_compliance("wireframe", tmp / "components" / "two-accents.svg",
+                               exceptions_path=exc)
+        assert_(res.ok, "check_compliance ok")
+        palette = [r for r in res.data["results"] if r["rule_id"] == "wireframe-palette"]
+        assert_(palette and palette[0]["status"] == "fail",
+                "uncovered #00ACC1 keeps the rule failing")
+        assert_(palette and palette[0]["detail"].get("unwaived") == ["#00ACC1"],
+                f"unwaived lists only the new colour (got {palette[0]['detail'].get('unwaived') if palette else None})")
+
+
+def test_exception_missing_reason_rejected():
+    section("rulebook exceptions: entry without a reason is a validation error")
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        exc = _exceptions_fixture(tmp, (
+            "  - file: components/accent.svg\n"
+            "    rule: wireframe-palette\n"
+            "    reason: '   '\n"
+            "  - file: components/clean.svg\n"
+            "    rule: wireframe-palette\n"
+        ))
+        res = check_compliance("wireframe", tmp / "components" / "accent.svg",
+                               exceptions_path=exc)
+        assert_(not res.ok, "check_compliance fails on an invalid exceptions file")
+        codes = [e.code for e in res.errors]
+        assert_(codes == ["EXCEPTIONS_INVALID"], f"error code is EXCEPTIONS_INVALID (got {codes})")
+        errors = res.errors[0].detail.get("errors", []) if res.errors else []
+        assert_(len(errors) == 2 and all("reason" in e for e in errors),
+                f"both reason problems reported in one pass (got {errors})")
+
+        rb = _rb()
+        try:
+            rb.parse_exceptions({"exceptions": [{"file": "a.svg", "rule": "no-emoji-imagery",
+                                                 "reason": "ok", "extra": 1}]},
+                                tmp / "x.yaml", rb.known_rule_ids("wireframe"))
+            rejected = False
+        except rb.ExceptionsFileError:
+            rejected = True
+        assert_(rejected, "unknown entry keys are rejected")
+        try:
+            rb.parse_exceptions({"exceptions": [{"file": "a.svg", "rule": "wireframe-pallete",
+                                                 "reason": "typo"}]},
+                                tmp / "x.yaml", rb.known_rule_ids("wireframe"))
+            rejected = False
+        except rb.ExceptionsFileError:
+            rejected = True
+        assert_(rejected, "unknown rule ids are rejected")
+
+
+def test_exception_stale_entry_fails():
+    section("rulebook exceptions: entry matching no violation fails the run")
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        exc = _exceptions_fixture(tmp, (
+            "  - file: components/clean.svg\n"
+            "    rule: wireframe-palette\n"
+            "    reason: Was off-palette once; since fixed.\n"
+        ))
+        res = check_compliance("wireframe", tmp / "components" / "clean.svg",
+                               exceptions_path=exc)
+        assert_(res.ok, "check_compliance ok")
+        stale = [r for r in res.data["results"] if r["rule_id"] == "rulebook-exception-stale"]
+        assert_(res.data["failed"] == 1 and len(stale) == 1 and stale[0]["status"] == "fail",
+                f"stale entry reported as one failure (failed={res.data['failed']})")
+
+        # Batch mode: stale for a clean file and for a file that no longer exists.
+        rb = _rb()
+        (tmp / "rulebook-exceptions.yaml").write_text(
+            "exceptions:\n"
+            "  - file: components/clean.svg\n"
+            "    rule: wireframe-palette\n"
+            "    reason: Was off-palette once; since fixed.\n"
+            "  - file: components/renamed-away.svg\n"
+            "    rule: wireframe-palette\n"
+            "    reason: File was renamed.\n"
+            "  - file: components/accent.svg\n"
+            "    rule: wireframe-palette\n"
+            "    reason: Fixture accent kept to exercise the allow-list.\n"
+        )
+        summary = rb.run_batch(str(tmp / "components"), "wireframe")
+        assert_(summary["stale_exceptions"] == 2,
+                f"batch reports 2 stale entries (got {summary['stale_exceptions']})")
+        assert_(summary["total_waived"] == 1, f"batch reports 1 waived (got {summary['total_waived']})")
+        assert_(rb._exit_code(summary) == 1, "stale entries make the batch exit non-zero")
+
+
+def test_exception_outside_scope_not_stale():
+    section("rulebook exceptions: entries outside the run are not stale")
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        exc = _exceptions_fixture(tmp, (
+            "  - file: components/accent.svg\n"
+            "    rule: wireframe-palette\n"
+            "    reason: Fixture accent kept to exercise the allow-list.\n"
+            "  - file: layouts/gone.svg\n"
+            "    rule: wireframe-palette\n"
+            "    reason: Belongs to another directory.\n"
+        ))
+        res = check_compliance("wireframe", tmp / "components" / "clean.svg",
+                               exceptions_path=exc)
+        assert_(res.ok and res.data["failed"] == 0,
+                "single-file run ignores entries for other files")
+
+        rb = _rb()
+        (tmp / "components" / "two-accents.svg").unlink()
+        summary = rb.run_batch(str(tmp / "components"), "wireframe")
+        assert_(summary["stale_exceptions"] == 0,
+                f"batch over components/ ignores the layouts/ entry (got {summary['stale_exceptions']})")
+        assert_(summary["failed_files"] == 0 and rb._exit_code(summary) == 0,
+                "batch is clean with the violation waived")
+
+
 # ─── test: register/unregister round-trip ──────────────────────────
 
 def test_register_unregister_roundtrip():
@@ -590,6 +769,11 @@ def main():
     test_check_compliance_swiss_component()
     test_check_compliance_wireframe_pattern()
     test_check_compliance_unknown_artifact()
+    test_exception_waives_violation()
+    test_exception_match_does_not_cover_new_violation()
+    test_exception_missing_reason_rejected()
+    test_exception_stale_entry_fails()
+    test_exception_outside_scope_not_stale()
     test_register_unregister_roundtrip()
     test_extends_loads_merged_spec()
     test_extends_cycle_detection()

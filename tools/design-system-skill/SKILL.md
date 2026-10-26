@@ -102,7 +102,9 @@ Consumers use this to perform compliance checks during artifact generation. The 
 
 ### check_compliance
 
-Takes a system id and an artifact (currently SVG file path; future: also accepts inline SVG content, PNG renderings for vision-based checks). Runs the system's rulebook against the artifact and returns `{ passed: int, failed: int, advisory: int, results: [...] }`.
+Takes a system id and an artifact (currently SVG file path; future: also accepts inline SVG content, PNG renderings for vision-based checks). Runs the system's rulebook against the artifact and returns `{ passed: int, failed: int, advisory: int, waived: int, results: [...] }`.
+
+Deliberate deviations are allow-listed per system in `systems/{id}/rulebook-exceptions.yaml` (entries: `file` path/glob relative to the system directory, `rule` id, optional `match` token, required non-empty `reason`; format documented in `tools/builders/rulebook_check.py`). A waived violation is reported with `status: "waived"` and its reasons under `detail.waivers`, and counts as passing. An entry naming the artifact that matched no violation is reported as a failing `rulebook-exception-stale` result, so the list can't rot. An invalid exceptions file (e.g. an entry without a reason) fails the call with `EXCEPTIONS_INVALID`.
 
 The mechanical checks (color palette membership, type scale enforcement, no-shadow validation, etc.) run as deterministic Python — no model invocation. The semantic checks (Swiss's "red used in 4 places per screen" requires understanding *which* uses count as the protected categories) may invoke a model. The result distinguishes mechanical from semantic checks so consumers can decide whether they trust a fully-mechanical pass or want human review for semantic findings.
 
@@ -192,7 +194,7 @@ All operations return a `Result` object. The CLI shim serializes it as JSON to s
 | `register_system` | the new `RegistryEntry.to_dict()`: `{ id, spec, status, library_root }` |
 | `unregister_system` | the removed `RegistryEntry.to_dict()` |
 | `get_rulebook` | `[{ id, rule, rationale, severity, check_method, check_scope, applies_when, scope, check_implementation }, ...]` |
-| `check_compliance` | `{ system_id, artifact_path, scope, passed, failed, advisory, results: [{ rule_id, status, detail }], ruleset, mechanical_only }` |
+| `check_compliance` | `{ system_id, artifact_path, scope, passed, failed, advisory, waived, results: [{ rule_id, status, detail }], ruleset, mechanical_only, exceptions_file }` (status: pass \| fail \| advisory \| waived) |
 
 ### Error code vocabulary
 

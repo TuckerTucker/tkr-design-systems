@@ -28,6 +28,7 @@ ERROR_CODES = {
     "ALREADY_REGISTERED",        # register_system without replace=True
     "INVALID_PATH",              # caller passed a path that doesn't exist
     "RULESET_UNKNOWN",           # check_compliance asked for unknown ruleset
+    "EXCEPTIONS_INVALID",        # rulebook-exceptions.yaml failed validation
     "INTERNAL",                  # catchall for unexpected exceptions
 }
 
