@@ -65,6 +65,7 @@ library. JSON has no comments, so explanations live in the `notes` object.
                         "replaces": "color.border_input on color.surface" } ],
   "contrast_backdrops": [ "extras.color.gradient_stop_1" ],   // opaque stand-ins for page_bg (§ 7)
   "contrast_waivers": [ { "pair": "color.accent on color.surface", "modes": [ { "ink": "sunset" } ], "reason": "…" } ],
+  "hue_waivers": [ { "pair": "color.accent vs color.danger", "reason": "…" } ],
   "notes": { "color.danger": { "derived": true, "note": "why this value",
                                "contrast_fix": [ { "old": "…", "new": "…", "pairs": { … } } ] } }
 }
@@ -383,16 +384,16 @@ FONT = get_token(T, "font.body")
 | `MOTION_TIERS`, `parse_cubic_bezier`, `is_timing_function` | contract | motion tiers and easing helpers |
 | `validate_motion_declarations(spec, doc)` / `iter_motion_declarations(spec)` | token_file | spec.yaml motion declarations |
 | `check_drift(spec_path)` / `check_drift_all()` / `find_drift(spec, doc)` | drift | spec ↔ token-file agreement |
-| `check_contrast(doc)` / `check_color_gates(doc)` | contrast | colour gates over every mode (reports + errors) |
+| `check_contrast(doc)` / `check_hue_gate(doc)` / `check_color_gates(doc)` | contrast | colour gates over every mode (reports + errors) |
 | `check_color_gates_for_spec(path)` / `check_color_gates_all()` | contrast | colour gates for a spec / every registered system (CLI `contrast`, MCP `ds_check_contrast`) |
 | `contrast_ratio`, `composite`, `rgb_to_oklch`, `oklch_to_rgb`, `suggest_lightness_fix` | contrast | WCAG ratio, alpha compositing, OKLCH with gamut clamp, minimum-lightness fixes |
 
 ---
 
-## 7. Colour gates and the values they changed (issue #7)
+## 7. Colour gates and the values they changed (issues #7, #8)
 
-`validate_spec` runs the WCAG contrast gate over every token file in every
-mode (rules in SCHEMA-V0.3.md § Colour gates;
+`validate_spec` runs the WCAG contrast gate and the accent/danger hue gate
+over every token file in every mode (rules in SCHEMA-V0.3.md § Colour gates;
 CLI `python3 tools/design-system-skill contrast --all`). The token-file keys
 involved:
 
@@ -401,7 +402,8 @@ involved:
 | `contrast_pairs[].replaces` | Re-express `color.border_input on color.surface` when inputs are identified another way (Terminal: the `$` prompt glyph). Needs a `note`. |
 | `contrast_backdrops` | Opaque colours that stand in for `page_bg` beneath translucent layers (Prism's gradient stops). Every pair is checked over each. |
 | `contrast_waivers` | `{pair, modes?, reason}` for decorative `ui` pairs only; stale entries fail. None are in use. |
-| `notes[path].contrast_fix` | Record of every value the gate changed: old, new, OKLCH before/after, ratio before/after per pair. |
+| `hue_waivers` | `{pair, modes?, reason}` for the hue gate; stale entries fail. |
+| `notes[path].contrast_fix` / `hue_fix` | Record of every value a gate changed: old, new, OKLCH before/after, ratio (or hue gap) before/after per pair. |
 
 When the gate was introduced these values failed and were corrected with the
 minimum OKLCH lightness change that passes, keeping hue and chroma (Prism's
@@ -472,3 +474,14 @@ Judgement calls (each explained in the token's note):
 - **Input borders** (editorial, prism, sketch, wireframe) were fixed because
   the stroke is what identifies those inputs; `border_default` keeps the light
   hairline. Terminal re-expresses the pair instead (prompt glyph).
+
+Hue gate (issue #8, ADR-0002), the `hue_fix` records and waivers:
+
+| System | Token | Old → new | Hue gap to accent | OKLCH |
+|--------|-------|-----------|-------------------|-------|
+| editorial | `color.danger` | `#6B1623` → `#5F1B4F` | 1.2° → 40.3° | oklch(0.352 0.118 17.6) → oklch(0.351 0.117 338.5) |
+
+- **Swiss** waives accent and action vs danger (one chromatic colour by
+  design; errors carried by the `Error:` copy prefix).
+- **Revolt** waives accent vs danger, provisionally: the five-colour palette
+  has no non-pink danger to offer.

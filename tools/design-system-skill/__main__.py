@@ -100,7 +100,8 @@ def main(argv: list[str] | None = None) -> int:
 
     p_contrast = sub.add_parser(
         "contrast",
-        help="WCAG contrast gate over every mode (default: all registered systems).",
+        help="WCAG contrast + accent/danger hue gates over every mode "
+             "(default: all registered systems).",
     )
     c_target = p_contrast.add_mutually_exclusive_group()
     c_target.add_argument("--all", action="store_true", help="Check every registered system (default).")

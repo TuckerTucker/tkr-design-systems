@@ -126,11 +126,12 @@ def ds_validate_spec(
 ) -> dict[str, Any]:
     """Validate a spec.yaml against the schema without modifying the registry.
 
-    Returns {valid, system_id, spec_version, errors, warnings, contrast}.
-    contrast is the colour-gate report for the spec's tokens.json (worst
-    ratio per pair with its minimum, pass flag and mode; failures also
-    appear in errors as CONTRAST_FAIL). Use when authoring a new design
-    system spec before registering it.
+    Returns {valid, system_id, spec_version, errors, warnings, contrast,
+    hue_gate}. contrast / hue_gate are the colour-gate reports for the
+    spec's tokens.json (worst ratio per pair with its minimum, pass flag
+    and mode; failures also appear in errors as CONTRAST_FAIL /
+    HUE_GATE_FAIL). Use when authoring a new design system spec before
+    registering it.
     """
     try:
         return validate_spec(spec_path, library_root=library_root).to_dict()
@@ -207,11 +208,12 @@ def ds_check_compliance(
 
 @mcp.tool()
 def ds_check_contrast(system_id: str | None = None, verbose: bool = False) -> dict[str, Any]:
-    """Run the WCAG contrast gate on a system's tokens.
+    """Run the WCAG contrast and accent/danger hue gates on a system's tokens.
 
     Checks every required fg/bg pair (text 4.5:1, large_text 3:1, ui 3:1;
     advisory pairs reported only) in every mode combination and over every
-    declared page backdrop, compositing translucent colours. Omit
+    declared page backdrop, compositing translucent colours, plus the
+    40-degree OKLCH hue gap between accent/action and danger. Omit
     system_id to check every registered system. Returns per-pair worst
     ratio, minimum, pass flag, mode and any waiver reason; verbose=True
     adds every evaluated result.

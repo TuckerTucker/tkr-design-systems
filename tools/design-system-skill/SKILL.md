@@ -114,7 +114,7 @@ Compares a spec.yaml with its canonical token file (`systems/<id>/tokens.json`, 
 
 ### check_color_gates
 
-Runs the WCAG 2.x contrast gate (issue #7: every contract and token-file pair, `text` 4.5:1, `large_text` 3:1, `ui` 3:1, `advisory` reported) over a system's token file in every mode combination, compositing translucent colours over the page and any declared `contrast_backdrops`. `python3 design-system-skill contrast --all` (default), `--id riso`, or `--spec path`, `--verbose` for every result; exit 1 on failure. MCP: `ds_check_contrast`. `validate_spec` runs the gate (errors `CONTRAST_FAIL`, `CONTRAST_INVALID`) and returns the per-pair report as `data.contrast`. Waivers (`contrast_waivers`) need a reason and fail when stale. See `docs/specs/SCHEMA-V0.3.md` § Colour gates.
+Runs the WCAG 2.x contrast gate (issue #7: every contract and token-file pair, `text` 4.5:1, `large_text` 3:1, `ui` 3:1, `advisory` reported) and the accent/danger hue gate (issue #8: accent and action at least 40° of OKLCH hue from danger, greys exempt; ADR-0002) over a system's token file in every mode combination, compositing translucent colours over the page and any declared `contrast_backdrops`. `python3 design-system-skill contrast --all` (default), `--id riso`, or `--spec path`, `--verbose` for every result; exit 1 on failure. MCP: `ds_check_contrast`. `validate_spec` runs both gates (errors `CONTRAST_FAIL`, `HUE_GATE_FAIL`, ...) and returns the per-pair reports as `data.contrast` / `data.hue_gate`. Waivers (`contrast_waivers`, `hue_waivers`) need a reason and fail when stale. See `docs/specs/SCHEMA-V0.3.md` § Colour gates.
 
 ## File Layout
 
@@ -316,7 +316,7 @@ The Python implementation lives at `design_system_skill/` (package) with these m
 | `contract.py` | The v0.3 semantic token contract (`CONTRACT_TOKENS`, `CONTRAST_PAIRS`, `MOTION_TIERS`), colour and easing parsing — `docs/specs/SCHEMA-V0.3.md` |
 | `token_file.py` | Canonical `systems/<id>/tokens.json`: load, validate, modes, aliases, projection into the spec — `docs/specs/TOKENS.md` |
 | `drift.py` | `check_drift()` / `check_drift_all()`: spec.yaml vs tokens.json (`drift` CLI subcommand) |
-| `contrast.py` | Colour gates: WCAG contrast over every mode, OKLCH conversion with gamut clamp, minimum-lightness fixes (`contrast` CLI subcommand) |
+| `contrast.py` | Colour gates: WCAG contrast and accent/danger hue over every mode, OKLCH conversion with gamut clamp, minimum-lightness fixes (`contrast` CLI subcommand) |
 | `rulebook.py` | `get_rulebook()`, `check_compliance()`; delegates mechanical checks to `tools/builders/rulebook_check.py` |
 | `errors.py` | `Result` + `Error` dataclasses; `ERROR_CODES` enumeration |
 | `paths.py` | Project-root + registry-path resolution; honors `$DESIGN_SYSTEM_SKILL_REGISTRY` for tests |

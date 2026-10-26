@@ -17,7 +17,7 @@ and any MCP-compatible client.
 | `ds_unregister_system` | Remove a system from the registry |
 | `ds_get_rulebook` | Get flattened rulebook for a system |
 | `ds_check_compliance` | Check SVG against mechanical rulebook |
-| `ds_check_contrast` | WCAG contrast gate on a system's tokens, every mode |
+| `ds_check_contrast` | WCAG contrast + accent/danger hue gates on a system's tokens, every mode |
 
 ### Wireframe (4 tools)
 

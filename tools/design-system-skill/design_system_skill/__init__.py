@@ -14,7 +14,7 @@ Public API:
         Result,
     )
 
-Colour gates (WCAG contrast): see contrast.py.
+Colour gates (WCAG contrast, accent/danger hue): see contrast.py.
 
 Token contract and token files: see contract.py, token_file.py and
 docs/specs/SCHEMA-V0.3.md / docs/specs/TOKENS.md.

@@ -32,6 +32,8 @@ ERROR_CODES = {
     "TOKEN_DRIFT",               # spec.yaml disagrees with its tokens.json
     "CONTRAST_FAIL",             # a colour pair misses its WCAG minimum, or a contrast waiver is stale
     "CONTRAST_INVALID",          # malformed contrast_waivers / contrast_backdrops / pair replacement
+    "HUE_GATE_FAIL",             # accent/action within 40deg OKLCH hue of danger, or a hue waiver is stale
+    "HUE_GATE_INVALID",          # malformed hue_waivers
     "INTERNAL",                  # catchall for unexpected exceptions
 }
 

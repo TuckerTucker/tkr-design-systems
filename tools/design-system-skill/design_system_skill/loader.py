@@ -58,8 +58,8 @@ def load_system(
     Returns a Result whose data is a normalized spec dict with:
       - `_meta`: {spec_version, system_version, checksum, spec_path, library_root,
         and, when the spec declares a token file, tokens_path, tokens_checksum,
-        contract_version, and (validated loads) color_gates = {contrast}
-        per-pair reports, see contrast.GateReport.summary}
+        contract_version, and (validated loads) color_gates = {contrast,
+        hue_gate} per-pair reports, see contrast.GateReport.summary}
       - `tokens.contract`: the system's canonical token document
         (systems/<id>/tokens.json), when declared
       - legacy token locations (`tokens.colors.page_bg`, `tokens.borders.radius_*`,

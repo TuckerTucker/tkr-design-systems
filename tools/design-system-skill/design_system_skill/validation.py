@@ -104,9 +104,10 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
     Returns:
         Result with data={valid, system_id, spec_version, errors, warnings}
         plus, when the spec has a contract-valid token file, ``contrast``
-        (``contrast.GateReport.summary()``: counts, the worst result per
-        pair with ratio / minimum / pass / mode, and the gate's errors).
-        Gate failures are also in ``errors`` (``CONTRAST_FAIL`` ...).
+        and ``hue_gate`` (``contrast.GateReport.summary()``: counts, the
+        worst result per pair with ratio / minimum / pass / mode, and the
+        gate's errors). Gate failures are also in ``errors``
+        (``CONTRAST_FAIL``, ``HUE_GATE_FAIL`` ...).
     """
     spec_path = Path(spec_path).resolve()
     if not spec_path.exists():
@@ -282,7 +283,7 @@ def _check_token_contract(
     checked against the contract tiers and the file's reduced-motion
     policy (``token_file.validate_motion_declarations``). When the token
     document is contract-valid, the colour gates run over every mode
-    (``contrast.check_color_gates``: WCAG contrast).
+    (``contrast.check_color_gates``: WCAG contrast, accent/danger hue).
 
     Args:
         data: Parsed spec mapping.
@@ -290,8 +291,8 @@ def _check_token_contract(
             relative to its directory).
         errors: Blocking errors accumulator.
         warnings: Advisory warnings accumulator.
-        color_gates: Filled with ``{gate_key: summary}`` (``contrast``)
-            when the gates ran.
+        color_gates: Filled with ``{gate_key: summary}`` (``contrast``,
+            ``hue_gate``) when the gates ran.
     """
     sys_block = data.get("system") if isinstance(data.get("system"), dict) else {}
     version = data.get("spec_version")

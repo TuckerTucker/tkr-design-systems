@@ -756,7 +756,7 @@ tokens:
 
 # Colours for the synthetic document: white surfaces, near-black text,
 # dark fills with white content. Every contract pair passes the contrast
-# gate (issue #7).
+# gate (issue #7) and accent/action sit far from danger in hue (issue #8).
 _MINIMAL_COLORS = {
     "page_bg": "#FFFFFF", "surface": "#FFFFFF", "surface_elevated": "#FFFFFF",
     "surface_selected": "#F0F0F0", "surface_inverse": "#111111",
@@ -776,7 +776,7 @@ _MINIMAL_COLORS = {
 def _minimal_token_doc(system_id: str = "synthetic") -> dict:
     """Build a token document supplying every contract token with a
     plausible value of the right kind (no file I/O). Its colours pass the
-    contrast gate."""
+    contrast and hue gates."""
     from design_system_skill import contract as c
     defaults = {
         c.KIND_COLOR: "#808080",
@@ -1040,10 +1040,10 @@ def test_token_file_edit_invalidates_cache():
                     "swiss accent loads from tokens.json")
             tok = td_path / "swiss" / "tokens.json"
             doc = json.loads(tok.read_text())
-            doc["color"]["accent"] = "#0000FF"
+            doc["color"]["accent"] = "#D0000A"   # still red: the hue waiver keeps matching
             tok.write_text(json.dumps(doc))
             second = load_system("swiss")
-            assert_(second.ok and second.data["tokens"]["colors"]["accent"] == "#0000FF",
+            assert_(second.ok and second.data["tokens"]["colors"]["accent"] == "#D0000A",
                     "edited accent is picked up without clear_cache()")
         finally:
             del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
@@ -1568,6 +1568,59 @@ def test_contrast_docs_match_module():
     assert_(render_thresholds_table() in doc, "thresholds table equals render_thresholds_table()")
 
 
+# ─── test: accent / danger hue gate (issue #8) ────────────────────
+
+def test_hue_gate_gap_floor_and_waiver():
+    section("hue gate: 40° OKLCH gap, chroma floor, waivers")
+    from design_system_skill.contrast import check_hue_gate
+    doc = _minimal_token_doc()
+    rep = check_hue_gate(doc)
+    gaps = {r["token"]: r["gap"] for r in rep.results}
+    assert_(rep.ok and all(g is not None and g >= 40 for g in gaps.values()),
+            f"blue accent vs red danger clears 40° ({gaps})")
+
+    doc["color"]["accent"] = "#C0182A"        # a red accent
+    rep = check_hue_gate(doc)
+    fail = [e for e in rep.errors if e.code == "HUE_GATE_FAIL"]
+    assert_(fail and fail[0].detail["pair"] == "color.accent vs color.danger" and fail[0].detail["gap"] < 40,
+            f"red accent within 40° of danger fails and reports the gap ({_gate_errors(rep)[:200]})")
+    assert_(not any(e.detail.get("pair") == "color.action vs color.danger" for e in fail),
+            "action (still blue) passes")
+
+    doc["color"]["accent"] = "#7A6E70"        # warm grey: chroma below the floor
+    rep = check_hue_gate(doc)
+    row = next(r for r in rep.results if r["token"] == "color.accent")
+    assert_(rep.ok and row["exempt"] and row["gap"] is None and row["chroma"] < 0.04,
+            f"a grey accent is exempt ({row['chroma']})")
+
+    doc["color"]["accent"] = "#C0182A"
+    doc["hue_waivers"] = [{"pair": "color.accent vs color.danger", "reason": "Danger carried by a label."}]
+    rep = check_hue_gate(doc)
+    assert_(rep.ok and next(r for r in rep.results if r["token"] == "color.accent")["waived"],
+            "a reasoned hue waiver covers the failure")
+    doc["hue_waivers"] = [{"pair": "color.accent vs color.danger"}]
+    assert_(any(e.code == "HUE_GATE_INVALID" for e in check_hue_gate(doc).errors),
+            "a hue waiver without a reason is invalid")
+    doc["color"]["accent"] = "#1F4FA0"
+    doc["hue_waivers"] = [{"pair": "color.accent vs color.danger", "reason": "was red"}]
+    assert_(any(e.code == "HUE_GATE_FAIL" and e.detail.get("stale") for e in check_hue_gate(doc).errors),
+            "a hue waiver that matches no failure is stale")
+
+
+def test_hue_gate_registered_systems():
+    section("hue gate: registered systems (ADR-0002)")
+    from design_system_skill.contrast import check_hue_gate
+    for sys_id, waived in (("swiss", 2), ("revolt", 1), ("editorial", 0), ("terminal", 0)):
+        doc = json.loads((SYSTEMS_DIR / sys_id / "tokens.json").read_text())
+        rep = check_hue_gate(doc)
+        n = sum(1 for r in rep.results if r["waived"])
+        assert_(rep.ok and n == waived, f"{sys_id}: passes with {waived} waived result(s) ({n})")
+    riso = json.loads((SYSTEMS_DIR / "riso" / "tokens.json").read_text())
+    rep = check_hue_gate(riso)
+    assert_(rep.modes == 30 and all(r["exempt"] for r in rep.results),
+            "riso's danger is the paper's text ink (grey): exempt in all 30 modes")
+
+
 # ─── runner ─────────────────────────────────────────────────────────
 
 def main():
@@ -1626,6 +1679,8 @@ def main():
     test_contrast_gate_in_validate_and_cli()
     test_every_system_passes_color_gates()
     test_contrast_docs_match_module()
+    test_hue_gate_gap_floor_and_waiver()
+    test_hue_gate_registered_systems()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

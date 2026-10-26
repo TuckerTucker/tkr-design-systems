@@ -23,7 +23,9 @@ Related documents:
 - `docs/specs/TOKENS.md` — token file format in full, and exactly how JSX and
   builders consume it.
 - GitHub issue #6 (this contract), #4 (single source of truth), #10
-  (motion) and #7 (contrast gate).
+  (motion), #7 (contrast gate) and #8 (accent/danger hue gate).
+- `docs/adr/0002-accent-danger-hue-gate.md` — why the hue gate exists and
+  which systems are waived.
 
 ---
 
@@ -81,8 +83,9 @@ For a v0.3 spec, `validate_spec` fails when:
 - spec.yaml **drifts** from the token file (see `TOKENS.md` § Drift check);
 - motion tiers are out of order, or a motion declaration names an unknown
   tier or a reduced-motion behaviour the policy forbids (see § Motion);
-- a colour pair misses its WCAG minimum in any mode, or a waiver is
-  malformed or stale (§ Colour gates: `CONTRAST_FAIL`, `CONTRAST_INVALID`).
+- a colour pair misses its WCAG minimum in any mode, a waiver is malformed
+  or stale, or accent/action sit within 40° of danger's hue (§ Colour gates:
+  `CONTRAST_FAIL`, `CONTRAST_INVALID`, `HUE_GATE_FAIL`, `HUE_GATE_INVALID`).
 
 v0.1/v0.2 specs may opt in by declaring `system.tokens_file`; the same checks
 then apply.
@@ -204,7 +207,7 @@ their own pairs in the token file's `contrast_pairs` list (e.g. Swiss declares
 
 ## Colour gates
 
-GitHub issue #7. `design_system_skill/contrast.py` computes the gate
+GitHub issues #7 and #8. `design_system_skill/contrast.py` computes both gates
 from the token file, for **every mode combination** and every page backdrop,
 and `validate_spec` fails on any miss. Run them on their own with
 
@@ -213,8 +216,8 @@ uv run python tools/design-system-skill contrast [--all | --id X | --spec PATH] 
 ```
 
 (exit 1 on failure; MCP tool `ds_check_contrast`). `validate_spec` /
-`ds_validate_spec` return the report under `data.contrast`; `load_system`
-attaches it at `_meta.color_gates`. Each
+`ds_validate_spec` return the reports under `data.contrast` and
+`data.hue_gate`; `load_system` attaches them at `_meta.color_gates`. Each
 report lists the worst result per pair: `ratio`, `minimum`, `passes`, `mode`,
 `backdrop`, and `waived` / `waiver_reason`. `--verbose` adds every pair in
 every mode.
@@ -289,6 +292,20 @@ the control is identified is checked in its place (only that pair is
 replaceable). Terminal does this: its inputs are identified by the bold `$`
 prompt glyph in accent (checked as text, 4.5:1), and `#1F2F1F` is a section
 rule, not a control boundary.
+
+### Hue gate (#8)
+
+Per system and mode, `color.accent` and `color.action` must sit at least
+**40° of OKLCH hue** from `color.danger` whenever both colours carry hue
+(OKLCH chroma ≥ 0.04; greys have no hue and are exempt), so a destructive
+state never reads as the brand signal. Colours are composited over
+`color.page_bg` before conversion. The report gives every gap, hue and
+chroma. Waivers use the contrast waiver shape under `hue_waivers`, with
+`pair` spelled `"color.accent vs color.danger"` or
+`"color.action vs color.danger"`; a reason is required and a stale waiver
+fails (`HUE_GATE_FAIL`). A fix moves the non-signature colour (normally
+danger) by hue or lightness only. ADR-0002 records the decision, the results
+per system and the waivers (Swiss; Revolt provisionally).
 
 ---
 
@@ -520,10 +537,11 @@ ADDED:
   - "{group.token}" aliases anywhere in spec.yaml
   - load_system: tokens.contract, _meta.tokens_path/tokens_checksum/contract_version
   - drift check: design_system_skill.drift + `drift` CLI command
-  - contrast gate (#7): design_system_skill.contrast + `contrast` CLI
+  - colour gates (#7, #8): design_system_skill.contrast + `contrast` CLI
     command + MCP ds_check_contrast; token file keys contrast_backdrops,
-    contrast_waivers; contrast_pairs[].replaces; notes[].contrast_fix
-    records; error codes CONTRAST_FAIL, CONTRAST_INVALID
+    contrast_waivers, hue_waivers; contrast_pairs[].replaces;
+    notes[].contrast_fix / hue_fix records; error codes CONTRAST_FAIL,
+    CONTRAST_INVALID, HUE_GATE_FAIL, HUE_GATE_INVALID
 
 MOVED (spec.yaml -> tokens.json, projected back by the loader):
   - tokens.colors.{page_bg,surface,surface_elevated,text_primary,

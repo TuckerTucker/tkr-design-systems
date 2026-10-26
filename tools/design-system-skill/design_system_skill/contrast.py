@@ -1,14 +1,18 @@
-"""Computed colour gates: WCAG contrast (issue #7).
+"""Computed colour gates: WCAG contrast (issue #7) and accent/danger hue (issue #8).
 
-The gate runs over a system's token document (``systems/<id>/tokens.json``)
+Two gates run over a system's token document (``systems/<id>/tokens.json``)
 in **every mode combination** (``token_file.iter_mode_selections``) and
 over every declared page backdrop:
 
-every contract pair (``contract.CONTRAST_PAIRS``) plus the file's own
-``contrast_pairs`` must reach the WCAG 2.x minimum for its kind: ``text``
-4.5:1 (SC 1.4.3), ``large_text`` 3:1 (SC 1.4.3 large-scale), ``ui`` 3:1
-(SC 1.4.11 non-text contrast). ``advisory`` pairs are computed and
-reported but never fail.
+1. **Contrast gate.** Every contract pair (``contract.CONTRAST_PAIRS``)
+   plus the file's own ``contrast_pairs`` must reach the WCAG 2.x minimum
+   for its kind: ``text`` 4.5:1 (SC 1.4.3), ``large_text`` 3:1 (SC 1.4.3
+   large-scale), ``ui`` 3:1 (SC 1.4.11 non-text contrast). ``advisory``
+   pairs are computed and reported but never fail.
+2. **Hue gate.** ``color.accent`` and ``color.action`` must sit at least
+   ``HUE_GAP_MIN`` degrees of OKLCH hue away from ``color.danger`` whenever
+   both colours carry hue (OKLCH chroma >= ``HUE_CHROMA_FLOOR``; greys have
+   no hue and are exempt). ADR-0002 records the decision.
 
 Alpha compositing. A translucent colour is drawn over what is beneath it,
 so ratios are computed on composited, opaque colours:
@@ -29,6 +33,9 @@ never waived). Waivers live in the token file::
       {"pair": "color.accent on color.surface",
        "modes": [{"ink": "sunset"}],          # optional partial selections
        "reason": "why this pair is decorative here"}
+    ]
+    "hue_waivers": [
+      {"pair": "color.accent vs color.danger", "reason": "..."}
     ]
 
 A reason is required, and a waiver (or one of its ``modes`` patterns) that
@@ -92,6 +99,17 @@ CONTRAST_MINIMUMS: dict[str, float | None] = {
 
 WAIVABLE_KINDS = frozenset({PAIR_UI})
 """Pair kinds a contrast waiver may cover (decorative non-text marks only)."""
+
+HUE_GAP_MIN = 40.0
+"""Minimum OKLCH hue distance (degrees) between accent/action and danger."""
+
+HUE_CHROMA_FLOOR = 0.04
+"""OKLCH chroma below which a colour is treated as grey (no hue)."""
+
+HUE_GATE_TOKENS: tuple[str, ...] = ("color.accent", "color.action")
+"""Colours that must not be mistakable for danger by hue alone."""
+
+HUE_GATE_REFERENCE = "color.danger"
 
 PAGE_BG = "color.page_bg"
 
@@ -237,6 +255,12 @@ def oklch_to_rgb(lightness: float, chroma: float, hue: float) -> tuple[RGB, floa
     lin = oklch_to_linear(lightness, chroma, hue)
     rgb = tuple(255 * _to_gamma(min(1.0, max(0.0, c))) for c in lin)
     return rgb, chroma  # type: ignore[return-value]
+
+
+def hue_distance(h1: float, h2: float) -> float:
+    """Shortest angular distance between two hues, in degrees (0-180)."""
+    d = abs(h1 - h2) % 360
+    return 360 - d if d > 180 else d
 
 
 # ─── Fix suggestion ─────────────────────────────────────────────────
@@ -403,13 +427,51 @@ class PairResult:
 
 
 @dataclass
+class HueResult:
+    """The hue gate for one token in one mode.
+
+    Attributes:
+        pair: ``"<token> vs color.danger"``.
+        token: ``color.accent`` or ``color.action``.
+        value: The token's value.
+        danger_value: ``color.danger``'s value.
+        hue: OKLCH hue of the token (composited over the page), degrees.
+        danger_hue: OKLCH hue of danger, degrees.
+        chroma: OKLCH chroma of the token.
+        danger_chroma: OKLCH chroma of danger.
+        gap: Hue distance in degrees (``None`` when exempt).
+        exempt: One side is grey (chroma below the floor).
+        passes: Exempt, or gap >= ``HUE_GAP_MIN``.
+        mode: Mode selection.
+        waived: A waiver covers this failure.
+        waiver_reason: The waiver's reason, when waived.
+    """
+
+    pair: str
+    token: str
+    value: str
+    danger_value: str
+    hue: float
+    danger_hue: float
+    chroma: float
+    danger_chroma: float
+    gap: float | None
+    exempt: bool
+    passes: bool
+    mode: dict[str, str]
+    waived: bool = False
+    waiver_reason: str | None = None
+
+
+@dataclass
 class GateReport:
     """Outcome of one gate over a token document.
 
     Attributes:
         system: Token file ``system`` id.
-        gate: Gate name (``"contrast"``).
-        results: Every evaluated result (dicts of ``PairResult``).
+        gate: ``"contrast"`` or ``"hue"``.
+        results: Every evaluated result (dicts of ``PairResult`` /
+            ``HueResult``).
         errors: Blocking errors (failures, stale or invalid waivers).
         modes: Number of mode combinations evaluated.
         backdrops: Backdrop token paths evaluated.
@@ -480,7 +542,7 @@ class _Waiver:
 def _parse_waivers(
     doc: dict[str, Any], key: str, known_pairs: dict[str, str] | set[str], code: str,
 ) -> tuple[list[_Waiver], list[Error]]:
-    """Validate and parse a waiver list (``contrast_waivers``).
+    """Validate and parse a waiver list (``contrast_waivers`` / ``hue_waivers``).
 
     Args:
         doc: Token document.
@@ -752,8 +814,82 @@ def backdrop_path_value(resolved: dict[str, Any], path: str, backdrop_path: str)
     return get_token(resolved, path, None)
 
 
+# ─── Hue gate ───────────────────────────────────────────────────────
+
+def hue_pair_label(token: str) -> str:
+    """Canonical hue-gate pair label used in reports and waivers."""
+    return f"{token} vs {HUE_GATE_REFERENCE}"
+
+
+def check_hue_gate(doc: dict[str, Any]) -> GateReport:
+    """Run the accent/action-vs-danger hue gate over every mode combination.
+
+    Colours are composited over ``color.page_bg`` before conversion, so a
+    translucent action reads as the colour it actually shows.
+
+    Args:
+        doc: A contract-valid token document.
+
+    Returns:
+        A ``GateReport``. Errors: ``HUE_GATE_FAIL`` for each failing token
+        (worst mode named) and each stale waiver; ``HUE_GATE_INVALID``
+        for malformed waivers.
+    """
+    system = doc.get("system")
+    report = GateReport(system=str(system), gate="hue", backdrops=[PAGE_BG])
+    known = {hue_pair_label(t) for t in HUE_GATE_TOKENS}
+    waivers, werrs = _parse_waivers(doc, "hue_waivers", known, "HUE_GATE_INVALID")
+    report.errors.extend(werrs)
+
+    results: list[HueResult] = []
+    for selection in iter_mode_selections(doc):
+        report.modes += 1
+        resolved = resolve_mode(doc, selection)
+        page = parse_color(get_token(resolved, PAGE_BG, None))
+        danger_val = get_token(resolved, HUE_GATE_REFERENCE, None)
+        danger = parse_color(danger_val)
+        if page is None or danger is None:
+            continue
+        _, d_chroma, d_hue = rgb_to_oklch(composite(danger, page[:3]))
+        for token in HUE_GATE_TOKENS:
+            val = get_token(resolved, token, None)
+            c = parse_color(val)
+            if c is None:
+                continue
+            _, chroma, hue = rgb_to_oklch(composite(c, page[:3]))
+            exempt = chroma < HUE_CHROMA_FLOOR or d_chroma < HUE_CHROMA_FLOOR
+            gap = None if exempt else round(hue_distance(hue, d_hue), 1)
+            results.append(HueResult(
+                pair=hue_pair_label(token), token=token, value=val, danger_value=danger_val,
+                hue=round(hue, 1), danger_hue=round(d_hue, 1), chroma=round(chroma, 3),
+                danger_chroma=round(d_chroma, 3), gap=gap, exempt=exempt,
+                passes=exempt or hue_distance(hue, d_hue) >= HUE_GAP_MIN, mode=dict(selection),
+            ))
+
+    _apply_waivers(results, waivers)
+    report.errors.extend(_stale_errors(waivers, "hue_waivers", "HUE_GATE_FAIL", system))
+    failing: dict[str, list[HueResult]] = {}
+    for r in results:
+        if not r.passes and not r.waived:
+            failing.setdefault(r.pair, []).append(r)
+    for label, rs in failing.items():
+        worst = min(rs, key=lambda r: r.gap or 0.0)
+        report.errors.append(Error(
+            "HUE_GATE_FAIL",
+            f"[{system}] {label}: OKLCH hue gap {worst.gap}° < {HUE_GAP_MIN:g}° "
+            f"({worst.value} h={worst.hue}° vs {worst.danger_value} h={worst.danger_hue}°, "
+            f"mode {mode_label(worst.mode)}); move danger's hue/lightness or add a hue_waivers "
+            f"entry with a reason",
+            {"system_id": system, "pair": label, "gap": worst.gap, "mode": worst.mode,
+             "failures": len(rs)},
+        ))
+    report.results = [asdict(r) for r in results]
+    return report
+
+
 GATES: tuple[tuple[str, Callable[[dict[str, Any]], GateReport]], ...] = (
     ("contrast", check_contrast),
+    ("hue_gate", check_hue_gate),
 )
 """Every colour gate, keyed as it appears in reports (``data.<key>``)."""
 
@@ -765,7 +901,7 @@ def check_color_gates(doc: dict[str, Any]) -> dict[str, GateReport]:
         doc: A contract-valid token document.
 
     Returns:
-        ``{report_key: GateReport}``, e.g. ``{"contrast": ...}``.
+        ``{report_key: GateReport}``, e.g. ``{"contrast": ..., "hue_gate": ...}``.
     """
     return {key: gate(doc) for key, gate in GATES}
 
@@ -782,7 +918,7 @@ def check_color_gates_for_spec(spec_path: str | Path, verbose: bool = False) -> 
 
     Returns:
         Result. ``data`` = ``{system_id, spec_path, tokens_path}`` plus one
-        ``GateReport.summary()`` per gate (``contrast``). Fails
+        ``GateReport.summary()`` per gate (``contrast``, ``hue_gate``). Fails
         when a gate reports an error, or the token file is missing or not
         contract-valid.
     """

@@ -194,17 +194,18 @@ def test_ds_check_compliance():
         )
 
 
-# ─── ds_check_contrast (issue #7) ───────────────────────────────────
+# ─── ds_check_contrast (issues #7, #8) ───────────────────────────────
 
 def test_ds_check_contrast():
     section("ds_check_contrast")
     one = ds_check_contrast("riso")
-    assert_(one["ok"] is True, "riso passes the contrast gate", str(one.get("errors"))[:300])
+    assert_(one["ok"] is True, "riso passes both colour gates", str(one.get("errors"))[:300])
     contrast = one.get("data", {}).get("contrast", {})
     assert_(contrast.get("modes") == 30, f"every riso press combination checked ({contrast.get('modes')})")
     worst = contrast.get("worst", [])
     assert_(worst and all({"pair", "ratio", "minimum", "passes", "mode"} <= set(r) for r in worst),
             "per-pair report carries pair, ratio, minimum, passes and mode")
+    assert_("hue_gate" in one.get("data", {}), "hue gate report included")
 
     every = ds_check_contrast()
     assert_(every["ok"] is True, "every registered system passes", str(every.get("errors"))[:300])
@@ -215,8 +216,8 @@ def test_ds_check_contrast():
     assert_(missing["ok"] is False, "unknown system fails cleanly")
 
     validated = ds_validate_spec(str(SYSTEMS_DIR / "swiss" / "spec.yaml"))
-    assert_("contrast" in validated.get("data", {}),
-            "ds_validate_spec returns the contrast report")
+    assert_("contrast" in validated.get("data", {}) and "hue_gate" in validated.get("data", {}),
+            "ds_validate_spec returns the colour-gate reports")
 
 
 # ─── ds_register_system / ds_unregister_system ───────────────────────
