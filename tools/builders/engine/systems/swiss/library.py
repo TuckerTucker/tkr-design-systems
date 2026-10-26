@@ -204,11 +204,14 @@ COMPONENTS = {
   <text x="0" y="44" class="text-disabled" font-size="14">user@example.com</text>
 """),
 
+    # Error treatment (spec components.error_message): typographic only.
+    # The input keeps its ordinary black rule; the error is the ink line
+    # "Error: <what failed>." below it. No red rule, icon or fill.
     "form-field-with-error": (320, 70, """
   <text x="0" y="14" class="text-secondary" font-size="11" font-weight="500" letter-spacing="1.76">EMAIL ADDRESS</text>
-  <line x1="0" y1="22" x2="320" y2="22" stroke="{color.danger}" stroke-width="1.5"/>
+  <line x1="0" y1="22" x2="320" y2="22" stroke="{color.border_input}" stroke-width="{border_width.default}"/>
   <text x="0" y="44" class="text-primary" font-size="14">invalid-email</text>
-  <text x="0" y="64" class="text-accent" font-size="11">Please enter a valid email address.</text>
+  <text x="0" y="64" class="text-primary" font-size="11">Error: invalid email address.</text>
 """),
 
     # Table row — Swiss style: zero-padded row numbers, hairline dividers,
@@ -425,8 +428,10 @@ COMPONENTS = {
 
     # Toast — transient notification. Swiss toast is a 1px black band with
     # 9px tracked uppercase severity label, body text in 13px, and a × dismiss
-    # right-aligned. No box, no shadow, no rounded surface. Severity colors
-    # map to red (error/warning) or black (info/success).
+    # right-aligned. No box, no shadow, no rounded surface. Severity is
+    # carried by copy, not colour: the error toast's body reads
+    # "Error: <what failed>." in ink (spec components.error_message); red
+    # stays inside its four contexts (swiss-red-finite-resource).
     "toast-info": (400, 64, """
   <line x1="0" y1="0" x2="400" y2="0" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
   <text x="0" y="22" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">UPDATE</text>
@@ -437,8 +442,8 @@ COMPONENTS = {
 
     "toast-error": (400, 64, """
   <line x1="0" y1="0" x2="400" y2="0" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
-  <text x="0" y="22" class="text-accent" font-size="9" font-weight="500" letter-spacing="1.44">ERROR</text>
-  <text x="0" y="46" class="text-primary" font-size="13">Could not connect to the server.</text>
+  <text x="0" y="22" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">CONNECTION</text>
+  <text x="0" y="46" class="text-primary" font-size="13">Error: could not connect to the server.</text>
   <text x="392" y="22" text-anchor="end" class="text-secondary" font-size="14">×</text>
   <line x1="0" y1="63.5" x2="400" y2="63.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
 """),

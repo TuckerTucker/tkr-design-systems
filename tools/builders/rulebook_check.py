@@ -24,8 +24,9 @@ Scope (per Schema v0.2 Change 12):
     all        — runs every rule regardless of scope. Useful for diagnostic mode.
 
 Only the mechanical rules are checkable here; rules requiring judgment
-(e.g. swiss-numerical-display semantic correctness) are noted but not
-automatically verified.
+(e.g. swiss-numerical-display semantic correctness, or whether Swiss error
+copy names what failed and stays free of icons and red, per
+swiss-error-typographic) are noted but not automatically verified.
 
 Rule exceptions (allow-list):
     A deliberate, defensible deviation from a rule is recorded as data in
@@ -459,6 +460,117 @@ def check_grid_alignment(svg_text):
     }
 
 
+# Swiss error copy (spec rulebook swiss-error-prefix / swiss-error-not-red,
+# grounded in the JSX voice table: Error -> "Error: send failed.").
+SWISS_ERROR_PREFIX = "Error:"
+_ERROR_WORD = re.compile(r"error\b", re.IGNORECASE)
+_SWISS_ERROR_FORM = re.compile(r"Error: \S.*\.\Z", re.DOTALL)
+_TEXT_ELEMENT = re.compile(r"<text\b([^>]*)>(.*?)</text>", re.DOTALL)
+_BANNER_COMMENT = re.compile(r"<!--\s*=+\s*([A-Z0-9][A-Z0-9 _-]*?)\s*=+\s*-->")
+_ENTITIES = {"&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'"}
+
+
+def _text_elements(svg_text: str) -> list[tuple[dict[str, str], str]]:
+    """Return every ``<text>`` element as (attributes, plain content).
+
+    Args:
+        svg_text: SVG source.
+
+    Returns:
+        One (attrs, content) pair per ``<text>``; nested tags such as
+        ``<tspan>`` are flattened, entities decoded, whitespace trimmed.
+    """
+    out = []
+    for m in _TEXT_ELEMENT.finditer(svg_text):
+        attrs = dict(re.findall(r'(\w[\w-]*)="([^"]*)"', m.group(1)))
+        content = re.sub(r"<[^>]+>", "", m.group(2))
+        for entity, char in _ENTITIES.items():
+            content = content.replace(entity, char)
+        out.append((attrs, " ".join(content.split())))
+    return out
+
+
+def _is_error_component(svg_text: str) -> bool:
+    """True when the builder banner comment names an error component.
+
+    The builders stamp each SVG with ``<!-- ===== NAME ===== -->`` (for
+    example ``TOAST-ERROR``); hand-authored SVGs without the banner are
+    never treated as error components.
+    """
+    return any("ERROR" in re.split(r"[-_ ]+", name)
+               for name in _BANNER_COMMENT.findall(svg_text))
+
+
+def check_error_prefix(svg_text: str) -> dict:
+    """Rule swiss-error-prefix: error copy reads ``Error: <what failed>.``
+
+    The JSX voice table prescribes ``Error: send failed.`` (prefix with a
+    capital E and a colon, the failure, a closing period). Two mechanical
+    checks follow from it:
+
+    1. Every ``<text>`` whose content starts with the word "error" (any
+       case) has exactly that form, so ``ERROR``, ``error: x``,
+       ``Error - x`` and ``Error: x`` (no period) fail.
+    2. A component whose builder banner names it an error component
+       (``*-ERROR``, ``*-WITH-ERROR``) carries at least one such text.
+
+    Whether the message after the prefix is lowercase and names what failed
+    is judgment (proper nouns), left to swiss-error-typographic.
+
+    Args:
+        svg_text: SVG source.
+
+    Returns:
+        Result dict; ``violations`` lists each offending text, plus a
+        ``missing prefix`` item for an error component without one.
+    """
+    texts = [content for _, content in _text_elements(svg_text)]
+    error_texts = [t for t in texts if _ERROR_WORD.match(t)]
+    violations = [f"{t!r} (expected 'Error: <what failed>.')"
+                  for t in error_texts if not _SWISS_ERROR_FORM.match(t)]
+    is_error_component = _is_error_component(svg_text)
+    if is_error_component and not any(_SWISS_ERROR_FORM.match(t) for t in error_texts):
+        violations.append("error component has no 'Error: <what failed>.' text "
+                          "(missing prefix)")
+    return {
+        "rule_id": "swiss-error-prefix",
+        "passed": not violations,
+        "violations": violations,
+        "error_component": is_error_component,
+        "vacuous": not error_texts and not is_error_component,
+    }
+
+
+def check_error_not_red(svg_text: str) -> dict:
+    """Rule swiss-error-not-red: ``Error:`` copy is never set in red.
+
+    Red's four contexts (swiss-red-finite-resource: CTAs, selection bars,
+    user tags, status dots) do not include error messages, and the JSX
+    lists red warning messages as a Don't. A text starting with
+    ``Error:`` whose fill (inline or via a CSS class) resolves to the
+    accent red fails.
+
+    Args:
+        svg_text: SVG source.
+
+    Returns:
+        Result dict; ``violations`` lists each red error text.
+    """
+    css_class_fills = _extract_css_class_fills(svg_text)
+    violations = [
+        repr(content)
+        for attrs, content in _text_elements(svg_text)
+        if content.startswith(SWISS_ERROR_PREFIX)
+        and _resolve_text_fill(attrs, css_class_fills) == SWISS_RED
+    ]
+    return {
+        "rule_id": "swiss-error-not-red",
+        "passed": not violations,
+        "violations": violations,
+        "expected": f"error copy in ink, not {SWISS_RED}",
+    }
+
+
 # ──────────────────────────────────────────────────────────────────────
 # WIREFRAME LIBRARY CHECKS
 # ──────────────────────────────────────────────────────────────────────
@@ -715,6 +827,8 @@ SWISS_CHECKS = [
     (check_color_palette,        "both"),
     (check_metadata_uppercase,   "component"),  # vacuous when no 9px text present
     (check_grid_alignment,       "both"),
+    (check_error_prefix,         "both"),
+    (check_error_not_red,        "both"),
     (check_no_emoji,             "both"),
 ]
 
@@ -795,6 +909,8 @@ _VIOLATION_ITEM_KEYS = {
     "swiss-color-palette": ("violations", None),
     "swiss-metadata-uppercase": ("actual_failures", None),
     "swiss-grid-alignment": ("off_grid_values", "off_grid_count"),
+    "swiss-error-prefix": ("violations", None),
+    "swiss-error-not-red": ("violations", None),
     "wireframe-text-overflow": ("overflows", None),
     "wireframe-palette": ("violations", None),
     "wireframe-type-scale": ("violations", None),

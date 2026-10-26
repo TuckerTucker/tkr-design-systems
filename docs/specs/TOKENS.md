@@ -530,6 +530,7 @@ Hue gate (issue #8, ADR-0002), the `hue_fix` records and waivers:
 | editorial | `color.danger` | `#6B1623` → `#5F1B4F` | 1.2° → 40.3° | oklch(0.352 0.118 17.6) → oklch(0.351 0.117 338.5) |
 
 - **Swiss** waives accent and action vs danger (one chromatic colour by
-  design; errors carried by the `Error:` copy prefix).
-- **Revolt** waives accent vs danger, provisionally: the five-colour palette
+  design; errors carried by the `Error:` copy prefix, spec rules
+  `swiss-error-*`).
+- **Revolt** waives accent vs danger (owner-confirmed): the five-colour palette
   has no non-pink danger to offer.
