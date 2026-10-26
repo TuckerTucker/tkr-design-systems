@@ -1,0 +1,174 @@
+# Colour literals the showcase pages may keep (issue #4).
+#
+# Every design value of a system lives in systems/<id>/tokens.json and the
+# pages read it from there. What is left inline is the showcase's own dark
+# documentation chrome (the spec viewer around the live preview) and a few
+# deliberate one-offs. Each entry says why. Checked by
+#   python3 tools/design-system-skill jsx-drift
+# (design_system_skill/jsx_drift.py); see its module docstring for the rules:
+#   - literals are matched by normalized value (#CCC == #CCCCCC);
+#   - an entry whose value equals a token of a system it applies to must be
+#     narrowed with `regions` (top-level declarations such as Tk, CBox,
+#     ThemeView, or <name>Spec.<section>) and/or `context` (regex the source
+#     line must match), so it cannot hide a real token literal;
+#   - an entry that matches nothing is stale and fails.
+version: 1
+entries:
+  # ── documentation chrome: page, panels, type ────────────────────────
+  - literal: "#0A0A0A"
+    reason: Spec viewer page background (App shell), not a system colour.
+  - literal: "#2A2A2A"
+    reason: Breadcrumb separator in the spec viewer top bar.
+  - literal: "#333"
+    reason: Spec viewer version tag; Revolt's black swatch outline on the dark doc panel.
+  - literal: "#555"
+    systems: [editorial, neutral, prism, revolt, riso, swiss, terminal]
+    reason: Spec viewer tertiary doc text (Tk descriptions, CBox labels, 'Design tokens in action').
+  - literal: "#555"
+    systems: [sketch]
+    regions: [Tk, CBox, PreviewView, App]
+    context: 'fontSize: (9|9\.5|10), (fontWeight: 600, )?color: "#555"|color: "#555" \}\}>\{d\}'
+    reason: Same doc text; equals Sketch text_secondary (#555555) by coincidence, so it is scoped to the doc helpers.
+  - literal: "#666"
+    systems: [editorial, neutral, prism, riso, sketch, swiss, terminal]
+    reason: Spec viewer muted doc text (Sw values, table notes, breadcrumbs).
+  - literal: "#666"
+    systems: [revolt]
+    regions: [Sw, CBox, App, revoltSpec.*]
+    context: 'fontSize: (8|8\.5|9|9\.5|10), color: "#666"|color: vi < \d \? "#999" : "#666"|color: "#666" \}\}>\{(v|p)\}'
+    reason: Same doc text; equals Revolt text_secondary (#666666) by coincidence, so it is scoped to doc table cells.
+  - literal: "#777"
+    reason: Spec viewer nav items and table notes.
+  - literal: "#888"
+    reason: Spec viewer card body text and table values.
+  - literal: "#999"
+    systems: [editorial, neutral, prism, riso, sketch, swiss, terminal]
+    reason: Spec viewer body copy (P) and table values; Tk default value colour.
+  - literal: "#999"
+    systems: [revolt]
+    regions: [Tk, P, revoltSpec.*]
+    context: 'a = "#999"|fontSize: (10|12), color: "#999"|color: vi < \d \? "#999"'
+    reason: Same doc text; equals Revolt text_muted (#999999) by coincidence, so it is scoped to doc helpers and table cells.
+  - literal: "#AAA"
+    systems: [riso]
+    regions: [SegmentedSelect, TweakPanel]
+    reason: Riso tweak panel (showcase control surface, not the system UI) button text.
+  - literal: "#BBB"
+    reason: Spec viewer emphasised doc text (Do/Dont, contract, table labels).
+  - literal: "#CCC"
+    systems: [editorial, neutral, prism, riso, sketch, swiss, terminal]
+    reason: Spec viewer headings and token names (Tk, Sw, H4, tweak panel labels).
+  - literal: "#CCC"
+    systems: [revolt]
+    regions: [Tk, Sw, H4, revoltSpec.*]
+    context: 'fontSize: (9|10|10\.5|11\.5), (fontWeight: 600, )?color: "#CCC"'
+    reason: Same doc text; equals Revolt extras.color.disabled_fill (#CCCCCC) by coincidence, so it is scoped to doc helpers and table cells.
+  - literal: "#DDD"
+    reason: Spec viewer card titles.
+  - literal: "#EEE"
+    reason: Spec viewer primary text (top bar, H3, family samples rendered on the dark panel).
+  - literal: "#FFF"
+    regions: [ThemeView]
+    context: '<h2 style='
+    reason: Spec viewer section heading; scoped because several systems define white tokens.
+  # ── documentation chrome: Do / Dont / grade colours ─────────────────
+  - literal: "#34D399"
+    reason: Showcase 'Do' / AAA / good-example green (doc chrome).
+  - literal: "#FF6B6B"
+    reason: Showcase 'Dont' / bad-example red (doc chrome).
+  - literal: "#FBBF24"
+    reason: Showcase AA grade amber in contrast tables (doc chrome).
+  - literal: "rgba(52,211,153,0.04)"
+    reason: Tinted 'good' panel background (doc chrome).
+  - literal: "rgba(52,211,153,0.05)"
+    reason: Do row background (doc chrome).
+  - literal: "rgba(52,211,153,0.12)"
+    reason: Do row border (doc chrome).
+  - literal: "rgba(52,211,153,0.15)"
+    systems: [revolt]
+    reason: Revolt voice 'good copy' panel border (doc chrome).
+  - literal: "rgba(255,107,107,0.04)"
+    reason: Tinted 'bad' panel background (doc chrome).
+  - literal: "rgba(255,107,107,0.05)"
+    reason: Dont row background (doc chrome).
+  - literal: "rgba(255,107,107,0.12)"
+    reason: Dont row border (doc chrome).
+  - literal: "rgba(255,107,107,0.15)"
+    systems: [revolt]
+    reason: Revolt voice 'bad copy' panel border (doc chrome).
+  # ── documentation chrome: white hairlines / fills on the dark panel ──
+  - literal: "rgba(255,255,255,0.01)"
+    systems: [neutral]
+    reason: Doc card fill on the dark panel.
+  - literal: "rgba(255,255,255,0.015)"
+    systems: [riso]
+    reason: Tweak panel background (showcase control surface).
+  - literal: "rgba(255,255,255,0.02)"
+    reason: Doc card / hover fill on the dark panel.
+  - literal: "rgba(255,255,255,0.025)"
+    reason: Doc table row divider.
+  - literal: "rgba(255,255,255,0.03)"
+    reason: Doc nav selection / CBox part chips.
+  - literal: "rgba(255,255,255,0.04)"
+    reason: CBox contract panel border; Revolt doc table dividers.
+  - literal: "rgba(255,255,255,0.05)"
+    reason: Doc table frames and top-bar dividers.
+  - literal: "rgba(255,255,255,0.06)"
+    reason: H3 underline and doc card borders.
+  - literal: "rgba(255,255,255,0.07)"
+    reason: CBox frame.
+  - literal: "rgba(255,255,255,0.08)"
+    systems: [editorial, neutral, revolt, riso, sketch, swiss, terminal]
+    reason: Swatch outline (Sw default), doc panel frames, Riso tweak panel and range track.
+  - literal: "rgba(255,255,255,0.08)"
+    systems: [prism]
+    regions: [Sw]
+    reason: Swatch outline (Sw default); equals Prism glass surface by coincidence, so it is scoped to Sw.
+  - literal: "rgba(255,255,255,0.1)"
+    systems: [riso]
+    regions: [TweakPanel]
+    reason: Riso tweak panel button borders (showcase control surface).
+  - literal: "rgba(255,255,255,0.1)"
+    systems: [prism]
+    regions: [prismSpec.color]
+    context: 'border: "1px solid rgba\(255,255,255,0\.1\)" \}\} />|b="1px solid rgba\(255,255,255,0\.1\)"'
+    reason: Outline of the gradient strip and of a swatch on the dark doc panel; equals Prism divider by coincidence.
+  - literal: "rgba(255,255,255,0.12)"
+    systems: [sketch]
+    reason: Swatch outline on the dark doc panel (Sw b=).
+  - literal: "rgba(255,255,255,0.15)"
+    systems: [editorial, neutral, prism, riso, sketch, swiss, terminal]
+    reason: Swatch outline for light swatches on the dark doc panel (Sw b=).
+  - literal: "rgba(255,255,255,0.2)"
+    systems: [prism, riso, swiss]
+    reason: Swatch outline for light swatches on the dark doc panel (Sw b=).
+  - literal: "rgba(0,0,0,0.45)"
+    reason: Drop shadow under the live-preview frame (showcase presentation, not the system).
+  - literal: "rgba(0,0,0,0.35)"
+    systems: [riso]
+    regions: [PreviewView]
+    reason: Drop shadow under the Riso preview frames (showcase presentation, not the system).
+  - literal: "rgba(0,0,0,0.15)"
+    systems: [riso]
+    regions: [SegmentedSelect]
+    reason: Outline of the ink/paper swatches in the tweak panel buttons (showcase control surface); equals extras.color.rule_vertical by coincidence.
+  # ── prose that names colours the system forbids ─────────────────────
+  - literal: "#000000"
+    systems: [neutral]
+    regions: [neutralSpec.color, neutralSpec.extensions]
+    reason: Prose naming pure black as forbidden ('Use #000000 for text', 'never reaches pure black (#000)'); not a token.
+  - literal: "#FFF"
+    systems: [neutral]
+    regions: [neutralSpec.extensions]
+    context: 'pure white \(#FFF for page\)'
+    reason: Prose naming pure white as the page colour Neutral avoids; a statement about white, not a token reference.
+  - literal: "#FFFFFF"
+    systems: [neutral]
+    regions: [neutralSpec.extensions]
+    context: 'Use #000000 or #FFFFFF as page backgrounds'
+    reason: Prose naming pure white as a forbidden page background; a statement about white, not a token reference.
+  - literal: "#FFFFFF"
+    systems: [terminal]
+    regions: [terminalSpec.color]
+    context: 'Use pure white \(#FFFFFF\)'
+    reason: Prose naming pure white as forbidden; Terminal has no white token.

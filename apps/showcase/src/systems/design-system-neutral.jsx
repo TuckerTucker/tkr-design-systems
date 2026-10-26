@@ -1,11 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
+/* neutral is the registry alias of wireframe: same spec, same token file */
+import tokens from "@systems/wireframe/tokens.json";
+import { motion, reducedMotionCss, contrastRatio, contrastText, wcagLevel, px, lh } from "../tokens.js";
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — NEUTRAL
    Greyscale Wireframe Reference · Single-theme standalone spec + live preview
    ═══════════════════════════════════════════════════════════════ */
 
-const TM = { name: "Neutral", tag: "Greyscale Wireframe Reference", color: "#424242" };
+/* Every design value comes from systems/wireframe/tokens.json (docs/specs/TOKENS.md § 4). */
+const { color: C, font: F, radius: rad, border_width: bw } = tokens;
+const X = tokens.extras.color;
+const T = { ...tokens.type, ...tokens.extras.type };
+const rule = (w, col) => `${w}px solid ${col}`;
+
+const TM = { name: "Neutral", tag: "Greyscale Wireframe Reference", color: C.accent };
 
 const chatList = [
   { id: 1, name: "Tokyo Trip", preview: "Want me to build a day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
@@ -55,58 +64,58 @@ const CBox = ({ title, parts, contract, specs, dos, donts, accent }) => {
    ═══════════════════════════════════════════════════════════════ */
 function NeutralChat({ sel, setSel }) {
   return (
-    <div className="app-sh" style={{ background: "#F5F5F5", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", borderRadius: 8, border: "1px solid #E0E0E0", color: "#212121" }}>
+    <div className="app-sh" style={{ background: C.page_bg, fontFamily: F.body, borderRadius: rad.chrome, border: rule(bw.default, C.border_default), color: C.text_primary }}>
       {/* Sidebar */}
-      <div className="sb" style={{ borderRight: "1px solid #E0E0E0", background: "#FFFFFF" }}>
-        <div style={{ padding: "16px", borderBottom: "1px solid #E0E0E0" }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: "#212121", lineHeight: 1.2 }}>Neutral</div>
-          <div style={{ fontSize: 11, color: "#757575", marginTop: 4 }}>5 conversations</div>
+      <div className="sb" style={{ borderRight: rule(bw.default, C.border_default), background: C.surface }}>
+        <div style={{ padding: "16px", borderBottom: rule(bw.default, C.border_default) }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: C.text_primary, lineHeight: 1.2 }}>Neutral</div>
+          <div style={{ fontSize: 11, color: C.text_secondary, marginTop: 4 }}>5 conversations</div>
         </div>
 
-        <div style={{ padding: "12px 16px", borderBottom: "1px solid #E0E0E0" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 6, border: "1px solid #E0E0E0", background: "#FFFFFF" }}>
-            <span style={{ fontSize: 13, color: "#BDBDBD" }}>⌕</span>
-            <input placeholder="Search conversations" className="si" style={{ fontFamily: "inherit", color: "#212121", fontSize: 13 }} />
+        <div style={{ padding: "12px 16px", borderBottom: rule(bw.default, C.border_default) }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: rad.input, border: rule(bw.default, C.border_input), background: C.surface }}>
+            <span style={{ fontSize: 13, color: C.text_muted }}>⌕</span>
+            <input placeholder="Search conversations" className="si" style={{ fontFamily: "inherit", color: C.text_primary, fontSize: 13 }} />
           </div>
         </div>
 
         <div className="cl">
           {chatList.map((c, i) => (
-            <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "12px 16px", borderBottom: "1px solid #E0E0E0", background: sel === c.id ? "#F5F5F5" : "#FFFFFF", cursor: "pointer", animationDelay: `${i * 40}ms` }}>
+            <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "12px 16px", borderBottom: rule(bw.default, C.border_default), background: sel === c.id ? C.surface_selected : C.surface, cursor: "pointer", animationDelay: `${i * 40}ms` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 16, background: "#E0E0E0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{c.avatar}</div>
+                <div style={{ width: 32, height: 32, borderRadius: 16, background: C.border_default, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{c.avatar}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                    <span style={{ fontSize: 14, fontWeight: sel === c.id ? 600 : 500, color: "#212121" }}>{c.name}</span>
-                    <span style={{ fontSize: 11, color: "#757575", flexShrink: 0 }}>{c.time}</span>
+                    <span style={{ fontSize: 14, fontWeight: sel === c.id ? 600 : 500, color: C.text_primary }}>{c.name}</span>
+                    <span style={{ fontSize: 11, color: C.text_secondary, flexShrink: 0 }}>{c.time}</span>
                   </div>
-                  <div style={{ fontSize: 13, color: "#757575", marginTop: 2, lineHeight: 1.4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.preview}</div>
+                  <div style={{ fontSize: 13, color: C.text_secondary, marginTop: 2, lineHeight: 1.4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.preview}</div>
                 </div>
-                {c.unread > 0 && <div style={{ minWidth: 20, height: 20, borderRadius: 10, background: "#424242", color: "#FFFFFF", fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{c.unread}</div>}
+                {c.unread > 0 && <div style={{ minWidth: 20, height: 20, borderRadius: 10, background: C.accent, color: C.accent_foreground, fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{c.unread}</div>}
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #E0E0E0", background: "#FFFFFF" }}>
+        <div style={{ padding: "12px 16px", borderTop: rule(bw.default, C.border_default), background: C.surface }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 14, background: "#E0E0E0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: "#757575" }}>TH</div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: "#212121" }}>T. Harris</div>
+            <div style={{ width: 28, height: 28, borderRadius: 14, background: C.border_default, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: C.text_secondary }}>TH</div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: C.text_primary }}>T. Harris</div>
           </div>
         </div>
       </div>
 
       {/* Main */}
-      <div className="ca" style={{ background: "#F5F5F5" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid #E0E0E0", background: "#FFFFFF" }}>
+      <div className="ca" style={{ background: C.page_bg }}>
+        <div style={{ padding: "16px 20px", borderBottom: rule(bw.default, C.border_default), background: C.surface }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: "#212121" }}>Tokyo Trip</div>
-              <div style={{ fontSize: 12, color: "#757575", marginTop: 2 }}>{msgs.length} messages</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: C.text_primary }}>Tokyo Trip</div>
+              <div style={{ fontSize: 12, color: C.text_secondary, marginTop: 2 }}>{msgs.length} messages</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 4, background: "#2E7D32" }} />
-              <span style={{ fontSize: 12, color: "#757575" }}>Active</span>
+              <div style={{ width: 8, height: 8, borderRadius: 4, background: C.success }} />
+              <span style={{ fontSize: 12, color: C.text_secondary }}>Active</span>
             </div>
           </div>
         </div>
@@ -114,15 +123,15 @@ function NeutralChat({ sel, setSel }) {
         <div className="ma" style={{ padding: "20px" }}>
           {msgs.map((m, i) => (
             <div key={m.id} className="mi" style={{ alignSelf: m.sender === "user" ? "flex-end" : "flex-start", maxWidth: "72%", animationDelay: `${i * 70}ms` }}>
-              <div style={{ fontSize: 11, color: "#757575", marginBottom: 4, textAlign: m.sender === "user" ? "right" : "left" }}>
+              <div style={{ fontSize: 11, color: C.text_secondary, marginBottom: 4, textAlign: m.sender === "user" ? "right" : "left" }}>
                 {m.sender === "user" ? "You" : "Assistant"}
               </div>
               <div style={{
                 padding: "10px 14px",
-                borderRadius: 8,
-                background: m.sender === "user" ? "#424242" : "#FFFFFF",
-                color: m.sender === "user" ? "#FFFFFF" : "#212121",
-                border: m.sender === "ai" ? "1px solid #E0E0E0" : "none",
+                borderRadius: tokens.extras.radius.message,
+                background: m.sender === "user" ? C.surface_inverse : C.surface,
+                color: m.sender === "user" ? C.text_inverse : C.text_primary,
+                border: m.sender === "ai" ? rule(bw.default, C.border_default) : "none",
                 fontSize: 14,
                 lineHeight: 1.55,
               }}>{m.text}</div>
@@ -130,10 +139,10 @@ function NeutralChat({ sel, setSel }) {
           ))}
 
           <div className="mi" style={{ alignSelf: "flex-start", maxWidth: "100%", animationDelay: "320ms" }}>
-            <div style={{ fontSize: 12, color: "#757575", fontWeight: 500, marginBottom: 8 }}>Suggestions</div>
+            <div style={{ fontSize: 12, color: C.text_secondary, fontWeight: 500, marginBottom: 8 }}>Suggestions</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {["Temples", "Ramen", "Culture", "Parks"].map((l, ti) => (
-                <div key={ti} className="bc-nt" style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid #E0E0E0", background: "#FFFFFF", cursor: "pointer", fontSize: 13, fontWeight: 500, color: "#212121" }}>
+                <div key={ti} className="bc-nt" style={{ padding: "8px 16px", borderRadius: rad.default, border: rule(bw.default, C.border_default), background: C.surface, cursor: "pointer", fontSize: 13, fontWeight: 500, color: C.text_primary }}>
                   {l}
                 </div>
               ))}
@@ -141,10 +150,10 @@ function NeutralChat({ sel, setSel }) {
           </div>
         </div>
 
-        <div style={{ padding: "12px 20px", borderTop: "1px solid #E0E0E0", background: "#FFFFFF" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 6, border: "1px solid #E0E0E0", background: "#FFFFFF" }}>
-            <input placeholder="Type a message..." className="si" style={{ fontFamily: "inherit", color: "#212121", fontSize: 14 }} />
-            <div className="snd" style={{ padding: "6px 16px", borderRadius: 6, background: "#424242", color: "#FFFFFF", fontSize: 13, fontWeight: 600 }}>Send</div>
+        <div style={{ padding: "12px 20px", borderTop: rule(bw.default, C.border_default), background: C.surface }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: rad.input, border: rule(bw.default, C.border_input), background: C.surface }}>
+            <input placeholder="Type a message..." className="si" style={{ fontFamily: "inherit", color: C.text_primary, fontSize: 14 }} />
+            <div className="snd" style={{ padding: "6px 16px", borderRadius: rad.default, background: C.action, color: C.action_foreground, fontSize: 13, fontWeight: 600 }}>Send</div>
           </div>
         </div>
       </div>
@@ -156,13 +165,13 @@ function NeutralChat({ sel, setSel }) {
 function PreviewView({ sel, setSel }) {
   const notes = [
     "System font stack only — no brand typeface commitment. The wireframe is deliberately font-agnostic.",
-    "Seven greyscale values: #F5F5F5 page, #FFFFFF surface, #E0E0E0 border, #BDBDBD disabled, #757575 secondary, #424242 interactive, #212121 primary text",
-    "Accent is #424242 (dark grey) — the system has no chromatic accent color at all",
+    `Seven greyscale values: ${C.page_bg} page, ${C.surface} surface, ${C.border_default} border, ${C.text_muted} disabled, ${C.text_secondary} secondary, ${C.accent} interactive, ${C.text_primary} primary text`,
+    `Accent is ${C.accent} (dark grey) — the system has no chromatic accent color at all`,
     "Border-radius: 6px default, 8px for chrome. Modest rounding — neither sharp nor bubbly.",
     "4px grid with allowed steps: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64",
     "Elevation via borders only — no shadows, no backdrop-blur, no translucency",
     "Type scale: 11, 12, 13, 14, 16, 18, 24. Seven sizes, same as every system.",
-    "Semantic colors reserved for status only: success #2E7D32, warning #E65100, danger #B71C1C, info #1565C0",
+    `Semantic colors reserved for status only: success ${C.success}, warning ${C.warning}, danger ${C.danger}, info ${C.info}`,
   ];
   return (<div>
     <P>Live implementation of the Neutral wireframe system. Every token from the wireframe spec applied to a working interface. This is the universal baseline — all other design systems are transformations of this greyscale reference.</P>
@@ -188,13 +197,13 @@ function PreviewView({ sel, setSel }) {
 function neutralSpec(a) { return {
   overview: () => (<div>
     <P>Neutral is the greyscale wireframe reference system. It defines the universal baseline palette, type scale, spacing grid, and component library that all other design systems build upon. Where Swiss adds red, Terminal adds phosphor green, and Prism adds frosted glass — Neutral commits to nothing. That is its purpose.</P>
-    <P>The system uses the platform's native font stack, a 4px spacing grid, 6px border radius, and borders-only elevation. Every color is greyscale. The darkest interactive tone (#424242) serves as the accent. The result is a deliberately unbranded, structurally complete interface that reads as "wireframe" — not as a finished product.</P>
+    <P>{`The system uses the platform's native font stack, a 4px spacing grid, 6px border radius, and borders-only elevation. Every color is greyscale. The darkest interactive tone (${C.accent}) serves as the accent. The result is a deliberately unbranded, structurally complete interface that reads as "wireframe" — not as a finished product.`}</P>
     <H3>Core Principles</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
       {[
         ["No brand commitment", "System fonts, no chromatic accent, no personality. The wireframe is a structural sketch — any brand can be projected onto it later."],
-        ["Greyscale hierarchy", "Seven grey values from #F5F5F5 to #212121 carry all visual weight. The value hierarchy is calibrated so each step is perceptually distinct."],
-        ["Borders, not shadows", "Elevation is communicated through 1px borders (#E0E0E0) only. No box-shadow, no blur, no translucency. Depth is flat and explicit."],
+        ["Greyscale hierarchy", `Seven grey values from ${C.page_bg} to ${C.text_primary} carry all visual weight. The value hierarchy is calibrated so each step is perceptually distinct.`],
+        ["Borders, not shadows", `Elevation is communicated through 1px borders (${C.border_default}) only. No box-shadow, no blur, no translucency. Depth is flat and explicit.`],
         ["Universal component set", "42 components (12 primitives + 18 composites + 12 patterns) define every building block. Other systems reinterpret these — Neutral defines them."],
       ].map(([t, d], i) => (
         <div key={i} style={{ padding: "10px 12px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
@@ -214,37 +223,37 @@ function neutralSpec(a) { return {
     <P>Neutral uses a calibrated greyscale palette. Seven core values from near-white to near-black, plus four semantic colors reserved strictly for status communication. No chromatic accent exists.</P>
     <H3>Page &amp; Surface</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#F5F5F5" n="Page Background" v="#F5F5F5" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#FFFFFF" n="Surface" v="#FFFFFF" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#FFFFFF" n="Surface Elevated" v="#FFFFFF" b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.page_bg} n="Page Background" v={C.page_bg} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.surface} n="Surface" v={C.surface} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.surface} n="Surface Elevated" v={C.surface} b="1px solid rgba(255,255,255,0.15)" />
     </div>
     <H3>Text</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#212121" n="Primary" v="#212121" />
-      <Sw c="#757575" n="Secondary" v="#757575" />
-      <Sw c="#BDBDBD" n="Muted / Disabled" v="#BDBDBD" />
+      <Sw c={C.text_primary} n="Primary" v={C.text_primary} />
+      <Sw c={C.text_secondary} n="Secondary" v={C.text_secondary} />
+      <Sw c={C.text_muted} n="Muted / Disabled" v={C.text_muted} />
     </div>
     <H3>Interactive &amp; Structural</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#424242" n="Interactive" v="#424242" />
-      <Sw c="#E0E0E0" n="Border" v="#E0E0E0" />
-      <Sw c="#FFFFFF" n="Inverse (on dark)" v="#FFFFFF" b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.accent} n="Interactive" v={C.accent} />
+      <Sw c={C.border_default} n="Border" v={C.border_default} />
+      <Sw c={C.text_inverse} n="Inverse (on dark)" v={C.text_inverse} b="1px solid rgba(255,255,255,0.15)" />
     </div>
     <H3>Semantic Status</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#2E7D32" n="Success" v="#2E7D32" />
-      <Sw c="#E65100" n="Warning" v="#E65100" />
-      <Sw c="#B71C1C" n="Danger" v="#B71C1C" />
-      <Sw c="#1565C0" n="Info" v="#1565C0" />
+      <Sw c={C.success} n="Success" v={C.success} />
+      <Sw c={C.warning} n="Warning" v={C.warning} />
+      <Sw c={C.danger} n="Danger" v={C.danger} />
+      <Sw c={C.info} n="Info" v={C.info} />
     </div>
     <Do>Use semantic colors only for status communication — success, warning, danger, info. Never decorative.</Do>
-    <Do>Maintain the greyscale value hierarchy: page (#F5F5F5) → surface (#FFF) → border (#E0E0E0) → secondary (#757575) → interactive (#424242) → primary (#212121)</Do>
+    <Do>{`Maintain the greyscale value hierarchy: page (${C.page_bg}) → surface (${C.surface}) → border (${C.border_default}) → secondary (${C.text_secondary}) → interactive (${C.accent}) → primary (${C.text_primary})`}</Do>
     <Dont>Introduce any chromatic accent — that transforms Neutral into a themed system</Dont>
-    <Dont>Use #000000 for text — #212121 is the darkest value. Pure black is too harsh on light backgrounds.</Dont>
+    <Dont>{`Use #000000 for text — ${C.text_primary} is the darkest value. Pure black is too harsh on light backgrounds.`}</Dont>
 
     <H3>Contrast Ratios</H3>
     <div style={{ borderRadius: 6, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["Primary on Page (#212121 on #F5F5F5)", "13.5:1", "AAA"], ["Primary on Surface (#212121 on #FFF)", "16.1:1", "AAA"], ["Secondary on Surface (#757575 on #FFF)", "4.6:1", "AA"], ["Interactive on Surface (#424242 on #FFF)", "9.7:1", "AAA"], ["Disabled on Surface (#BDBDBD on #FFF)", "1.7:1", "Decorative only"], ["Inverse on Interactive (#FFF on #424242)", "9.7:1", "AAA"]].map((r, i) => (
+      {[["Primary on Page", C.text_primary, C.page_bg], ["Primary on Surface", C.text_primary, C.surface], ["Secondary on Surface", C.text_secondary, C.surface], ["Interactive on Surface", C.accent, C.surface], ["Disabled on Surface", C.text_muted, C.surface, "Decorative only"], ["Inverse on Interactive", C.accent_foreground, C.accent]].map(([n, fg, bg, use]) => [`${n} (${fg} on ${bg})`, contrastText(fg, bg), use ?? wcagLevel(contrastRatio(fg, bg))]).map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 70px 95px", padding: "5px 10px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
           <code className="mn" style={{ fontSize: 10, color: "#999" }}>{r[1]}</code>
@@ -257,14 +266,14 @@ function neutralSpec(a) { return {
     <P>Neutral uses the platform's native system font stack. This is deliberate — wireframes should not commit to a typeface. The structure and scale carry the hierarchy, not the font's personality.</P>
     <H3>Font Families</H3>
     <div style={{ padding: 14, borderRadius: 6, border: `1px solid ${a}30`, background: `${a}04`, marginBottom: 12 }}>
-      <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", fontSize: 26, color: "#EEE", marginBottom: 4, fontWeight: 700 }}>System Sans</div>
+      <div style={{ fontFamily: F.body, fontSize: 26, color: "#EEE", marginBottom: 4, fontWeight: 700 }}>System Sans</div>
       <div style={{ fontSize: 10, fontWeight: 600, color: a, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Primary — structural</div>
-      <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif. Renders as San Francisco on macOS, Segoe UI on Windows, Roboto on Android. The wireframe intentionally uses whatever the platform provides.</div>
+      <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>{`${F.body}. Renders as San Francisco on macOS, Segoe UI on Windows, Roboto on Android. The wireframe intentionally uses whatever the platform provides.`}</div>
     </div>
     <div style={{ padding: 14, borderRadius: 6, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.01)", marginBottom: 12 }}>
-      <div style={{ fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace", fontSize: 22, color: "#EEE", marginBottom: 4, fontWeight: 600 }}>System Mono</div>
-      <div style={{ fontSize: 10, fontWeight: 600, color: "#757575", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Secondary — tokens &amp; code</div>
-      <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>'SF Mono', 'Monaco', 'Consolas', monospace. Used sparingly for technical labels, code excerpts, and tabular data. Not for body text.</div>
+      <div style={{ fontFamily: F.mono, fontSize: 22, color: "#EEE", marginBottom: 4, fontWeight: 600 }}>System Mono</div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: C.text_secondary, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Secondary — tokens &amp; code</div>
+      <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>{`${F.mono}. Used sparingly for technical labels, code excerpts, and tabular data. Not for body text.`}</div>
     </div>
     <Do>Let the platform choose the font — that is the point of a wireframe system</Do>
     <Dont>Override system fonts with a branded typeface — that makes Neutral a themed system</Dont>
@@ -274,14 +283,14 @@ function neutralSpec(a) { return {
     <P>Every text element uses one of these seven sizes. The scale covers caption through display with clear perceptual steps between each role.</P>
     <div style={{ borderRadius: 6, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
       {[
-        ["display", "24px", "700", "1.2", "Dashboard metrics, hero numbers"],
-        ["title", "18px", "600", "1.3", "Page headings"],
-        ["heading", "16px", "600", "1.3", "Section headings"],
-        ["body", "14px", "400", "1.55", "Primary content text"],
-        ["secondary", "13px", "400", "1.4", "Supporting text, descriptions"],
-        ["label", "12px", "600", "1.3", "Metadata, badges, captions"],
-        ["caption", "11px", "400", "1.3", "Fine print, timestamps"],
-      ].map((t, i) => (
+        ["display", T.display, "Dashboard metrics, hero numbers"],
+        ["title", T.title, "Page headings"],
+        ["heading", T.heading, "Section headings"],
+        ["body", T.body, "Primary content text"],
+        ["secondary", T.small, "Supporting text, descriptions"],
+        ["label", T.label, "Metadata, badges, captions"],
+        ["caption", T.caption, "Fine print, timestamps"],
+      ].map(([n, t, use]) => [n, px(t.size), String(t.weight), lh(t.line_height), use]).map((t, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "80px 48px 40px 36px 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <code className="mn" style={{ fontSize: 10, color: "#CCC" }}>{t[0]}</code>
           {t.slice(1).map((v, vi) => <span key={vi} style={{ fontSize: 10, color: vi < 3 ? "#999" : "#666" }}>{v}</span>)}
@@ -303,14 +312,14 @@ function neutralSpec(a) { return {
   elevation: () => (<div>
     <P>Neutral has a borders-only elevation strategy. No shadows, no blur, no translucency. Depth is communicated through surface color (page vs surface) and border weight. This is the simplest possible elevation model — other systems layer shadows and glass effects on top of it.</P>
     <H3>Border Tokens</H3>
-    <Tk n="border.light" v="1px solid #E0E0E0" d="Component boundaries, dividers" a={a} />
-    <Tk n="border.strong" v="1.5px solid #E0E0E0" d="Input focus, interactive card hover" a={a} />
+    <Tk n="border.light" v={rule(bw.default, C.border_default)} d="Component boundaries, dividers" a={a} />
+    <Tk n="border.strong" v={rule(bw.strong, C.border_strong)} d="Input focus, interactive card hover" a={a} />
     <Tk n="elevation.shadow" v="none" d="Shadows are not used" a={a} />
     <Tk n="elevation.blur" v="none" d="Backdrop-filter is not used" a={a} />
 
     <H3>Border Radius</H3>
     <div style={{ display: "flex", gap: 14, marginBottom: 10 }}>
-      {[{ r: 6, l: "Default", t: "radius.default" }, { r: 6, l: "Inputs", t: "radius.inputs" }, { r: 8, l: "Chrome", t: "radius.chrome" }].map(item => (
+      {[{ r: rad.default, l: "Default", t: "radius.default" }, { r: rad.input, l: "Inputs", t: "radius.inputs" }, { r: rad.chrome, l: "Chrome", t: "radius.chrome" }].map(item => (
         <div key={item.t} style={{ textAlign: "center" }}>
           <div style={{ width: 44, height: 44, borderRadius: item.r, border: `2px solid ${a}40`, background: "rgba(255,255,255,0.02)", marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <code className="mn" style={{ fontSize: 9, color: "#999" }}>{item.r}px</code>
@@ -341,58 +350,58 @@ function neutralSpec(a) { return {
 
     <H4>Primitives</H4>
     <CBox title="Button" parts={["label", "icon"]} accent={a}
-      contract="The primary interactive element. 48px tall default, 6px radius. Primary variant uses #424242 fill with #FFFFFF text. Secondary uses #FFFFFF fill with #E0E0E0 border and #757575 text. Ghost is transparent with no border."
-      specs={[["height.default", "48px"], ["height.small", "32px"], ["height.large", "56px"], ["radius", "6px"], ["font-size", "14px"], ["font-weight", "500"], ["primary.fill", "#424242 (interactive)"], ["primary.text", "#FFFFFF (inverse)"], ["secondary.fill", "#FFFFFF (surface)"], ["secondary.stroke", "1.5px #E0E0E0"], ["secondary.text", "#757575 (secondary)"], ["ghost.fill", "transparent"], ["ghost.text", "#757575 (secondary)"], ["disabled.fill", "#E0E0E0"], ["disabled.text", "#BDBDBD"], ["danger.fill", "#B71C1C (danger)"], ["danger.text", "#FFFFFF (inverse)"]]}
+      contract={`The primary interactive element. 48px tall default, 6px radius. Primary variant uses ${C.accent} fill with ${C.surface} text. Secondary uses ${C.surface} fill with ${C.border_default} border and ${C.text_secondary} text. Ghost is transparent with no border.`}
+      specs={[["height.default", "48px"], ["height.small", "32px"], ["height.large", "56px"], ["radius", "6px"], ["font-size", "14px"], ["font-weight", "500"], ["primary.fill", `${C.accent} (interactive)`], ["primary.text", `${C.surface} (inverse)`], ["secondary.fill", `${C.surface} (surface)`], ["secondary.stroke", `${bw.strong}px ${C.border_input}`], ["secondary.text", `${C.text_secondary} (secondary)`], ["ghost.fill", "transparent"], ["ghost.text", `${C.text_secondary} (secondary)`], ["disabled.fill", C.border_default], ["disabled.text", C.text_muted], ["danger.fill", `${C.danger} (danger)`], ["danger.text", `${C.surface} (inverse)`]]}
       dos={["Use only one primary button per screen — it represents the primary action", "Use the danger variant only for irreversible destructive actions"]}
       donts={["Use more than one primary button in a view", "Use ghost buttons where the action needs visual weight"]} />
 
     <CBox title="Input" parts={["placeholder", "value", "focus", "clear"]} accent={a}
-      contract="48px tall text input field. 6px radius, #FFFFFF fill, 1.5px #E0E0E0 stroke. Placeholder text in #BDBDBD, entered value in #212121. Variants: text, password, search, numeric."
-      specs={[["height", "48px"], ["radius", "6px"], ["fill", "#FFFFFF (surface)"], ["stroke", "1.5px #E0E0E0"], ["placeholder.color", "#BDBDBD (disabled)"], ["value.color", "#212121 (primary)"], ["value.font-size", "14px"], ["focus.stroke", "1.5px #424242 (interactive)"]]}
-      dos={["Always pair inputs with a label via the form_field composite", "Use #BDBDBD for placeholders to clearly distinguish from entered values"]}
+      contract={`48px tall text input field. 6px radius, ${C.surface} fill, ${bw.strong}px ${C.border_input} stroke. Placeholder text in ${C.text_muted}, entered value in ${C.text_primary}. Variants: text, password, search, numeric.`}
+      specs={[["height", "48px"], ["radius", "6px"], ["fill", `${C.surface} (surface)`], ["stroke", `${bw.strong}px ${C.border_input}`], ["placeholder.color", `${C.text_muted} (disabled)`], ["value.color", `${C.text_primary} (primary)`], ["value.font-size", "14px"], ["focus.stroke", `${bw.strong}px ${C.focus_ring} (interactive)`]]}
+      dos={["Always pair inputs with a label via the form_field composite", `Use ${C.text_muted} for placeholders to clearly distinguish from entered values`]}
       donts={["Style inputs without a visible border — the 1.5px stroke is required", "Use placeholder text as a substitute for a label"]} />
 
     <CBox title="Avatar" parts={["identifier", "status_dot"]} accent={a}
-      contract="32x32 circle identifier. Monogram variant: #E0E0E0 fill with 2-letter initials in #757575. Photo placeholder variant: diagonal stripe pattern. Optional status dot (8px) positioned bottom-right."
-      specs={[["size", "32x32"], ["radius", "16px (full circle)"], ["monogram.fill", "#E0E0E0"], ["monogram.text", "#757575, 600 weight"], ["status.size", "8px circle"], ["status.online", "#2E7D32 (success)"]]}
+      contract={`32x32 circle identifier. Monogram variant: ${C.border_default} fill with 2-letter initials in ${C.text_secondary}. Photo placeholder variant: diagonal stripe pattern. Optional status dot (8px) positioned bottom-right.`}
+      specs={[["size", "32x32"], ["radius", "16px (full circle)"], ["monogram.fill", C.border_default], ["monogram.text", `${C.text_secondary}, 600 weight`], ["status.size", "8px circle"], ["status.online", `${C.success} (success)`]]}
       dos={["Use monogram as the default avatar — it works without user photos"]}
       donts={["Use avatars larger than 32px in list contexts — save space for content"]} />
 
     <CBox title="Badge" parts={["text", "shape"]} accent={a}
-      contract="Small indicator element. Count variant: pill (16–20px tall, 10px radius), #424242 fill, white digit. Status variant: semantic color fill. Tag variant: #FFFFFF fill with #E0E0E0 border. Dot variant: 8px circle."
-      specs={[["count.fill", "#424242 (interactive)"], ["count.text", "#FFFFFF, 11px, 600"], ["count.radius", "10px"], ["status.fill", "Semantic color"], ["status.text", "#FFFFFF, 10px, 600, UPPER"], ["tag.fill", "#FFFFFF"], ["tag.stroke", "1px #E0E0E0"], ["tag.text", "#757575, 12px"], ["dot.size", "8px circle"]]}
+      contract={`Small indicator element. Count variant: pill (16–20px tall, 10px radius), ${C.accent} fill, white digit. Status variant: semantic color fill. Tag variant: ${C.surface} fill with ${C.border_default} border. Dot variant: 8px circle.`}
+      specs={[["count.fill", `${C.accent} (interactive)`], ["count.text", `${C.surface}, 11px, 600`], ["count.radius", "10px"], ["status.fill", "Semantic color"], ["status.text", `${C.surface}, 10px, 600, UPPER`], ["tag.fill", C.surface], ["tag.stroke", `${bw.default}px ${C.border_default}`], ["tag.text", `${C.text_secondary}, 12px`], ["dot.size", "8px circle"]]}
       dos={["Use count badges sparingly — only for unread or notification counts"]}
       donts={["Stack multiple badge types on the same element"]} />
 
     <H4>Composites</H4>
     <CBox title="Card" parts={["container", "content", "border"]} accent={a}
-      contract="The universal container. 6px radius, #FFFFFF fill, 1px #E0E0E0 stroke, 16px internal padding. Cards are the primary boundary pattern — every distinct content group lives in one."
-      specs={[["radius", "6px"], ["fill", "#FFFFFF (surface)"], ["stroke", "1px #E0E0E0"], ["padding", "16px all sides"], ["hover.stroke", "1.5px #E0E0E0 (interactive cards only)"], ["selected.stroke", "2px #424242"], ["empty.stroke", "dashed #E0E0E0"]]}
+      contract={`The universal container. 6px radius, ${C.surface} fill, ${bw.default}px ${C.border_default} stroke, 16px internal padding. Cards are the primary boundary pattern — every distinct content group lives in one.`}
+      specs={[["radius", "6px"], ["fill", `${C.surface} (surface)`], ["stroke", `${bw.default}px ${C.border_default}`], ["padding", "16px all sides"], ["hover.stroke", `${bw.strong}px ${C.border_input} (interactive cards only)`], ["selected.stroke", `2px ${C.accent}`], ["empty.stroke", `dashed ${C.border_default}`]]}
       dos={["Use cards for any distinct content with a clear boundary", "Keep card padding consistent at 16px — component_gap (12px) for sub-elements"]}
       donts={["Nest cards inside cards — use dividers instead", "Add shadow to cards — border is the only elevation signal"]} />
 
     <CBox title="ListItem" parts={["avatar", "title", "preview", "timestamp", "badge"]} accent={a}
-      contract="64–96px tall row. Avatar (32px) on left, title (14px #212121) and preview (12px #757575) stacked. Timestamp top-right (11px #757575). Optional badge on right. Selection signaled by #F5F5F5 background, never by accent bar."
-      specs={[["height", "64-96px"], ["avatar", "32px, left-aligned"], ["title.font", "14px, 500 weight, #212121"], ["title.selected", "600 weight"], ["preview.font", "12px, #757575, truncate with ellipsis"], ["timestamp.font", "11px, #757575"], ["divider", "1px #E0E0E0 below"], ["selected.bg", "#F5F5F5"]]}
-      dos={["Truncate preview text with ellipsis — never wrap to multiple lines", "Use background fill (#F5F5F5) alone for selection — no colored accent bars"]}
+      contract={`64–96px tall row. Avatar (32px) on left, title (14px ${C.text_primary}) and preview (12px ${C.text_secondary}) stacked. Timestamp top-right (11px ${C.text_secondary}). Optional badge on right. Selection signaled by ${C.page_bg} background, never by accent bar.`}
+      specs={[["height", "64-96px"], ["avatar", "32px, left-aligned"], ["title.font", `14px, 500 weight, ${C.text_primary}`], ["title.selected", "600 weight"], ["preview.font", `12px, ${C.text_secondary}, truncate with ellipsis`], ["timestamp.font", `11px, ${C.text_secondary}`], ["divider", `${bw.default}px ${C.border_default} below`], ["selected.bg", C.page_bg]]}
+      dos={["Truncate preview text with ellipsis — never wrap to multiple lines", `Use background fill (${C.page_bg}) alone for selection — no colored accent bars`]}
       donts={["Use a chromatic accent bar for selection — Neutral has no accent color", "Omit the bottom divider — list items need visible separation"]} />
 
     <CBox title="Stat" parts={["value", "label", "trend"]} accent={a}
-      contract="Dashboard metric display. Value in 24px #212121 weight 700 (display role). Label in 12px #757575 weight 600 uppercase tracked above value. Optional trend indicator below."
-      specs={[["value.font", "24px, 700, #212121"], ["label.font", "12px, 600, UPPER, 0.05em tracking, #757575"], ["trend.positive", "#2E7D32 (success)"], ["trend.negative", "#B71C1C (danger)"]]}
+      contract={`Dashboard metric display. Value in 24px ${C.text_primary} weight 700 (display role). Label in 12px ${C.text_secondary} weight 600 uppercase tracked above value. Optional trend indicator below.`}
+      specs={[["value.font", `24px, 700, ${C.text_primary}`], ["label.font", `12px, 600, UPPER, 0.05em tracking, ${C.text_secondary}`], ["trend.positive", `${C.success} (success)`], ["trend.negative", `${C.danger} (danger)`]]}
       dos={["Place labels above values — the label provides context before the number"]}
       donts={["Use display type sizes (24px) for non-metric content"]} />
 
     <H4>Patterns</H4>
     <CBox title="Sidebar" parts={["brand", "search", "nav_list", "footer"]} accent={a}
-      contract="Fixed width 240–280px, full viewport height. #FFFFFF fill, 1px #E0E0E0 right border. Brand area at top, search input, nav items in middle, account footer at bottom."
-      specs={[["width", "240-280px"], ["fill", "#FFFFFF (surface)"], ["border-right", "1px #E0E0E0"], ["brand.height", "64-80px"], ["nav.active.bg", "#F5F5F5"], ["nav.item.font", "14px, #212121 active / #757575 inactive"]]}
-      dos={["Use uppercase tracked section labels (12px #757575) to group nav items"]}
-      donts={["Use a chromatic highlight for active nav items — #F5F5F5 background only"]} />
+      contract={`Fixed width 240–280px, full viewport height. ${C.surface} fill, ${bw.default}px ${C.border_default} right border. Brand area at top, search input, nav items in middle, account footer at bottom.`}
+      specs={[["width", "240-280px"], ["fill", `${C.surface} (surface)`], ["border-right", `${bw.default}px ${C.border_default}`], ["brand.height", "64-80px"], ["nav.active.bg", C.page_bg], ["nav.item.font", `14px, ${C.text_primary} active / ${C.text_secondary} inactive`]]}
+      dos={[`Use uppercase tracked section labels (12px ${C.text_secondary}) to group nav items`]}
+      donts={[`Use a chromatic highlight for active nav items — ${C.page_bg} background only`]} />
 
     <CBox title="Modal" parts={["overlay", "container", "title", "body", "actions"]} accent={a}
       contract="Centered card on semi-transparent overlay. 480px wide on desktop, full-width minus margins on mobile. 8px radius. Title at top, body content, button row at bottom-right."
-      specs={[["overlay", "#00000040"], ["width.default", "480px"], ["width.confirm", "360px"], ["width.form", "560-640px"], ["radius", "8px"], ["title.font", "16px, 600, #212121"], ["close.position", "top-right"]]}
+      specs={[["overlay", X.overlay_scrim], ["width.default", "480px"], ["width.confirm", "360px"], ["width.form", "560-640px"], ["radius", "8px"], ["title.font", `16px, 600, ${C.text_primary}`], ["close.position", "top-right"]]}
       dos={["Use the confirmation variant (360px) for simple yes/no decisions"]}
       donts={["Stack modals on top of modals — use a single modal at a time"]} />
 
@@ -406,11 +415,11 @@ function neutralSpec(a) { return {
   patterns: () => (<div>
     <P>Composition rules for Neutral layouts. These patterns define how components arrange into screens.</P>
     {[
-      { n: "Sidebar + Main", rows: [["Sidebar width", "240–280px fixed, #FFFFFF surface"], ["Main area", "Fluid, fills remaining, #F5F5F5 page background"], ["Divider", "1px solid #E0E0E0 (right border of sidebar)"], ["Brand area", "64–80px tall, top of sidebar"], ["Nav items", "Active: #F5F5F5 bg + 600 weight. Inactive: transparent + 400 weight."]] },
-      { n: "Message Thread", rows: [["Direction", "Vertical stack, chronological"], ["User messages", "Right-aligned, #424242 fill, #FFFFFF text, 8px radius"], ["AI messages", "Left-aligned, #FFFFFF fill, #212121 text, 1px #E0E0E0 border, 8px radius"], ["Max width", "72% of container"], ["Gap", "12–16px between messages"], ["Sender label", "11px #757575, above bubble"]] },
-      { n: "Selection Model", rows: [["Signaling", "#F5F5F5 background fill — no accent bar, no chromatic indicator"], ["Title weight", "Bumps from 500 to 600 on selection"], ["Transition", "Instant — no animation on selection change"], ["Focus outline", "2px solid #424242 offset 2px (keyboard focus)"]] },
+      { n: "Sidebar + Main", rows: [["Sidebar width", `240–280px fixed, ${C.surface} surface`], ["Main area", `Fluid, fills remaining, ${C.page_bg} page background`], ["Divider", `${rule(bw.default, C.border_default)} (right border of sidebar)`], ["Brand area", "64–80px tall, top of sidebar"], ["Nav items", `Active: ${C.page_bg} bg + 600 weight. Inactive: transparent + 400 weight.`]] },
+      { n: "Message Thread", rows: [["Direction", "Vertical stack, chronological"], ["User messages", `Right-aligned, ${C.accent} fill, ${C.surface} text, 8px radius`], ["AI messages", `Left-aligned, ${C.surface} fill, ${C.text_primary} text, ${bw.default}px ${C.border_default} border, 8px radius`], ["Max width", "72% of container"], ["Gap", "12–16px between messages"], ["Sender label", `11px ${C.text_secondary}, above bubble`]] },
+      { n: "Selection Model", rows: [["Signaling", `${C.page_bg} background fill — no accent bar, no chromatic indicator`], ["Title weight", "Bumps from 500 to 600 on selection"], ["Transition", "Instant — no animation on selection change"], ["Focus outline", `${rule(bw.focus, C.focus_ring)} offset 2px (keyboard focus)`]] },
       { n: "Mobile-First Expansion", rows: [["Mobile viewport", "375px width"], ["Desktop viewport", "1280px width"], ["Expansion: two-column", "60% main / 40% panel, 24px gap"], ["Expansion: card grid", "2–3 columns, 16px gap"], ["Expansion: centered", "Max 640px content width"], ["Expansion: left sidebar", "200–280px sidebar"]] },
-      { n: "Empty & Error States", rows: [["Empty icon", "64x64 placeholder in #BDBDBD"], ["Empty title", "16px #212121, weight 600"], ["Empty description", "13px #757575, max 2 lines"], ["Error variant", "Same layout with retry button"], ["First-use variant", "Stronger primary CTA (Get Started)"]] },
+      { n: "Empty & Error States", rows: [["Empty icon", `64x64 placeholder in ${C.text_muted}`], ["Empty title", `16px ${C.text_primary}, weight 600`], ["Empty description", `13px ${C.text_secondary}, max 2 lines`], ["Error variant", "Same layout with retry button"], ["First-use variant", "Stronger primary CTA (Get Started)"]] },
     ].map((p, pi) => (<div key={pi} style={{ marginBottom: 14 }}><H4>{p.n}</H4>
       <div style={{ borderRadius: 6, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
         {p.rows.map((r, ri) => (<div key={ri} style={{ display: "grid", gridTemplateColumns: "160px 1fr", borderBottom: ri < p.rows.length - 1 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
@@ -424,23 +433,23 @@ function neutralSpec(a) { return {
   extensions: () => (<div>
     <H3>1. The Greyscale Value Hierarchy</H3>
     <P>Neutral's defining characteristic is its calibrated greyscale. Seven values are arranged in a perceptual hierarchy where each step serves a distinct role. The system never reaches pure black (#000) or pure white (#FFF for page) — the endpoints are softened for comfort.</P>
-    <Tk n="#F5F5F5" v="Page background" d="The canvas — everything sits on this" a={a} />
-    <Tk n="#FFFFFF" v="Surface" d="Cards, panels, headers — elevated above page" a={a} />
-    <Tk n="#E0E0E0" v="Border" d="Boundaries, dividers — structural lines" a={a} />
-    <Tk n="#BDBDBD" v="Disabled / muted" d="Placeholder text, inactive elements" a={a} />
-    <Tk n="#757575" v="Secondary text" d="Labels, metadata, descriptions" a={a} />
-    <Tk n="#424242" v="Interactive" d="Buttons, links, active states — the 'accent'" a={a} />
-    <Tk n="#212121" v="Primary text" d="Headings, body copy — the strongest value" a={a} />
-    <Do>Treat #424242 as the accent — it is the only value used for interactive fills</Do>
-    <Do>Maintain perceptual separation between adjacent values — #757575 and #424242 should feel like different tones</Do>
+    <Tk n={C.page_bg} v="Page background" d="The canvas — everything sits on this" a={a} />
+    <Tk n={C.surface} v="Surface" d="Cards, panels, headers — elevated above page" a={a} />
+    <Tk n={C.border_default} v="Border" d="Boundaries, dividers — structural lines" a={a} />
+    <Tk n={C.text_muted} v="Disabled / muted" d="Placeholder text, inactive elements" a={a} />
+    <Tk n={C.text_secondary} v="Secondary text" d="Labels, metadata, descriptions" a={a} />
+    <Tk n={C.accent} v="Interactive" d="Buttons, links, active states — the 'accent'" a={a} />
+    <Tk n={C.text_primary} v="Primary text" d="Headings, body copy — the strongest value" a={a} />
+    <Do>{`Treat ${C.accent} as the accent — it is the only value used for interactive fills`}</Do>
+    <Do>{`Maintain perceptual separation between adjacent values — ${C.text_secondary} and ${C.accent} should feel like different tones`}</Do>
     <Dont>Use #000000 or #FFFFFF as page backgrounds — they are too extreme for wireframes</Dont>
 
     <H3>2. Borders-Only Elevation</H3>
     <P>Neutral communicates depth exclusively through surface color and border weight. There are no shadows, no blur, no translucency. This is the simplest elevation model — it makes the wireframe feel flat and structural, which is the intent.</P>
-    <Tk n="border.light" v="1px solid #E0E0E0" d="Standard container boundary" a={a} />
-    <Tk n="border.strong" v="1.5px solid #E0E0E0" d="Focus state, hover emphasis" a={a} />
-    <Tk n="depth.signal" v="Surface color only" d="#F5F5F5 → #FFFFFF indicates 'above'" a={a} />
-    <Do>Use the page-to-surface color shift (#F5F5F5 → #FFFFFF) as the primary depth cue</Do>
+    <Tk n="border.light" v={rule(bw.default, C.border_default)} d="Standard container boundary" a={a} />
+    <Tk n="border.strong" v={rule(bw.strong, C.border_strong)} d="Focus state, hover emphasis" a={a} />
+    <Tk n="depth.signal" v="Surface color only" d={`${C.page_bg} → ${C.surface} indicates 'above'`} a={a} />
+    <Do>{`Use the page-to-surface color shift (${C.page_bg} → ${C.surface}) as the primary depth cue`}</Do>
     <Do>Use 1.5px borders for interactive hover states to signal affordance</Do>
     <Dont>Add any box-shadow, drop-shadow, or backdrop-filter</Dont>
 
@@ -488,7 +497,7 @@ function neutralSpec(a) { return {
       ].map((p, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "140px 1fr 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{p[0]}</span>
-          <span style={{ fontSize: 11, color: "#212121", fontFamily: "-apple-system, sans-serif", background: "#F5F5F5", padding: "2px 6px", display: "inline-block", borderRadius: 3, fontWeight: 500 }}>{p[1]}</span>
+          <span style={{ fontSize: 11, color: C.text_primary, fontFamily: F.body, background: C.page_bg, padding: "2px 6px", display: "inline-block", borderRadius: 3, fontWeight: 500 }}>{p[1]}</span>
           <span style={{ fontSize: 9.5, color: "#666" }}>{p[2]}</span>
         </div>))}
     </div>
@@ -567,12 +576,13 @@ export default function App() {
         .ma { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px }
         .si { border: none; outline: none; background: transparent; flex: 1; font-size: 12px; width: 100% }
         input::placeholder { opacity: 0.5 }
-        .snd { cursor: pointer; transition: opacity 0.12s; flex-shrink: 0 }
+        .snd { cursor: pointer; transition: opacity ${motion(tokens, "fast")}; flex-shrink: 0 }
         .snd:hover { opacity: 0.75 }
-        .mi { animation: fadeSlideUp 0.2s ease both }
-        .ci { animation: fadeSlideUp 0.2s ease both }
-        .ci:hover { background: #F5F5F5 !important }
-        .bc-nt:hover { background: #F5F5F5 !important }
+        .mi { animation: fadeSlideUp ${motion(tokens, "slow")} both }
+        .ci { animation: fadeSlideUp ${motion(tokens, "moderate")} both }
+        .ci:hover { background: ${C.surface_selected} !important }
+        .bc-nt:hover { background: ${C.page_bg} !important }
+        ${reducedMotionCss(tokens, { scope: ".app-sh", animated: [".mi", ".ci"] })}
       `}</style>
 
       {/* TOP NAV */}
