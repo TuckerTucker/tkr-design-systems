@@ -10,6 +10,7 @@ Public API:
         register_system, unregister_system,
         get_rulebook, check_compliance,
         check_drift, check_drift_all, read_spec_with_tokens,
+        check_jsx_drift,
         Result,
     )
 
@@ -33,6 +34,7 @@ from .validation import validate_spec
 from .rulebook import get_rulebook, check_compliance
 from .drift import check_drift, check_drift_all
 from .token_file import read_spec_with_tokens
+from .jsx_drift import check_jsx_drift
 
 __all__ = [
     "Result",
@@ -47,4 +49,5 @@ __all__ = [
     "check_drift",
     "check_drift_all",
     "read_spec_with_tokens",
+    "check_jsx_drift",
 ]

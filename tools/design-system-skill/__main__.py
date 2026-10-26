@@ -10,6 +10,7 @@ Usage from the project root:
     python3 design-system-skill register --spec /abs/path/to/new-spec.yaml [--replace]
     python3 design-system-skill unregister --id <id>
     python3 design-system-skill drift [--all | --id swiss | --spec systems/swiss/spec.yaml]
+    python3 design-system-skill jsx-drift [--id swiss ...] [--allowlist PATH]
 
 All commands print a JSON Result to stdout. Exit code 0 if ok, 1 otherwise.
 """
@@ -48,6 +49,7 @@ def main(argv: list[str] | None = None) -> int:
         check_compliance,
         check_drift,
         check_drift_all,
+        check_jsx_drift,
     )
     from design_system_skill.paths import project_root  # noqa: E402
     from design_system_skill.registry import Registry  # noqa: E402
@@ -95,6 +97,14 @@ def main(argv: list[str] | None = None) -> int:
     target.add_argument("--id", help="Check one registered system.")
     target.add_argument("--spec", help="Check one spec.yaml by path.")
 
+    p_jsx = sub.add_parser(
+        "jsx-drift",
+        help="Check the showcase JSX for colour literals that bypass tokens.json (default: every page).",
+    )
+    p_jsx.add_argument("--id", action="append", dest="ids",
+                       help="Showcase system id (repeatable), e.g. neutral, swiss.")
+    p_jsx.add_argument("--allowlist", help="Allow-list YAML (default: apps/showcase/jsx-color-allowlist.yaml).")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "list":
@@ -126,6 +136,9 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             return _emit(check_drift(project_root() / entry.spec))
         return _emit(check_drift_all())
+    if args.cmd == "jsx-drift":
+        allow = Path(args.allowlist).resolve() if args.allowlist else None
+        return _emit(check_jsx_drift(args.ids, allowlist=allow))
     parser.error(f"Unknown command: {args.cmd}")
     return 2
 
