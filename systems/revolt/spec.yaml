@@ -14,7 +14,8 @@ system:
   # two-letter abbreviations in 30×30 white squares with 2px black borders,
   # uppercase Space Mono weight 700 — matches the neobrutalist code-comment
   # affect. The pink-swap on selection still applies (background swaps to
-  # #FF3366; the abbreviation flips to white).
+  # #FF3366; the abbreviation flips to black #111111 = color.accent_foreground,
+  # since white on pink is 3.5:1, issue #7).
   requires_emoji: false
   avatar_strategy:
     mode: abbreviation
@@ -27,8 +28,8 @@ system:
     placeholder_letter_color: "#111111"
     selected_swap:
       surface: "#FF3366"
-      letter_color: "#FFFFFF"
-    rendering_notes: "Two-letter uppercase abbreviation (e.g. TT, RI, BC), Space Mono weight 700, centered in a 30×30 white square with 2px black border. On selection, background swaps to pink (#FF3366) and the abbreviation flips white."
+      letter_color: "{color.accent_foreground}"
+    rendering_notes: "Two-letter uppercase abbreviation (e.g. TT, RI, BC), Space Mono weight 700, centered in a 30×30 white square with 2px black border. On selection, background swaps to pink (#FF3366) and the abbreviation stays black (#111111, accent_foreground; white on pink is 3.5:1)."
 
 tokens:
   colors:
@@ -110,7 +111,7 @@ components:
           border: "2px solid #111"
           shadow: { offset_x: 4, offset_y: 4, color: "#111", blur: 0 }
           additional_treatment: "avatar bg swap to #FF3366"
-        rendering_notes: "Lime fill (#C8FF00), 2px black border, 4px hard offset shadow. Avatar background swaps to pink (#FF3366) with white emoji. Same preview-yields-to-badge rule as default variant."
+        rendering_notes: "Lime fill (#C8FF00), 2px black border, 4px hard offset shadow. Avatar background swaps to pink (#FF3366) with the black (#111111) abbreviation. Same preview-yields-to-badge rule as default variant."
         states: [selected]
     constraints:
       - "Selection: lime fill + 2px black border + 4px hard shadow + pink avatar swap. NEVER use a soft shadow or rounded selection."

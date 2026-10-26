@@ -10,8 +10,11 @@ Public API:
         register_system, unregister_system,
         get_rulebook, check_compliance,
         check_drift, check_drift_all, read_spec_with_tokens,
+        check_color_gates_for_spec, check_color_gates_all,
         Result,
     )
+
+Colour gates (WCAG contrast, accent/danger hue): see contrast.py.
 
 Token contract and token files: see contract.py, token_file.py and
 docs/specs/SCHEMA-V0.3.md / docs/specs/TOKENS.md.
@@ -32,6 +35,7 @@ from .registry import list_systems, register_system, unregister_system
 from .validation import validate_spec
 from .rulebook import get_rulebook, check_compliance
 from .drift import check_drift, check_drift_all
+from .contrast import check_color_gates_all, check_color_gates_for_spec
 from .token_file import read_spec_with_tokens
 
 __all__ = [
@@ -46,5 +50,7 @@ __all__ = [
     "check_compliance",
     "check_drift",
     "check_drift_all",
+    "check_color_gates_for_spec",
+    "check_color_gates_all",
     "read_spec_with_tokens",
 ]

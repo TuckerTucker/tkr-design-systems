@@ -51,7 +51,11 @@ from design_system_skill import (  # noqa: E402
     unregister_system,
     get_rulebook,
     check_compliance,
+    check_color_gates_all,
+    check_color_gates_for_spec,
 )
+from design_system_skill.paths import project_root  # noqa: E402
+from design_system_skill.registry import Registry  # noqa: E402
 from wireframe_skill import (  # noqa: E402
     wireframe,
     build_substitution_request,
@@ -85,7 +89,7 @@ def _error_result(exc: Exception) -> dict[str, Any]:
     return {"ok": False, "errors": [str(exc)]}
 
 
-# ─── design-system-skill tools (7) ────────────────────────────────────
+# ─── design-system-skill tools (8) ────────────────────────────────────
 
 
 @mcp.tool()
@@ -122,8 +126,12 @@ def ds_validate_spec(
 ) -> dict[str, Any]:
     """Validate a spec.yaml against the schema without modifying the registry.
 
-    Returns {valid, system_id, spec_version, errors, warnings}. Use when
-    authoring a new design system spec before registering it.
+    Returns {valid, system_id, spec_version, errors, warnings, contrast,
+    hue_gate}. contrast / hue_gate are the colour-gate reports for the
+    spec's tokens.json (worst ratio per pair with its minimum, pass flag
+    and mode; failures also appear in errors as CONTRAST_FAIL /
+    HUE_GATE_FAIL). Use when authoring a new design system spec before
+    registering it.
     """
     try:
         return validate_spec(spec_path, library_root=library_root).to_dict()
@@ -189,10 +197,39 @@ def ds_check_compliance(
     Violations allow-listed in systems/<id>/rulebook-exceptions.yaml come
     back as status "waived" with their reasons; an allow-list entry for
     this artifact that matched nothing is a failing
-    "rulebook-exception-stale" result.
+    "rulebook-exception-stale" result. The system itself must pass its
+    colour gates (see ds_check_contrast) or the check fails to load it.
     """
     try:
         return check_compliance(system_id, artifact_path, scope=scope).to_dict()
+    except Exception as exc:
+        return _error_result(exc)
+
+
+@mcp.tool()
+def ds_check_contrast(system_id: str | None = None, verbose: bool = False) -> dict[str, Any]:
+    """Run the WCAG contrast and accent/danger hue gates on a system's tokens.
+
+    Checks every required fg/bg pair (text 4.5:1, large_text 3:1, ui 3:1;
+    advisory pairs reported only) in every mode combination and over every
+    declared page backdrop, compositing translucent colours, plus the
+    40-degree OKLCH hue gap between accent/action and danger. Omit
+    system_id to check every registered system. Returns per-pair worst
+    ratio, minimum, pass flag, mode and any waiver reason; verbose=True
+    adds every evaluated result.
+    """
+    try:
+        if system_id is None:
+            return check_color_gates_all(
+                checker=lambda p: check_color_gates_for_spec(p, verbose=verbose)).to_dict()
+        reg = Registry.load()
+        if not reg.ok:
+            return reg.to_dict()
+        entry = reg.data.get(system_id)
+        if entry is None:
+            return {"ok": False, "errors": [{"code": "SYSTEM_NOT_FOUND",
+                                             "message": f"System '{system_id}' is not registered"}]}
+        return check_color_gates_for_spec(project_root() / entry.spec, verbose=verbose).to_dict()
     except Exception as exc:
         return _error_result(exc)
 

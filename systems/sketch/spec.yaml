@@ -135,13 +135,13 @@ rulebook:
   # check_scope (Change 12) so consumers know how and where to verify.
 
   - id: sketch-purple-on-annotations-only
-    rule: "Purple (#B8A9C8) is used on Caveat annotation elements and unread badges. NEVER on button backgrounds or fill regions."
+    rule: "Purple (#7F718E) is used on Caveat annotation elements and unread badges. NEVER on button backgrounds or fill regions."
     rationale: "Purple is the editorial layer's signature; using it for navigation or surfaces breaks the layer separation."
     severity: required
     check_method: both
     check_scope: artifact
     check_implementation: |
-      Mechanical: count <text> elements with effective fill #B8A9C8 by font-family.
+      Mechanical: count <text> elements with effective fill #7F718E by font-family.
       Caveat-family text and small unread-badge rects are permitted; flag any
       large rect/path with purple fill. Semantic: verify each purple element
       serves an annotation or unread role.

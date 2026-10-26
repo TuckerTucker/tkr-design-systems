@@ -754,9 +754,29 @@ tokens:
 
 # ─── test: semantic token contract (schema v0.3, issue #6) ────────
 
+# Colours for the synthetic document: white surfaces, near-black text,
+# dark fills with white content. Every contract pair passes the contrast
+# gate (issue #7) and accent/action sit far from danger in hue (issue #8).
+_MINIMAL_COLORS = {
+    "page_bg": "#FFFFFF", "surface": "#FFFFFF", "surface_elevated": "#FFFFFF",
+    "surface_selected": "#F0F0F0", "surface_inverse": "#111111",
+    "text_primary": "#111111", "text_secondary": "#555555", "text_muted": "#767676",
+    "text_placeholder": "#999999", "text_inverse": "#FFFFFF",
+    "accent": "#1F4FA0", "accent_foreground": "#FFFFFF",
+    "action": "#1F4FA0", "action_foreground": "#FFFFFF",
+    "danger": "#B00020", "danger_foreground": "#FFFFFF",
+    "success": "#1B5E20", "success_foreground": "#FFFFFF",
+    "warning": "#7A4F00", "warning_foreground": "#FFFFFF",
+    "info": "#0D47A1", "info_foreground": "#FFFFFF",
+    "border_default": "#E0E0E0", "border_strong": "#111111",
+    "border_input": "#767676", "focus_ring": "#1F4FA0",
+}
+
+
 def _minimal_token_doc(system_id: str = "synthetic") -> dict:
     """Build a token document supplying every contract token with a
-    plausible value of the right kind (no file I/O)."""
+    plausible value of the right kind (no file I/O). Its colours pass the
+    contrast and hue gates."""
     from design_system_skill import contract as c
     defaults = {
         c.KIND_COLOR: "#808080",
@@ -775,6 +795,8 @@ def _minimal_token_doc(system_id: str = "synthetic") -> dict:
         if token.kind == c.KIND_TYPE_ROLE:
             value = {"size": 14, "weight": 400, "line_height": 1.5,
                      "tracking": 0, "family": "body", "case": "none"}
+        elif token.kind == c.KIND_COLOR:
+            value = _MINIMAL_COLORS[token.name]
         else:
             value = json.loads(json.dumps(defaults[token.kind]))  # no shared mappings
         doc.setdefault(token.group, {})[token.name] = value
@@ -994,7 +1016,9 @@ def test_riso_modes_cover_every_press():
     kraft_sunset = resolve_mode(doc, {"paper": "kraft", "ink": "sunset"})
     assert_(kraft_sunset["color"]["page_bg"] == "#D4BE94", "kraft paper sets page_bg")
     assert_(kraft_sunset["color"]["text_primary"] == "#2A1F12", "kraft paper sets text ink")
-    assert_(kraft_sunset["color"]["accent"] == "#E8C700", "sunset ink-2 sets accent")
+    assert_(kraft_sunset["extras"]["color"]["ink_2"] == "#E8C700", "sunset sets the ink-2 drum")
+    assert_(kraft_sunset["color"]["accent"] == "#5A4C00",
+            "sunset sets accent to the legible shade of its ink-2 drum (issue #7)")
     default = resolve_mode(doc)
     assert_(default["color"] == doc["color"], "default selection equals base values")
 
@@ -1016,10 +1040,10 @@ def test_token_file_edit_invalidates_cache():
                     "swiss accent loads from tokens.json")
             tok = td_path / "swiss" / "tokens.json"
             doc = json.loads(tok.read_text())
-            doc["color"]["accent"] = "#0000FF"
+            doc["color"]["accent"] = "#D0000A"   # still red: the hue waiver keeps matching
             tok.write_text(json.dumps(doc))
             second = load_system("swiss")
-            assert_(second.ok and second.data["tokens"]["colors"]["accent"] == "#0000FF",
+            assert_(second.ok and second.data["tokens"]["colors"]["accent"] == "#D0000A",
                     "edited accent is picked up without clear_cache()")
         finally:
             del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
@@ -1038,7 +1062,7 @@ def test_find_drift_kinds():
         "tokens": {
             "colors": {
                 "accent": "#e3000b",          # same colour, different spelling: not drift
-                "page_bg": "#FFFFFF",         # token says #808080
+                "page_bg": "#FAFAFA",         # token says #FFFFFF
                 "palette": [
                     {"name": "red", "token": "color.accent"},
                     {"name": "hair", "token": "extras.color.rule_hairline", "value": "#EEEEEE"},
@@ -1294,6 +1318,309 @@ def test_every_system_declares_motion():
             "revolt rotation_interaction.transition_ms aliases motion.fast.enter_ms")
 
 
+# ─── test: contrast gate (issue #7) ───────────────────────────────
+
+def _gate_errors(report) -> str:
+    return " | ".join(f"{e.code}: {e.message}" for e in report.errors)
+
+
+def test_contrast_ratio_matches_wcag():
+    section("contrast: WCAG 2.x ratio math")
+    from design_system_skill.contrast import contrast_ratio, relative_luminance
+    from design_system_skill.contract import parse_color
+
+    def ratio(a, b):
+        return contrast_ratio(parse_color(a)[:3], parse_color(b)[:3])
+
+    assert_(round(ratio("#777", "#FFF"), 2) == 4.48, f"#777 on #FFF is 4.48:1 ({ratio('#777', '#FFF'):.4f})")
+    assert_(ratio("#777", "#FFF") < 4.5, "#777 on #FFF fails 4.5 (ratios are never rounded up)")
+    assert_(round(ratio("#000", "#FFF"), 2) == 21.0, "black on white is 21:1")
+    assert_(ratio("#FFF", "#FFF") == 1.0, "identical colours are 1:1")
+    assert_(ratio("#767676", "#FFFFFF") >= 4.5, "#767676 on white passes 4.5 (4.54:1)")
+    assert_(ratio("#E3000B", "#FFF") == ratio("#FFF", "#E3000B"), "ratio is order-independent")
+    assert_(abs(relative_luminance((255, 255, 255)) - 1.0) < 1e-12, "white has luminance 1")
+
+
+def test_contrast_alpha_compositing():
+    section("contrast: translucent colours composite over their real backdrop")
+    from design_system_skill.contrast import check_contrast, composite
+    mid = composite((0, 0, 0, 0.5), (255, 255, 255))
+    assert_(all(abs(c - 127.5) < 1e-9 for c in mid), f"50% black over white is mid grey ({mid})")
+
+    doc = _minimal_token_doc()
+    doc["color"]["page_bg"] = "#000000"
+    doc["color"]["surface"] = "rgba(255,255,255,0.1)"        # glass on black
+    doc["color"]["text_primary"] = "rgba(255,255,255,0.9)"
+    rep = check_contrast(doc)
+    row = next(r for r in rep.results if r["pair"] == "color.text_primary on color.surface")
+    # surface -> (25.5,)*3 over black; text -> 0.9*255 + 0.1*25.5 = 232.05
+    assert_(row["passes"] and row["ratio"] > 10, f"glass text composites over glass over page ({row['ratio']})")
+
+    doc["extras"] = {"color": {"stop": "#C0C0C0"}}
+    doc["contrast_backdrops"] = ["extras.color.stop"]
+    rep = check_contrast(doc)
+    rows = [r for r in rep.results if r["pair"] == "color.text_primary on color.surface"]
+    assert_({r["backdrop"] for r in rows} == {"color.page_bg", "extras.color.stop"},
+            "every pair is evaluated over page_bg and each contrast_backdrops entry")
+    assert_(any(not r["passes"] for r in rows if r["backdrop"] == "extras.color.stop"),
+            "white glass text fails over a light backdrop stop")
+    assert_(any("extras.color.stop" in e.message for e in rep.errors if e.code == "CONTRAST_FAIL"),
+            f"failure names the backdrop ({_gate_errors(rep)[:300]})")
+
+    doc["contrast_backdrops"] = ["color.surface"]          # translucent: not a backdrop
+    assert_(any(e.code == "CONTRAST_INVALID" for e in check_contrast(doc).errors),
+            "a translucent backdrop is rejected")
+
+
+def test_contrast_oklch_and_gamut():
+    section("contrast: OKLCH conversion, gamut clamp, lightness fix")
+    from design_system_skill.contrast import (
+        in_srgb_gamut, oklch_to_rgb, rgb_to_oklch, suggest_lightness_fix, to_hex,
+    )
+    from design_system_skill.contract import parse_color
+    white = rgb_to_oklch((255, 255, 255))
+    assert_(abs(white[0] - 1.0) < 1e-4 and white[1] < 1e-4, f"white is L=1, C=0 ({white})")
+    red = rgb_to_oklch((255, 0, 0))
+    assert_(abs(red[0] - 0.628) < 1e-3 and abs(red[1] - 0.2577) < 1e-3 and abs(red[2] - 29.23) < 0.05,
+            f"#FF0000 is oklch(0.628 0.258 29.2) ({red})")
+    for hexv in ("#E3000B", "#7DDFBE", "#3255A4", "#F4EFE4", "#111111"):
+        rgb, _ = oklch_to_rgb(*rgb_to_oklch(parse_color(hexv)[:3]))
+        assert_(to_hex(rgb) == hexv, f"{hexv} round-trips through OKLCH ({to_hex(rgb)})")
+    assert_(not in_srgb_gamut(0.7, 0.4, 150), "oklch(0.7 0.4 150) is outside sRGB")
+    rgb, chroma = oklch_to_rgb(0.7, 0.4, 150)
+    assert_(chroma < 0.4 and in_srgb_gamut(0.7, chroma, 150) and all(0 <= c <= 255 for c in rgb),
+            f"out-of-gamut colour is clamped by reducing chroma ({chroma:.3f})")
+
+    fix = suggest_lightness_fix("#B8A9C8", [("#F0EDE8", "#FAFAF8")], 3.0, move="fg")
+    before, after = rgb_to_oklch(parse_color("#B8A9C8")[:3]), rgb_to_oklch(parse_color(fix.new)[:3])
+    assert_(fix.ratio_before < 3.0 <= fix.ratio_after, f"fix passes ({fix})")
+    assert_(abs(before[2] - after[2]) < 2 and abs(before[1] - after[1]) < 0.003,
+            f"hue and chroma are kept ({before} -> {after})")
+    assert_(fix.delta_l < 0, "lavender darkens to pass on a light surface")
+    glass = suggest_lightness_fix("rgba(255,255,255,0.4)", [("rgba(255,255,255,0.08)", "#5A5562")],
+                                  3.0, move="fg")
+    assert_(glass is not None and glass.delta_alpha > 0 and glass.new.startswith("rgba(255,255,255,"),
+            f"white glass text (already L=1) gains opacity instead ({glass})")
+
+
+def test_contrast_every_mode_combination():
+    section("contrast: every mode combination is checked")
+    from design_system_skill.contrast import check_contrast
+    doc = _minimal_token_doc()
+    doc["modes"] = {"axes": [
+        {"id": "scheme", "default": "light",
+         "options": {"light": {}, "dark": {"color.page_bg": "#121212", "color.surface": "#121212"}}},
+        {"id": "density", "default": "regular", "options": {"regular": {}, "compact": {}}},
+    ]}
+    rep = check_contrast(doc)
+    assert_(rep.modes == 4, f"2 x 2 axes = 4 combinations ({rep.modes})")
+    fails = [e for e in rep.errors if e.code == "CONTRAST_FAIL"]
+    assert_(fails and all(e.detail["mode"]["scheme"] == "dark" for e in fails),
+            f"dark text on the dark scheme fails, named by mode ({_gate_errors(rep)[:300]})")
+    assert_(any(e.detail["failures"] == 2 for e in fails), "failure count spans both densities")
+    passing = [r for r in rep.results if r["mode"]["scheme"] == "light"]
+    assert_(passing and all(r["passes"] for r in passing), "light scheme passes")
+
+
+def test_contrast_waivers():
+    section("contrast: waivers need a reason, only cover ui pairs, and go stale")
+    from design_system_skill.contrast import check_contrast
+    doc = _minimal_token_doc()
+    doc["color"]["accent"] = "#9DB8E8"           # light blue mark on white: ui 1.9:1
+    doc["color"]["accent_foreground"] = "#111111"
+    rep = check_contrast(doc)
+    assert_(any(e.code == "CONTRAST_FAIL" and e.detail["pair"] == "color.accent on color.surface"
+                for e in rep.errors), "unwaived ui failure fails")
+
+    doc["contrast_waivers"] = [{"pair": "color.accent on color.surface",
+                                "reason": "Decorative brand flourish; selection is carried by weight."}]
+    rep = check_contrast(doc)
+    assert_(rep.ok, f"a reasoned waiver covers the ui failure ({_gate_errors(rep)[:300]})")
+    row = next(r for r in rep.results if r["pair"] == "color.accent on color.surface")
+    assert_(row["waived"] and "Decorative" in row["waiver_reason"], "waived result carries the reason")
+    assert_(rep.summary()["waived"] == 1, "summary counts the waiver")
+
+    doc["contrast_waivers"] = [{"pair": "color.accent on color.surface", "reason": "  "}]
+    rep = check_contrast(doc)
+    assert_(any(e.code == "CONTRAST_INVALID" and "reason" in e.message for e in rep.errors),
+            "a waiver without a reason is invalid")
+
+    doc["contrast_waivers"] = [{"pair": "color.accent_foreground on color.accent", "reason": "x"}]
+    rep = check_contrast(doc)
+    assert_(any(e.code == "CONTRAST_INVALID" and "only" in e.message for e in rep.errors),
+            "text pairs cannot be waived")
+
+    doc["color"]["accent"] = "#1F4FA0"            # fixed: the waiver no longer matches
+    doc["color"]["accent_foreground"] = "#FFFFFF"
+    doc["contrast_waivers"] = [{"pair": "color.accent on color.surface", "reason": "was decorative"}]
+    rep = check_contrast(doc)
+    assert_(any(e.code == "CONTRAST_FAIL" and e.detail.get("stale") for e in rep.errors),
+            "a waiver that matches no failure is stale and fails")
+
+    doc["contrast_waivers"] = [{"pair": "color.nope on color.surface", "reason": "x"}]
+    assert_(any(e.code == "CONTRAST_INVALID" for e in check_contrast(doc).errors),
+            "a waiver naming an unknown pair is invalid")
+
+
+def test_contrast_waiver_modes_and_stale_patterns():
+    section("contrast: mode-scoped waivers match partial selections; unused patterns are stale")
+    from design_system_skill.contrast import check_contrast
+    doc = _minimal_token_doc()
+    doc["modes"] = {"axes": [{"id": "ink", "default": "blue", "options": {
+        "blue": {}, "pale": {"color.focus_ring": "#C8D6F0"}}}]}
+    waiver = {"pair": "color.focus_ring on color.surface", "modes": [{"ink": "pale"}],
+              "reason": "test"}
+    doc["contrast_waivers"] = [waiver, {**waiver, "pair": "color.focus_ring on color.page_bg"}]
+    rep = check_contrast(doc)
+    assert_(rep.ok, f"mode-scoped waivers cover the pale ink only ({_gate_errors(rep)[:300]})")
+    waiver2 = {**waiver, "modes": [{"ink": "pale"}, {"ink": "blue"}]}
+    doc["contrast_waivers"] = [waiver2, {**waiver, "pair": "color.focus_ring on color.page_bg"}]
+    rep = check_contrast(doc)
+    assert_(any(e.detail.get("stale") and "{'ink': 'blue'}" in e.message for e in rep.errors),
+            f"a mode pattern that matches nothing is stale ({_gate_errors(rep)[:300]})")
+    doc["contrast_waivers"] = [{**waiver, "modes": [{"ink": "neon"}]}]
+    assert_(any(e.code == "CONTRAST_INVALID" for e in check_contrast(doc).errors),
+            "a waiver naming an unknown mode option is invalid")
+
+
+def test_contrast_pair_replacement():
+    section("contrast: border_input pair can be re-expressed, with a note")
+    from design_system_skill.contrast import check_contrast
+    doc = _minimal_token_doc()
+    doc["color"]["border_input"] = "#EEEEEE"
+    assert_(not check_contrast(doc).ok, "a faint input stroke fails ui 3:1")
+    doc["contrast_pairs"] = [{"fg": "color.accent", "bg": "color.surface", "kind": "text",
+                              "replaces": "color.border_input on color.surface",
+                              "note": "Inputs are identified by a prompt glyph in accent."}]
+    rep = check_contrast(doc)
+    assert_(rep.ok, f"the identifying pair replaces the stroke pair ({_gate_errors(rep)[:200]})")
+    assert_(not any(r["pair"] == "color.border_input on color.surface" for r in rep.results),
+            "the replaced pair is not evaluated")
+    doc["contrast_pairs"][0]["note"] = ""
+    assert_(any(e.code == "CONTRAST_INVALID" for e in check_contrast(doc).errors),
+            "a replacement needs a note")
+    doc["contrast_pairs"][0].update(note="x", replaces="color.text_primary on color.surface")
+    assert_(any(e.code == "CONTRAST_INVALID" for e in check_contrast(doc).errors),
+            "only border_input on surface is replaceable")
+
+
+def test_contrast_gate_in_validate_and_cli():
+    section("contrast: validate_spec, load_system and the CLI expose the gate")
+    import contextlib
+    import importlib.util
+    import io
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        doc = _minimal_token_doc()
+        spec_path = _write_v03_spec(td_path, doc)
+        res = validate_spec(spec_path)
+        assert_(res.ok and "contrast" in res.data, "valid spec returns the contrast report")
+        worst = res.data["contrast"]["worst"]
+        assert_(all({"pair", "ratio", "minimum", "passes", "mode", "kind"} <= set(r) for r in worst),
+                "per-pair report has ratio, minimum, pass and mode")
+
+        doc["color"]["text_secondary"] = "#AAAAAA"
+        spec_path = _write_v03_spec(td_path, doc)
+        res = validate_spec(spec_path)
+        assert_(not res.ok and any(e.code == "CONTRAST_FAIL" for e in res.errors),
+                "a failing pair fails validate_spec with CONTRAST_FAIL")
+        assert_(res.data and res.data["contrast"]["failed"] >= 1,
+                "the failing report is still attached to the result data")
+
+        spec_mod = importlib.util.spec_from_file_location("dss_cli_c", HERE / "__main__.py")
+        cli = importlib.util.module_from_spec(spec_mod)
+        spec_mod.loader.exec_module(cli)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = cli.main(["contrast", "--spec", str(spec_path)])
+        assert_(code == 1 and "text_secondary" in out.getvalue(), f"CLI exits 1 and names the pair ({code})")
+        doc["color"]["text_secondary"] = "#555555"
+        spec_path = _write_v03_spec(td_path, doc)
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["contrast", "--spec", str(spec_path)])
+        assert_(code == 0, f"CLI exits 0 when every pair passes ({code})")
+    clear_cache()
+    loaded = load_system("swiss")
+    assert_(loaded.ok and "contrast" in loaded.data["_meta"].get("color_gates", {}),
+            "load_system attaches the gate reports under _meta.color_gates")
+
+
+def test_every_system_passes_color_gates():
+    section("contrast: every registered system passes in every mode")
+    from design_system_skill import check_color_gates_all
+    res = check_color_gates_all()
+    assert_(res.ok, "every registered system passes", "; ".join(e.message for e in res.errors)[:500])
+    systems = (res.data or {}).get("systems", {})
+    assert_(systems.get("riso", {}).get("contrast", {}).get("modes") == 30,
+            "riso is checked in all 30 paper x ink combinations")
+    assert_(len(systems.get("prism", {}).get("contrast", {}).get("backdrops", [])) == 5,
+            "prism is checked over page_bg and its four gradient stops")
+    for sys_id, data in systems.items():
+        if "alias_of" in data:
+            continue
+        assert_(data["contrast"]["failed"] == 0, f"{sys_id}: no failing contrast pair")
+
+
+def test_contrast_docs_match_module():
+    section("contrast: SCHEMA-V0.3.md thresholds table matches contrast.py")
+    from design_system_skill.contrast import render_thresholds_table
+    doc = (HERE.parents[1] / "docs" / "specs" / "SCHEMA-V0.3.md").read_text()
+    assert_(render_thresholds_table() in doc, "thresholds table equals render_thresholds_table()")
+
+
+# ─── test: accent / danger hue gate (issue #8) ────────────────────
+
+def test_hue_gate_gap_floor_and_waiver():
+    section("hue gate: 40° OKLCH gap, chroma floor, waivers")
+    from design_system_skill.contrast import check_hue_gate
+    doc = _minimal_token_doc()
+    rep = check_hue_gate(doc)
+    gaps = {r["token"]: r["gap"] for r in rep.results}
+    assert_(rep.ok and all(g is not None and g >= 40 for g in gaps.values()),
+            f"blue accent vs red danger clears 40° ({gaps})")
+
+    doc["color"]["accent"] = "#C0182A"        # a red accent
+    rep = check_hue_gate(doc)
+    fail = [e for e in rep.errors if e.code == "HUE_GATE_FAIL"]
+    assert_(fail and fail[0].detail["pair"] == "color.accent vs color.danger" and fail[0].detail["gap"] < 40,
+            f"red accent within 40° of danger fails and reports the gap ({_gate_errors(rep)[:200]})")
+    assert_(not any(e.detail.get("pair") == "color.action vs color.danger" for e in fail),
+            "action (still blue) passes")
+
+    doc["color"]["accent"] = "#7A6E70"        # warm grey: chroma below the floor
+    rep = check_hue_gate(doc)
+    row = next(r for r in rep.results if r["token"] == "color.accent")
+    assert_(rep.ok and row["exempt"] and row["gap"] is None and row["chroma"] < 0.04,
+            f"a grey accent is exempt ({row['chroma']})")
+
+    doc["color"]["accent"] = "#C0182A"
+    doc["hue_waivers"] = [{"pair": "color.accent vs color.danger", "reason": "Danger carried by a label."}]
+    rep = check_hue_gate(doc)
+    assert_(rep.ok and next(r for r in rep.results if r["token"] == "color.accent")["waived"],
+            "a reasoned hue waiver covers the failure")
+    doc["hue_waivers"] = [{"pair": "color.accent vs color.danger"}]
+    assert_(any(e.code == "HUE_GATE_INVALID" for e in check_hue_gate(doc).errors),
+            "a hue waiver without a reason is invalid")
+    doc["color"]["accent"] = "#1F4FA0"
+    doc["hue_waivers"] = [{"pair": "color.accent vs color.danger", "reason": "was red"}]
+    assert_(any(e.code == "HUE_GATE_FAIL" and e.detail.get("stale") for e in check_hue_gate(doc).errors),
+            "a hue waiver that matches no failure is stale")
+
+
+def test_hue_gate_registered_systems():
+    section("hue gate: registered systems (ADR-0002)")
+    from design_system_skill.contrast import check_hue_gate
+    for sys_id, waived in (("swiss", 2), ("revolt", 1), ("editorial", 0), ("terminal", 0)):
+        doc = json.loads((SYSTEMS_DIR / sys_id / "tokens.json").read_text())
+        rep = check_hue_gate(doc)
+        n = sum(1 for r in rep.results if r["waived"])
+        assert_(rep.ok and n == waived, f"{sys_id}: passes with {waived} waived result(s) ({n})")
+    riso = json.loads((SYSTEMS_DIR / "riso" / "tokens.json").read_text())
+    rep = check_hue_gate(riso)
+    assert_(rep.modes == 30 and all(r["exempt"] for r in rep.results),
+            "riso's danger is the paper's text ink (grey): exempt in all 30 modes")
+
+
 # ─── runner ─────────────────────────────────────────────────────────
 
 def main():
@@ -1342,6 +1669,18 @@ def main():
     test_motion_declarations_valid()
     test_motion_declarations_invalid()
     test_every_system_declares_motion()
+    test_contrast_ratio_matches_wcag()
+    test_contrast_alpha_compositing()
+    test_contrast_oklch_and_gamut()
+    test_contrast_every_mode_combination()
+    test_contrast_waivers()
+    test_contrast_waiver_modes_and_stale_patterns()
+    test_contrast_pair_replacement()
+    test_contrast_gate_in_validate_and_cli()
+    test_every_system_passes_color_gates()
+    test_contrast_docs_match_module()
+    test_hue_gate_gap_floor_and_waiver()
+    test_hue_gate_registered_systems()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")
