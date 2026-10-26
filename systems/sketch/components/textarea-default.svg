@@ -4,8 +4,8 @@
       .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
       .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
       .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-accent { fill: #7F718E; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-annotation { fill: #7F718E; font-family: 'Caveat', cursive; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
     </style>
   </defs>
   <!-- ==================== TEXTAREA-DEFAULT ==================== -->

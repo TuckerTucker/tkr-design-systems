@@ -19,8 +19,6 @@ TEXT_CLASSES = (
     TextClass("text-primary", "color.text_primary", "font.body"),
     TextClass("text-secondary", "color.text_secondary", "font.body"),
     TextClass("text-muted", "color.text_muted", "font.body"),
-    # Timestamps: one tier below text_muted (no contract token sits at 0.30).
-    TextClass("text-very-muted", "color.text_muted|alpha=0.30", "font.body"),
     TextClass("text-accent", "color.accent", "font.body"),
 )
 

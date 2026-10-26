@@ -3,12 +3,13 @@
     <style>
       .text-primary { fill: #111111; font-family: 'Space Mono', monospace; }
       .text-secondary { fill: #666666; font-family: 'Space Mono', monospace; }
-      .text-muted { fill: #949494; font-family: 'Space Mono', monospace; }
+      .text-muted { fill: #939393; font-family: 'Space Mono', monospace; }
       .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', monospace; }
+      .text-on-accent { fill: #111111; font-family: 'Space Mono', monospace; }
     </style>
   </defs>
   <!-- ==================== LABEL-REQUIRED ==================== -->
 
-  <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">LABEL <tspan fill="#FF3366">*</tspan></text>
+  <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">LABEL <tspan fill="#E80B55">*</tspan></text>
 
 </svg>

@@ -16,6 +16,7 @@ TEXT_CLASSES = (
     TextClass("text-secondary", "color.text_secondary", "font.body"),
     TextClass("text-muted", "color.text_muted", "font.body"),
     TextClass("text-inverse", "color.text_inverse", "font.body"),
+    TextClass("text-on-accent", "color.accent_foreground", "font.body"),
 )
 
 BUILDER = {

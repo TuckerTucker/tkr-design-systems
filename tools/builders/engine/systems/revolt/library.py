@@ -66,7 +66,7 @@ COMPONENTS = {
     "button-danger": (140, 48, """
   <rect x="2" y="2" width="136" height="44" fill="{extras.color.shadow}"/>
   <rect x="0" y="0" width="136" height="44" fill="{color.accent}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <text x="68" y="30" text-anchor="middle" class="text-inverse" font-size="11" font-weight="700" letter-spacing="0.44">DELETE</text>
+  <text x="68" y="30" text-anchor="middle" class="text-on-accent" font-size="11" font-weight="700" letter-spacing="0.44">DELETE</text>
 """),
 
     # Input — 2px black border, no shadow (inputs are minimal), white fill,
@@ -161,7 +161,7 @@ COMPONENTS = {
 """),
 
     "label-required": (100, 14, """
-  <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">LABEL <tspan fill="{color.accent}">*</tspan></text>
+  <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">LABEL <tspan fill="{color.danger}">*</tspan></text>
 """),
 
     # Icon — Space Mono glyph variants (>, ×, +, ↓) or placeholder square
@@ -196,7 +196,7 @@ COMPONENTS = {
 
     "avatar-selected": (30, 30, """
   <rect x="0" y="0" width="30" height="30" fill="{color.accent}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <text x="15" y="22" text-anchor="middle" class="text-inverse" font-size="11" font-weight="700">TT</text>
+  <text x="15" y="22" text-anchor="middle" class="text-on-accent" font-size="11" font-weight="700">TT</text>
 """),
 
     "avatar-with-status": (38, 30, """
@@ -211,7 +211,7 @@ COMPONENTS = {
 
     "badge-count": (24, 20, """
   <rect x="0" y="0" width="24" height="20" fill="{color.accent}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <text x="12" y="16" text-anchor="middle" class="text-inverse" font-size="9" font-weight="700">2</text>
+  <text x="12" y="16" text-anchor="middle" class="text-on-accent" font-size="9" font-weight="700">2</text>
 """),
 
     "badge-status-lime": (12, 12, """
@@ -270,7 +270,7 @@ COMPONENTS = {
   <rect x="2" y="2" width="196" height="56" fill="{extras.color.shadow}"/>
   <rect x="0" y="0" width="196" height="56" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <rect x="8" y="8" width="22" height="22" fill="{color.accent}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <text x="19" y="25" text-anchor="middle" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.text_inverse}">AB</text>
+  <text x="19" y="25" text-anchor="middle" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}">AB</text>
   <text x="38" y="20" class="text-primary" font-size="9" font-weight="700" letter-spacing="0.36">ITEM</text>
   <text x="186" y="20" text-anchor="end" class="text-primary" font-size="8" font-weight="700">2M</text>
   <text x="38" y="38" class="text-primary" font-size="8">preview text here…</text>

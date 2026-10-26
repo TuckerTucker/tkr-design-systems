@@ -447,6 +447,7 @@ involved:
 
 | Key | Purpose |
 |-----|---------|
+| `contrast_pairs[]` | `{fg, bg, kind, note}`: `kind` is `text`, `large_text`, `ui`, `advisory` (decorative text such as Riso's ghost ink; placeholders) or `disabled` (inactive components: one side must be a `*disabled*` token). `advisory` / `disabled` never fail and need a `note`. Every colour a builder template paints text in must appear here or in the contract pairs (`tools/builders/engine/text_coverage.py`). |
 | `contrast_pairs[].replaces` | Re-express `color.border_input on color.surface` when inputs are identified another way (Terminal: the `$` prompt glyph). Needs a `note`. |
 | `contrast_backdrops` | Opaque colours that stand in for `page_bg` beneath translucent layers (Prism's gradient stops). Every pair is checked over each. |
 | `contrast_waivers` | `{pair, modes?, reason}` for decorative `ui` pairs only; stale entries fail. None are in use. |
@@ -522,6 +523,86 @@ Judgement calls (each explained in the token's note):
 - **Input borders** (editorial, prism, sketch, wireframe) were fixed because
   the stroke is what identifies those inputs; `border_default` keeps the light
   hairline. Terminal re-expresses the pair instead (prompt glyph).
+
+### Text coverage (follow-up to #7)
+
+The gate only checks declared pairs, so a colour used as text in no pair
+passed unchecked (Sketch's `extras.color.accent_light` annotations were
+1.8:1). `tools/builders/engine/text_coverage.py` now derives every
+`(text colour, background)` the builder templates render and
+`test_build.py::test_every_template_text_colour_is_a_checked_contrast_pair`
+fails when one is not a declared pair at least as strict as the text:
+
+- **Usage**: each `<text>`/`<tspan>` with content; colour from its `fill`,
+  its `class` (the system's `TextClass`), or the nearest ancestor's. A
+  stroked text also counts as a `ui` usage of the stroke. A text with no
+  token fill (SVG default black) fails.
+- **Class**: WCAG large text (>= 24px, or >= 18.66px at weight >= 700) is
+  `large_text`, anything smaller `text`. A foreground the contract pairs
+  with a weaker kind keeps that kind on every background (`text_muted` is
+  `large_text`, `text_placeholder` `advisory`).
+- **Background**: the topmost shape painted before the text whose box
+  contains the centre of the text's estimated box (0.55 em per character,
+  shifted by `text-anchor`); `|rrect=` paths use their geometry. Nothing
+  found, or a non-token fill (a gradient), means `color.page_bg` (Prism's
+  gradient stops are `contrast_backdrops`). Small `rotate` tilts are
+  ignored.
+- **Template alpha**: a text fill written with `|alpha=` or under
+  `opacity` < 1 is not the token's value; it is accepted only when its pair
+  is `advisory`/`disabled`.
+
+Template role fixes made with it: Sketch timestamps used
+`color.text_placeholder` (now `color.text_muted`) and input placeholders
+used `extras.color.icon_muted` (now `color.text_placeholder`); Revolt text
+on pink fills used `color.text_inverse` (now `color.accent_foreground`, the
+value the earlier fix chose) and the required `*` uses `color.danger`;
+Prism's dashboard alpha variants of `text_primary` map to
+`text_primary`/`text_secondary`/`text_muted`/`text_placeholder` and the
+modal's teal `Delete` became a danger button; Riso's primary type uses
+`extras.color.ink_1_text` at full density (the 60%/70% screens are gone)
+while the ghost ink stays the raw drum, declared `advisory`; avatar
+initials with no fill got `color.text_primary` / `color.accent_foreground`.
+Disabled pairs: `color.text_muted` on `extras.color.disabled_fill`
+(wireframe, revolt) and on `extras.color.surface_disabled` (wireframe).
+
+Values these new pairs changed (minimum OKLCH lightness change that passes,
+hue and chroma kept; Prism's white glass text gained opacity):
+
+| System | Token | Mode | Old → new | Pair: ratio before → after (minimum) |
+|--------|-------|------|-----------|--------------------------------------|
+| prism | `color.danger` | — | `#F59A9A` → `#FFCBC9` | danger on page_bg 3.08 → 4.52 (min 4.5) |
+| prism | `extras.color.accent_tint` | — | `rgba(125,223,190,0.25)` → `rgba(70,170,140,0.25)` | accent on accent_tint 3.72 → 4.51 (min 4.5) |
+| prism | `color.text_secondary` | — | `rgba(255,255,255,0.87)` → `rgba(255,255,255,0.98)` | text_secondary on surface_elevated 3.97 → 4.54 (min 4.5); text_secondary on surface_selected 3.97 → 4.54 (min 4.5) |
+| prism | `color.text_muted` | — | `rgba(255,255,255,0.59)` → `rgba(255,255,255,0.66)` | text_muted on surface_elevated 2.72 → 3.01 (min 3); text_muted on surface_selected 2.72 → 3.01 (min 3) |
+| revolt | `color.danger` | — | `#FF3366` → `#E80B55` | danger_foreground on danger 5.32 → 4.56 (min 4.5); danger on page_bg 3.51 → 4.5 (min 4.5); danger on surface 3.55 → 4.56 (min 4.5) |
+| revolt | `color.danger_foreground` | — | `#111111` → `#FFFFFF` | danger_foreground on danger 5.32 → 4.56 (min 4.5) |
+| revolt | `color.text_muted` | — | `#949494` → `#939393` | text_muted on page_bg 3.0 → 3.04 (min 3) |
+| riso | `extras.color.ink_1_text` | ink=classic | `#3255A4` → `#234492` | ink_1_text on page_bg 3.76 → 4.82 (min 4.5); ink_1_text on surface_selected 3.53 → 4.54 (min 4.5) |
+| riso | `extras.color.ink_1_text` | ink=electric | `#C60081` → `#8F005C` | ink_1_text on page_bg 3.0 → 4.81 (min 4.5); ink_1_text on surface_selected 2.82 → 4.52 (min 4.5) |
+| riso | `extras.color.ink_1_text` | ink=sunset | `#C32C2C` → `#970010` | ink_1_text on page_bg 3.0 → 4.8 (min 4.5); ink_1_text on surface_selected 2.82 → 4.52 (min 4.5) |
+| riso | `extras.color.ink_1_text` | ink=forest | `#00727D` → `#00515A` | ink_1_text on page_bg 3.01 → 4.8 (min 4.5); ink_1_text on surface_selected 2.83 → 4.51 (min 4.5) |
+| riso | `extras.color.ink_1_text` | ink=spritz | `#3255A4` → `#234492` | ink_1_text on page_bg 3.76 → 4.82 (min 4.5); ink_1_text on surface_selected 3.53 → 4.54 (min 4.5) |
+| sketch | `color.accent` | — | `#7F718E` → `#7C6E8B` | accent on page_bg 4.32 → 4.51 (min 4.5) |
+| sketch | `extras.color.accent_light` | — | `#C4B8D4` → `#7A6F89` | accent_light on surface_elevated 1.88 → 4.71 (min 4.5); accent_light on page_bg 1.8 → 4.5 (min 4.5) |
+| swiss | `color.text_muted` | — | `#949494` → `#8E8E8E` | text_muted on surface_elevated 2.78 → 3.01 (min 3) |
+| wireframe | `color.text_secondary` | — | `#757575` → `#636363` | text_secondary on page_bg 4.23 → 5.51 (min 4.5); text_secondary on border_default 3.49 → 4.55 (min 4.5); text_secondary on surface_selected 4.23 → 5.51 (min 4.5) |
+| wireframe | `color.text_muted` | — | `#949494` → `#8E8E8E` | text_muted on page_bg 2.78 → 3.01 (min 3); text_muted on surface_selected 2.78 → 3.01 (min 3) |
+
+Judgement calls (each explained in the token's note):
+
+- **Revolt danger**: no pink passes both 4.5:1 as text on white and with
+  black text on it, so `danger_foreground` became white and `danger` took
+  the minimum darkening (`#E80B55`); the signature `accent` `#FF3366` is
+  unchanged. This adds a sixth colour to the "inviolable" five-colour
+  palette.
+- **Prism accent tint**: the teal numerals cannot get lighter (no lighter
+  teal reaches 4.5:1 on the tint), so the badge tint behind them darkened.
+- **Prism danger** lost chroma (0.110 → 0.059) because the sRGB gamut
+  cannot hold it at the passing lightness.
+- **Sketch accent_light** is now about as deep as `color.accent`; the
+  annotations stay lavender at 4.5:1.
+- **Riso** ink-1 text shades now reach 4.5:1 (they were checked at 3:1 as
+  InkTag large text, but the builder sets 12-14px type in them).
 
 Hue gate (issue #8, ADR-0002), the `hue_fix` records and waivers:
 

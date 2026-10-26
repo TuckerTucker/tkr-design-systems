@@ -13,9 +13,9 @@ from .library import COMPONENTS
 
 TEXT_CLASSES = (
     TextClass("text-primary", "color.text_primary", "font.body"),
-    TextClass("text-ink-1", "extras.color.ink_1", "font.body"),
-    TextClass("text-ink-2", "extras.color.ink_2", "font.body"),
-    TextClass("text-label", "extras.color.ink_1", "font.label"),
+    TextClass("text-ink-1", "extras.color.ink_1_text", "font.body"),
+    TextClass("text-ink-2", "color.action", "font.body"),
+    TextClass("text-label", "extras.color.ink_1_text", "font.label"),
 )
 
 GRAIN_DEFS = """\

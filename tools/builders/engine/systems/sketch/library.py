@@ -231,9 +231,9 @@ COMPONENTS = {
     "list-item-compact": (280, 48, """
   <rect x="0" y="0" width="280" height="48" fill="{color.page_bg}"/>
   <rect x="14" y="7" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
-  <text x="31" y="30" font-family="{font.body}" font-size="14" font-weight="600" text-anchor="middle">R</text>
+  <text x="31" y="30" font-family="{font.body}" font-size="14" font-weight="600" fill="{color.text_primary}" text-anchor="middle">R</text>
   <text x="58" y="29" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Recipe ideas</text>
-  <text x="266" y="29" font-family="{font.body}" font-size="10" fill="{color.text_placeholder}" text-anchor="end">1h</text>
+  <text x="266" y="29" font-family="{font.body}" font-size="10" fill="{color.text_muted}" text-anchor="end">1h</text>
 """),
 
     # Form field — label above input, optional help/error below.
@@ -478,7 +478,7 @@ COMPONENTS = {
 
   <!-- Title row -->
   <text x="58" y="29" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Tokyo Trip</text>
-  <text x="266" y="29" font-family="{font.body}" font-size="10" font-weight="400" fill="{color.text_placeholder}" text-anchor="end">2m</text>
+  <text x="266" y="29" font-family="{font.body}" font-size="10" font-weight="400" fill="{color.text_muted}" text-anchor="end">2m</text>
 
   <!-- Preview -->
   <text x="58" y="46" font-family="{font.body}" font-size="11" font-weight="400" fill="{color.text_muted}">Want me to build a day-by-day…</text>
@@ -497,7 +497,7 @@ COMPONENTS = {
   <text x="37" y="38" font-family="{font.body}" font-size="14" font-weight="600" fill="{color.text_primary}" text-anchor="middle">T</text>
 
   <text x="64" y="29" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Tokyo Trip</text>
-  <text x="260" y="29" font-family="{font.body}" font-size="10" font-weight="400" fill="{color.text_placeholder}" text-anchor="end">2m</text>
+  <text x="260" y="29" font-family="{font.body}" font-size="10" font-weight="400" fill="{color.text_muted}" text-anchor="end">2m</text>
 
   <text x="64" y="46" font-family="{font.body}" font-size="11" font-weight="400" fill="{color.text_muted}">Want me to build a day-by-day…</text>
 
