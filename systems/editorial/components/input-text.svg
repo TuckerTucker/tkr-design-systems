@@ -13,7 +13,7 @@
   <!-- ==================== INPUT-TEXT ==================== -->
 
   <text x="0" y="14" class="text-metadata" font-size="9" font-weight="600" letter-spacing="1.44">LABEL</text>
-  <line x1="0" y1="20" x2="280" y2="20" stroke="#D8CEB9" stroke-width="1"/>
+  <line x1="0" y1="20" x2="280" y2="20" stroke="#968C79" stroke-width="1"/>
   <text x="0" y="40" class="text-muted" font-size="14" font-style="italic">text</text>
 
 </svg>

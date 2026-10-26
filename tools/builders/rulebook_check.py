@@ -112,6 +112,14 @@ SWISS_GRID = {0, 1, 2, 8, 16, 24, 32, 40, 48, 64, 72, 80, 96, 104, 112, 120, 128
 SWISS_TOKENS_PATH = Path(__file__).resolve().parents[2] / "systems" / "swiss" / "tokens.json"
 
 
+def _load_tokens(path: Path) -> dict:
+    """Parse a token file; empty when it is missing or invalid."""
+    try:
+        return json.loads(path.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
 def _swiss_color(tokens: dict, path: str, fallback: str) -> str:
     """Read a colour from the Swiss token document, upper-cased.
 
@@ -131,10 +139,7 @@ def _swiss_color(tokens: dict, path: str, fallback: str) -> str:
 
 def _load_swiss_tokens() -> dict:
     """Parse the Swiss token file; empty when it is missing or invalid."""
-    try:
-        return json.loads(SWISS_TOKENS_PATH.read_text())
-    except (OSError, ValueError):
-        return {}
+    return _load_tokens(SWISS_TOKENS_PATH)
 
 
 # The Swiss palette comes from the canonical token file (issue #4), so the
@@ -162,19 +167,36 @@ SWISS_METADATA_COLORS = (SWISS_GRAY_METADATA, SWISS_GRAY_TERTIARY, SWISS_RED, SW
 
 WIREFRAME_TYPE_SCALE = {11, 12, 13, 14, 16, 18, 24}
 
-WIREFRAME_ALLOWED_COLORS = {
-    "#F5F5F5",  # background
-    "#FFFFFF",  # surface / inverse
-    "#FAFAFA",  # disabled card surface (close to F5F5F5; permitted variant)
-    "#E0E0E0",  # border
-    "#BDBDBD",  # disabled
-    "#757575",  # secondary
-    "#424242",  # interactive
-    "#212121",  # primary text
-    "#2E7D32",  # success
-    "#E65100",  # warning
-    "#B71C1C",  # danger
-    "#1565C0",  # info
+WIREFRAME_TOKENS_PATH = SWISS_TOKENS_PATH.parents[1] / "wireframe" / "tokens.json"
+
+
+def _token_palette(tokens: dict, groups: tuple[str, ...]) -> set[str]:
+    """Collect the opaque hex colours under the given token groups.
+
+    Args:
+        tokens: Parsed token document (may be empty).
+        groups: Dotted paths of colour groups, e.g. ``("color", "extras.color")``.
+
+    Returns:
+        Upper-case ``#RRGGBB`` values; an 8-digit hex contributes its RGB part.
+    """
+    palette: set[str] = set()
+    for path in groups:
+        node: Any = tokens
+        for part in path.split("."):
+            node = node.get(part) if isinstance(node, dict) else None
+        for value in (node or {}).values() if isinstance(node, dict) else ():
+            if isinstance(value, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?", value):
+                palette.add(value[:7].upper())
+    return palette
+
+
+# The wireframe palette comes from the canonical token file (issue #4), so a
+# token change (e.g. a contrast fix) reaches the rulebook and the library together.
+_WIREFRAME_PALETTE = _token_palette(_load_tokens(WIREFRAME_TOKENS_PATH), ("color", "extras.color"))
+# No hard-coded fallback: a missing token file leaves only the two entries
+# below, so every coloured artifact fails loudly instead of passing stale values.
+WIREFRAME_ALLOWED_COLORS = _WIREFRAME_PALETTE | {
     "#000000",  # ink (used in modal overlays)
     "TRANSPARENT",  # explicitly OK
 }
