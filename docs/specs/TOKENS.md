@@ -538,9 +538,11 @@ fails when one is not a declared pair at least as strict as the text:
   stroked text also counts as a `ui` usage of the stroke. A text with no
   token fill (SVG default black) fails.
 - **Class**: WCAG large text (>= 24px, or >= 18.66px at weight >= 700) is
-  `large_text`, anything smaller `text`. A foreground the contract pairs
-  with a weaker kind keeps that kind on every background (`text_muted` is
-  `large_text`, `text_placeholder` `advisory`).
+  `large_text`, anything smaller `text`, for every token: size, not role,
+  sets the class. The one role exception is the `advisory` contract
+  foreground `text_placeholder`, which stays advisory on every background.
+  (Until the follow-up below, a contract `large_text` foreground, i.e.
+  `text_muted`, was capped at 3:1 even at 8-12px. That cap is gone.)
 - **Background**: the topmost shape painted before the text whose box
   contains the centre of the text's estimated box (0.55 em per character,
   shifted by `text-anchor`); `|rrect=` paths use their geometry. Nothing
@@ -610,6 +612,53 @@ Judgement calls (each explained in the token's note):
   annotations stay lavender at 4.5:1.
 - **Riso** ink-1 text shades now reach 4.5:1 (they were checked at 3:1 as
   InkTag large text, but the builder sets 12-14px type in them).
+
+### Small muted text (follow-up to #7)
+
+`color.text_muted` used to be checked at 3:1 (`large_text`) everywhere,
+although every system sets it at 8-14px (timestamps, datelines, help text,
+counters, muted field values). The contract pair `text_muted on surface` is
+now `text`. The coverage guard no longer caps a contract `large_text`
+foreground, so each `text_muted` pair a template renders below large size
+was redeclared `text`. Every system's muted grey then failed 4.5:1 and was
+corrected with the minimum OKLCH lightness change that passes, hue and
+chroma kept. The alpha-based tokens gained opacity instead: Prism's white
+glass at L = 1, and Riso's per-paper ink, whose colour stays. Ratios are
+the worst over every mode and backdrop:
+
+| System | Token | Mode | Old → new | Pair: ratio before → after (minimum) |
+|--------|-------|------|-----------|--------------------------------------|
+| editorial | `color.text_muted` | — | `#8B7D6F` → `#77695B` | text_muted on surface 3.64 → 4.84; on page_bg 3.64 → 4.84; on surface_selected 3.38 → 4.5 (min 4.5) |
+| prism | `color.text_muted` | — | `rgba(255,255,255,0.66)` → `rgba(255,255,255,0.98)` | text_muted on surface 3.35 → 5.21; on surface_elevated 3.01 → 4.54; on page_bg 3.89 → 6.31; on surface_selected 3.01 → 4.54 (min 4.5) |
+| revolt | `color.text_muted` | — | `#939393` → `#757575` | text_muted on surface 3.07 → 4.61; on page_bg 3.04 → 4.55 (min 4.5) |
+| riso | `color.text_muted` | paper=kraft | `rgba(42,31,18,0.65)` → `rgba(42,31,18,0.71)` | text_muted on surface 3.88 → 4.51 (min 4.5) |
+| riso | `color.text_muted` | paper=gray | `rgba(20,20,20,0.65)` → `rgba(20,20,20,0.67)` | text_muted on surface 4.35 → 4.58 (min 4.5) |
+| riso | `color.text_muted` | paper=newsprint | `rgba(43,38,32,0.65)` → `rgba(43,38,32,0.68)` | text_muted on surface 4.19 → 4.54 (min 4.5) |
+| sketch | `color.text_muted` | — | `#8A8680` → `#6F6B66` | text_muted on surface 3.1 → 4.53; on surface_subtle 3.32 → 4.85; on surface_elevated 3.62 → 5.29; on page_bg 3.46 → 5.06; on surface_selected 3.1 → 4.53 (min 4.5) |
+| swiss | `color.text_muted` | — | `#8E8E8E` → `#707070` | text_muted on surface 3.28 → 4.95; on surface_elevated 3.01 → 4.54; on page_bg 3.28 → 4.95 (min 4.5) |
+| terminal | `color.text_muted` | — | `#3D7044` → `#578B5D` | text_muted on surface 3.1 → 4.52; on page_bg 3.32 → 4.84 (min 4.5) |
+| wireframe | `color.text_muted` | — | `#8E8E8E` → `#707070` | text_muted on surface 3.28 → 4.95; on page_bg 3.01 → 4.54; on surface_selected 3.01 → 4.54 (min 4.5) |
+
+Hierarchy and judgement calls:
+
+- **Muted stays lighter than secondary** everywhere except Prism, with no
+  `text_secondary` change needed. Wireframe (`#636363` vs `#707070`) and
+  Revolt (`#666666` vs `#757575`) keep the narrowest gap, about 0.04 OKLCH
+  L. Riso's secondary stays at ink 0.75 over the per-paper muted
+  0.65-0.71. Terminal's muted is still the dimmer green.
+- **Prism cannot keep the hierarchy by colour.** On the elevated and
+  selected glass over the lightest gradient stop, white text reaches 4.5:1
+  only at opacity 0.98, which is already `text_primary` and
+  `text_secondary`. All three are now `rgba(255,255,255,0.98)`, and Prism's
+  muted metadata is told apart by size and weight. Raising secondary to 1.0
+  would not be visible and would put it above primary. The alternative,
+  dimming the glass tiers, changes surfaces, not the failing colour, so it
+  was not done.
+- **Disabled labels** stay `disabled` only on disabled-role fills
+  (Wireframe and Revolt `extras.color.disabled_fill`, Wireframe
+  `surface_disabled`). Swiss's disabled button on `surface_elevated`,
+  Sketch's on `surface_subtle` and Terminal's on the page are ordinary
+  fills, so their muted labels are `text`.
 
 Hue gate (issue #8, ADR-0002), the `hue_fix` records and waivers:
 

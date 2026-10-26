@@ -9,7 +9,7 @@ Sketch grammar:
   8 sizes: 9, 10, 11, 12, 13, 14, 15, 17, 22
   Palette: warm beige #FAFAF8, warm-surface #F0EDE8, purple #B8A9C8,
            purple-light #C4B8D4, text #2C2C2C, text-secondary #555555,
-           muted #8A8680, warm-rule #E5E3DE
+           muted #6F6B66, warm-rule #E5E3DE
   Spacing: 2-grid (2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32)
   Borders: radius.input fields/buttons, radius.default containers, radius.chrome
   shell/dialogs; extras.radius.avatar/badge/checkbox for the rounded squares

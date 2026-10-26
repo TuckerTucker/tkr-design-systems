@@ -160,7 +160,7 @@ components:
         states: [default, hover, active]
       - id: disabled
         svg: components/button-disabled.svg
-        rendering_notes: "48px tall, 6px radius, fill #E0E0E0 (border color used as disabled bg), text in #949494 (disabled / text_muted). Visually unactionable."
+        rendering_notes: "48px tall, 6px radius, fill #E0E0E0 (border color used as disabled bg), text in #707070 (disabled / text_muted). Visually unactionable."
         states: [disabled]
       - id: danger
         svg: components/button-danger.svg
@@ -291,7 +291,7 @@ components:
         states: [default]
       - id: optional
         svg: components/label-optional.svg
-        rendering_notes: "Same as default with '(optional)' in #949494 suffixed."
+        rendering_notes: "Same as default with '(optional)' in #707070 (text_muted) suffixed."
         states: [default]
 
   icon:
@@ -407,7 +407,7 @@ components:
         states: [default, hover]
       - id: disabled
         svg: components/card-disabled.svg
-        rendering_notes: "Same as default with content faded — text in #949494, indicating non-interactive."
+        rendering_notes: "Same as default with content faded — text in #707070 (text_muted), indicating non-interactive."
         states: [disabled]
     constraints:
       - "Cards are the universal container — use them for any distinct content with a boundary"
@@ -504,7 +504,7 @@ components:
         states: [default]
       - id: sortable
         svg: components/table-header-sortable.svg
-        rendering_notes: "Same as default with sort chevrons (▲▼) in #949494 beside sortable columns. Active sort column has chevron in #424242."
+        rendering_notes: "Same as default with sort chevrons (▲▼) in #707070 (text_muted) beside sortable columns. Active sort column has chevron in #424242."
         states: [default, sorted_asc, sorted_desc]
       - id: with_filter
         svg: components/table-header-with-filter.svg
@@ -544,7 +544,7 @@ components:
         states: [active]
       - id: disabled
         svg: components/tab-item-disabled.svg
-        rendering_notes: "Same as default but text and icon in #949494; non-interactive."
+        rendering_notes: "Same as default but text and icon in #707070 (text_muted); non-interactive."
         states: [disabled]
 
   breadcrumb_trail:
@@ -554,7 +554,7 @@ components:
     variants:
       - id: default
         svg: components/breadcrumb-trail-default.svg
-        rendering_notes: "Sequence of nav_item.breadcrumb_segment separated by ' / ' or chevron (›) in #949494. Final segment in #212121 (current page)."
+        rendering_notes: "Sequence of nav_item.breadcrumb_segment separated by ' / ' or chevron (›) in #707070 (text_muted). Final segment in #212121 (current page)."
         states: [default]
       - id: truncated
         svg: components/breadcrumb-trail-truncated.svg
@@ -740,7 +740,7 @@ components:
     variants:
       - id: linear
         svg: components/stepper-linear.svg
-        rendering_notes: "Horizontal sequence of step circles (24px) connected by lines. Active step in #424242, completed steps in #424242 with check, future steps in #949494."
+        rendering_notes: "Horizontal sequence of step circles (24px) connected by lines. Active step in #424242, completed steps in #424242 with check, future steps in #707070 (text_muted)."
         states: [default]
       - id: numbered
         svg: components/stepper-numbered.svg

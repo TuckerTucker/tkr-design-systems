@@ -287,11 +287,23 @@ def test_coverage_requires_a_pair_for_every_rendered_text_colour() -> None:
     assert report.ok
 
 
-def test_coverage_caps_at_the_contract_role_and_rejects_template_alpha() -> None:
+def test_coverage_holds_small_muted_text_to_4_5_and_rejects_template_alpha() -> None:
     muted = '<text x="0" y="20" font-size="11" fill="{color.text_muted}">2m</text>'
     _, report = _coverage(muted, [{"fg": "color.text_muted", "bg": "color.page_bg",
                                    "kind": "large_text"}])
-    assert report.ok and report.capped == ["color.text_muted on color.page_bg"]
+    assert not report.capped
+    assert "declared large_text but rendered as text" in report.problems[0]
+    surface = '<rect width="100" height="40" fill="{color.surface}"/>' + muted
+    _, report = _coverage(surface)
+    assert report.ok and report.combos == {"color.text_muted on color.surface": "text"}
+    big = '<text x="0" y="30" font-size="24" fill="{color.text_muted}">1,247</text>'
+    _, report = _coverage(big, [{"fg": "color.text_muted", "bg": "color.page_bg",
+                                 "kind": "large_text"}])
+    assert report.ok, "a large usage keeps the 3:1 large_text minimum"
+    placeholder = '<text x="0" y="20" font-size="11" fill="{color.text_placeholder}">Search</text>'
+    _, report = _coverage(placeholder, [{"fg": "color.text_placeholder", "bg": "color.page_bg",
+                                         "kind": "advisory", "note": "placeholder"}])
+    assert report.ok and report.capped == ["color.text_placeholder on color.page_bg"]
     alpha = '<text x="0" y="20" font-size="11" fill="{color.text_primary|alpha=0.3}">2m</text>'
     _, report = _coverage(alpha)
     assert "change the fill's alpha" in report.problems[0]

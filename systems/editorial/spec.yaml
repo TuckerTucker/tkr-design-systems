@@ -159,7 +159,7 @@ components:
     variants:
       - id: default
         svg: components/list-item-default.svg
-        rendering_notes: "Top: timestamp + emoji in 9px Inter uppercase tracked, color #8B7D6F. If unread, 'N new' on right in Fraunces 11px serif weight 700, color burgundy. Title in Fraunces 15px weight 600, color #1A1614, slight negative tracking. Preview in Inter italic 11px, color #5C4F44, single-line truncated. Hairline rule below."
+        rendering_notes: "Top: timestamp + emoji in 9px Inter uppercase tracked, color #77695B (text_muted). If unread, 'N new' on right in Fraunces 11px serif weight 700, color burgundy. Title in Fraunces 15px weight 600, color #1A1614, slight negative tracking. Preview in Inter italic 11px, color #5C4F44, single-line truncated. Hairline rule below."
         states: [default, hover, selected]
       - id: selected
         svg: components/list-item-selected.svg
@@ -235,7 +235,7 @@ rulebook:
     check_method: mechanical
     check_scope: component
     applies_when: "element font-size in [8.5, 9]"
-    check_implementation: "For 9px Inter <text>, verify letter-spacing >= 1.44 (0.16em * 9px) and color resolves to #8B7D6F or #8B1E2D."
+    check_implementation: "For 9px Inter <text>, verify letter-spacing >= 1.44 (0.16em * 9px) and color resolves to color.text_muted (#77695B) or #8B1E2D."
 
   - id: editorial-drop-cap-ceremony
     rule: "Drop caps are reserved for the FIRST AI message in a conversation, never elsewhere. 54px Fraunces weight 700 in burgundy, float-left, with body text wrapping for 3 lines."

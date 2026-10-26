@@ -42,13 +42,13 @@ for it: such usages are accepted only when their pair is ``advisory`` or
 own alpha).
 
 Required class. A usage needs a declared pair for its ``(fg, bg)`` whose
-kind is at least as strict as the usage's class. One exception keeps the
-contract's role policy: a foreground the contract itself pairs with a
-weaker kind (``color.text_muted`` is ``large_text``,
-``color.text_placeholder`` is ``advisory``) caps the requirement at that
-kind on every background (the role, not the backdrop, sets the class).
-``advisory`` and ``disabled`` pairs cover any usage; the gate requires
-them to carry a note.
+kind is at least as strict as the usage's class. Size alone sets the
+class: no token is held to 3:1 when it renders below WCAG large size,
+whatever its role (``color.text_muted`` timestamps at 8-12px need
+4.5:1). The one role exception is an ``advisory`` contract foreground
+(``color.text_placeholder``): placeholders are reported, never blocking,
+on every background. ``advisory`` and ``disabled`` pairs cover any
+usage; the gate requires them to carry a note.
 """
 
 from __future__ import annotations
@@ -327,14 +327,15 @@ def scan_builder(system_id: str, module: Any) -> list[TextUsage]:
 
 
 def contract_caps() -> dict[str, str]:
-    """``{fg: weakest kind}`` for contract foregrounds paired with a sub-text kind."""
-    caps: dict[str, str] = {}
-    for p in CONTRAST_PAIRS:
-        if p.kind != PAIR_TEXT and p.kind != PAIR_UI:
-            prev = caps.get(p.fg)
-            if prev is None or KIND_RANK[p.kind] < KIND_RANK[prev]:
-                caps[p.fg] = p.kind
-    return caps
+    """``{fg: advisory}`` for contract foregrounds the contract pairs as ``advisory``.
+
+    Only the advisory role (placeholders) caps a requirement. A
+    ``large_text`` contract pair never does: large-text minimums apply only
+    to text that is actually large, so a small usage of any token is held
+    to 4.5:1 (#7 follow-up: the old ``large_text`` cap let 8-12px
+    ``text_muted`` timestamps pass at 3:1).
+    """
+    return {p.fg: PAIR_ADVISORY for p in CONTRAST_PAIRS if p.kind == PAIR_ADVISORY}
 
 
 @dataclass
@@ -346,7 +347,7 @@ class CoverageReport:
         usages: Every usage found.
         combos: ``{pair label: required kind}`` over the usages.
         problems: One message per uncovered or under-classed combination.
-        capped: Pair labels whose requirement the contract role capped.
+        capped: Pair labels whose requirement the advisory contract role capped.
     """
 
     system: str

@@ -185,7 +185,7 @@ CONTRACT_TOKENS: tuple[ContractToken, ...] = (
     _c("text_secondary", "Supporting copy: previews, descriptions, labels.",
        "fg on surface"),
     _c("text_muted", "De-emphasised metadata: timestamps, counters, captions.",
-       "fg on surface (large/advisory threshold)"),
+       "fg on surface (text threshold: metadata is set below large size)"),
     _c("text_placeholder", "Input placeholder text.",
        "input placeholder; advisory pair on surface"),
     _c("text_inverse", "Text on surface_inverse.",
@@ -292,7 +292,7 @@ TOKENS_BY_PATH: dict[str, ContractToken] = {t.path: t for t in CONTRACT_TOKENS}
 # ─── Required contrast pairs ────────────────────────────────────────
 
 PAIR_TEXT = "text"              # body-size text
-PAIR_LARGE_TEXT = "large_text"  # >= 18.66px bold / 24px regular, or metadata the system sizes up
+PAIR_LARGE_TEXT = "large_text"  # WCAG large-scale only: >= 24px, or >= 18.66px at 700+
 PAIR_UI = "ui"                  # non-text UI: strokes, focus rings, icons
 PAIR_ADVISORY = "advisory"      # reported, never blocking (placeholders, decorative text)
 PAIR_DISABLED = "disabled"      # reported, never blocking: inactive UI (WCAG 1.4.3 exception)
@@ -325,7 +325,7 @@ CONTRAST_PAIRS: tuple[ContrastPair, ...] = (
     ContrastPair("color.text_primary", "color.surface_elevated", PAIR_TEXT),
     ContrastPair("color.text_primary", "color.surface_selected", PAIR_TEXT),
     ContrastPair("color.text_secondary", "color.surface", PAIR_TEXT),
-    ContrastPair("color.text_muted", "color.surface", PAIR_LARGE_TEXT),
+    ContrastPair("color.text_muted", "color.surface", PAIR_TEXT),
     ContrastPair("color.text_placeholder", "color.surface", PAIR_ADVISORY),
     ContrastPair("color.text_inverse", "color.surface_inverse", PAIR_TEXT),
     ContrastPair("color.accent_foreground", "color.accent", PAIR_TEXT),

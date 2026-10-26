@@ -101,7 +101,7 @@ components:
     variants:
       - id: default
         svg: components/list-item-default.svg
-        rendering_notes: "Avatar 34px square emoji on warm surface with 1px border, 8px radius. Title in IBM Plex 12.5px weight 600. Timestamp top-right 10px in #B0ADA8. Preview in 11px #8A8680. Unread badge: 18px purple square (#B8A9C8) with white digit, 6px radius. Preview text MUST end at least 8px before the unread_badge x-position when badge is present; truncate with ellipsis (…) at a natural word break. Without truncation, the preview will overflow into the badge."
+        rendering_notes: "Avatar 34px square emoji on warm surface with 1px border, 8px radius. Title in IBM Plex 12.5px weight 600. Timestamp top-right 10px in #B0ADA8. Preview in 11px #6F6B66 (text_muted). Unread badge: 18px purple square (#B8A9C8) with white digit, 6px radius. Preview text MUST end at least 8px before the unread_badge x-position when badge is present; truncate with ellipsis (…) at a natural word break. Without truncation, the preview will overflow into the badge."
         states: [default, hover, selected]
       - id: selected
         svg: components/list-item-selected.svg

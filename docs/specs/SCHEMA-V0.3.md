@@ -116,7 +116,7 @@ enter), `easing` (`cubic-bezier(x1, y1, x2, y2)`, x in 0-1) and an optional
 | color | `surface_inverse` | color | Inverted, high-emphasis fill (e.g. user message bubble). | bg of text_inverse pair |
 | color | `text_primary` | color | Body copy and headings. | fg on page_bg/surface/surface_elevated/surface_selected |
 | color | `text_secondary` | color | Supporting copy: previews, descriptions, labels. | fg on surface |
-| color | `text_muted` | color | De-emphasised metadata: timestamps, counters, captions. | fg on surface (large/advisory threshold) |
+| color | `text_muted` | color | De-emphasised metadata: timestamps, counters, captions. | fg on surface (text threshold: metadata is set below large size) |
 | color | `text_placeholder` | color | Input placeholder text. | input placeholder; advisory pair on surface |
 | color | `text_inverse` | color | Text on surface_inverse. | fg on surface_inverse |
 | color | `accent` | color | The system's signal hue (brand mark, unread, selection bar). | accent marks; tokens.colors.accent; bg of accent_foreground |
@@ -188,7 +188,7 @@ their own pairs in the token file's `contrast_pairs` list (e.g. Swiss declares
 | `color.text_primary` | `color.surface_elevated` | text |
 | `color.text_primary` | `color.surface_selected` | text |
 | `color.text_secondary` | `color.surface` | text |
-| `color.text_muted` | `color.surface` | large_text |
+| `color.text_muted` | `color.surface` | text |
 | `color.text_placeholder` | `color.surface` | advisory |
 | `color.text_inverse` | `color.surface_inverse` | text |
 | `color.accent_foreground` | `color.accent` | text |
@@ -247,7 +247,22 @@ exempts inactive components) also needs a disabled-role token on one side
 (a path whose last segment contains `disabled`, e.g.
 `extras.color.disabled_fill`), so it cannot silence ordinary text. Builder
 templates may only paint text in declared pairs (`TOKENS.md` § 7, Text
-coverage). A
+coverage).
+
+**Size, not role, sets the text class.** `large_text` (3:1) is WCAG
+large-scale text only: at least 24px, or at least 18.66px at weight 700+.
+Anything smaller is `text` (4.5:1), whatever its role. `color.text_muted`
+therefore pairs with `color.surface` as `text`: timestamps, counters and
+captions are set at metadata sizes. The text-coverage guard holds every
+token, `text_muted` included, to 4.5:1 wherever a template renders it below
+large size. The only role-based relaxation left is the `advisory`
+placeholder pair; the earlier "contract cap", which let a contract
+`large_text` foreground keep 3:1 at 8-12px, is gone (#7 follow-up). A
+disabled label stays `disabled` only on a disabled-role background. A
+muted label on an ordinary fill (Swiss's `surface_elevated` disabled
+button, Sketch's `surface_subtle`) is `text`.
+
+A
 file pair that repeats a contract pair with a stricter kind supersedes it
 (Prism declares `color.accent` on `color.surface` as `text` because its teal
 numerals are text).

@@ -152,7 +152,7 @@ components:
     variants:
       - id: default
         svg: components/list-item-default.svg
-        rendering_notes: "Indented by 14px (one mono char + space). Empty space where prompt indicator would be. Name in #5EAA66 (text_muted_2). Time top-right in #3D7044. If unread, [N] in amber inline with name. Preview on next line, prefixed with `// ` in #3D7044."
+        rendering_notes: "Indented by 14px (one mono char + space). Empty space where prompt indicator would be. Name in #5EAA66 (text_muted_2). Time top-right in #578B5D (text_muted). If unread, [N] in amber inline with name. Preview on next line, prefixed with `// ` in #578B5D."
         states: [default, hover, selected]
       - id: selected
         svg: components/list-item-selected.svg
