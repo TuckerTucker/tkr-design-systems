@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
 """
-Build the Terminal design system's component library against the LIBRARY-SPEC
-vocabulary. Terminal's grammar applied to each component.
+Terminal component templates (LIBRARY-SPEC vocabulary).
+Terminal's grammar applied to each component.
 
-Terminal tokens:
+Terminal grammar:
   JetBrains Mono typeface (required for box-drawing and cursor blocks)
   Palette: #0A0F0A background, phosphor green #00FF66, muted greens, amber
   Borders: Unicode box-drawing chars (┌─┐│└─┘) with dashed 1px #1F2F1F
@@ -18,34 +17,13 @@ Coverage scope:
                    nav_item, tab_item, breadcrumb_trail, pagination, stat,
                    key_value, dropdown_menu
                    (skip: toast, banner per Terminal coverage notes)
-  Patterns: handled by build_terminal_patterns.py
+  Patterns: see patterns.py
 
-Output goes to systems/terminal/components/
+Rendered by tools/builders/build.py into systems/terminal/components/.
+Colours, fonts, radii and border widths are {token.path} placeholders
+resolved from systems/terminal/tokens.json, which is authoritative;
+values quoted above describe the grammar and may lag the token file.
 """
-
-import sys
-from pathlib import Path
-
-STANDARD_DEFS = """  <defs>
-    <style>
-      .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', ui-monospace, monospace; }
-      .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
-      .text-muted { fill: #3D7044; font-family: 'JetBrains Mono', ui-monospace, monospace; }
-      .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', ui-monospace, monospace; }
-      .text-error { fill: #FF6B6B; font-family: 'JetBrains Mono', ui-monospace, monospace; }
-      .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', ui-monospace, monospace; }
-    </style>
-  </defs>"""
-
-
-def wrap_svg(width: int, height: int, body: str, comment: str = "") -> str:
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">
-{STANDARD_DEFS}
-  {comment}
-{body}
-</svg>
-"""
-
 
 COMPONENTS = {
 
@@ -81,7 +59,7 @@ COMPONENTS = {
     # Input — single-line text field with > prompt prefix and cursor block
     "input-text": (240, 32, """
   <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">LABEL</text>
-  <line x1="0" y1="18" x2="240" y2="18" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="{color.border_input}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
   <text x="0" y="31" class="text-secondary" font-size="12" font-weight="400">> </text>
   <text x="16" y="31" class="text-muted" font-size="12" font-weight="400">type text</text>
   <text x="88" y="31" class="text-accent" font-size="12" font-weight="700">█</text>
@@ -89,7 +67,7 @@ COMPONENTS = {
 
     "input-password": (240, 32, """
   <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">PASSWORD</text>
-  <line x1="0" y1="18" x2="240" y2="18" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="{color.border_input}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
   <text x="0" y="31" class="text-secondary" font-size="12" font-weight="400">> </text>
   <text x="16" y="31" class="text-muted" font-size="12" font-weight="400">•••••••</text>
   <text x="88" y="31" class="text-accent" font-size="12" font-weight="700">█</text>
@@ -97,7 +75,7 @@ COMPONENTS = {
 
     "input-search": (240, 32, """
   <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">SEARCH</text>
-  <line x1="0" y1="18" x2="240" y2="18" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="{color.border_input}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
   <text x="0" y="31" class="text-secondary" font-size="12" font-weight="400">> </text>
   <text x="16" y="31" class="text-muted" font-size="12" font-weight="400">find...</text>
   <text x="88" y="31" class="text-accent" font-size="12" font-weight="700">█</text>
@@ -105,7 +83,7 @@ COMPONENTS = {
 
     "input-numeric": (240, 32, """
   <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">AMOUNT</text>
-  <line x1="0" y1="18" x2="240" y2="18" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="{color.border_input}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
   <text x="0" y="31" class="text-secondary" font-size="12" font-weight="400">> </text>
   <text x="16" y="31" class="text-primary" font-size="12" font-weight="400">1024</text>
   <text x="68" y="31" class="text-accent" font-size="12" font-weight="700">█</text>
@@ -114,7 +92,7 @@ COMPONENTS = {
     # Textarea — multi-line input
     "textarea-default": (240, 80, """
   <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">MESSAGE</text>
-  <line x1="0" y1="18" x2="240" y2="18" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="{color.border_input}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
   <text x="0" y="35" class="text-secondary" font-size="11" font-weight="400">> </text>
   <text x="16" y="35" class="text-muted" font-size="11" font-weight="400">type message here</text>
   <text x="0" y="51" class="text-secondary" font-size="11" font-weight="400">> </text>
@@ -126,7 +104,7 @@ COMPONENTS = {
     # Select — dropdown with ↓ chevron indicator
     "select-default": (240, 32, """
   <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">TIME_ZONE</text>
-  <line x1="0" y1="18" x2="240" y2="18" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="{color.border_input}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
   <text x="0" y="31" class="text-secondary" font-size="12" font-weight="400">> </text>
   <text x="16" y="31" class="text-primary" font-size="12" font-weight="400">america/los_angeles</text>
   <text x="232" y="31" class="text-secondary" font-size="12" font-weight="500" text-anchor="end">↓</text>
@@ -266,14 +244,14 @@ COMPONENTS = {
     # Form field — label above, input with rule, optional help/error below
     "form-field-default": (240, 48, """
   <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">EMAIL_ADDRESS</text>
-  <line x1="0" y1="18" x2="240" y2="18" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="{color.border_input}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
   <text x="0" y="34" class="text-secondary" font-size="12" font-weight="400">> </text>
   <text x="16" y="34" class="text-primary" font-size="12" font-weight="400">user@example.com</text>
 """),
 
     "form-field-with-error": (240, 64, """
   <text x="0" y="12" class="text-muted" font-size="9" font-weight="500" letter-spacing="0.54">EMAIL_ADDRESS</text>
-  <line x1="0" y1="18" x2="240" y2="18" stroke="#FF6B6B" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="18" x2="240" y2="18" stroke="{color.danger}" stroke-width="1" stroke-dasharray="3,2"/>
   <text x="0" y="34" class="text-secondary" font-size="12" font-weight="400">> </text>
   <text x="16" y="34" class="text-primary" font-size="12" font-weight="400">invalid-email</text>
   <text x="0" y="52" class="text-error" font-size="9" font-weight="500" letter-spacing="0.54">! INVALID EMAIL</text>
@@ -292,7 +270,7 @@ COMPONENTS = {
   <text x="40" y="18" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">NAME</text>
   <text x="200" y="18" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">ROLE</text>
   <text x="400" y="18" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">STATUS</text>
-  <line x1="0" y1="22" x2="480" y2="22" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="22" x2="480" y2="22" stroke="{color.border_default}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
 """),
 
     # Table header — standalone header row
@@ -301,7 +279,7 @@ COMPONENTS = {
   <text x="40" y="18" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">NAME</text>
   <text x="200" y="18" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">EMAIL</text>
   <text x="400" y="18" class="text-muted" font-size="9" font-weight="700" letter-spacing="0.54">STATUS</text>
-  <line x1="0" y1="22" x2="480" y2="22" stroke="#1F2F1F" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="0" y1="22" x2="480" y2="22" stroke="{color.border_default}" stroke-width="{border_width.default}" stroke-dasharray="3,2"/>
 """),
 
     # Nav item — top level or sub item with enumeration
@@ -333,9 +311,9 @@ COMPONENTS = {
 
     # Pagination — [ < prev ] [ page info ] [ next > ]
     "pagination-default": (280, 20, """
-  <text x="0" y="15" class="text-secondary" font-size="12" font-weight="500">[ < prev ]</text>
+  <text x="0" y="15" class="text-secondary" font-size="12" font-weight="500">[ &lt; prev ]</text>
   <text x="100" y="15" class="text-muted" font-size="11" font-weight="400">page [05 / 247]</text>
-  <text x="240" y="15" class="text-secondary" font-size="12" font-weight="500">[ next > ]</text>
+  <text x="240" y="15" class="text-secondary" font-size="12" font-weight="500">[ next &gt; ]</text>
 """),
 
     # Stat — large phosphor number + uppercase label
@@ -364,29 +342,3 @@ COMPONENTS = {
 """),
 
 }
-
-
-def main():
-    only = None
-    if len(sys.argv) > 2 and sys.argv[1] == "--only":
-        only = sys.argv[2]
-
-    # Script lives in tooling/; output goes up one level into the project root.
-    out_dir = Path(__file__).resolve().parents[2] / "systems" / "terminal" / "components"
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    written = []
-    for component_id, (width, height, body) in COMPONENTS.items():
-        if only and component_id != only:
-            continue
-        path = out_dir / f"{component_id}.svg"
-        comment = f"<!-- ==================== {component_id.upper()} ==================== -->"
-        svg = wrap_svg(width, height, body, comment)
-        path.write_text(svg)
-        written.append(path)
-
-    print(f"Wrote {len(written)} Terminal component SVGs to {out_dir}")
-
-
-if __name__ == "__main__":
-    main()

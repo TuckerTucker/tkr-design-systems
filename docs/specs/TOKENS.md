@@ -80,8 +80,9 @@ Token paths are dotted: `color.page_bg`, `type.label`, `extras.color.ink_1`.
 1. Edit `systems/<id>/tokens.json` only.
 2. `python3 tools/design-system-skill drift --id <id>` (or `--all`).
 3. `python3 tools/design-system-skill validate --spec systems/<id>/spec.yaml`.
-4. Re-run the system's builders (once they consume the file, § 5) and, for
-   Riso, `python3 tools/builders/build_riso_reference.py`.
+4. Regenerate the SVG libraries: `uv run python tools/builders/build.py --system <id>`
+   (§ 5; CI runs `--check` and fails on stale SVGs) and, for Riso,
+   `python3 tools/builders/build_riso_reference.py`.
 
 Never re-introduce a token value into spec.yaml; reference it instead
 (§ 3). To add a token every system needs, change `contract.py`, paste the
@@ -255,48 +256,64 @@ should only hit documentation chrome.
 
 ---
 
-## 5. SVG builders (`tools/builders/build_<id>_{library,patterns}.py`)
+## 5. SVG builders (`tools/builders/build.py`)
 
-Builders currently hard-code hex values (e.g. `STANDARD_DEFS` in
-`build_swiss_library.py`). Migrate them to read the token file:
+One engine renders every system's component library and layout patterns
+(issue #5). It discovers systems from `systems/registry.yaml` (the
+`neutral` alias builds `wireframe` once; Riso has no SVG builder), loads
+each spec's token file with `read_spec_with_tokens`, validates the
+system's builder data and renders it:
 
-```python
-import sys
-from pathlib import Path
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "tools" / "design-system-skill"))
-from design_system_skill.token_file import get_token, load_tokens_for_system  # noqa: E402
-
-_loaded = load_tokens_for_system("swiss")
-if not _loaded.ok:
-    raise SystemExit("; ".join(e.message for e in _loaded.errors))
-T = _loaded.data
-
-INK = get_token(T, "color.text_primary")
-RULE_HAIRLINE = get_token(T, "extras.color.rule_hairline")
-FONT = get_token(T, "font.body")
+```bash
+uv run python tools/builders/build.py                   # every system
+uv run python tools/builders/build.py --system swiss    # one (repeatable)
+uv run python tools/builders/build.py --kind patterns   # layouts only
+uv run python tools/builders/build.py --check           # exit 1 if a committed SVG is stale
+uv run python tools/builders/build.py --png             # also refresh existing PNG previews
 ```
 
-- Generate the `<defs><style>` class block from tokens using the same mapping
-  the wireframe-skill uses (`wireframe_skill/tokens.py::_CLASS_TOKENS`):
-  `.text-primary → color.text_primary`, `.text-secondary → color.text_secondary`,
+Per-system content lives in `tools/builders/engine/systems/<id>/`:
+`library.py` / `patterns.py` hold the SVG body templates
+(`{id: (width, height, body)}`) and `__init__.py` declares `BUILDER` — the
+text classes of the shared `<defs><style>` block plus any envelope
+override (Prism paints a gradient behind its glass). Templates never hold
+colour or font literals; they use placeholders resolved from the token
+file:
+
+```xml
+<rect width="140" height="48" rx="{radius.input}" fill="{color.surface}"
+      stroke="{color.border_input}" stroke-width="{border_width.default}"/>
+<line x1="0" y1="0.5" x2="320" y2="0.5" stroke="{extras.color.rule_hairline}"/>
+<stop offset="0" stop-color="{extras.color.orb_lavender|alpha=0.25}"/>
+```
+
+`|alpha=A` keeps a token's hue at a template-specific alpha (Prism's
+ambient orbs and glass tiers that have no token of their own). A test keeps
+colour and font literals out of the templates, and the engine reports any
+unknown token or malformed entry with the system, kind, item and key.
+
+- Text classes follow the wireframe-skill mapping
+  (`wireframe_skill/tokens.py::_CLASS_TOKENS`): `.text-primary →
+  color.text_primary`, `.text-secondary → color.text_secondary`,
   `.text-disabled → color.text_muted`, `.text-inverse → color.text_inverse`,
-  `.text-danger/-success/-warning/-info → color.danger/…`, plus
-  `.text-accent → color.accent` where a builder needs it. Keeping one mapping
-  means SVGs, wireframe-skill output and `wf_get_tokens` agree.
+  `.text-danger/-success/-warning/-info → color.danger/…`, `.text-accent →
+  color.accent`. One mapping means SVGs, wireframe-skill output and
+  `wf_get_tokens` agree.
 - Strokes: `color.border_default` at `border_width.default`,
   `color.border_strong` at `border_width.strong`, inputs `color.border_input`,
   focus `color.focus_ring` at `border_width.focus`.
 - Radii: `radius.default` (containers), `radius.input` (controls),
-  `radius.chrome` (shell/modals).
+  `radius.chrome` (shell/modals); pill and glyph geometry stays literal.
 - SVG cannot composite CSS `rgba()` the way the browser does over a gradient;
-  for Prism keep alpha values as `fill-opacity` on white, and for Riso
-  flatten per the spec's `format_fitness.svg` caveats.
-- Riso builders take a mode selection and call `resolve_mode(T, {...})`;
-  default output uses the base values (cream + classic).
-- After migrating a builder, regenerate its SVGs and confirm
-  `design-system-skill check` still passes for the library.
+  for Prism the glass tiers stay white-with-alpha fills painted over a slice
+  of `extras.color.gradient_stop_*`, and for Riso flatten per the spec's
+  `format_fitness.svg` caveats.
+- After changing a token value, run `build.py` and commit the regenerated
+  SVGs with the token change; `build.py --check` in CI fails until you do.
+  Previews (`*.png` next to an SVG) are refreshed with `--png`.
+- New system: add `engine/systems/<id>/` with a `BUILDER` and register the
+  system; `build.py --system <id>` writes `systems/<id>/components/` and
+  `layouts/`.
 
 ---
 
