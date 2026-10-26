@@ -60,8 +60,13 @@ library. JSON has no comments, so explanations live in the `notes` object.
 
   // ── optional ──
   "modes": { "axes": [ … ] },              // per-mode overrides (SCHEMA-V0.3.md § Modes)
-  "contrast_pairs": [ { "fg": "color.action", "bg": "color.surface", "kind": "text", "note": "…" } ],
-  "notes": { "color.danger": { "derived": true, "note": "why this value" } }
+  "contrast_pairs": [ { "fg": "color.action", "bg": "color.surface", "kind": "text", "note": "…" },
+                      { "fg": "color.accent", "bg": "color.surface", "kind": "text", "note": "how inputs are identified",
+                        "replaces": "color.border_input on color.surface" } ],
+  "contrast_backdrops": [ "extras.color.gradient_stop_1" ],   // opaque stand-ins for page_bg (§ 7)
+  "contrast_waivers": [ { "pair": "color.accent on color.surface", "modes": [ { "ink": "sunset" } ], "reason": "…" } ],
+  "notes": { "color.danger": { "derived": true, "note": "why this value",
+                               "contrast_fix": [ { "old": "…", "new": "…", "pairs": { … } } ] } }
 }
 ```
 
@@ -128,8 +133,11 @@ const enter = (tier, reduced) => {
 
 1. Edit `systems/<id>/tokens.json` only.
 2. `python3 tools/design-system-skill drift --id <id>` (or `--all`).
-3. `python3 tools/design-system-skill validate --spec systems/<id>/spec.yaml`.
-4. Re-run the system's builders (once they consume the file, § 5) and, for
+3. `python3 tools/design-system-skill contrast --id <id>` (or `--all`): every
+   pair in every mode must pass; fix a failure with
+   `contrast.suggest_lightness_fix` and record it in `notes` (§ 7).
+4. `python3 tools/design-system-skill validate --spec systems/<id>/spec.yaml`.
+5. Re-run the system's builders (once they consume the file, § 5) and, for
    Riso, `python3 tools/builders/build_riso_reference.py`.
 
 Never re-introduce a token value into spec.yaml; reference it instead
@@ -283,8 +291,11 @@ const t = resolveMode(risoTokens, { paper: tweaks.paperKey, ink: tweaks.inkKey }
 const vars = {
   "--riso-paper": t.color.page_bg,
   "--riso-text": t.color.text_primary,
-  "--riso-ink-1": t.extras.color.ink_1,
-  "--riso-ink-2": t.extras.color.ink_2,
+  "--riso-ink-1": t.extras.color.ink_1,          // drum: duotone, ghost, halftone, rules
+  "--riso-ink-2": t.extras.color.ink_2,          // drum: duotone ghost, ticks, strips
+  "--riso-ink-1-text": t.extras.color.ink_1_text, // ink-1 InkTag text (3:1 on every paper)
+  "--riso-action": t.color.action,               // ink-2 InkTag text, unread chip (4.5:1)
+  "--riso-focus": t.color.focus_ring,            // focus outline (3:1)
   "--riso-blend": t.extras.press.blend,
   "--riso-ink-density": String(t.extras.press.density),
   // slider-driven vars (offsets, halftone, grain, bleed, tremor) stay in system_state
@@ -292,7 +303,16 @@ const vars = {
 ```
 
 Selector labels come from the spec's `press_presets` (labels/characters are
-prose, not tokens). Put `resolveMode` and `typeStyle` in a shared module such
+prose, not tokens).
+
+The drum colours (`extras.color.ink_1` / `ink_2`) are print colours: on most
+paper stocks they cannot carry text (pink on cream is 2.69:1, yellow on kraft
+1.09:1). Since issue #7 the contract roles are the legible shades of the active
+drum, resolved per ink option: `color.accent` / `color.action` (ink-2 hue,
+4.5:1 against every paper, so paper-colour knock-out numerals stay legible),
+`color.focus_ring` (3:1) and `extras.color.ink_1_text` (ink-1 hue, 3:1). Use
+them for InkTag text, the unread chip and the focus outline; keep the drums
+for duotone, ghost, halftone and tick strips. Put `resolveMode` and `typeStyle` in a shared module such
 as `apps/showcase/src/tokens.js`.
 
 ### 4.5 Verifying
@@ -363,3 +383,92 @@ FONT = get_token(T, "font.body")
 | `MOTION_TIERS`, `parse_cubic_bezier`, `is_timing_function` | contract | motion tiers and easing helpers |
 | `validate_motion_declarations(spec, doc)` / `iter_motion_declarations(spec)` | token_file | spec.yaml motion declarations |
 | `check_drift(spec_path)` / `check_drift_all()` / `find_drift(spec, doc)` | drift | spec ↔ token-file agreement |
+| `check_contrast(doc)` / `check_color_gates(doc)` | contrast | colour gates over every mode (reports + errors) |
+| `check_color_gates_for_spec(path)` / `check_color_gates_all()` | contrast | colour gates for a spec / every registered system (CLI `contrast`, MCP `ds_check_contrast`) |
+| `contrast_ratio`, `composite`, `rgb_to_oklch`, `oklch_to_rgb`, `suggest_lightness_fix` | contrast | WCAG ratio, alpha compositing, OKLCH with gamut clamp, minimum-lightness fixes |
+
+---
+
+## 7. Colour gates and the values they changed (issue #7)
+
+`validate_spec` runs the WCAG contrast gate over every token file in every
+mode (rules in SCHEMA-V0.3.md § Colour gates;
+CLI `python3 tools/design-system-skill contrast --all`). The token-file keys
+involved:
+
+| Key | Purpose |
+|-----|---------|
+| `contrast_pairs[].replaces` | Re-express `color.border_input on color.surface` when inputs are identified another way (Terminal: the `$` prompt glyph). Needs a `note`. |
+| `contrast_backdrops` | Opaque colours that stand in for `page_bg` beneath translucent layers (Prism's gradient stops). Every pair is checked over each. |
+| `contrast_waivers` | `{pair, modes?, reason}` for decorative `ui` pairs only; stale entries fail. None are in use. |
+| `notes[path].contrast_fix` | Record of every value the gate changed: old, new, OKLCH before/after, ratio before/after per pair. |
+
+When the gate was introduced these values failed and were corrected with the
+minimum OKLCH lightness change that passes, keeping hue and chroma (Prism's
+white glass text, already at L = 1, gained opacity instead). Ratios are the
+worst over every mode and backdrop that uses the value. The table is the
+`contrast_fix` records of the token files:
+
+| System | Token | Mode | Old → new | Pair: ratio before → after (minimum) |
+|--------|-------|------|-----------|--------------------------------------|
+| editorial | `color.border_input` | — | `#D8CEB9` → `#968C79` | border_input on surface 1.42 → 3.03 (min 3) |
+| prism | `color.text_primary` | — | `rgba(255,255,255,0.95)` → `rgba(255,255,255,0.98)` | text_primary on surface_elevated 4.38 → 4.54 (min 4.5); text_primary on surface_selected 4.38 → 4.54 (min 4.5) |
+| prism | `color.text_secondary` | — | `rgba(255,255,255,0.8)` → `rgba(255,255,255,0.87)` | text_secondary on surface 4.1 → 4.51 (min 4.5) |
+| prism | `color.surface_inverse` | — | `rgba(255,255,255,0.18)` → `rgba(222,222,222,0.18)` | text_inverse on surface_inverse 4.01 → 4.51 (min 4.5) |
+| prism | `color.text_inverse` | — | `rgba(255,255,255,0.95)` → `rgba(255,255,255,0.98)` | text_inverse on surface_inverse 4.01 → 4.51 (min 4.5) |
+| prism | `color.text_muted` | — | `rgba(255,255,255,0.4)` → `rgba(255,255,255,0.59)` | text_muted on surface 2.2 → 3.01 (min 3) |
+| prism | `color.action_foreground` | — | `rgba(255,255,255,0.7)` → `rgba(255,255,255,0.87)` | action_foreground on action 3.55 → 4.51 (min 4.5) |
+| prism | `color.border_input` | — | `rgba(255,255,255,0.12)` → `rgba(255,255,255,0.59)` | border_input on surface 1.29 → 3.01 (min 3) |
+| prism | `color.accent` | — | `#7DDFBE` → `#9CFFDD` | accent on surface 3.35 → 4.52 (min 4.5) |
+| revolt | `color.accent_foreground` | — | `#FFFFFF` → `#111111` | accent_foreground on accent 3.55 → 5.32 (min 4.5) |
+| revolt | `color.text_muted` | — | `#999999` → `#949494` | text_muted on surface 2.85 → 3.03 (min 3) |
+| riso | `color.accent` | ink=classic | `#FF48B0` → `#960061` | accent_foreground on accent 1.64 → 4.52 (min 4.5); accent on surface 1.64 → 4.52 (min 3) |
+| riso | `color.accent` | ink=electric | `#00A95C` → `#00592E` | accent_foreground on accent 1.63 → 4.52 (min 4.5); accent on surface 1.63 → 4.52 (min 3) |
+| riso | `color.accent` | ink=sunset | `#E8C700` → `#5A4C00` | accent_foreground on accent 1.09 → 4.52 (min 4.5); accent on surface 1.09 → 4.52 (min 3) |
+| riso | `color.accent` | ink=forest | `#00A95C` → `#00592E` | accent_foreground on accent 1.63 → 4.52 (min 4.5); accent on surface 1.63 → 4.52 (min 3) |
+| riso | `color.accent` | ink=spritz | `#E8C700` → `#5A4C00` | accent_foreground on accent 1.09 → 4.52 (min 4.5); accent on surface 1.09 → 4.52 (min 3) |
+| riso | `color.accent` | ink=ink | `#FF48B0` → `#960061` | accent_foreground on accent 1.64 → 4.52 (min 4.5); accent on surface 1.64 → 4.52 (min 3) |
+| riso | `color.action` | ink=classic | `#FF48B0` → `#960061` | action_foreground on action 1.64 → 4.52 (min 4.5); action on page_bg 1.64 → 4.52 (min 3) |
+| riso | `color.action` | ink=electric | `#00A95C` → `#00592E` | action_foreground on action 1.63 → 4.52 (min 4.5); action on page_bg 1.63 → 4.52 (min 3) |
+| riso | `color.action` | ink=sunset | `#E8C700` → `#5A4C00` | action_foreground on action 1.09 → 4.52 (min 4.5); action on page_bg 1.09 → 4.52 (min 3) |
+| riso | `color.action` | ink=forest | `#00A95C` → `#00592E` | action_foreground on action 1.63 → 4.52 (min 4.5); action on page_bg 1.63 → 4.52 (min 3) |
+| riso | `color.action` | ink=spritz | `#E8C700` → `#5A4C00` | action_foreground on action 1.09 → 4.52 (min 4.5); action on page_bg 1.09 → 4.52 (min 3) |
+| riso | `color.action` | ink=ink | `#FF48B0` → `#960061` | action_foreground on action 1.64 → 4.52 (min 4.5); action on page_bg 1.64 → 4.52 (min 3) |
+| riso | `color.focus_ring` | ink=classic | `#FF48B0` → `#C60081` | focus_ring on surface 1.64 → 3.0 (min 3); focus_ring on page_bg 1.64 → 3.0 (min 3) |
+| riso | `color.focus_ring` | ink=electric | `#00A95C` → `#00773F` | focus_ring on surface 1.63 → 3.01 (min 3); focus_ring on page_bg 1.63 → 3.01 (min 3) |
+| riso | `color.focus_ring` | ink=sunset | `#E8C700` → `#786600` | focus_ring on surface 1.09 → 3.02 (min 3); focus_ring on page_bg 1.09 → 3.02 (min 3) |
+| riso | `color.focus_ring` | ink=forest | `#00A95C` → `#00773F` | focus_ring on surface 1.63 → 3.01 (min 3); focus_ring on page_bg 1.63 → 3.01 (min 3) |
+| riso | `color.focus_ring` | ink=spritz | `#E8C700` → `#786600` | focus_ring on surface 1.09 → 3.02 (min 3); focus_ring on page_bg 1.09 → 3.02 (min 3) |
+| riso | `color.focus_ring` | ink=ink | `#FF48B0` → `#C60081` | focus_ring on surface 1.64 → 3.0 (min 3); focus_ring on page_bg 1.64 → 3.0 (min 3) |
+| riso | `extras.color.ink_1_text` | ink=classic | `#3255A4` → `#3255A4` | ink_1_text on page_bg 3.76 → 3.76 (min 3) |
+| riso | `extras.color.ink_1_text` | ink=electric | `#FF48B0` → `#C60081` | ink_1_text on page_bg 1.64 → 3.0 (min 3) |
+| riso | `extras.color.ink_1_text` | ink=sunset | `#FF665E` → `#C32C2C` | ink_1_text on page_bg 1.53 → 3.0 (min 3) |
+| riso | `extras.color.ink_1_text` | ink=forest | `#00838F` → `#00727D` | ink_1_text on page_bg 2.4 → 3.01 (min 3) |
+| riso | `extras.color.ink_1_text` | ink=spritz | `#3255A4` → `#3255A4` | ink_1_text on page_bg 3.76 → 3.76 (min 3) |
+| riso | `extras.color.ink_1_text` | ink=ink | `#1A1A1A` → `#1A1A1A` | ink_1_text on page_bg 9.25 → 9.25 (min 3) |
+| sketch | `color.action` | — | `#B8A9C8` → `#7F718E` | action on surface_elevated 2.2 → 4.51 (min 3); action_foreground on action 2.2 → 4.51 (min 4.5) |
+| sketch | `color.accent` | — | `#B8A9C8` → `#7F718E` | accent on surface 1.88 → 3.86 (min 3); accent_foreground on accent 2.2 → 4.51 (min 4.5) |
+| sketch | `color.border_input` | — | `#E5E3DE` → `#8A8984` | border_input on surface 1.1 → 3.0 (min 3) |
+| swiss | `color.accent_foreground` | — | `#000000` → `#FFFFFF` | accent_foreground on accent 4.27 → 4.92 (min 4.5) |
+| swiss | `color.action_foreground` | — | `#000000` → `#FFFFFF` | action_foreground on action 4.27 → 4.92 (min 4.5) |
+| wireframe | `color.border_input` | — | `#E0E0E0` → `#949494` | border_input on surface 1.32 → 3.03 (min 3) |
+| wireframe | `color.text_muted` | — | `#BDBDBD` → `#949494` | text_muted on surface 1.88 → 3.03 (min 3) |
+| wireframe | `color.warning` | — | `#E65100` → `#D14900` | warning_foreground on warning 3.79 → 4.5 (min 4.5) |
+
+Judgement calls (each explained in the token's note):
+
+- **Sketch accent/action** moved further than the 3:1 UI minimum (`#9283A1`)
+  so the white label keeps 4.5:1, instead of turning the label near-black
+  (a 0.75 lightness move).
+- **Swiss accent/action foreground**: the signature red stays; black became
+  white (the minimum passing value is `#F5F5F5`, snapped to Swiss white).
+- **Revolt accent foreground**: minimum `#212121`, snapped to the system black
+  `#111111` because the five-colour palette is inviolable.
+- **Wireframe warning**: the fill moved rather than the white text, so every
+  wireframe status keeps white text.
+- **Riso**: the drums are untouched; the contract roles became per-ink legible
+  shades (§ 4.4). The token pair for ink-1 text now checks
+  `extras.color.ink_1_text` (new) instead of the drum.
+- **Input borders** (editorial, prism, sketch, wireframe) were fixed because
+  the stroke is what identifies those inputs; `border_default` keeps the light
+  hairline. Terminal re-expresses the pair instead (prompt glyph).

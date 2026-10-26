@@ -7,8 +7,8 @@ see ``token_file.py``). Systems may declare additional tokens under
 
 This module is pure data plus value-shape predicates. It has no I/O and
 no dependency on the loader, so the validator, the drift check, the
-wireframe-skill and a future contrast gate can all import it without
-cycles.
+wireframe-skill and the colour gates (``contrast.py``) can all import it
+without cycles.
 
 The human-readable contract table in ``docs/specs/SCHEMA-V0.3.md`` is
 rendered from ``CONTRACT_TOKENS`` by ``render_contract_table()`` (and the
@@ -304,7 +304,8 @@ class ContrastPair:
     """A foreground/background pairing every system must make legible.
 
     The contract only declares *which* pairs exist and their kind. The
-    contrast gate (a later change) owns the ratio thresholds per kind.
+    contrast gate (``contrast.CONTRAST_MINIMUMS``, issue #7) owns the ratio
+    thresholds per kind.
 
     Attributes:
         fg: Token path of the foreground colour.

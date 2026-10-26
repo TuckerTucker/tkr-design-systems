@@ -10,6 +10,7 @@ Usage from the project root:
     python3 design-system-skill register --spec /abs/path/to/new-spec.yaml [--replace]
     python3 design-system-skill unregister --id <id>
     python3 design-system-skill drift [--all | --id swiss | --spec systems/swiss/spec.yaml]
+    python3 design-system-skill contrast [--all | --id swiss | --spec systems/swiss/spec.yaml] [--verbose]
 
 All commands print a JSON Result to stdout. Exit code 0 if ok, 1 otherwise.
 """
@@ -48,6 +49,8 @@ def main(argv: list[str] | None = None) -> int:
         check_compliance,
         check_drift,
         check_drift_all,
+        check_color_gates_all,
+        check_color_gates_for_spec,
     )
     from design_system_skill.paths import project_root  # noqa: E402
     from design_system_skill.registry import Registry  # noqa: E402
@@ -95,6 +98,17 @@ def main(argv: list[str] | None = None) -> int:
     target.add_argument("--id", help="Check one registered system.")
     target.add_argument("--spec", help="Check one spec.yaml by path.")
 
+    p_contrast = sub.add_parser(
+        "contrast",
+        help="WCAG contrast gate over every mode (default: all registered systems).",
+    )
+    c_target = p_contrast.add_mutually_exclusive_group()
+    c_target.add_argument("--all", action="store_true", help="Check every registered system (default).")
+    c_target.add_argument("--id", help="Check one registered system.")
+    c_target.add_argument("--spec", help="Check one spec.yaml by path.")
+    p_contrast.add_argument("--verbose", action="store_true",
+                            help="Include every pair in every mode, not just the worst per pair.")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "list":
@@ -111,9 +125,18 @@ def main(argv: list[str] | None = None) -> int:
         return _emit(register_system(args.spec, replace=args.replace))
     if args.cmd == "unregister":
         return _emit(unregister_system(args.id))
-    if args.cmd == "drift":
+    if args.cmd in ("drift", "contrast"):
+        if args.cmd == "drift":
+            one, every = check_drift, check_drift_all
+        else:
+            def one(path):
+                return check_color_gates_for_spec(path, verbose=args.verbose)
+
+            def every():
+                return check_color_gates_all(
+                    checker=lambda p: check_color_gates_for_spec(p, verbose=args.verbose))
         if args.spec:
-            return _emit(check_drift(args.spec))
+            return _emit(one(args.spec))
         if args.id:
             reg = Registry.load()
             if not reg.ok:
@@ -124,8 +147,8 @@ def main(argv: list[str] | None = None) -> int:
                     {"code": "SYSTEM_NOT_FOUND", "message": f"System '{args.id}' is not registered"}]},
                     indent=2))
                 return 1
-            return _emit(check_drift(project_root() / entry.spec))
-        return _emit(check_drift_all())
+            return _emit(one(project_root() / entry.spec))
+        return _emit(every())
     parser.error(f"Unknown command: {args.cmd}")
     return 2
 

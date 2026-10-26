@@ -34,6 +34,7 @@ from typing import Any
 import yaml
 
 from .errors import Error, Result
+from .contrast import check_color_gates
 from .drift import find_drift
 from .token_file import (
     load_token_file,
@@ -101,7 +102,11 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
             registry's library_root for accurate path warnings.
 
     Returns:
-        Result with data={valid, system_id, spec_version, errors, warnings}.
+        Result with data={valid, system_id, spec_version, errors, warnings}
+        plus, when the spec has a contract-valid token file, ``contrast``
+        (``contrast.GateReport.summary()``: counts, the worst result per
+        pair with ratio / minimum / pass / mode, and the gate's errors).
+        Gate failures are also in ``errors`` (``CONTRAST_FAIL`` ...).
     """
     spec_path = Path(spec_path).resolve()
     if not spec_path.exists():
@@ -134,7 +139,8 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
     _check_spec_version(data, errors)
     _check_system_block(data, errors, warnings)
     _check_tokens(data, errors, warnings)
-    _check_token_contract(data, spec_path, errors, warnings)
+    color_gates: dict[str, Any] = {}
+    _check_token_contract(data, spec_path, errors, warnings, color_gates)
     _check_components(data, spec_dir, errors, warnings, lib_root)
     _check_layout_templates(data, spec_dir, errors, warnings, lib_root)
     _check_rulebook(data, errors, warnings)
@@ -151,6 +157,7 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
             "spec_version": data.get("spec_version"),
             "errors": [{"code": e.code, "message": e.message, "detail": e.detail} for e in errors],
             "warnings": [{"code": w.code, "message": w.message, "detail": w.detail} for w in warnings],
+            **color_gates,
         }
         return result
 
@@ -161,6 +168,7 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
             "spec_version": data.get("spec_version"),
             "errors": [],
             "warnings": [{"code": w.code, "message": w.message, "detail": w.detail} for w in warnings],
+            **color_gates,
         },
         warnings=warnings or None,
     )
@@ -261,7 +269,8 @@ def _check_tokens(data: dict, errors: list[Error], warnings: list[Error]) -> Non
 
 
 def _check_token_contract(
-    data: dict, spec_path: Path, errors: list[Error], warnings: list[Error]
+    data: dict, spec_path: Path, errors: list[Error], warnings: list[Error],
+    color_gates: dict[str, Any] | None = None,
 ) -> None:
     """Validate the spec's canonical token file against the contract.
 
@@ -271,7 +280,9 @@ def _check_token_contract(
     and spec.yaml must not drift from it (``drift.find_drift``). Motion
     declarations (``components.<id>.motion``, ``motion.elements``) are
     checked against the contract tiers and the file's reduced-motion
-    policy (``token_file.validate_motion_declarations``).
+    policy (``token_file.validate_motion_declarations``). When the token
+    document is contract-valid, the colour gates run over every mode
+    (``contrast.check_color_gates``: WCAG contrast).
 
     Args:
         data: Parsed spec mapping.
@@ -279,6 +290,8 @@ def _check_token_contract(
             relative to its directory).
         errors: Blocking errors accumulator.
         warnings: Advisory warnings accumulator.
+        color_gates: Filled with ``{gate_key: summary}`` (``contrast``)
+            when the gates ran.
     """
     sys_block = data.get("system") if isinstance(data.get("system"), dict) else {}
     version = data.get("spec_version")
@@ -304,6 +317,16 @@ def _check_token_contract(
     tok_errors, tok_warnings = validate_token_document(doc, str(tok_path))
     errors.extend(tok_errors)
     warnings.extend(tok_warnings)
+
+    # Colour gates need every contract colour present and parseable.
+    if not tok_errors:
+        for key, report in check_color_gates(doc).items():
+            errors.extend(
+                Error(e.code, e.message, {**e.detail, "tokens_path": str(tok_path)})
+                for e in report.errors
+            )
+            if color_gates is not None:
+                color_gates[key] = report.summary()
 
     if isinstance(doc.get("system"), str) and sys_block.get("id") and doc["system"] != sys_block["id"]:
         errors.append(Error(

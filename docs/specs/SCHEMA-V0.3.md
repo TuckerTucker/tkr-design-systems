@@ -3,8 +3,8 @@
 Schema v0.3 adds one thing to v0.2: a **fixed semantic token contract**. Every
 design system supplies a value for every contract token, under the same name,
 in a canonical token file (`systems/<id>/tokens.json`). Consumers — the
-wireframe-skill, the MCP server, builders, the showcase JSX, and the planned
-contrast gate — can then ask any system for `color.danger_foreground` or
+wireframe-skill, the MCP server, builders, the showcase JSX, and the colour
+gates (§ Colour gates) — can then ask any system for `color.danger_foreground` or
 `type.label` without knowing that system's private vocabulary.
 
 Everything else in v0.2 (`SCHEMA-V0.2.md`) is unchanged. v0.1 and v0.2 specs
@@ -22,8 +22,8 @@ Related documents:
 
 - `docs/specs/TOKENS.md` — token file format in full, and exactly how JSX and
   builders consume it.
-- GitHub issue #6 (this contract), #4 (single source of truth) and #10
-  (motion).
+- GitHub issue #6 (this contract), #4 (single source of truth), #10
+  (motion) and #7 (contrast gate).
 
 ---
 
@@ -80,7 +80,9 @@ For a v0.3 spec, `validate_spec` fails when:
   unknown tokens;
 - spec.yaml **drifts** from the token file (see `TOKENS.md` § Drift check);
 - motion tiers are out of order, or a motion declaration names an unknown
-  tier or a reduced-motion behaviour the policy forbids (see § Motion).
+  tier or a reduced-motion behaviour the policy forbids (see § Motion);
+- a colour pair misses its WCAG minimum in any mode, or a waiver is
+  malformed or stale (§ Colour gates: `CONTRAST_FAIL`, `CONTRAST_INVALID`).
 
 v0.1/v0.2 specs may opt in by declaring `system.tokens_file`; the same checks
 then apply.
@@ -165,9 +167,9 @@ enter), `easing` (`cubic-bezier(x1, y1, x2, y2)`, x in 0-1) and an optional
 ### Required contrast pairs
 
 The contract declares which foreground/background pairs every system must make
-legible, and of what kind. Thresholds per kind belong to the contrast gate
-(not part of this change); suggested WCAG 2.x mapping: `text` 4.5:1,
-`large_text` 3:1, `ui` 3:1 (non-text contrast), `advisory` reported only.
+legible, and of what kind. The contrast gate (§ Colour gates) owns the
+thresholds per kind: `text` 4.5:1, `large_text` 3:1, `ui` 3:1 (non-text
+contrast), `advisory` reported only.
 
 Semi-transparent colours composite over the pair's background; a
 semi-transparent background composites over `color.page_bg`. Pairs are checked
@@ -197,6 +199,96 @@ their own pairs in the token file's `contrast_pairs` list (e.g. Swiss declares
 | `color.focus_ring` | `color.surface` | ui |
 | `color.focus_ring` | `color.page_bg` | ui |
 <!-- pairs-table:end -->
+
+---
+
+## Colour gates
+
+GitHub issue #7. `design_system_skill/contrast.py` computes the gate
+from the token file, for **every mode combination** and every page backdrop,
+and `validate_spec` fails on any miss. Run them on their own with
+
+```
+uv run python tools/design-system-skill contrast [--all | --id X | --spec PATH] [--verbose]
+```
+
+(exit 1 on failure; MCP tool `ds_check_contrast`). `validate_spec` /
+`ds_validate_spec` return the report under `data.contrast`; `load_system`
+attaches it at `_meta.color_gates`. Each
+report lists the worst result per pair: `ratio`, `minimum`, `passes`, `mode`,
+`backdrop`, and `waived` / `waiver_reason`. `--verbose` adds every pair in
+every mode.
+
+### Contrast gate (#7)
+
+WCAG 2.x relative luminance (sRGB transfer function) and ratio
+`(L1 + 0.05) / (L2 + 0.05)`. A ratio is compared unrounded: `#777` on `#FFF`
+is 4.48:1 and fails 4.5:1.
+
+<!-- thresholds-table:begin -->
+| Kind | Minimum | WCAG 2.x | Waivable |
+|------|---------|----------|----------|
+| text | 4.5:1 | 1.4.3 Contrast (Minimum) | no |
+| large_text | 3:1 | 1.4.3, large-scale text | no |
+| ui | 3:1 | 1.4.11 Non-text Contrast | yes, with a reason |
+| advisory | — | reported only | no |
+<!-- thresholds-table:end -->
+
+The table is rendered by `contrast.render_thresholds_table()`;
+`test_contrast_docs_match_module` keeps it in sync.
+
+Pairs checked: the contract pairs above plus the file's `contrast_pairs`. A
+file pair that repeats a contract pair with a stricter kind supersedes it
+(Prism declares `color.accent` on `color.surface` as `text` because its teal
+numerals are text).
+
+**Alpha compositing.** Ratios are computed on the colours the browser
+actually paints, source-over in gamma-encoded sRGB:
+
+1. The backdrop is `color.page_bg` (must be opaque) and, in turn, each colour
+   listed in the token file's optional `contrast_backdrops` (token paths of
+   opaque colours that stand in for `page_bg`). Prism lists its four gradient
+   stops, so every pair is checked over the gradient's darkest and lightest
+   points as well as the solid stand-in; the worst result counts.
+2. A translucent pair background composites over the backdrop.
+3. The foreground composites over that composited background.
+
+**Fix policy.** A failing text or UI colour is corrected with the minimum
+OKLCH lightness change that passes, keeping hue and chroma (chroma is reduced
+only as far as the sRGB gamut requires): `contrast.suggest_lightness_fix`.
+The colour moved is chosen by role, usually the foreground or fill that
+defines the system least; a signature accent may change lightness but never
+hue. A translucent white already at L = 1 gains opacity instead. Every
+changed value keeps a `notes` entry with a `contrast_fix` record (old, new,
+OKLCH before/after, each pair's ratio before/after); `TOKENS.md` § 7 lists
+them.
+
+**Waivers** (`ui` pairs only; text is fixed, never waived):
+
+```json
+"contrast_waivers": [
+  { "pair": "color.accent on color.surface",
+    "modes": [ { "ink": "sunset" } ],
+    "reason": "why this mark is decorative here" }
+]
+```
+
+`pair` is `"<fg> on <bg>"`; `modes` (optional) are partial selections, and a
+pattern matches every combination that agrees on the axes it names; `reason`
+is required. A waiver, or one of its mode patterns, that matches no failing
+result is **stale** and fails (`CONTRAST_FAIL` with `detail.stale`), the same
+discipline as `rulebook-exceptions.yaml`. No registered system needs a
+contrast waiver.
+
+**Input boundaries.** WCAG 1.4.11 asks for 3:1 on the visual information
+needed to identify a control. Where a system identifies inputs by something
+other than their stroke, it re-expresses the contract pair instead of
+waiving it: a `contrast_pairs` entry with
+`"replaces": "color.border_input on color.surface"` and a `note` saying how
+the control is identified is checked in its place (only that pair is
+replaceable). Terminal does this: its inputs are identified by the bold `$`
+prompt glyph in accent (checked as text, 4.5:1), and `#1F2F1F` is a section
+rule, not a control boundary.
 
 ---
 
@@ -428,6 +520,10 @@ ADDED:
   - "{group.token}" aliases anywhere in spec.yaml
   - load_system: tokens.contract, _meta.tokens_path/tokens_checksum/contract_version
   - drift check: design_system_skill.drift + `drift` CLI command
+  - contrast gate (#7): design_system_skill.contrast + `contrast` CLI
+    command + MCP ds_check_contrast; token file keys contrast_backdrops,
+    contrast_waivers; contrast_pairs[].replaces; notes[].contrast_fix
+    records; error codes CONTRAST_FAIL, CONTRAST_INVALID
 
 MOVED (spec.yaml -> tokens.json, projected back by the loader):
   - tokens.colors.{page_bg,surface,surface_elevated,text_primary,
