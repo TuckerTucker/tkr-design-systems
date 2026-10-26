@@ -78,6 +78,14 @@ SCHEMA_V03_PATH = Path("docs/specs/SCHEMA-V0.3.md")
 # deleted by an edit cannot silently stop a doc from being maintained.
 EXPECTED_REGIONS: dict[str, frozenset[str]] = {
     "tools/mcp-server/README.md": frozenset({"mcp-tool-count", "mcp-tools"}),
+    "tools/design-system-skill/SKILL.md": frozenset({
+        "which-component", "which-system", "rules-agents-get-wrong",
+        "system-rules", "system-count",
+    }),
+    "tools/wireframe-skill/SKILL.md": frozenset({
+        "which-component", "which-system", "rules-agents-get-wrong",
+        "system-rules",
+    }),
     "docs/HANDOFF.md": frozenset({
         "library-vocabulary-count", "system-count", "library-counts",
     }),

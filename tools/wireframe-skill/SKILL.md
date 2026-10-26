@@ -129,6 +129,202 @@ Validation rejects: unknown component_ids, components placed outside their regio
 | Same as above, but you want brief-specific content | `substitution-prompt` + `apply-substitutions` |
 | Brief implies a layout the system hasn't authored | `decompose-prompt` + `apply-decomposition` |
 
+## Decision Guide
+
+> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `uv run python tools/docs/generate.py`. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
+
+### Which system
+
+The user picks the system; the skill applies it. The table says what each registered system is for, from its spec. When no system is named, use `wireframe` (the default); `neutral` is the same library under another id.
+
+<!-- generated:which-system -->
+| System | Intent | Grammar | Suits | Components / layouts | Rules |
+|--------|--------|---------|-------|----------------------|-------|
+| `wireframe` Wireframe | Neutral Greyscale Reference Library (showcase: Greyscale Wireframe Reference) | `wireframe` | Structure before a visual language is chosen. The default when the user names no system, and the fallback library for components another system has not authored. | 100 / 53 | 12 |
+| `swiss` Swiss | Grid + Grotesk + Single Saturated Accent (showcase: Grid-strict + Rams Heritage) | `contemporary_clean` | General-purpose product UI: dashboards, settings, forms, data tables, sign-in. Dense information where hierarchy comes from type and grid, with one accent. | 71 / 12 | 13 |
+| `terminal` Terminal | CLI + Phosphor Heritage | `character_grid` | Developer tools, logs, monitoring and command palettes; keyboard-first surfaces. Not long-form reading or consumer sign-in. | 53 / 4 | 8 |
+| `editorial` Editorial | Long-form Serif + Newsprint Masthead | `contemporary_clean` | Long-form reading: articles, briefings, newsletters, transcripts. The article pattern is its strength. | 73 / 5 | 9 |
+| `sketch` Sketch | Linear + Hand-Drawn | `contemporary_clean` | Early product UI that carries an annotation layer: design reviews, onboarding, explained flows. | 65 / 4 | 6 |
+| `prism` Prism | Liquid Glass + Bento | `contemporary_clean` | Atmospheric, short compositions: dashboards, modals, drawers. Built for HTML/CSS; its SVG glass is an approximation for layout review only. | 56 / 4 | 6 |
+| `revolt` Revolt | Neobrutalist + Y2K | `contemporary_clean` | Expressive, loud moments: launches, campaigns, banners, playful sign-in. | 57 / 3 | 8 |
+| `riso` Riso | Duotone Print + Tweakable Press | `print_texture` | Content-heavy, print-flavoured surfaces: zines, features, articles, with parametric ink and paper presets. | 2 / 0 | 20 |
+| `neutral` | Alias of `wireframe`: same spec and library. |  |  |  |  |
+<!-- /generated:which-system -->
+
+### Which component
+
+Pick by the job, not by habit. Component ids and variants are the LIBRARY-SPEC vocabulary; a system that has not authored one falls back to the neutral library (LIBRARY-SPEC composition rule 5). The *Not* column is what the project's UX policies (`claude.md`) rule out.
+
+<!-- generated:which-component -->
+| Job | Use | Not | Why |
+|-----|-----|-----|-----|
+| Status that persists (sync failed, offline, plan expiring) | `banner` | `toast` | NO toast notifications: a toast forces a context switch and is gone before it is read. A banner stays in place until the condition clears. |
+| Result of one action (saved, sent, failed to send) | `badge` (`status`) | `toast`, `modal` | Status and errors appear contextual to the action: mark the item that was acted on, in place. |
+| Destructive action (delete, archive, remove) | `button` (`destructive`), `banner` | `modal` (`confirmation`) | NO "Are you sure?" dialogs: act immediately and offer undo (a banner with an undo action), so responsibility is not shifted to the user. |
+| List or table under 100 items | `list_item`, `data_table` (`default`), `search_bar` | `pagination`, `data_table` (`with_pagination`) | NO pagination for small datasets: show every row; filter with search instead of making the user page. |
+| Required and optional form fields | `label` (`required`), `label` (`optional`) | `label` (`default`) | NO required fields without indication: an unmarked required field is an error discovered after the fact. |
+| Invalid input | `form_field` (`with_error`) | `modal`, `toast` | Validate inline as they type and show how to fix it, in place; constrain inputs so invalid states are impossible where you can. |
+| Action that is not available yet | `button` | — | Render it in its disabled state, not hidden; a tooltip says what is required to enable it. Disable instead of erroring after the fact. |
+| Edit a value or a setting | `input`, `toggle`, `settings_layout` | `modal` (`form_modal`) | Edit in place, not in modals; keep context visible during the operation. |
+| On/off setting that applies immediately | `toggle` | `checkbox` | LIBRARY-SPEC: toggle is the settings-context boolean; checkbox is for multiple-select context or a form that is submitted. |
+| Advanced or secondary detail | `accordion_item`, `drawer` | `modal` | Progressive disclosure: basics first, reveal on demand without leaving the page. |
+| Missing, empty, failed or denied content | `empty_state` (`no_data`), `empty_state` (`no_results`), `empty_state` (`first_use`), `empty_state` (`error`) | — | Never a blank region. Edge cases are first-class deliverables (wireframe-edge-cases-first-class) and say what went wrong and how to fix it. |
+| A count or metric that matters | `stat` | `badge` (`count`) | Numbers carry meaning as display type (swiss-numerical-display); Swiss forbids count badges outright. |
+| Identity of a person or thread | `avatar` (`monogram`), `avatar` (`index`), `avatar` (`none`) | `avatar` (`emoji`), `avatar` (`photo`) | Follow the system's avatar_strategy; emoji are banned (ADR-0001) and photos are content, not structure. |
+<!-- /generated:which-component -->
+
+### Rules agents get wrong
+
+The violations that recur, each with the rule or decision behind it.
+
+<!-- generated:rules-agents-get-wrong -->
+| Wrong | Why | Source |
+|-------|-----|--------|
+| Spacing of 12px or 20px in Swiss | Every Swiss spacing value is a multiple of 8; off-grid breaks the rhythm. | `swiss-grid-alignment` |
+| A fifth red mark in Swiss, or an error set in red | Red is finite: CTA, selection bar, identity tag, status dot, at most four per screen. Swiss danger reuses that red (hue-gate waiver), so an error is ink copy reading "Error: what failed." with no icon, badge, fill or border change. | `swiss-red-finite-resource`, `swiss-error-not-red`, `swiss-error-typographic`, [0002-accent-danger-hue-gate.md](../../docs/adr/0002-accent-danger-hue-gate.md) |
+| An error in Revolt shown only by a new colour | Revolt's five colours are fixed; an error is labelled with the uppercase ERROR status pill, not recoloured. | `revolt-error-status` |
+| Emoji in an avatar, label, status or decoration | Emoji depend on system fonts and degrade silently in CairoSVG. Identity uses the system's avatar_strategy; functional icons come from Lucide. | `swiss-no-emoji-imagery`, `riso-no-emoji`, [0001-lucide-as-icon-source.md](../../docs/adr/0001-lucide-as-icon-source.md) |
+| A font size between steps (12px in Swiss, 15px in the wireframe library) | Each system has a fixed type scale; nudge to the nearest allowed size (sizes per system below). | `swiss-fixed-type-scale`, `wireframe-type-scale-discipline` |
+| A colour literal instead of a token (a hex in a template, an off-palette fill) | tokens.json is canonical. Read colours through the token file (wf_get_tokens); the drift check flags literals the file does not produce, and the rulebook flags off-palette fills. | [TOKENS.md](../../docs/specs/TOKENS.md), `wireframe-palette-discipline` |
+| An unescaped < or > in SVG text, such as `[ < prev ]` | The SVG is no longer well-formed XML and the rulebook check aborts. Write `&lt;` and `&gt;`. | `xml-well-formed` |
+| A double hyphen inside an SVG comment | XML forbids `--` inside a comment body; the file will not parse. | `wireframe-no-double-hyphens-in-comments` |
+| An animation with no tier, or one that ignores reduced motion | Every animation names a motion tier and a reduced behaviour within the system's reduced_motion policy; keep is not allowed on anything that moves. | [SCHEMA-V0.3.md](../../docs/specs/SCHEMA-V0.3.md#motion) |
+| Rounded corners or soft shadows in Swiss, Terminal or Revolt | Radius is 0 in all three. Swiss and Terminal use no shadows; Revolt's only shadow is the hard 4px 4px 0 offset. | `swiss-zero-radius`, `swiss-no-shadows`, `terminal-no-radius`, `revolt-hard-shadows-only` |
+| A pure white page in Editorial or Sketch | Both pages are warm paper; white is reserved for deliberate emphasis. | `editorial-paper-bg-required`, `sketch-warm-paper-bg` |
+| Status shown twice (a red border and a red badge on one card) | One status, one visual channel; doubling it adds noise, not meaning. | `wireframe-one-channel-per-message` |
+| Selection shown with a background fill in Terminal | Terminal selects by changing characters (' ' to '>') and colour, never by fill. | `terminal-selection-via-character` |
+| A third ink in Riso | Exactly two inks per artifact from one press preset; neutrals come from the paper. | `riso-two-inks-only`, `riso-paper-is-the-neutral` |
+| A toast for status, or an "Are you sure?" dialog before deleting | Use a banner or inline status, and undo. See the Which component table. | [claude.md](../../claude.md) |
+<!-- /generated:rules-agents-get-wrong -->
+
+### Rules per system
+
+The first sentence of every rulebook entry, with its severity and check method. `design-system-skill.get_rulebook(system)` returns the full rule, rationale and scope; step 6 below checks the mechanical ones. The tokens line is read from the system's `tokens.json` (default mode).
+
+<!-- generated:system-rules -->
+#### Wireframe (`wireframe`, alias `neutral`)
+
+Tokens: spacing 4, 8, 12, 16, 20, 24, 32, 40, 48, 64; type sizes 11, 12, 13, 14, 16, 18, 24; radius 6; accent `#424242`; reduced motion `fade`.
+
+- `wireframe-mobile-first` (required, semantic): Every wireframe is authored at mobile (375px) first, then desktop (1280px) is created as an EXPANSION of mobile.
+- `wireframe-cards-universal-container` (recommended, semantic): Distinct content (anything with a boundary, title, and related data) is presented in a card.
+- `wireframe-one-channel-per-message` (required, semantic): Status is communicated through ONE visual channel, not multiple simultaneously.
+- `wireframe-comments-for-intent` (required, semantic): SVG comments explain INTENT (why this element, what role does it play), not appearance (what color, what dimensions).
+- `wireframe-consistency-over-creativity` (required, semantic): Every card looks like every other card.
+- `wireframe-edge-cases-first-class` (required, semantic): Empty state, error state, loading state, and permission-denied state are required deliverables alongside the populated state.
+- `wireframe-verify-dont-assume` (required, mechanical): After creating wireframes, verify them: file exists with non-trivial content, viewBox matches dimensions, all colors come from the palette, all sizes from the type scale, all spacing from the grid.
+- `wireframe-palette-discipline` (required, mechanical): Every fill and stroke value is one of the 12 palette colors (7 greyscale + 4 semantic + inverse white).
+- `wireframe-type-scale-discipline` (required, mechanical): Every font-size is one of the 7 scale values (11, 12, 13, 14, 16, 18, 24).
+- `wireframe-no-double-hyphens-in-comments` (required, mechanical): SVG comments NEVER contain '--' (double hyphens).
+- `wireframe-css-classes-not-inline-fills` (required, mechanical): Text element fills MUST use CSS classes (text-primary, text-secondary, text-disabled, text-inverse) defined in `<defs><style>`, not inline fill attributes.
+- `wireframe-mobile-desktop-pair` (required, mechanical): Every wireframe screen is delivered as a (mobile.svg, desktop.svg) pair.
+
+#### Swiss (`swiss`)
+
+Tokens: spacing 8, 16, 24, 32, 40, 48, 64; type sizes 9, 11, 13, 14, 22, 32, 40; radius 0; accent `#E3000B`; reduced motion `none`.
+
+- `swiss-red-finite-resource` (required, mechanical): Red (#E3000B) is bounded above by 4 usages per screen.
+- `swiss-grid-alignment` (required, both): All spacing values are multiples of 8 (8, 16, 24, 32, 40, 48, 64).
+- `swiss-zero-radius` (required, mechanical): border-radius is 0 on every element.
+- `swiss-no-shadows` (required, mechanical): box-shadow is never used.
+- `swiss-numerical-display` (required, semantic): Numerical values (counts, indices, metrics) are rendered as display type (22px–40px) when they're meaningful information.
+- `swiss-zero-padded-indices` (required, semantic): List item indices are zero-padded to 2 digits (01, 02, ..., 99). 3-digit lists pad to 3 (001, 002).
+- `swiss-fixed-type-scale` (required, mechanical): Only 7 type sizes are permitted: 9, 11, 13, 14, 22, 32, 40.
+- `swiss-single-typeface` (required, mechanical): Inter is the only typeface.
+- `swiss-metadata-uppercase` (required, mechanical): All metadata (timestamps, labels, captions) is rendered uppercase, 9px Inter, tracked 0.16em, color #666.
+- `swiss-no-emoji-imagery` (required, semantic): No emoji avatars, no decorative imagery, no illustrations.
+- `swiss-error-prefix` (required, mechanical): Error copy reads 'Error: `<what failed>`.' — the prefix 'Error:' with a capital E and a colon, a space, the failure, and a closing period (JSX voice table: 'Error: send failed.').
+- `swiss-error-not-red` (required, mechanical): Text beginning 'Error:' is set in ink (color.text_primary), never in the accent red.
+- `swiss-error-typographic` (required, semantic): Error states are carried by copy and type alone: no icon, glyph, shape, badge, pill, fill, coloured or thickened border, and no ● (the red ● is the active-status dot).
+
+#### Terminal (`terminal`)
+
+Tokens: spacing 4, 8, 12, 14, 16, 20, 24, 32, 40, 48, 64; type sizes 9, 10, 11, 12, 14; radius 0; accent `#00FF66`; reduced motion `none`.
+
+- `terminal-monospace-only` (required, mechanical): Every text element uses JetBrains Mono (or another monospace fallback).
+- `terminal-no-radius` (required, mechanical): border-radius is 0 on every element.
+- `terminal-no-shadows` (required, mechanical): box-shadow is never used.
+- `terminal-prompt-style-labels` (required, semantic): Section headers use prompt-style or comment-style prefixes: `$ command`, `// comment`, `> path`, or `[n]` for enumerated items.
+- `terminal-color-as-signal` (required, both): Color usage is diagnostic, never decorative.
+- `terminal-box-drawing-borders` (required, semantic): Structural borders should use ASCII/Unicode box-drawing characters (┌─┐│└─┘) where possible, falling back to 1px dashed #1F2F1F lines.
+- `terminal-selection-via-character` (required, mechanical): Selection is signaled by changing characters (e.g. ' ' → '>') and color shifts, NEVER by adding a background fill or accent bar.
+- `terminal-snake-case-names` (recommended, semantic): Object names (sessions, files, identifiers) are lowercase_snake_case to feel terminal-native.
+
+#### Editorial (`editorial`)
+
+Tokens: spacing 4, 8, 10, 12, 16, 18, 20, 24, 32, 40, 48, 64; type sizes 8.5, 9, 12, 13, 15, 18, 24, 54; radius 0; accent `#8B1E2D`; reduced motion `fade`.
+
+- `editorial-typeface-boundary` (required, mechanical): Fraunces and Inter never appear on the same line.
+- `editorial-paper-bg-required` (required, mechanical): Page background is #F8F4EC (warm cream paper), not pure white.
+- `editorial-no-shadows` (required, mechanical): box-shadow is never used.
+- `editorial-rules-not-boxes` (required, mechanical): Sections are separated by horizontal rules, not by boxed containers with borders.
+- `editorial-tracked-metadata` (required, mechanical): All metadata (timestamps, overlines, bylines, section labels, dispatch headers) is rendered uppercase Inter at 8.5–9px with 0.16em–0.20em letter-spacing.
+- `editorial-drop-cap-ceremony` (required, semantic): Drop caps are reserved for the FIRST AI message in a conversation, never elsewhere. 54px Fraunces weight 700 in burgundy, float-left, with body text wrapping for 3 lines.
+- `editorial-no-bubbles` (required, both): Messages are NOT enclosed in chat bubbles.
+- `editorial-burgundy-discipline` (required, both): Burgundy (#8B1E2D) is used in: dispatch overlines, drop caps, unread 'N new' markers, masthead double rule, and the user-message left rule.
+- `editorial-no-emoji-imagery` (required, mechanical): No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations, status indicators).
+
+#### Sketch (`sketch`)
+
+Tokens: spacing 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32; type sizes 10, 11, 13, 13.5, 17, 18; radius 10; accent `#7F718E`; reduced motion `fade`.
+
+- `sketch-purple-on-annotations-only` (required, both): Purple (#7F718E) is used on Caveat annotation elements and unread badges.
+- `sketch-no-shadows` (required, mechanical): box-shadow is never used.
+- `sketch-typeface-roles` (required, both): IBM Plex Sans for all structural text.
+- `sketch-rounded-not-pilled` (required, mechanical): Rounded corners use 8–14px radius.
+- `sketch-warm-paper-bg` (required, mechanical): Page background is #FAFAF8 (warm beige), not pure white.
+- `sketch-no-emoji-imagery` (required, mechanical): No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations, category labels).
+
+#### Prism (`prism`)
+
+Tokens: spacing 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32; type sizes 10, 11, 13, 13.5, 16; radius 12; accent `#9CFFDD`; reduced motion `fade`.
+
+- `prism-glass-elevation` (required, mechanical): All elevated surfaces use semi-transparent glass: rgba(255,255,255,0.08) base with 1px rgba(255,255,255,0.12) border.
+- `prism-no-shadows` (required, mechanical): box-shadow is never used.
+- `prism-gradient-bg-required` (required, mechanical): The page background is the multi-stop gradient (150deg, #4A5D6B → #5A4A5E → #6B5A5A → #4A6058).
+- `prism-teal-as-signal` (required, both): Teal is reserved for online indicators, unread badges, and other status signals (accent #9CFFDD for teal text and numerals on glass; #7DDFBE for status fills, dots and the focus ring).
+- `prism-minimal-metadata` (required, semantic): Timestamps, sender labels, and other metadata are minimized.
+- `prism-no-emoji-imagery` (required, mechanical): No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations, status indicators).
+
+#### Revolt (`revolt`)
+
+Tokens: spacing 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32; type sizes 8, 9, 10, 11.5, 12, 14; radius 0; accent `#FF3366`; reduced motion `none`.
+
+- `revolt-no-radius` (required, mechanical): border-radius is 0 on every element.
+- `revolt-hard-shadows-only` (required, mechanical): All box-shadows are 4px 4px 0 #111 — zero blur, exact offset.
+- `revolt-2px-borders` (required, mechanical): Default borders are 2px solid #111.
+- `revolt-monospace-uppercase` (required, both): All metadata, names, and labels are uppercase Space Mono with letter-spacing 0.04–0.08em.
+- `revolt-color-pairing` (required, both): Pink (#FF3366) and lime (#C8FF00) are paired accent colors.
+- `revolt-code-style-timestamps` (required, semantic): Message timestamps follow the format `{SENDER} // 00:N` (e.g. YOU // 00:1, BOT // 00:2).
+- `revolt-no-emoji-imagery` (required, mechanical): No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations).
+- `revolt-error-status` (required, semantic): An error is labelled, not recoloured: it carries the uppercase status label ERROR (JSX Status Pills variants LIVE / TYPING / OFFLINE / ERROR) in a rectangular bordered pill: 2px solid border, padding 2px 8px, 9px/700 Space Mono uppercase, radius 0.
+
+#### Riso (`riso`)
+
+Tokens: spacing 6, 8, 10, 12, 14, 16, 18, 20, 22, 24; type sizes 8.5, 9, 11, 14, 16, 28, 30; radius 0; accent `#960061`; reduced motion `none`; default mode.
+
+- `riso-two-inks-only` (required, semantic): Exactly two inks are active per artifact, drawn from one press_presets.ink pair.
+- `riso-paper-is-the-neutral` (required, mechanical): Grays, neutrals, and backgrounds come from the paper color.
+- `riso-paper-preset-atomic` (required, mechanical): Paper is selected as a whole preset — color, blend mode, density, and text ink change together.
+- `riso-no-shadows` (required, mechanical): No box-shadow, no filter: drop-shadow, no text-shadow — ever.
+- `riso-grain-once-at-root` (required, mechanical): Exactly one grain layer, applied at the theme root above all content (z-index 100, mix-blend-mode: overlay).
+- `riso-duotone-display-only` (required, mechanical): DuotoneText applies only to type at 16px and above.
+- `riso-metadata-is-inktag` (required, mechanical): All metadata — timestamps, indices, section labels, sender tags, counts — uses JetBrains Mono uppercase at 0.14-0.16em tracking, 11px or below, and never receives a duotone ghost.
+- `riso-halftone-is-gradient` (required, mechanical): Halftone is a rotated radial-gradient dot field inside an oversized (inset: -50%) clipping container — not noise, not a texture image.
+- `riso-halftone-not-full-page` (required, semantic): Halftone appears as explicit strips and blocks.
+- `riso-registration-not-on-controls` (required, mechanical): Registration offset applies to ghost layers of display type and images only — never to icons, buttons, inputs, or other interactive elements.
+- `riso-selection-is-text-treatment` (required, mechanical): Selection is signalled by the title gaining its duotone ghost plus a paper darkening at most rgba(0,0,0,0.03).
+- `riso-srgb-filters` (required, mechanical): All feColorMatrix filters declare color-interpolation-filters="sRGB".
+- `riso-scoped-filter-ids` (required, mechanical): Filter ids are scoped per theme instance, never global constants.
+- `riso-images-wrapped` (required, mechanical): Every raster image passes through RisoImage (primary duotone + offset ghost + halftone overlay).
+- `riso-ink2-not-body` (required, mechanical): The ink-2 drum colour is never used for text (on cream it measures 2.69:1).
+- `riso-bleed-ceiling` (required, mechanical): Ink bleed on body copy is 0.4x the global bleed value and must not exceed 0.8px effective blur.
+- `riso-no-emoji` (required, mechanical): No emoji in any copy, label, or avatar slot.
+- `riso-print-vocabulary` (recommended, semantic): UI copy uses printing verbs (compose, file, print, reprint, edition, issue) rather than chat-app verbs (send, submit, post, ping).
+- `riso-sentence-case` (recommended, mechanical): Headlines and UI chrome are sentence case.
+- `riso-no-dissolve` (recommended, mechanical): State transitions cut.
+<!-- /generated:system-rules -->
+
 ## Generation Flow
 
 The skill follows seven steps when generating a system-aware wireframe. The first six produce the SVG; the seventh validates and emits.
@@ -367,7 +563,7 @@ Three predictable failure modes the skill handles:
 
 **Doesn't handle interactive states.** Wireframes are single-state. If multiple states need to be wireframed, invoke the skill multiple times, one per state.
 
-**Doesn't choose between systems.** The user picks the system; the skill applies it. "Should we use Swiss or Editorial for this?" is a design conversation, not a wireframe-skill decision.
+**Doesn't choose between systems.** The user picks the system; the skill applies it. The Decision Guide's *Which system* table informs that conversation; "Should we use Swiss or Editorial for this?" stays a design decision, not a wireframe-skill one.
 
 **Doesn't run finetune workflows.** Future finetune work for system-specific generation lives in a separate skill (or is a non-skill ML workflow). wireframe-skill is the production interface; finetune training is a different concern.
 
@@ -423,10 +619,10 @@ The Python implementation lives at `wireframe_skill/` (package) with these modul
 |--------|----------------|
 | `generator.py` | `wireframe()`; orchestrates the 7-step flow; entry point |
 | `placement.py` | `select_layout_pattern()` — keyword-heuristic brief→pattern routing; `derive_content_substitutions()` — LLM seam (currently no-op) |
-| `compose.py` | `compose_svg()` — reads pattern SVG, applies substitutions, extracts viewBox; `apply_artifact_treatments()` — assembles the Riso filter pipeline (filter_library injection, layer=bottom page-bg rect, layer=top filter overlay) for systems that declare `artifact_treatments`; no-op for the contemporary-clean systems (Swiss, Editorial, Sketch, Prism, Revolt, Terminal) |
+| `compose.py` | `compose_svg()` — reads pattern SVG, applies substitutions, extracts viewBox; `apply_artifact_treatments()` — assembles the Riso filter pipeline (filter_library injection, layer=bottom page-bg rect, layer=top filter overlay) for systems that declare `artifact_treatments`; no-op for systems that declare none |
 | `substitution.py` | `extract_text_nodes()`, `build_substitution_request()`, `validate_substitutions()`, `apply_substitutions()` — backs the `substitution-prompt` / `apply-substitutions` two-pass subcommands (item 9.1) |
 | `decomposition.py` | `build_decomposition_request()`, `validate_blueprint()` — backs the `decompose-prompt` subcommand (item 9.2) |
 | `assembler.py` | `assemble_blueprint()` — composes a blueprint into a single SVG with `<defs>` id deduplication and per-component transforms (item 9.2) |
 | `emit.py` | `emit_artifact()` — writes wireframe.svg + spec.yaml; builds the `design_system` block per the Output Contract |
 
-CLI shim at `__main__.py` exposes the operation as `python3 wireframe-skill --brief "..." [--system X] [--platform Y] [--out dir]`. End-to-end tests at `test_wireframe_skill.py` (38 assertions) cover Swiss + wireframe library at desktop and mobile, all keyword routing cases, unknown-system + invalid-platform failures, mobile-variant routing, advisory-warning emit, custom filename stem.
+CLI shim at `__main__.py` exposes the operation as `python3 wireframe-skill --brief "..." [--system X] [--platform Y] [--out dir]`. End-to-end tests at `test_wireframe_skill.py` cover Swiss + wireframe library at desktop and mobile, all keyword routing cases, unknown-system + invalid-platform failures, mobile-variant routing, advisory-warning emit, custom filename stem.

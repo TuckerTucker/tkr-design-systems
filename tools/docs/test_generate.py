@@ -199,3 +199,12 @@ def test_library_spec_heading_counts_are_enforced(tmp_path: Path) -> None:
 
 def test_schema_tables_are_checked() -> None:
     assert generate.check_schema_tables(REPO_ROOT) == []
+
+
+@pytest.mark.parametrize("skill", ["design-system-skill", "wireframe-skill"])
+def test_skills_carry_the_decision_guide_and_output_contract(skill: str) -> None:
+    text = (REPO_ROOT / "tools" / skill / "SKILL.md").read_text()
+    assert "## Output Contract" in text
+    for region in ("which-component", "which-system", "rules-agents-get-wrong", "system-rules"):
+        assert f"<!-- generated:{region} -->" in text
+    assert text.index("## Decision Guide") < text.index("## Output Contract")
