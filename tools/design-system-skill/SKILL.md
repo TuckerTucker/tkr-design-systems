@@ -116,6 +116,10 @@ Compares a spec.yaml with its canonical token file (`systems/<id>/tokens.json`, 
 
 Runs the WCAG 2.x contrast gate (issue #7: every contract and token-file pair, `text` 4.5:1, `large_text` 3:1, `ui` 3:1, `advisory` reported) and the accent/danger hue gate (issue #8: accent and action at least 40° of OKLCH hue from danger, greys exempt; ADR-0002) over a system's token file in every mode combination, compositing translucent colours over the page and any declared `contrast_backdrops`. `python3 design-system-skill contrast --all` (default), `--id riso`, or `--spec path`, `--verbose` for every result; exit 1 on failure. MCP: `ds_check_contrast`. `validate_spec` runs both gates (errors `CONTRAST_FAIL`, `HUE_GATE_FAIL`, ...) and returns the per-pair reports as `data.contrast` / `data.hue_gate`. Waivers (`contrast_waivers`, `hue_waivers`) need a reason and fail when stale. See `docs/specs/SCHEMA-V0.3.md` § Colour gates.
 
+### check_jsx_drift
+
+Scans each showcase page (`apps/showcase/src/systems/design-system-{id}.jsx`) for colour literals (hex, rgb[a], hsl[a]) and fails on any literal that equals a token value in any mode (it should reference `tokens.json`) or that is not on the allow-list. The allow-list, `apps/showcase/jsx-color-allowlist.yaml`, covers documentation chrome around the preview; every entry needs a reason, entries that collide with a token value must be scoped to a region or line context, and stale entries fail. `python3 design-system-skill jsx-drift` (every page), `--id swiss` (repeatable), `--allowlist path`; exit 1 on drift. See `docs/specs/TOKENS.md` § 4.5.
+
 ## Decision Guide
 
 > The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `uv run python tools/docs/generate.py`. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
@@ -513,6 +517,7 @@ The Python implementation lives at `design_system_skill/` (package) with these m
 | `token_file.py` | Canonical `systems/<id>/tokens.json`: load, validate, modes, aliases, projection into the spec — `docs/specs/TOKENS.md` |
 | `drift.py` | `check_drift()` / `check_drift_all()`: spec.yaml vs tokens.json (`drift` CLI subcommand) |
 | `contrast.py` | Colour gates: WCAG contrast and accent/danger hue over every mode, OKLCH conversion with gamut clamp, minimum-lightness fixes (`contrast` CLI subcommand) |
+| `jsx_drift.py` | Showcase JSX colour literals vs tokens.json, with a reasoned allow-list (`jsx-drift` CLI subcommand) |
 | `rulebook.py` | `get_rulebook()`, `check_compliance()`; delegates mechanical checks to `tools/builders/rulebook_check.py` |
 | `errors.py` | `Result` + `Error` dataclasses; `ERROR_CODES` enumeration |
 | `paths.py` | Project-root + registry-path resolution; honors `$DESIGN_SYSTEM_SKILL_REGISTRY` for tests |
