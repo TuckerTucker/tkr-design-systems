@@ -2,8 +2,8 @@
   <defs>
     <style>
       .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .text-disabled { fill: #949494; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #636363; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #8E8E8E; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
@@ -56,7 +56,7 @@
   <text x="280" y="376" class="text-primary" font-size="14" font-weight="600">Time zone</text>
   <rect x="280" y="398" width="480" height="48" rx="6" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1.5"/>
   <text x="296" y="428" class="text-primary" font-size="14">America/Los_Angeles</text>
-  <path d="M 730 420 L 738 428 L 746 420" fill="none" stroke="#757575" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M 730 420 L 738 428 L 746 420" fill="none" stroke="#636363" stroke-width="1.5" stroke-linecap="round"/>
 
   <rect x="280" y="488" width="100" height="40" rx="6" fill="#424242"/>
   <text x="330" y="514" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Save changes</text>

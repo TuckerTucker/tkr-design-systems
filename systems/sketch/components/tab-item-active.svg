@@ -4,15 +4,15 @@
       .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
       .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
       .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-accent { fill: #7F718E; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-annotation { fill: #7F718E; font-family: 'Caveat', cursive; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
     </style>
   </defs>
   <!-- ==================== TAB-ITEM-ACTIVE ==================== -->
 
   <text x="60" y="26" text-anchor="middle" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="700">Active Tab</text>
   <g transform="rotate(-1.5, 60, 36)">
-    <line x1="20" y1="36" x2="100" y2="36" stroke="#7F718E" stroke-width="1.5"/>
+    <line x1="20" y1="36" x2="100" y2="36" stroke="#7C6E8B" stroke-width="1.5"/>
   </g>
 
 </svg>

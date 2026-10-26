@@ -4,8 +4,8 @@
       .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
       .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
       .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-accent { fill: #7F718E; font-family: 'IBM Plex Sans', sans-serif; }
-      .text-annotation { fill: #7F718E; font-family: 'Caveat', cursive; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
     </style>
   </defs>
   <!-- ==================== FORM-FIELD-WITH-ERROR ==================== -->
@@ -14,7 +14,7 @@
   <rect x="0" y="24" width="320" height="32" fill="#FFFFFF" stroke="#8A8984" stroke-width="1.5" rx="8" ry="8"/>
   <text x="12" y="46" class="text-primary" font-size="14" letter-spacing="-0.02em">invalid-user</text>
   <g transform="rotate(-1, 0, 62)">
-    <text x="0" y="62" font-family="'Caveat', cursive" font-size="14" font-weight="700" fill="#7F718E">letters and numbers only</text>
+    <text x="0" y="62" font-family="'Caveat', cursive" font-size="14" font-weight="700" fill="#7C6E8B">letters and numbers only</text>
   </g>
 
 </svg>

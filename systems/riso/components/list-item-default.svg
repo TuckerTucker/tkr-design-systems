@@ -2,9 +2,9 @@
   <defs>
     <style>
       .text-primary { fill: #1A1614; font-family: 'Space Grotesk', system-ui, sans-serif; }
-      .text-ink-1 { fill: #3255A4; font-family: 'Space Grotesk', system-ui, sans-serif; }
-      .text-ink-2 { fill: #FF48B0; font-family: 'Space Grotesk', system-ui, sans-serif; }
-      .text-label { fill: #3255A4; font-family: 'JetBrains Mono', monospace; }
+      .text-ink-1 { fill: #234492; font-family: 'Space Grotesk', system-ui, sans-serif; }
+      .text-ink-2 { fill: #960061; font-family: 'Space Grotesk', system-ui, sans-serif; }
+      .text-label { fill: #234492; font-family: 'JetBrains Mono', monospace; }
     </style>
     <!-- Grain filter: feTurbulence overlay with multiply blend -->
     <filter id="grain" x="0%" y="0%" width="100%" height="100%">
@@ -79,7 +79,7 @@
         font-family="'JetBrains Mono', monospace"
         font-size="14"
         font-weight="500"
-        fill="#3255A4"
+        fill="#234492"
         letter-spacing="1.4">01</text>
 
   <!-- Title — Space Grotesk -->
@@ -87,31 +87,31 @@
         font-family="'Space Grotesk', system-ui, sans-serif"
         font-size="14"
         font-weight="500"
-        fill="#3255A4">Tokyo Trip</text>
+        fill="#234492">Tokyo Trip</text>
 
-  <!-- Timestamp top-right — Space Mono uppercase, 60% density -->
+  <!-- Timestamp top-right — Space Mono uppercase. Full density: a 60%
+       screen of the drum was 2.3:1 on cream; ink_1_text is the legible
+       shade of the ink-1 drum (#7). -->
   <text x="264" y="28"
         font-family="'JetBrains Mono', monospace"
         font-size="12"
         font-weight="500"
-        fill="#3255A4"
-        opacity="0.6"
+        fill="#234492"
         text-anchor="end">2M</text>
 
-  <!-- Preview — Space Grotesk, lighter weight -->
+  <!-- Preview — Space Grotesk, lighter weight (full density, see above) -->
   <text x="46" y="48"
         font-family="'Space Grotesk', system-ui, sans-serif"
         font-size="12"
         font-weight="400"
-        fill="#3255A4"
-        opacity="0.7">Build day-by-day itinerary?</text>
+        fill="#234492">Build day-by-day itinerary?</text>
 
   <!-- Unread count — large duotone numeral -->
   <text x="46" y="84"
         font-family="'Space Grotesk', system-ui, sans-serif"
         font-size="30"
         font-weight="700"
-        fill="#3255A4">02</text>
+        fill="#234492">02</text>
 
   <!-- ─── GRAIN OVERLAY ───
        feTurbulence noise applied as a multiply layer over everything.
