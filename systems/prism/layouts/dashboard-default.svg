@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
   <defs>
     <style>
-      .text-primary { fill: rgba(255,255,255,0.95); font-family: 'Outfit', sans-serif; }
-      .text-secondary { fill: rgba(255,255,255,0.8); font-family: 'Outfit', sans-serif; }
-      .text-muted { fill: rgba(255,255,255,0.4); font-family: 'Outfit', sans-serif; }
+      .text-primary { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
+      .text-secondary { fill: rgba(255,255,255,0.87); font-family: 'Outfit', sans-serif; }
+      .text-muted { fill: rgba(255,255,255,0.59); font-family: 'Outfit', sans-serif; }
       .text-very-muted { fill: rgba(255,255,255,0.30); font-family: 'Outfit', sans-serif; }
-      .text-accent { fill: #7DDFBE; font-family: 'Outfit', sans-serif; }
+      .text-accent { fill: #9CFFDD; font-family: 'Outfit', sans-serif; }
     </style>
     <linearGradient id="prism-bg" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate(0)">
       <stop offset="0" stop-color="#4A5D6B"/>
@@ -44,7 +44,7 @@
   <rect x="6" y="106" width="268" height="56" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="12" ry="12"/>
   <rect x="20" y="115" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
   <text x="37" y="138" class="text-primary" font-size="15" font-weight="500" text-anchor="middle">T</text>
-  <circle cx="52" cy="147" r="4" fill="#7DDFBE" stroke="rgba(74,93,107,0.8)" stroke-width="2"/>
+  <circle cx="52" cy="147" r="4" fill="#9CFFDD" stroke="rgba(74,93,107,0.8)" stroke-width="2"/>
   <text x="64" y="129" class="text-primary" font-size="12.5" font-weight="500">Tokyo Trip</text>
   <text x="260" y="129" class="text-very-muted" font-size="10" text-anchor="end">2m</text>
   <text x="64" y="146" class="text-muted" font-size="11">Build itinerary?</text>
@@ -59,7 +59,7 @@
 
   <rect x="14" y="242" width="34" height="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="10" ry="10"/>
   <text x="31" y="265" class="text-primary" font-size="15" font-weight="500" text-anchor="middle">B</text>
-  <circle cx="46" cy="274" r="4" fill="#7DDFBE" stroke="rgba(74,93,107,0.8)" stroke-width="2"/>
+  <circle cx="46" cy="274" r="4" fill="#9CFFDD" stroke="rgba(74,93,107,0.8)" stroke-width="2"/>
   <text x="58" y="256" class="text-primary" font-size="12.5" font-weight="500">Book Club</text>
   <text x="266" y="256" class="text-very-muted" font-size="10" text-anchor="end">3h</text>
 
@@ -79,7 +79,7 @@
 
   <!-- Message 1 — USER (right, 0.18 opacity) -->
   <path d="M 804 108 H 1236 A 16 16 0 0 1 1252 124 V 148 A 4 4 0 0 1 1248 152 H 804 A 16 16 0 0 1 788 136 V 124 A 16 16 0 0 1 804 108 Z"
-        fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        fill="rgba(222,222,222,0.18)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
   <text x="800" y="135" class="text-primary" font-size="13">Hey, can you plan my Tokyo trip?</text>
 
   <!-- Message 2 — AI (left, 0.08 opacity) -->
@@ -90,7 +90,7 @@
 
   <!-- Message 3 — USER -->
   <path d="M 860 278 H 1236 A 16 16 0 0 1 1252 294 V 318 A 4 4 0 0 1 1248 322 H 860 A 16 16 0 0 1 844 306 V 294 A 16 16 0 0 1 860 278 Z"
-        fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        fill="rgba(222,222,222,0.18)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
   <text x="856" y="305" class="text-primary" font-size="13">Perfect! Temples + food.</text>
 
   <!-- Composer panel -->
