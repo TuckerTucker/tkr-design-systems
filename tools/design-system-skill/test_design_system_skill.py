@@ -994,7 +994,9 @@ def test_riso_modes_cover_every_press():
     kraft_sunset = resolve_mode(doc, {"paper": "kraft", "ink": "sunset"})
     assert_(kraft_sunset["color"]["page_bg"] == "#D4BE94", "kraft paper sets page_bg")
     assert_(kraft_sunset["color"]["text_primary"] == "#2A1F12", "kraft paper sets text ink")
-    assert_(kraft_sunset["color"]["accent"] == "#E8C700", "sunset ink-2 sets accent")
+    assert_(kraft_sunset["extras"]["color"]["ink_2"] == "#E8C700", "sunset sets the ink-2 drum")
+    assert_(kraft_sunset["color"]["accent"] == "#5A4C00",
+            "sunset sets accent to the legible shade of its ink-2 drum (issue #7)")
     default = resolve_mode(doc)
     assert_(default["color"] == doc["color"], "default selection equals base values")
 

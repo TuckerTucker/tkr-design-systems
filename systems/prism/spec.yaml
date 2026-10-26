@@ -188,7 +188,7 @@ rulebook:
     check_implementation: "Verify the root background <rect> uses fill=url(#gradient-id) where the linearGradient has the 4 expected stops at 0/0.40/0.70/1.00."
 
   - id: prism-teal-as-signal
-    rule: "Teal (#7DDFBE) is reserved for online indicators, unread badges, and other status signals. NEVER decorative."
+    rule: "Teal is reserved for online indicators, unread badges, and other status signals (accent #9CFFDD for teal text and numerals on glass; #7DDFBE for status fills, dots and the focus ring). NEVER decorative."
     rationale: "Teal is the only saturated color in the system; using it decoratively dilutes its signal value."
     severity: required
     check_method: both

@@ -60,6 +60,7 @@ TOKEN_ROOTS: frozenset[str] = frozenset(CONTRACT_GROUPS) | {"extras"}
 _RESERVED_KEYS = frozenset({
     "$schema", "contract_version", "system", "source", "description",
     "extras", "modes", "notes", "contrast_pairs",
+    "contrast_backdrops",
 })
 
 ALIAS_RE = re.compile(
