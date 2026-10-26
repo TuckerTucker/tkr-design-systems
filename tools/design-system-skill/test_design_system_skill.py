@@ -51,6 +51,9 @@ def assert_(condition: bool, label: str, detail: str = "") -> None:
     else:
         FAILED += 1
         print(f"  FAIL  {label}" + (f"\n        {detail}" if detail else ""))
+        # Under pytest a counted failure would pass silently; fail the test instead.
+        if "pytest" in sys.modules:
+            raise AssertionError(f"{label}: {detail}" if detail else label)
 
 
 def section(name: str) -> None:
@@ -64,10 +67,11 @@ def test_list_systems():
     res = list_systems()
     assert_(res.ok, "list_systems returns ok=True")
     ids = [d["id"] for d in res.data] if res.ok else []
+    # `neutral` is a registry alias of the wireframe library.
     expected = {"wireframe", "swiss", "terminal", "editorial",
-                "sketch", "prism", "revolt", "riso"}
+                "sketch", "prism", "revolt", "riso", "neutral"}
     assert_(set(ids) == expected,
-            f"all 8 expected systems present (got {sorted(ids)})")
+            f"all 9 expected systems present (got {sorted(ids)})")
     for d in res.data:
         assert_(d["status"] == "available",
                 f"system '{d['id']}' has status='available' (got {d['status']})")

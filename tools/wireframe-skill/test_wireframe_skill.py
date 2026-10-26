@@ -46,6 +46,9 @@ def assert_(condition: bool, label: str, detail: str = "") -> None:
     else:
         FAILED += 1
         print(f"  FAIL  {label}" + (f"\n        {detail}" if detail else ""))
+        # Under pytest a counted failure would pass silently; fail the test instead.
+        if "pytest" in sys.modules:
+            raise AssertionError(f"{label}: {detail}" if detail else label)
 
 
 def section(name: str) -> None:
