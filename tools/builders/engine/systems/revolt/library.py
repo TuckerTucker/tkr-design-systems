@@ -17,6 +17,8 @@ Revolt grammar:
   Tracking: 0.10em metadata, 0.04em body, 0.08em headers
   No radius anywhere — right angles only.
   No emoji anywhere — avatars use two-letter uppercase abbreviations.
+  Errors: the ERROR status pill (pink fill, 2px black border, black 9px/700
+  text; spec rule revolt-error-status). Pink is a fill, never a text colour.
 
 Coverage scope:
   Primitives: button (primary/secondary/ghost/disabled/danger), input, textarea,
@@ -39,7 +41,8 @@ COMPONENTS = {
 
     # Button — Revolt style: 2px black borders, 4px hard offset shadow underneath
     # Space Mono all-caps tracking labels. Primary white-bg, secondary lime-bg,
-    # ghost text-only, disabled grey-bg, danger pink-bg with white text.
+    # ghost text-only, disabled grey-bg, danger pink (color.danger = the accent
+    # pink) with black text (color.danger_foreground).
 
     "button-primary": (140, 48, """
   <rect x="2" y="2" width="136" height="44" fill="{extras.color.shadow}"/>
@@ -65,8 +68,8 @@ COMPONENTS = {
 
     "button-danger": (140, 48, """
   <rect x="2" y="2" width="136" height="44" fill="{extras.color.shadow}"/>
-  <rect x="0" y="0" width="136" height="44" fill="{color.accent}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <text x="68" y="30" text-anchor="middle" class="text-on-accent" font-size="11" font-weight="700" letter-spacing="0.44">DELETE</text>
+  <rect x="0" y="0" width="136" height="44" fill="{color.danger}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <text x="68" y="30" text-anchor="middle" class="text-on-danger" font-size="11" font-weight="700" letter-spacing="0.44">DELETE</text>
 """),
 
     # Input — 2px black border, no shadow (inputs are minimal), white fill,
@@ -154,14 +157,15 @@ COMPONENTS = {
   <rect x="2" y="2" width="20" height="16" fill="{color.surface_inverse}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 """),
 
-    # Label — uppercase Space Mono tracking, optional marker as pink asterisk
+    # Label — uppercase Space Mono tracking, optional required marker as an ink
+    # asterisk (pink is never a text colour: 3.5:1 on cream/white)
 
     "label-default": (100, 14, """
   <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">LABEL</text>
 """),
 
     "label-required": (100, 14, """
-  <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">LABEL <tspan fill="{color.danger}">*</tspan></text>
+  <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">LABEL <tspan fill="{color.text_primary}">*</tspan></text>
 """),
 
     # Icon — Space Mono glyph variants (>, ×, +, ↓) or placeholder square
@@ -276,7 +280,10 @@ COMPONENTS = {
   <text x="38" y="38" class="text-primary" font-size="8">preview text here…</text>
 """),
 
-    # Form field — label above, input with 2px border, optional error message
+    # Form field — label above, input with 2px border, optional error message.
+    # An error keeps the black input border (a pink border alone is not an
+    # error treatment) and adds the ERROR status pill + uppercase code-like
+    # copy (spec rule revolt-error-status).
 
     "form-field-default": (200, 60, """
   <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">NAME</text>
@@ -286,9 +293,11 @@ COMPONENTS = {
 
     "form-field-with-error": (200, 80, """
   <text x="0" y="10" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.8">EMAIL</text>
-  <rect x="0" y="16" width="200" height="28" fill="{color.surface}" stroke="{color.danger}" stroke-width="2"/>
+  <rect x="0" y="16" width="200" height="28" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="6" y="36" class="text-primary" font-size="9">invalid-email</text>
-  <text x="0" y="60" class="text-secondary" font-size="8" font-weight="700">ERROR // INVALID</text>
+  <rect x="1" y="52" width="50" height="18" fill="{color.danger}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <text x="26" y="64" text-anchor="middle" class="text-on-danger" font-size="9" font-weight="700" letter-spacing="0.9">ERROR</text>
+  <text x="58" y="64" class="text-primary" font-size="8" font-weight="700" letter-spacing="0.64">// INVALID EMAIL</text>
 """),
 
     # Table row — zero-padded index + cells, 2px bottom border (hairline) except header
@@ -347,7 +356,9 @@ COMPONENTS = {
   <text x="200" y="14" text-anchor="end" class="text-primary" font-size="8" font-weight="700">NEXT ></text>
 """),
 
-    # Toast — bordered card (2px border, 4px shadow) with severity label and dismiss
+    # Toast — bordered card (2px border, 4px shadow) with severity label and dismiss.
+    # Error severity is the ERROR status pill: pink fill (color.danger), 2px black
+    # border, 9px/700 uppercase black text (color.danger_foreground), radius 0.
 
     "toast-info": (240, 44, """
   <rect x="2" y="2" width="236" height="40" fill="{extras.color.shadow}"/>
@@ -360,8 +371,9 @@ COMPONENTS = {
     "toast-error": (240, 44, """
   <rect x="2" y="2" width="236" height="40" fill="{extras.color.shadow}"/>
   <rect x="0" y="0" width="236" height="40" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <text x="6" y="14" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64" fill="{color.danger}">ERROR</text>
-  <text x="6" y="30" class="text-primary" font-size="9">Something went wrong.</text>
+  <rect x="6" y="4" width="50" height="18" fill="{color.danger}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <text x="31" y="16" text-anchor="middle" class="text-on-danger" font-size="9" font-weight="700" letter-spacing="0.9">ERROR</text>
+  <text x="6" y="34" class="text-primary" font-size="9">Something went wrong.</text>
   <text x="230" y="14" text-anchor="end" class="text-secondary" font-size="11" font-weight="700">×</text>
 """),
 
@@ -417,7 +429,8 @@ COMPONENTS = {
   <text x="0" y="68" class="text-secondary" font-size="8" font-weight="700">ITEM TWO</text>
 """),
 
-    # Banner — full-width bordered band with severity label + message + optional action
+    # Banner — full-width bordered band with severity label + message + optional action.
+    # Error severity is the ERROR status pill (see toast).
 
     "banner-info": (320, 48, """
   <rect x="2" y="2" width="316" height="44" fill="{extras.color.shadow}"/>
@@ -430,8 +443,9 @@ COMPONENTS = {
     "banner-error": (320, 48, """
   <rect x="2" y="2" width="316" height="44" fill="{extras.color.shadow}"/>
   <rect x="0" y="0" width="316" height="44" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <text x="6" y="16" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64" fill="{color.danger}">ERROR</text>
-  <text x="6" y="34" class="text-primary" font-size="9">Something failed.</text>
+  <rect x="6" y="5" width="50" height="18" fill="{color.danger}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <text x="31" y="17" text-anchor="middle" class="text-on-danger" font-size="9" font-weight="700" letter-spacing="0.9">ERROR</text>
+  <text x="6" y="37" class="text-primary" font-size="9">Something failed.</text>
   <text x="310" y="34" text-anchor="end" class="text-primary" font-size="8" font-weight="700">RETRY ></text>
 """),
 

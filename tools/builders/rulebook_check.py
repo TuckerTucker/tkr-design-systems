@@ -572,6 +572,98 @@ def check_error_not_red(svg_text: str) -> dict:
 
 
 # ──────────────────────────────────────────────────────────────────────
+# REVOLT CHECKS (spec rulebook revolt-pink-not-text / revolt-error-status)
+# ──────────────────────────────────────────────────────────────────────
+
+REVOLT_TOKENS_PATH = SWISS_TOKENS_PATH.parents[1] / "revolt" / "tokens.json"
+_REVOLT_TOKENS = _load_tokens(REVOLT_TOKENS_PATH)
+REVOLT_PINK = _swiss_color(_REVOLT_TOKENS, "color.accent", "#FF3366")
+REVOLT_DANGER = _swiss_color(_REVOLT_TOKENS, "color.danger", "#FF3366")
+REVOLT_INK = _swiss_color(_REVOLT_TOKENS, "color.text_primary", "#111111")
+REVOLT_DANGER_FOREGROUND = _swiss_color(_REVOLT_TOKENS, "color.danger_foreground", "#111111")
+
+
+def check_revolt_pink_not_text(svg_text: str) -> dict:
+    """Rule revolt-pink-not-text: pink is a fill, never a text colour.
+
+    Revolt's backgrounds are cream, white, lime and pink (the JSX colour
+    roles: black is never a background), and the pink (``color.accent``,
+    reused as ``color.danger``) measures under 4.5:1 as text on every one
+    of them (about 3.5:1 on cream and white). Errors are carried by the
+    ERROR status pill, not by pink type. A ``<text>`` or ``<tspan>`` whose
+    fill (inline, or via a ``<defs><style>`` class) resolves to the pink
+    fails.
+
+    Args:
+        svg_text: SVG source.
+
+    Returns:
+        Result dict; ``violations`` lists each pink text element.
+    """
+    css_class_fills = _extract_css_class_fills(svg_text)
+    pinks = {REVOLT_PINK, REVOLT_DANGER}
+    violations = []
+    for tag, attrs in extract_inline_attrs(svg_text):
+        if tag not in ("text", "tspan"):
+            continue
+        fill = _resolve_text_fill(attrs, css_class_fills)
+        if fill in pinks:
+            violations.append(f"{tag}(fill={fill}, x={attrs.get('x', '?')}, "
+                              f"y={attrs.get('y', '?')})")
+    return {
+        "rule_id": "revolt-pink-not-text",
+        "passed": not violations,
+        "violations": violations,
+        "expected": (f"text in ink, or {REVOLT_DANGER_FOREGROUND} on a pink fill; "
+                     f"never {REVOLT_PINK} type"),
+    }
+
+
+def check_revolt_error_pill(svg_text: str) -> dict:
+    """Rule revolt-error-status (mechanical part): error components carry the ERROR pill.
+
+    A component whose builder banner names it an error component
+    (``*-ERROR``, ``*-WITH-ERROR``) must contain the status-pill grammar of
+    the spec's ``error_status`` block: a ``<rect>`` filled with
+    ``color.danger``, stroked in ink at 2px with no corner radius, and a
+    ``<text>`` reading ``ERROR`` at 9px / weight 700 in
+    ``color.danger_foreground``. Fragments without the banner pass
+    vacuously; whether the rest of the copy is code-like
+    (``ERROR // INVALID``) is judgment.
+
+    Args:
+        svg_text: SVG source.
+
+    Returns:
+        Result dict; ``violations`` names each missing part.
+    """
+    if not _is_error_component(svg_text):
+        return {"rule_id": "revolt-error-status", "passed": True, "violations": [],
+                "vacuous": True}
+    css_class_fills = _extract_css_class_fills(svg_text)
+    pill = any(
+        tag == "rect"
+        and attrs.get("fill", "").upper() == REVOLT_DANGER
+        and attrs.get("stroke", "").upper() == REVOLT_INK
+        and attrs.get("stroke-width") == "2"
+        and attrs.get("rx", "0") == "0"
+        for tag, attrs in extract_inline_attrs(svg_text))
+    label = any(
+        content == "ERROR"
+        and attrs.get("font-size") == "9"
+        and attrs.get("font-weight") == "700"
+        and _resolve_text_fill(attrs, css_class_fills) == REVOLT_DANGER_FOREGROUND
+        for attrs, content in _text_elements(svg_text))
+    violations = []
+    if not pill:
+        violations.append(f"no pill rect (fill {REVOLT_DANGER}, 2px {REVOLT_INK} stroke, radius 0)")
+    if not label:
+        violations.append(f"no 'ERROR' label at 9px/700 in {REVOLT_DANGER_FOREGROUND}")
+    return {"rule_id": "revolt-error-status", "passed": not violations,
+            "violations": violations, "vacuous": False}
+
+
+# ──────────────────────────────────────────────────────────────────────
 # WIREFRAME LIBRARY CHECKS
 # ──────────────────────────────────────────────────────────────────────
 
@@ -851,7 +943,9 @@ PRISM_CHECKS = [
 ]
 
 REVOLT_CHECKS = [
-    (check_no_emoji, "both"),
+    (check_revolt_pink_not_text, "both"),
+    (check_revolt_error_pill,    "both"),
+    (check_no_emoji,             "both"),
 ]
 
 TERMINAL_CHECKS = [

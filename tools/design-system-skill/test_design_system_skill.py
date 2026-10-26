@@ -379,6 +379,85 @@ def test_swiss_library_follows_error_treatment():
         assert_(rb.check_error_not_red(svg)["passed"], f"{name} error copy is not red")
 
 
+_REVOLT_STYLE = (
+    "<defs><style>.text-primary { fill: #111111; } "
+    ".text-on-danger { fill: #111111; } .text-pink { fill: #FF3366; }</style></defs>"
+)
+_REVOLT_PILL = ('<rect x="6" y="4" width="50" height="18" fill="#FF3366" stroke="#111111" '
+                'stroke-width="2"/><text x="31" y="16" class="text-on-danger" font-size="9" '
+                'font-weight="700">ERROR</text>')
+
+
+def _revolt_svg(body: str, banner: str = "") -> str:
+    """Build a minimal Revolt SVG fragment with builder-style class fills.
+
+    Args:
+        body: Inner SVG markup.
+        banner: Optional builder banner name (e.g. ``TOAST-ERROR``).
+
+    Returns:
+        SVG source text.
+    """
+    comment = f"<!-- ==================== {banner} ==================== -->" if banner else ""
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 44">'
+            f"{_REVOLT_STYLE}{comment}{body}</svg>")
+
+
+def test_revolt_pink_not_text_rule():
+    section("revolt-pink-not-text: pink is a fill, never a text colour")
+    rb = _rb()
+    assert_(rb.REVOLT_PINK == "#FF3366" and rb.REVOLT_DANGER == rb.REVOLT_PINK,
+            "danger reuses the accent pink (five-colour palette, ADR-0002)")
+    ok = _revolt_svg(_REVOLT_PILL + '<text class="text-primary">Something failed.</text>')
+    assert_(rb.check_revolt_pink_not_text(ok)["passed"], "black text on a pink pill passes")
+    for bad in ('<text fill="#ff3366">ERROR</text>', '<text class="text-pink">ERROR</text>',
+                '<text class="text-primary">LABEL <tspan fill="#FF3366">*</tspan></text>'):
+        res = rb.check_revolt_pink_not_text(_revolt_svg(bad))
+        assert_(not res["passed"] and res["rule_id"] == "revolt-pink-not-text"
+                and len(res["violations"]) == 1, f"pink text fails: {bad} (got {res})")
+
+
+def test_revolt_error_pill_rule():
+    section("revolt-error-status: error components carry the ERROR status pill")
+    rb = _rb()
+    res = rb.check_revolt_error_pill(_revolt_svg(_REVOLT_PILL, "TOAST-ERROR"))
+    assert_(res["passed"] and not res["vacuous"], f"the pill passes (got {res})")
+    plain = _revolt_svg('<text class="text-primary">Profile saved.</text>', "TOAST-INFO")
+    assert_(rb.check_revolt_error_pill(plain)["vacuous"], "a non-error component is vacuous")
+    old = _revolt_svg('<text fill="#FF3366" font-size="8" font-weight="700">ERROR</text>',
+                      "BANNER-ERROR")
+    res = rb.check_revolt_error_pill(old)
+    assert_(not res["passed"] and len(res["violations"]) == 2,
+            f"a pink ERROR word without the pill fails (got {res})")
+    border_only = _revolt_svg('<rect width="200" height="28" fill="#FFFFFF" stroke="#FF3366" '
+                              'stroke-width="2"/><text class="text-primary" font-size="8">'
+                              "ERROR // INVALID</text>", "FORM-FIELD-WITH-ERROR")
+    assert_(not rb.check_revolt_error_pill(border_only)["passed"],
+            "a pink input border alone is not an error treatment")
+    rounded = _revolt_svg(_REVOLT_PILL.replace('stroke-width="2"', 'stroke-width="2" rx="4"'),
+                          "TOAST-ERROR")
+    assert_(not rb.check_revolt_error_pill(rounded)["passed"], "a rounded pill fails")
+
+
+def test_revolt_library_follows_error_treatment():
+    section("revolt library: error components use the pill, no pink text")
+    rb = _rb()
+    ids = {fn.__name__ for fn, _ in rb.CHECKS_BY_RULESET["revolt"]}
+    assert_({"check_revolt_pink_not_text", "check_revolt_error_pill"} <= ids,
+            "the revolt ruleset runs both checks")
+    rule_ids = {r["id"] for r in get_rulebook("revolt").data}
+    assert_({"revolt-error-status", "revolt-pink-not-text"} <= rule_ids,
+            "spec.yaml rulebook declares both rules")
+    for name in ("banner-error", "toast-error", "form-field-with-error", "label-required",
+                 "button-danger"):
+        svg = (SYSTEMS_DIR / "revolt" / "components" / f"{name}.svg").read_text()
+        assert_(rb.check_revolt_pink_not_text(svg)["passed"], f"{name} has no pink text")
+        pill = rb.check_revolt_error_pill(svg)
+        assert_(pill["passed"], f"{name} follows revolt-error-status (got {pill['violations']})")
+        if name != "label-required" and name != "button-danger":
+            assert_(not pill["vacuous"], f"{name} is checked as an error component")
+
+
 def test_check_compliance_wireframe_pattern():
     section("check_compliance against wireframe pattern")
     project = SYSTEMS_DIR

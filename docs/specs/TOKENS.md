@@ -555,7 +555,9 @@ Template role fixes made with it: Sketch timestamps used
 `color.text_placeholder` (now `color.text_muted`) and input placeholders
 used `extras.color.icon_muted` (now `color.text_placeholder`); Revolt text
 on pink fills used `color.text_inverse` (now `color.accent_foreground`, the
-value the earlier fix chose) and the required `*` uses `color.danger`;
+value the earlier fix chose) and the required `*` is ink
+(`color.text_primary`; it briefly used `color.danger`, see "Revolt danger"
+below);
 Prism's dashboard alpha variants of `text_primary` map to
 `text_primary`/`text_secondary`/`text_muted`/`text_placeholder` and the
 modal's teal `Delete` became a danger button; Riso's primary type uses
@@ -574,8 +576,8 @@ hue and chroma kept; Prism's white glass text gained opacity):
 | prism | `extras.color.accent_tint` | — | `rgba(125,223,190,0.25)` → `rgba(70,170,140,0.25)` | accent on accent_tint 3.72 → 4.51 (min 4.5) |
 | prism | `color.text_secondary` | — | `rgba(255,255,255,0.87)` → `rgba(255,255,255,0.98)` | text_secondary on surface_elevated 3.97 → 4.54 (min 4.5); text_secondary on surface_selected 3.97 → 4.54 (min 4.5) |
 | prism | `color.text_muted` | — | `rgba(255,255,255,0.59)` → `rgba(255,255,255,0.66)` | text_muted on surface_elevated 2.72 → 3.01 (min 3); text_muted on surface_selected 2.72 → 3.01 (min 3) |
-| revolt | `color.danger` | — | `#FF3366` → `#E80B55` | danger_foreground on danger 5.32 → 4.56 (min 4.5); danger on page_bg 3.51 → 4.5 (min 4.5); danger on surface 3.55 → 4.56 (min 4.5) |
-| revolt | `color.danger_foreground` | — | `#111111` → `#FFFFFF` | danger_foreground on danger 5.32 → 4.56 (min 4.5) |
+| revolt | `color.danger` | — | `#FF3366` → `#E80B55` | danger_foreground on danger 5.32 → 4.56 (min 4.5); danger on page_bg 3.51 → 4.5 (min 4.5); danger on surface 3.55 → 4.56 (min 4.5); **reverted** to `#FF3366` (see below) |
+| revolt | `color.danger_foreground` | — | `#111111` → `#FFFFFF` | danger_foreground on danger 5.32 → 4.56 (min 4.5); **reverted** to `#111111` (see below) |
 | revolt | `color.text_muted` | — | `#949494` → `#939393` | text_muted on page_bg 3.0 → 3.04 (min 3) |
 | riso | `extras.color.ink_1_text` | ink=classic | `#3255A4` → `#234492` | ink_1_text on page_bg 3.76 → 4.82 (min 4.5); ink_1_text on surface_selected 3.53 → 4.54 (min 4.5) |
 | riso | `extras.color.ink_1_text` | ink=electric | `#C60081` → `#8F005C` | ink_1_text on page_bg 3.0 → 4.81 (min 4.5); ink_1_text on surface_selected 2.82 → 4.52 (min 4.5) |
@@ -590,11 +592,16 @@ hue and chroma kept; Prism's white glass text gained opacity):
 
 Judgement calls (each explained in the token's note):
 
-- **Revolt danger**: no pink passes both 4.5:1 as text on white and with
-  black text on it, so `danger_foreground` became white and `danger` took
-  the minimum darkening (`#E80B55`); the signature `accent` `#FF3366` is
-  unchanged. This adds a sixth colour to the "inviolable" five-colour
-  palette.
+- **Revolt danger (reverted)**: no pink passes both 4.5:1 as text on white
+  and with black text on it, so this pass first made `danger_foreground`
+  white and darkened `danger` to `#E80B55`. That was a sixth colour in the
+  inviolable five-colour palette (ADR-0002), so the owner had it reverted:
+  `danger` is `#FF3366` and `danger_foreground` `#111111` again (5.32:1),
+  and the failing usage was fixed by role. The Revolt error components carry
+  the ERROR status pill (black on a pink fill) instead of pink `ERROR` text
+  on white, the required `*` is ink, and the token file no longer declares
+  `color.danger on color.page_bg` / `on color.surface`: pink is never text
+  (rule `revolt-pink-not-text`, checked mechanically).
 - **Prism accent tint**: the teal numerals cannot get lighter (no lighter
   teal reaches 4.5:1 on the tint), so the badge tint behind them darkened.
 - **Prism danger** lost chroma (0.110 → 0.059) because the sRGB gamut

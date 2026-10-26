@@ -58,7 +58,8 @@ Measured in OKLCH hue, before this decision:
    the uppercase `ERROR` status label (JSX status pill variants `LIVE /
    TYPING / OFFLINE / ERROR`) and black text on pink (`danger_foreground
    #111111`, 5.3:1). `systems/revolt/spec.yaml` now states this as the
-   judgment rule `revolt-error-status` and the
+   rule `revolt-error-status` (judgment, with a mechanical part for builder
+   error components), the rule `revolt-pink-not-text` and the
    `grammar_extensions.per_system_signature.error_status` block. Action
    (lime) passes at 110.6°.
 5. **Editorial is fixed, not waived; the owner accepted the fix on
@@ -134,12 +135,21 @@ red "Please enter a valid email address.") and `toast-error` (was a red
 - Editorial's destructive states become plum rather than oxblood; builders
   and the showcase pick this up from `tokens.json`.
 - Two systems carry waivers, both confirmed by the owner. Revolt keeps its
-  five colours; its error treatment is a judgment rule only (the revolt
-  ruleset has no mechanical error check). The Revolt builder's error
-  components (`banner-error`, `toast-error`, `form-field-with-error`) do not
-  yet follow it: they set `ERROR` as pink text on white with no pill, and
-  the field marks the error with a pink border. Bringing them into line is a
-  follow-up.
+  five colours. The Revolt builder's error components (`banner-error`,
+  `toast-error`, `form-field-with-error`) used to set `ERROR` as pink text on
+  white with no pill, and the field marked the error with a pink border
+  only. The #7 text-coverage pass then made that pink text pass 4.5:1 by
+  darkening `color.danger` to `#E80B55` with a white `danger_foreground`, a
+  sixth colour that this decision rules out. That change was reverted
+  (`#FF3366` / `#111111`) and the usage fixed instead: the three components
+  now carry the ERROR status pill (pink fill, 2px black border, black
+  9px/700 uppercase text, radius 0), the field keeps its black border, and
+  the required `*` is ink. Two mechanical revolt rules back this up
+  (`tools/builders/rulebook_check.py`): `revolt-pink-not-text` (no text or
+  tspan filled with the pink: it is under 4.5:1 on every Revolt
+  background) and the mechanical part of `revolt-error-status` (a
+  `*-ERROR` / `*-WITH-ERROR` component must contain the pink pill rect and
+  the black 9px/700 `ERROR` label).
 - Swiss's waiver now points at an error treatment its spec defines and the
   rulebook check partly enforces (see "Swiss's error treatment").
 - Reversal cost is low: the gate is one function and one key in the token

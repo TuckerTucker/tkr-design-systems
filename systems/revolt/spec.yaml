@@ -198,10 +198,18 @@ rulebook:
     rule: "An error is labelled, not recoloured: it carries the uppercase status label ERROR (JSX Status Pills variants LIVE / TYPING / OFFLINE / ERROR) in a rectangular bordered pill: 2px solid border, padding 2px 8px, 9px/700 Space Mono uppercase, radius 0. On white or cream the pill is black border + black text. When danger is painted as a fill it is pink (color.danger = color.accent) with black text (color.danger_foreground #111111, 5.3:1), never white text on a pink error fill (3.5:1). Error copy follows the voice table: uppercase, code-like (e.g. ERROR // INVALID), never warm. No sixth colour."
     rationale: "Owner decision (ADR-0002, 2026-10-26): the five-colour palette is inviolable, so danger reuses pink and the hue gate is waived. Pink alone also means header, user message and unread badge, so the word ERROR in the status-pill grammar is what tells an error apart."
     severity: required
-    check_method: semantic
+    check_method: both
     check_scope: both
     applies_when: "artifact or component shows an error or failure state"
-    check_implementation: "Judgment: find error or failure states; verify each carries an uppercase ERROR label in the bordered-pill grammar and that any pink error fill uses #111111 text. Not mechanically checked (the revolt ruleset in rulebook_check runs no-emoji only)."
+    check_implementation: "Mechanical (tools/builders/rulebook_check.py, revolt ruleset, check_revolt_error_pill): a builder component named *-ERROR / *-WITH-ERROR must contain a rect filled with color.danger, stroked 2px in color.text_primary with no radius, and an ERROR text at 9px/700 in color.danger_foreground. Judgment: find other error or failure states (layouts, hand-authored artifacts); verify each carries the uppercase ERROR label in the bordered-pill grammar, that error copy is code-like, and that an error is not signalled by a pink border or pink text alone."
+
+  - id: revolt-pink-not-text
+    rule: "Pink (#FF3366, color.accent, reused as color.danger) is a fill, never a text colour. Revolt's backgrounds are cream, white, lime and pink (black is never a background), and pink type measures under 4.5:1 on every one of them (3.5:1 on cream and white). Text on a pink fill is black (color.accent_foreground / color.danger_foreground); a required-field asterisk is ink."
+    rationale: "Owner decision (ADR-0002, #7 follow-up): the five-colour palette is inviolable, so a failing pink text is fixed by role (pill, ink), never by darkening the pink into a sixth colour."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "tools/builders/rulebook_check.py (revolt ruleset, check_revolt_pink_not_text): any <text> or <tspan> whose fill, inline or via a <defs><style> class, resolves to color.accent or color.danger fails."
 
 grammar_extensions:
   family: contemporary_clean
@@ -223,14 +231,17 @@ grammar_extensions:
       # Grounded in the JSX Status Pills extension (border 2px solid context
       # colour, padding 2px 8px, micro 9px/700, radius 0, variants LIVE /
       # TYPING / OFFLINE / ERROR; black border + black text on white/cream)
-      # and the voice table ("UPPERCASE all labels and status"). The JSX's
-      # "white border + white text on accent backgrounds" does not apply to
-      # an error fill: white on pink is 3.5:1, so tokens.json sets
-      # danger_foreground to #111111.
+      # and the voice table ("UPPERCASE all labels and status"). White on
+      # pink is 3.5:1, so text on a pink pill is black (accent_foreground =
+      # danger_foreground = #111111); the JSX Status Pills advice says so.
+      # The builder's error components (banner-error, toast-error,
+      # form-field-with-error) use the pink-filled pill on their white
+      # cards; a pink border or pink text alone is never the error signal
+      # (rule revolt-pink-not-text).
       label: ERROR
       pill: { border_px: 2, padding: "2px 8px", font_size: 9, font_weight: 700, case: uppercase, radius: 0 }
       on_light: { border: "{color.text_primary}", text: "{color.text_primary}" }
-      on_danger_fill: { fill: "{color.danger}", text: "{color.danger_foreground}" }
+      on_danger_fill: { fill: "{color.danger}", border: "{color.border_default}", text: "{color.danger_foreground}" }
     pink_lime_pairing:
       pink: "#FF3366"
       lime: "#C8FF00"
