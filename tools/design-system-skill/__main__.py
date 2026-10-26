@@ -9,6 +9,7 @@ Usage from the project root:
     python3 design-system-skill check --id swiss --artifact systems/swiss/layouts/dashboard.svg
     python3 design-system-skill register --spec /abs/path/to/new-spec.yaml [--replace]
     python3 design-system-skill unregister --id <id>
+    python3 design-system-skill drift [--all | --id swiss | --spec systems/swiss/spec.yaml]
 
 All commands print a JSON Result to stdout. Exit code 0 if ok, 1 otherwise.
 """
@@ -45,7 +46,11 @@ def main(argv: list[str] | None = None) -> int:
         unregister_system,
         get_rulebook,
         check_compliance,
+        check_drift,
+        check_drift_all,
     )
+    from design_system_skill.paths import project_root  # noqa: E402
+    from design_system_skill.registry import Registry  # noqa: E402
 
     parser = argparse.ArgumentParser(
         prog="design-system-skill",
@@ -81,6 +86,15 @@ def main(argv: list[str] | None = None) -> int:
     p_unregister = sub.add_parser("unregister", help="Remove a system from the registry.")
     p_unregister.add_argument("--id", required=True)
 
+    p_drift = sub.add_parser(
+        "drift",
+        help="Check spec.yaml against its canonical tokens.json (default: all registered systems).",
+    )
+    target = p_drift.add_mutually_exclusive_group()
+    target.add_argument("--all", action="store_true", help="Check every registered system (default).")
+    target.add_argument("--id", help="Check one registered system.")
+    target.add_argument("--spec", help="Check one spec.yaml by path.")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "list":
@@ -97,6 +111,21 @@ def main(argv: list[str] | None = None) -> int:
         return _emit(register_system(args.spec, replace=args.replace))
     if args.cmd == "unregister":
         return _emit(unregister_system(args.id))
+    if args.cmd == "drift":
+        if args.spec:
+            return _emit(check_drift(args.spec))
+        if args.id:
+            reg = Registry.load()
+            if not reg.ok:
+                return _emit(reg)
+            entry = reg.data.get(args.id)
+            if entry is None:
+                print(json.dumps({"ok": False, "errors": [
+                    {"code": "SYSTEM_NOT_FOUND", "message": f"System '{args.id}' is not registered"}]},
+                    indent=2))
+                return 1
+            return _emit(check_drift(project_root() / entry.spec))
+        return _emit(check_drift_all())
     parser.error(f"Unknown command: {args.cmd}")
     return 2
 

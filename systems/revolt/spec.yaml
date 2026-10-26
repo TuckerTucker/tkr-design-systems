@@ -1,4 +1,4 @@
-spec_version: "0.2"
+spec_version: "0.3"
 
 system:
   id: revolt
@@ -6,6 +6,7 @@ system:
   tagline: "Neobrutalist + Y2K"
   grammar_family: contemporary_clean
   version: "1.2.0"   # bumped: project-wide no-emoji policy — two-letter abbreviation avatars
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: ../design-system-integrated.jsx
 
   # tkr-kit project policy: no emoji glyphs anywhere (mechanically enforced
@@ -31,27 +32,23 @@ system:
 
 tokens:
   colors:
-    page_bg: "#FFFEF5"
-    surface: "#FFFFFF"
-    surface_elevated: "#FFFFFF"
-    text_primary: "#111111"
-    text_secondary: "#666666"
-    text_muted: "#999999"
-    accent: "#FF3366"
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
 
     palette:
-      - { name: paper_offwhite, value: "#FFFEF5", role: page background }
-      - { name: paper_white, value: "#FFFFFF", role: surface fills }
-      - { name: ink_hard, value: "#111111", role: borders, body, headlines }
-      - { name: pink_revolt, value: "#FF3366", role: header bar, user message fill, selection bar fill, unread badges }
-      - { name: lime_revolt, value: "#C8FF00", role: brand bar, selected state, send button }
-      - { name: text_secondary_grey, value: "#666666", role: preview text }
-      - { name: text_muted_grey, value: "#999999", role: timestamps and footnotes }
+      - { name: paper_offwhite, token: color.page_bg, role: page background }
+      - { name: paper_white, token: color.surface, role: surface fills }
+      - { name: ink_hard, token: color.text_primary, role: borders, body, headlines }
+      - { name: pink_revolt, token: color.accent, role: header bar, user message fill, selection bar fill, unread badges }
+      - { name: lime_revolt, token: color.action, role: brand bar, selected state, send button }
+      - { name: text_secondary_grey, token: color.text_secondary, role: preview text }
+      - { name: text_muted_grey, token: color.text_muted, role: timestamps and footnotes }
 
   typography:
     families:
       - id: structural
-        stack: "'Space Mono', ui-monospace, monospace"
+        stack: "{font.body}"
         role: every piece of text
         mixing_rule: "single typeface — monospace only"
     scale:
@@ -72,21 +69,18 @@ tokens:
       headers: 0.08
 
   spacing:
-    grid_unit: 2
-    allowed_steps: [2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32]
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
     enforcement: relaxed
 
   borders:
-    radius_default: 0
-    radius_inputs: 0
-    radius_chrome: 0
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
     no_radius_anywhere: true
 
   elevation:
-    strategy: hard_offset
+    # strategy: projected from tokens.json elevation.strategy
     config:
       shadow_offset: { x: 4, y: 4 }
-      shadow_color: "#111111"
+      shadow_color: "{extras.color.shadow}"
       shadow_blur: 0   # always 0 for Revolt — hard offset only
       border_width: 2  # default; brand and section dividers use 3
 

@@ -29,6 +29,7 @@ ERROR_CODES = {
     "INVALID_PATH",              # caller passed a path that doesn't exist
     "RULESET_UNKNOWN",           # check_compliance asked for unknown ruleset
     "EXCEPTIONS_INVALID",        # rulebook-exceptions.yaml failed validation
+    "TOKEN_DRIFT",               # spec.yaml disagrees with its tokens.json
     "INTERNAL",                  # catchall for unexpected exceptions
 }
 

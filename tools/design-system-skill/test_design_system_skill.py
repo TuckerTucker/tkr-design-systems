@@ -77,8 +77,8 @@ def test_list_systems():
     for d in res.data:
         assert_(d["status"] == "available",
                 f"system '{d['id']}' has status='available' (got {d['status']})")
-        assert_(d["spec_version"] in ("0.1", "0.2"),
-                f"system '{d['id']}' spec_version is 0.1 or 0.2 (got {d['spec_version']})")
+        assert_(d["spec_version"] in ("0.1", "0.2", "0.3"),
+                f"system '{d['id']}' spec_version is 0.1, 0.2 or 0.3 (got {d['spec_version']})")
 
 
 # ─── test: load_system ──────────────────────────────────────────────
@@ -96,7 +96,7 @@ def test_load_system():
         assert_("_meta" in spec, f"load_system('{sys_id}') spec has _meta block")
         assert_(spec["_meta"]["system_id"] == sys_id,
                 f"load_system('{sys_id}') _meta.system_id matches")
-        assert_(spec["_meta"]["spec_version"] in ("0.1", "0.2"),
+        assert_(spec["_meta"]["spec_version"] in ("0.1", "0.2", "0.3"),
                 f"load_system('{sys_id}') _meta.spec_version is set")
 
 
@@ -752,6 +752,368 @@ tokens:
             clear_cache()
 
 
+# ─── test: semantic token contract (schema v0.3, issue #6) ────────
+
+def _minimal_token_doc(system_id: str = "synthetic") -> dict:
+    """Build a token document supplying every contract token with a
+    plausible value of the right kind (no file I/O)."""
+    from design_system_skill import contract as c
+    defaults = {
+        c.KIND_COLOR: "#808080",
+        c.KIND_PX: 4,
+        c.KIND_PX_LIST: [4, 8, 16],
+        c.KIND_FONT_STACK: "system-ui, sans-serif",
+        c.KIND_SHADOW: "none",
+        c.KIND_BLUR: "none",
+        c.KIND_ELEVATION_STRATEGY: "borders_only",
+    }
+    doc: dict = {"contract_version": c.CONTRACT_VERSION, "system": system_id}
+    for token in c.CONTRACT_TOKENS:
+        if token.kind == c.KIND_TYPE_ROLE:
+            value = {"size": 14, "weight": 400, "line_height": 1.5,
+                     "tracking": 0, "family": "body", "case": "none"}
+        else:
+            value = defaults[token.kind]
+        doc.setdefault(token.group, {})[token.name] = value
+    return doc
+
+
+def _write_v03_spec(dir_path: Path, doc: dict | None, system_id: str = "synthetic") -> Path:
+    """Write a minimal v0.3 spec (and optionally its tokens.json) into dir_path."""
+    spec_path = dir_path / "spec.yaml"
+    tokens_line = "  tokens_file: tokens.json\n" if doc is not None else ""
+    spec_path.write_text(
+        'spec_version: "0.3"\n'
+        "system:\n"
+        f"  id: {system_id}\n"
+        "  name: Synthetic\n"
+        f"{tokens_line}"
+        "tokens: {}\n"
+    )
+    if doc is not None:
+        (dir_path / "tokens.json").write_text(json.dumps(doc))
+    return spec_path
+
+
+def test_contract_doc_matches_module():
+    section("contract: SCHEMA-V0.3.md tables match contract.py")
+    from design_system_skill.contract import render_contract_table, render_pairs_table
+    doc = (HERE.parents[1] / "docs" / "specs" / "SCHEMA-V0.3.md").read_text()
+    assert_(render_contract_table() in doc,
+            "contract table in SCHEMA-V0.3.md equals render_contract_table()")
+    assert_(render_pairs_table() in doc,
+            "pairs table in SCHEMA-V0.3.md equals render_pairs_table()")
+
+
+def test_contract_pairs_reference_contract_tokens():
+    section("contract: every required pair names contract colour tokens")
+    from design_system_skill.contract import CONTRAST_PAIRS, TOKENS_BY_PATH, KIND_COLOR
+    for pair in CONTRAST_PAIRS:
+        for side in (pair.fg, pair.bg):
+            token = TOKENS_BY_PATH.get(side)
+            assert_(token is not None and token.kind == KIND_COLOR,
+                    f"pair side {side} is a contract colour token")
+
+
+def test_minimal_token_doc_validates():
+    section("contract: a complete token document validates")
+    from design_system_skill.token_file import validate_token_document
+    errors, _ = validate_token_document(_minimal_token_doc())
+    assert_(errors == [], "complete synthetic token doc has no errors",
+            "; ".join(e.message for e in errors)[:300])
+
+
+def test_missing_contract_token_fails():
+    section("contract: a token document missing a contract token fails")
+    from design_system_skill.token_file import validate_token_document
+    doc = _minimal_token_doc()
+    del doc["color"]["danger_foreground"]
+    del doc["type"]["label"]
+    errors, _ = validate_token_document(doc)
+    msgs = " | ".join(e.message for e in errors)
+    assert_("color.danger_foreground" in msgs, f"error names color.danger_foreground ({msgs[:200]})")
+    assert_("type.label" in msgs, f"error names type.label ({msgs[:200]})")
+
+
+def test_bad_token_values_fail():
+    section("contract: wrong-shaped values and stray keys fail")
+    from design_system_skill.token_file import validate_token_document
+    doc = _minimal_token_doc()
+    doc["color"]["accent"] = "red-ish"
+    doc["type"]["body"]["family"] = "serif_display"   # not a key of `font`
+    doc["space"]["steps"] = [16, 8]                    # not ascending
+    doc["color"]["brand_teal"] = "#00FFFF"             # extras belong in `extras`
+    errors, _ = validate_token_document(doc)
+    msgs = " | ".join(e.message for e in errors)
+    for needle in ("color.accent", "type.body", "space.steps", "color.brand_teal"):
+        assert_(needle in msgs, f"error mentions {needle} ({msgs[:300]})")
+
+
+def test_modes_validation():
+    section("contract: modes — default must equal base, overrides must be known tokens")
+    from design_system_skill.token_file import (
+        validate_token_document, resolve_mode, iter_mode_selections,
+    )
+    doc = _minimal_token_doc()
+    doc["color"]["page_bg"] = "#FFFFFF"
+    doc["modes"] = {"axes": [{
+        "id": "scheme", "default": "light",
+        "options": {"light": {"color.page_bg": "#FFFFFF"},
+                    "dark": {"color.page_bg": "#111111", "color.text_primary": "#EEEEEE"}},
+    }]}
+    errors, _ = validate_token_document(doc)
+    assert_(errors == [], "well-formed light/dark modes validate",
+            "; ".join(e.message for e in errors)[:300])
+    sels = list(iter_mode_selections(doc))
+    assert_(sels == [{"scheme": "light"}, {"scheme": "dark"}],
+            f"iter_mode_selections yields both options ({sels})")
+    dark = resolve_mode(doc, {"scheme": "dark"})
+    assert_(dark["color"]["page_bg"] == "#111111" and doc["color"]["page_bg"] == "#FFFFFF",
+            "resolve_mode applies overrides to a copy")
+
+    doc["modes"]["axes"][0]["options"]["light"]["color.page_bg"] = "#FAFAFA"
+    doc["modes"]["axes"][0]["options"]["dark"]["color.nonexistent"] = "#000000"
+    errors, _ = validate_token_document(doc)
+    msgs = " | ".join(e.message for e in errors)
+    assert_("default" in msgs and "color.page_bg" in msgs,
+            f"default option disagreeing with base value fails ({msgs[:200]})")
+    assert_("color.nonexistent" in msgs, f"override of unknown token fails ({msgs[:200]})")
+
+
+def test_v03_spec_requires_token_file():
+    section("validate_spec: v0.3 requires system.tokens_file with every contract token")
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        res = validate_spec(_write_v03_spec(td_path, None))
+        assert_(not res.ok, "v0.3 spec without tokens_file fails")
+        assert_(any("tokens_file" in e.message for e in res.errors),
+                "error mentions tokens_file")
+
+        doc = _minimal_token_doc()
+        res = validate_spec(_write_v03_spec(td_path, doc))
+        assert_(res.ok, "v0.3 spec with a complete token file validates",
+                "; ".join(e.message for e in res.errors)[:300])
+
+        del doc["color"]["focus_ring"]
+        res = validate_spec(_write_v03_spec(td_path, doc))
+        assert_(not res.ok, "v0.3 spec whose token file lacks focus_ring fails")
+        assert_(any("color.focus_ring" in e.message for e in res.errors),
+                "error names the missing token")
+
+        doc = _minimal_token_doc(system_id="someone_else")
+        res = validate_spec(_write_v03_spec(td_path, doc))
+        assert_(not res.ok and any("does not match" in e.message for e in res.errors),
+                "token file naming a different system fails")
+
+
+def test_v02_spec_without_token_file_still_valid():
+    section("validate_spec: v0.2 specs need no token file (backwards compatible)")
+    with tempfile.NamedTemporaryFile(suffix="-spec.yaml", mode="w", delete=False) as f:
+        f.write('spec_version: "0.2"\nsystem:\n  id: legacy\n  name: Legacy\ntokens: {}\n')
+        p = f.name
+    res = validate_spec(p)
+    Path(p).unlink(missing_ok=True)
+    assert_(res.ok, "v0.2 spec without tokens_file is valid")
+
+
+# ─── test: canonical token files (issue #4) ───────────────────────
+
+ALL_REGISTERED = ["wireframe", "neutral", "swiss", "terminal", "editorial",
+                  "sketch", "prism", "revolt", "riso"]
+
+
+def _strings(node):
+    if isinstance(node, dict):
+        for v in node.values():
+            yield from _strings(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _strings(v)
+    elif isinstance(node, str):
+        yield node
+
+
+def test_every_system_loads_tokens_from_token_file():
+    section("load_system: every registered system reads tokens from tokens.json")
+    from design_system_skill.token_file import ALIAS_RE, LEGACY_PROJECTION, get_spec_path, get_token
+    clear_cache()
+    for sys_id in ALL_REGISTERED:
+        res = load_system(sys_id)
+        assert_(res.ok, f"load_system('{sys_id}') ok",
+                "; ".join(e.message for e in res.errors)[:300] if not res.ok else "")
+        if not res.ok:
+            continue
+        spec = res.data
+        contract = spec["tokens"].get("contract")
+        assert_(isinstance(contract, dict) and contract.get("contract_version") == "1.0",
+                f"{sys_id}: tokens.contract attached")
+        assert_(spec["_meta"].get("tokens_path", "").endswith("tokens.json"),
+                f"{sys_id}: _meta.tokens_path points at tokens.json")
+        for keys, token_path in LEGACY_PROJECTION:
+            assert_(get_spec_path(spec, keys) == get_token(contract, token_path),
+                    f"{sys_id}: {'.'.join(keys)} projected from {token_path}")
+        palette = spec["tokens"]["colors"].get("palette") or []
+        assert_(all("value" in p for p in palette),
+                f"{sys_id}: every palette entry has a resolved value")
+        leftovers = [s for s in _strings({k: v for k, v in spec["tokens"].items() if k != "contract"})
+                     if ALIAS_RE.search(s)]
+        assert_(not leftovers, f"{sys_id}: no unresolved aliases in tokens ({leftovers[:3]})")
+
+
+def test_neutral_alias_shares_wireframe_tokens():
+    section("load_system: 'neutral' registry alias shares wireframe's token file")
+    clear_cache()
+    wf, nt = load_system("wireframe"), load_system("neutral")
+    assert_(wf.ok and nt.ok, "both ids load")
+    if wf.ok and nt.ok:
+        assert_(wf.data["_meta"]["tokens_path"] == nt.data["_meta"]["tokens_path"],
+                "same tokens_path")
+        assert_(nt.data["tokens"]["contract"]["system"] == "wireframe",
+                "token file system id is the canonical 'wireframe'")
+    from design_system_skill.token_file import load_tokens_for_system
+    builder_view = load_tokens_for_system("neutral")
+    assert_(builder_view.ok and builder_view.data["color"]["page_bg"] == "#F5F5F5",
+            "load_tokens_for_system('neutral') returns the wireframe token document")
+    assert_(not load_tokens_for_system("does_not_exist").ok,
+            "load_tokens_for_system fails cleanly for unknown ids")
+
+
+def test_riso_modes_cover_every_press():
+    section("riso tokens: paper x ink modes resolve every press combination")
+    from design_system_skill.token_file import iter_mode_selections, resolve_mode
+    doc = json.loads((SYSTEMS_DIR / "riso" / "tokens.json").read_text())
+    selections = list(iter_mode_selections(doc))
+    assert_(len(selections) == 30, f"5 papers x 6 inks = 30 selections (got {len(selections)})")
+    kraft_sunset = resolve_mode(doc, {"paper": "kraft", "ink": "sunset"})
+    assert_(kraft_sunset["color"]["page_bg"] == "#D4BE94", "kraft paper sets page_bg")
+    assert_(kraft_sunset["color"]["text_primary"] == "#2A1F12", "kraft paper sets text ink")
+    assert_(kraft_sunset["color"]["accent"] == "#E8C700", "sunset ink-2 sets accent")
+    default = resolve_mode(doc)
+    assert_(default["color"] == doc["color"], "default selection equals base values")
+
+
+def test_token_file_edit_invalidates_cache():
+    section("load_system: editing tokens.json invalidates the spec cache")
+    import os
+    import shutil
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        temp_registry = td_path / "registry.yaml"
+        shutil.copy2(SYSTEMS_DIR / "registry.yaml", temp_registry)
+        shutil.copytree(SYSTEMS_DIR / "swiss", td_path / "swiss")
+        os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"] = str(temp_registry)
+        try:
+            clear_cache()
+            first = load_system("swiss")
+            assert_(first.ok and first.data["tokens"]["colors"]["accent"] == "#E3000B",
+                    "swiss accent loads from tokens.json")
+            tok = td_path / "swiss" / "tokens.json"
+            doc = json.loads(tok.read_text())
+            doc["color"]["accent"] = "#0000FF"
+            tok.write_text(json.dumps(doc))
+            second = load_system("swiss")
+            assert_(second.ok and second.data["tokens"]["colors"]["accent"] == "#0000FF",
+                    "edited accent is picked up without clear_cache()")
+        finally:
+            del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
+            clear_cache()
+
+
+# ─── test: drift check (issue #4) ─────────────────────────────────
+
+def test_find_drift_kinds():
+    section("find_drift: detects each kind of disagreement")
+    from design_system_skill.drift import find_drift
+    doc = _minimal_token_doc()
+    doc["color"]["accent"] = "#E3000B"
+    doc["extras"] = {"color": {"rule_hairline": "#F0F0F0"}}
+    spec = {
+        "tokens": {
+            "colors": {
+                "accent": "#e3000b",          # same colour, different spelling: not drift
+                "page_bg": "#FFFFFF",         # token says #808080
+                "palette": [
+                    {"name": "red", "token": "color.accent"},
+                    {"name": "hair", "token": "extras.color.rule_hairline", "value": "#EEEEEE"},
+                    {"name": "ghost", "token": "extras.color.nope"},
+                ],
+            },
+            "elevation": {"config": {
+                "rule": {"color": "{color.border_default}"},
+                "bar": {"color": "#123456"},                     # not in the token file
+                "broken": {"color": "{color.not_a_token}"},
+            }},
+            "typography": {"families": [{"id": "structural", "stack": "Comic Sans MS"}]},
+        },
+    }
+    items = find_drift(spec, doc)
+    kinds = {(i.kind, i.location) for i in items}
+    assert_(("value_mismatch", "tokens.colors.page_bg") in kinds, f"page_bg mismatch found ({kinds})")
+    assert_(not any(loc == "tokens.colors.accent" for _, loc in kinds),
+            "case-only difference is not drift")
+    assert_(("palette_mismatch", "tokens.colors.palette[1].value") in kinds, "palette value mismatch found")
+    assert_(("unresolved_alias", "tokens.colors.palette[2].token") in kinds, "unknown palette token found")
+    assert_(("unresolved_alias", "tokens.elevation.config.broken.color") in kinds, "unknown alias found")
+    assert_(("unknown_literal", "tokens.elevation.config.bar.color") in kinds, "unknown colour literal found")
+    assert_(("unknown_literal", "tokens.typography.families[0].stack") in kinds, "unknown font stack found")
+    assert_(len(items) == 6, f"exactly 6 drift items ({len(items)}: {sorted(kinds)})")
+
+
+def test_drift_clean_for_all_registered_systems():
+    section("check_drift_all: every registered spec agrees with its tokens.json")
+    from design_system_skill import check_drift_all
+    res = check_drift_all()
+    assert_(res.ok, "no drift in any registered system",
+            "; ".join(e.message for e in res.errors)[:400])
+    systems = (res.data or {}).get("systems", {})
+    assert_(systems.get("neutral") == {"alias_of": "wireframe"},
+            f"neutral is reported as an alias of wireframe ({systems.get('neutral')})")
+
+
+def _copy_swiss(td_path: Path) -> Path:
+    import shutil
+    dst = td_path / "swiss"
+    shutil.copytree(SYSTEMS_DIR / "swiss", dst)
+    return dst / "spec.yaml"
+
+
+def test_drift_fails_validation_and_cli():
+    section("drift: a drifting spec fails validate_spec and the CLI")
+    import contextlib
+    import importlib.util
+    import io
+    from design_system_skill import check_drift
+    spec_mod = importlib.util.spec_from_file_location("dss_cli", HERE / "__main__.py")
+    cli = importlib.util.module_from_spec(spec_mod)
+    spec_mod.loader.exec_module(cli)
+
+    with tempfile.TemporaryDirectory() as td:
+        spec_path = _copy_swiss(Path(td))
+        with contextlib.redirect_stdout(io.StringIO()):
+            clean_exit = cli.main(["drift", "--spec", str(spec_path)])
+        assert_(clean_exit == 0, f"CLI exits 0 on a clean spec (got {clean_exit})")
+
+        text = spec_path.read_text().replace(
+            "    palette:\n", '    text_muted: "#666666"   # the pre-v0.3 value\n\n    palette:\n', 1)
+        spec_path.write_text(text)
+
+        res = check_drift(spec_path)
+        assert_(not res.ok, "check_drift reports the stale literal")
+        drift = (res.data or {}).get("drift", [])
+        assert_(any(d["location"] == "tokens.colors.text_muted" and d["token_value"] == "#949494"
+                    for d in drift), f"drift names text_muted vs #949494 ({drift})")
+
+        val = validate_spec(spec_path, library_root=str(spec_path.parent))
+        assert_(not val.ok and any(e.code == "TOKEN_DRIFT" for e in val.errors),
+                "validate_spec fails with TOKEN_DRIFT")
+
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            drift_exit = cli.main(["drift", "--spec", str(spec_path)])
+        assert_(drift_exit == 1, f"CLI exits 1 on drift (got {drift_exit})")
+        assert_("text_muted" in out.getvalue(), "CLI output names the drifting key")
+
+
 # ─── runner ─────────────────────────────────────────────────────────
 
 def main():
@@ -779,6 +1141,21 @@ def main():
     test_extends_cycle_detection()
     test_extends_parent_not_found()
     test_extends_multi_level()
+    test_contract_doc_matches_module()
+    test_contract_pairs_reference_contract_tokens()
+    test_minimal_token_doc_validates()
+    test_missing_contract_token_fails()
+    test_bad_token_values_fail()
+    test_modes_validation()
+    test_v03_spec_requires_token_file()
+    test_v02_spec_without_token_file_still_valid()
+    test_every_system_loads_tokens_from_token_file()
+    test_neutral_alias_shares_wireframe_tokens()
+    test_riso_modes_cover_every_press()
+    test_token_file_edit_invalidates_cache()
+    test_find_drift_kinds()
+    test_drift_clean_for_all_registered_systems()
+    test_drift_fails_validation_and_cli()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

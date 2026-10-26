@@ -318,13 +318,14 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--ui-lin
      ══════════════════════════════════════════════════════════════════ -->
 <script type="application/json" id="riso-spec">
 {
-  "spec_version": "0.2",
+  "spec_version": "0.3",
   "system": {
     "id": "riso",
     "name": "Riso",
     "tagline": "Duotone Print + Tweakable Press",
     "grammar_family": "print_texture",
     "version": "3.0.0",
+    "tokens_file": "tokens.json",
     "source_jsx": "../../apps/showcase/src/systems/design-system-riso.jsx",
     "reference_export": "riso-reference.html",
     "premise": "A duotone-print aesthetic inspired by Risograph duplicators — the two-drum stencil presses beloved in zines, art books, and independent publishing. Color comes from two spot inks printed on a tinted paper stock. Registration is slightly off. Dots and grain are visible. Accidents are celebrated.\n",
@@ -391,75 +392,87 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--ui-lin
   },
   "tokens": {
     "colors": {
+      "palette": [
+        {
+          "name": "paper_cream",
+          "token": "extras.color.paper_cream",
+          "role": "paper — default, warm, forgiving",
+          "value": "#F4EFE4"
+        },
+        {
+          "name": "paper_kraft",
+          "token": "extras.color.paper_kraft",
+          "role": "paper — earthier, colors shift muddy",
+          "value": "#D4BE94"
+        },
+        {
+          "name": "paper_white",
+          "token": "extras.color.paper_white",
+          "role": "paper — clinical, max ink saturation",
+          "value": "#FDFCF8"
+        },
+        {
+          "name": "paper_gray",
+          "token": "extras.color.paper_gray",
+          "role": "paper — industrial zine feel",
+          "value": "#BFBDB5"
+        },
+        {
+          "name": "paper_newsprint",
+          "token": "extras.color.paper_newsprint",
+          "role": "paper — bleached, grainy, most 'printed'",
+          "value": "#E4DCC9"
+        },
+        {
+          "name": "ink_federal_blue",
+          "token": "extras.color.ink_federal_blue",
+          "role": "ink — classic ink-1, spritz ink-1",
+          "value": "#3255A4"
+        },
+        {
+          "name": "ink_fluorescent_pink",
+          "token": "extras.color.ink_fluorescent_pink",
+          "role": "ink — classic ink-2, electric ink-1, ink ink-2",
+          "value": "#FF48B0"
+        },
+        {
+          "name": "ink_green",
+          "token": "extras.color.ink_green",
+          "role": "ink — electric ink-2, forest ink-2",
+          "value": "#00A95C"
+        },
+        {
+          "name": "ink_red",
+          "token": "extras.color.ink_red",
+          "role": "ink — sunset ink-1",
+          "value": "#FF665E"
+        },
+        {
+          "name": "ink_yellow",
+          "token": "extras.color.ink_yellow",
+          "role": "ink — sunset ink-2, spritz ink-2",
+          "value": "#E8C700"
+        },
+        {
+          "name": "ink_teal",
+          "token": "extras.color.ink_teal",
+          "role": "ink — forest ink-1",
+          "value": "#00838F"
+        },
+        {
+          "name": "ink_black",
+          "token": "extras.color.ink_black",
+          "role": "ink — ink preset ink-1",
+          "value": "#1A1A1A"
+        }
+      ],
       "page_bg": "#F4EFE4",
       "surface": "#F4EFE4",
       "surface_elevated": "#F4EFE4",
       "text_primary": "#1A1614",
       "text_secondary": "rgba(26,22,20,0.75)",
       "text_muted": "rgba(26,22,20,0.65)",
-      "accent": "#FF48B0",
-      "palette": [
-        {
-          "name": "paper_cream",
-          "value": "#F4EFE4",
-          "role": "paper — default, warm, forgiving"
-        },
-        {
-          "name": "paper_kraft",
-          "value": "#D4BE94",
-          "role": "paper — earthier, colors shift muddy"
-        },
-        {
-          "name": "paper_white",
-          "value": "#FDFCF8",
-          "role": "paper — clinical, max ink saturation"
-        },
-        {
-          "name": "paper_gray",
-          "value": "#BFBDB5",
-          "role": "paper — industrial zine feel"
-        },
-        {
-          "name": "paper_newsprint",
-          "value": "#E4DCC9",
-          "role": "paper — bleached, grainy, most 'printed'"
-        },
-        {
-          "name": "ink_federal_blue",
-          "value": "#3255A4",
-          "role": "ink — classic ink-1, spritz ink-1"
-        },
-        {
-          "name": "ink_fluorescent_pink",
-          "value": "#FF48B0",
-          "role": "ink — classic ink-2, electric ink-1, ink ink-2"
-        },
-        {
-          "name": "ink_green",
-          "value": "#00A95C",
-          "role": "ink — electric ink-2, forest ink-2"
-        },
-        {
-          "name": "ink_red",
-          "value": "#FF665E",
-          "role": "ink — sunset ink-1"
-        },
-        {
-          "name": "ink_yellow",
-          "value": "#E8C700",
-          "role": "ink — sunset ink-2, spritz ink-2"
-        },
-        {
-          "name": "ink_teal",
-          "value": "#00838F",
-          "role": "ink — forest ink-1"
-        },
-        {
-          "name": "ink_black",
-          "value": "#1A1A1A",
-          "role": "ink — ink preset ink-1"
-        }
-      ]
+      "accent": "#FF48B0"
     },
     "typography": {
       "families": [
@@ -471,7 +484,7 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--ui-lin
         },
         {
           "id": "metadata",
-          "stack": "'JetBrains Mono', ui-monospace, monospace",
+          "stack": "'JetBrains Mono', monospace",
           "role": "metadata — the colophon",
           "mixing_rule": "Tracked uppercase labels at 11px and below only: timestamps, issue numbers, sender tags, section headers. The monospace width gives the printed-catalog rhythm. Never for body.\n"
         }
@@ -576,6 +589,8 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--ui-lin
       }
     },
     "spacing": {
+      "enforcement": "relaxed",
+      "note": "Riso's rhythm is editorial, not modular. The implementation uses off-grid paddings (10px 16px, 18px 24px, 20px 24px 22px) deliberately — a strict 8pt grid reads as software, not print. Enforcement is relaxed by design; do not \"fix\" these to the grid.\n",
       "grid_unit": 8,
       "allowed_steps": [
         6,
@@ -588,24 +603,21 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--ui-lin
         20,
         22,
         24
-      ],
-      "enforcement": "relaxed",
-      "note": "Riso's rhythm is editorial, not modular. The implementation uses off-grid paddings (10px 16px, 18px 24px, 20px 24px 22px) deliberately — a strict 8pt grid reads as software, not print. Enforcement is relaxed by design; do not \"fix\" these to the grid.\n"
+      ]
     },
     "borders": {
-      "radius_default": 0,
-      "radius_inputs": 0,
-      "radius_chrome": 0,
       "note": "Radius 4 appears ONLY in spec-panel chrome, never in the system itself.",
       "rules": {
         "hairline": "1px solid rgba(0,0,0,0.1)",
         "strong": "1px solid var(--riso-text)",
         "grid": "1px solid var(--riso-text)",
         "vertical": "1px solid rgba(0,0,0,0.15)"
-      }
+      },
+      "radius_default": 0,
+      "radius_inputs": 0,
+      "radius_chrome": 0
     },
     "elevation": {
-      "strategy": "duotone_filter",
       "premise": "Riso has no traditional elevation system. Depth is communicated through ink layering: which color sits on top, where halftone fields accumulate, how registration offsets stack. \"Above\" and \"below\" are ink-order concepts, not z-index.\n",
       "ink_stacking_order": [
         {
@@ -629,7 +641,467 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--ui-lin
           "detail": "overlay-blend noise, always top"
         }
       ],
-      "blend_mode": "var(--riso-blend)"
+      "blend_mode": "var(--riso-blend)",
+      "strategy": "duotone_filter"
+    },
+    "contract": {
+      "contract_version": "1.0",
+      "system": "riso",
+      "source": "apps/showcase/src/systems/design-system-riso.jsx",
+      "description": "Canonical token values for the riso design system. Values are taken from the JSX source (canonical); see notes for derivations.",
+      "color": {
+        "page_bg": "#F4EFE4",
+        "surface": "#F4EFE4",
+        "surface_elevated": "#F4EFE4",
+        "surface_selected": "rgba(0,0,0,0.03)",
+        "surface_inverse": "#1A1614",
+        "text_primary": "#1A1614",
+        "text_secondary": "rgba(26,22,20,0.75)",
+        "text_muted": "rgba(26,22,20,0.65)",
+        "text_placeholder": "rgba(26,22,20,0.45)",
+        "text_inverse": "#F4EFE4",
+        "accent": "#FF48B0",
+        "accent_foreground": "#F4EFE4",
+        "action": "#FF48B0",
+        "action_foreground": "#F4EFE4",
+        "danger": "#1A1614",
+        "danger_foreground": "#F4EFE4",
+        "success": "#1A1614",
+        "success_foreground": "#F4EFE4",
+        "warning": "#1A1614",
+        "warning_foreground": "#F4EFE4",
+        "info": "#1A1614",
+        "info_foreground": "#F4EFE4",
+        "border_default": "rgba(0,0,0,0.1)",
+        "border_strong": "#1A1614",
+        "border_input": "#1A1614",
+        "focus_ring": "#FF48B0"
+      },
+      "radius": {
+        "default": 0,
+        "input": 0,
+        "chrome": 0
+      },
+      "border_width": {
+        "default": 1,
+        "strong": 1,
+        "focus": 2
+      },
+      "space": {
+        "unit": 8,
+        "steps": [
+          6,
+          8,
+          10,
+          12,
+          14,
+          16,
+          18,
+          20,
+          22,
+          24
+        ],
+        "xs": 6,
+        "sm": 10,
+        "md": 16,
+        "lg": 20,
+        "xl": 24
+      },
+      "font": {
+        "body": "'Space Grotesk', system-ui, sans-serif",
+        "label": "'JetBrains Mono', monospace",
+        "mono": "'JetBrains Mono', monospace"
+      },
+      "type": {
+        "display": {
+          "size": 30,
+          "weight": 700,
+          "line_height": 1.0,
+          "tracking": -0.03,
+          "family": "body",
+          "case": "none"
+        },
+        "title": {
+          "size": 16,
+          "weight": 700,
+          "line_height": 1.1,
+          "tracking": -0.02,
+          "family": "body",
+          "case": "none"
+        },
+        "body": {
+          "size": 14,
+          "weight": 500,
+          "line_height": 1.55,
+          "tracking": -0.005,
+          "family": "body",
+          "case": "none"
+        },
+        "small": {
+          "size": 11,
+          "weight": 400,
+          "line_height": 1.4,
+          "tracking": 0,
+          "family": "body",
+          "case": "none"
+        },
+        "label": {
+          "size": 9,
+          "weight": 700,
+          "line_height": 1.3,
+          "tracking": 0.16,
+          "family": "label",
+          "case": "uppercase"
+        }
+      },
+      "elevation": {
+        "strategy": "duotone_filter",
+        "raised": "none",
+        "overlay": "none",
+        "backdrop_blur": "none"
+      },
+      "extras": {
+        "color": {
+          "paper": "#F4EFE4",
+          "text_ink": "#1A1614",
+          "ink_1": "#3255A4",
+          "ink_2": "#FF48B0",
+          "rule_vertical": "rgba(0,0,0,0.15)",
+          "composer_fill": "rgba(0,0,0,0.02)",
+          "paper_cream": "#F4EFE4",
+          "paper_kraft": "#D4BE94",
+          "paper_white": "#FDFCF8",
+          "paper_gray": "#BFBDB5",
+          "paper_newsprint": "#E4DCC9",
+          "ink_federal_blue": "#3255A4",
+          "ink_fluorescent_pink": "#FF48B0",
+          "ink_green": "#00A95C",
+          "ink_red": "#FF665E",
+          "ink_yellow": "#E8C700",
+          "ink_teal": "#00838F",
+          "ink_black": "#1A1A1A"
+        },
+        "press": {
+          "blend": "multiply",
+          "density": 0.92
+        },
+        "radius": {
+          "spec_chrome": 4
+        },
+        "type": {
+          "brand": {
+            "size": 28,
+            "weight": 700,
+            "line_height": 0.95,
+            "tracking": -0.04,
+            "family": "body",
+            "case": "none"
+          },
+          "item": {
+            "size": 14,
+            "weight": 600,
+            "line_height": 1.2,
+            "tracking": -0.01,
+            "family": "body",
+            "case": "none"
+          },
+          "micro": {
+            "size": 8.5,
+            "weight": 700,
+            "line_height": 1.3,
+            "tracking": 0.14,
+            "family": "label",
+            "case": "uppercase"
+          }
+        }
+      },
+      "modes": {
+        "axes": [
+          {
+            "id": "paper",
+            "state_ref": "system_state.active_paper",
+            "default": "cream",
+            "options": {
+              "cream": {
+                "color.page_bg": "#F4EFE4",
+                "color.surface": "#F4EFE4",
+                "color.surface_elevated": "#F4EFE4",
+                "color.surface_inverse": "#1A1614",
+                "color.text_primary": "#1A1614",
+                "color.text_secondary": "rgba(26,22,20,0.75)",
+                "color.text_muted": "rgba(26,22,20,0.65)",
+                "color.text_placeholder": "rgba(26,22,20,0.45)",
+                "color.text_inverse": "#F4EFE4",
+                "color.accent_foreground": "#F4EFE4",
+                "color.action_foreground": "#F4EFE4",
+                "color.border_strong": "#1A1614",
+                "color.border_input": "#1A1614",
+                "extras.color.paper": "#F4EFE4",
+                "extras.color.text_ink": "#1A1614",
+                "extras.press.blend": "multiply",
+                "extras.press.density": 0.92,
+                "color.danger": "#1A1614",
+                "color.danger_foreground": "#F4EFE4",
+                "color.success": "#1A1614",
+                "color.success_foreground": "#F4EFE4",
+                "color.warning": "#1A1614",
+                "color.warning_foreground": "#F4EFE4",
+                "color.info": "#1A1614",
+                "color.info_foreground": "#F4EFE4"
+              },
+              "kraft": {
+                "color.page_bg": "#D4BE94",
+                "color.surface": "#D4BE94",
+                "color.surface_elevated": "#D4BE94",
+                "color.surface_inverse": "#2A1F12",
+                "color.text_primary": "#2A1F12",
+                "color.text_secondary": "rgba(42,31,18,0.75)",
+                "color.text_muted": "rgba(42,31,18,0.65)",
+                "color.text_placeholder": "rgba(42,31,18,0.45)",
+                "color.text_inverse": "#D4BE94",
+                "color.accent_foreground": "#D4BE94",
+                "color.action_foreground": "#D4BE94",
+                "color.border_strong": "#2A1F12",
+                "color.border_input": "#2A1F12",
+                "extras.color.paper": "#D4BE94",
+                "extras.color.text_ink": "#2A1F12",
+                "extras.press.blend": "multiply",
+                "extras.press.density": 0.85,
+                "color.danger": "#2A1F12",
+                "color.danger_foreground": "#D4BE94",
+                "color.success": "#2A1F12",
+                "color.success_foreground": "#D4BE94",
+                "color.warning": "#2A1F12",
+                "color.warning_foreground": "#D4BE94",
+                "color.info": "#2A1F12",
+                "color.info_foreground": "#D4BE94"
+              },
+              "white": {
+                "color.page_bg": "#FDFCF8",
+                "color.surface": "#FDFCF8",
+                "color.surface_elevated": "#FDFCF8",
+                "color.surface_inverse": "#151515",
+                "color.text_primary": "#151515",
+                "color.text_secondary": "rgba(21,21,21,0.75)",
+                "color.text_muted": "rgba(21,21,21,0.65)",
+                "color.text_placeholder": "rgba(21,21,21,0.45)",
+                "color.text_inverse": "#FDFCF8",
+                "color.accent_foreground": "#FDFCF8",
+                "color.action_foreground": "#FDFCF8",
+                "color.border_strong": "#151515",
+                "color.border_input": "#151515",
+                "extras.color.paper": "#FDFCF8",
+                "extras.color.text_ink": "#151515",
+                "extras.press.blend": "multiply",
+                "extras.press.density": 0.98,
+                "color.danger": "#151515",
+                "color.danger_foreground": "#FDFCF8",
+                "color.success": "#151515",
+                "color.success_foreground": "#FDFCF8",
+                "color.warning": "#151515",
+                "color.warning_foreground": "#FDFCF8",
+                "color.info": "#151515",
+                "color.info_foreground": "#FDFCF8"
+              },
+              "gray": {
+                "color.page_bg": "#BFBDB5",
+                "color.surface": "#BFBDB5",
+                "color.surface_elevated": "#BFBDB5",
+                "color.surface_inverse": "#141414",
+                "color.text_primary": "#141414",
+                "color.text_secondary": "rgba(20,20,20,0.75)",
+                "color.text_muted": "rgba(20,20,20,0.65)",
+                "color.text_placeholder": "rgba(20,20,20,0.45)",
+                "color.text_inverse": "#BFBDB5",
+                "color.accent_foreground": "#BFBDB5",
+                "color.action_foreground": "#BFBDB5",
+                "color.border_strong": "#141414",
+                "color.border_input": "#141414",
+                "extras.color.paper": "#BFBDB5",
+                "extras.color.text_ink": "#141414",
+                "extras.press.blend": "darken",
+                "extras.press.density": 0.82,
+                "color.danger": "#141414",
+                "color.danger_foreground": "#BFBDB5",
+                "color.success": "#141414",
+                "color.success_foreground": "#BFBDB5",
+                "color.warning": "#141414",
+                "color.warning_foreground": "#BFBDB5",
+                "color.info": "#141414",
+                "color.info_foreground": "#BFBDB5"
+              },
+              "newsprint": {
+                "color.page_bg": "#E4DCC9",
+                "color.surface": "#E4DCC9",
+                "color.surface_elevated": "#E4DCC9",
+                "color.surface_inverse": "#2B2620",
+                "color.text_primary": "#2B2620",
+                "color.text_secondary": "rgba(43,38,32,0.75)",
+                "color.text_muted": "rgba(43,38,32,0.65)",
+                "color.text_placeholder": "rgba(43,38,32,0.45)",
+                "color.text_inverse": "#E4DCC9",
+                "color.accent_foreground": "#E4DCC9",
+                "color.action_foreground": "#E4DCC9",
+                "color.border_strong": "#2B2620",
+                "color.border_input": "#2B2620",
+                "extras.color.paper": "#E4DCC9",
+                "extras.color.text_ink": "#2B2620",
+                "extras.press.blend": "color-burn",
+                "extras.press.density": 0.78,
+                "color.danger": "#2B2620",
+                "color.danger_foreground": "#E4DCC9",
+                "color.success": "#2B2620",
+                "color.success_foreground": "#E4DCC9",
+                "color.warning": "#2B2620",
+                "color.warning_foreground": "#E4DCC9",
+                "color.info": "#2B2620",
+                "color.info_foreground": "#E4DCC9"
+              }
+            }
+          },
+          {
+            "id": "ink",
+            "state_ref": "system_state.active_ink",
+            "default": "classic",
+            "options": {
+              "classic": {
+                "color.accent": "#FF48B0",
+                "color.action": "#FF48B0",
+                "color.focus_ring": "#FF48B0",
+                "extras.color.ink_1": "#3255A4",
+                "extras.color.ink_2": "#FF48B0"
+              },
+              "electric": {
+                "color.accent": "#00A95C",
+                "color.action": "#00A95C",
+                "color.focus_ring": "#00A95C",
+                "extras.color.ink_1": "#FF48B0",
+                "extras.color.ink_2": "#00A95C"
+              },
+              "sunset": {
+                "color.accent": "#E8C700",
+                "color.action": "#E8C700",
+                "color.focus_ring": "#E8C700",
+                "extras.color.ink_1": "#FF665E",
+                "extras.color.ink_2": "#E8C700"
+              },
+              "forest": {
+                "color.accent": "#00A95C",
+                "color.action": "#00A95C",
+                "color.focus_ring": "#00A95C",
+                "extras.color.ink_1": "#00838F",
+                "extras.color.ink_2": "#00A95C"
+              },
+              "spritz": {
+                "color.accent": "#E8C700",
+                "color.action": "#E8C700",
+                "color.focus_ring": "#E8C700",
+                "extras.color.ink_1": "#3255A4",
+                "extras.color.ink_2": "#E8C700"
+              },
+              "ink": {
+                "color.accent": "#FF48B0",
+                "color.action": "#FF48B0",
+                "color.focus_ring": "#FF48B0",
+                "extras.color.ink_1": "#1A1A1A",
+                "extras.color.ink_2": "#FF48B0"
+              }
+            }
+          }
+        ]
+      },
+      "contrast_pairs": [
+        {
+          "fg": "color.action",
+          "bg": "color.page_bg",
+          "kind": "large_text",
+          "note": "InkTag actions are ink-2 text on paper (JSX table: Ink-2 on Cream 3.4:1, AA large)."
+        },
+        {
+          "fg": "extras.color.ink_1",
+          "bg": "color.page_bg",
+          "kind": "large_text",
+          "note": "Ink-1 InkTags and rules."
+        }
+      ],
+      "notes": {
+        "color.page_bg": {
+          "derived": false,
+          "note": "Base values are the default press (paper: cream, ink: classic). modes.axes re-resolve them; see riso paperPresets/inkPresets in the JSX."
+        },
+        "color.surface_selected": {
+          "derived": false,
+          "note": "Selected sidebar row: rgba(0,0,0,0.03)."
+        },
+        "color.surface_inverse": {
+          "derived": true,
+          "note": "Riso never inverts; the inverse pair is the paper's text ink as fill with paper text."
+        },
+        "color.text_secondary": {
+          "derived": false,
+          "note": "JSX: text ink at opacity 0.75 (subtitles)."
+        },
+        "color.text_muted": {
+          "derived": false,
+          "note": "JSX: text ink at opacity 0.65 (previews)."
+        },
+        "color.text_placeholder": {
+          "derived": false,
+          "note": "Live CSS: .riso-input::placeholder opacity 0.45 over text ink."
+        },
+        "color.accent": {
+          "derived": false,
+          "note": "Ink-2 of the active drum pair (var(--riso-ink-2))."
+        },
+        "color.accent_foreground": {
+          "derived": false,
+          "note": "Unread InkTag badge: ink-2 fill with paper-colour text."
+        },
+        "color.action": {
+          "derived": false,
+          "note": "'File Reply ->' is an ink-2 InkTag."
+        },
+        "color.danger": {
+          "derived": true,
+          "note": "Two inks, one paper: Riso has no status hues. Status fills use the paper's text ink (legible in all 30 press combinations); meaning is carried by the InkTag label."
+        },
+        "color.success": {
+          "derived": true,
+          "note": "See danger."
+        },
+        "color.warning": {
+          "derived": true,
+          "note": "See danger."
+        },
+        "color.info": {
+          "derived": true,
+          "note": "See danger."
+        },
+        "color.border_default": {
+          "derived": false,
+          "note": "Hairline between sidebar items: 1px solid rgba(0,0,0,0.1)."
+        },
+        "color.border_strong": {
+          "derived": false,
+          "note": "Section rules: 1px solid var(--riso-text)."
+        },
+        "color.border_input": {
+          "derived": false,
+          "note": "Composer is framed by a var(--riso-text) top rule."
+        },
+        "color.focus_ring": {
+          "derived": false,
+          "note": "JSX selection model: 'Focus outline 2px solid var(--riso-ink-2) offset 2px'."
+        },
+        "extras.press.blend": {
+          "derived": false,
+          "note": "Mode-dependent CSS mix-blend-mode (var(--riso-blend))."
+        },
+        "space.md": {
+          "derived": true,
+          "note": "Not named in JSX; 16px/24px are the recurring paddings (riso rhythm is deliberately off-grid)."
+        }
+      }
     }
   },
   "press_presets": {
@@ -1869,7 +2341,7 @@ footer { margin-top: 80px; padding-top: 20px; border-top: 1px solid var(--ui-lin
 <div class="wrap">
 
 <header>
-  <div class="kicker">print_texture · spec 0.2 · system v3.0.0</div>
+  <div class="kicker">print_texture · spec 0.3 · system v3.0.0</div>
   <h1>Riso</h1>
   <p class="lede">Duotone Print + Tweakable Press — A duotone-print aesthetic inspired by Risograph duplicators — the two-drum stencil presses beloved in zines, art books, and independent publishing. Color comes from two spot inks printed on a tinted paper stock. Registration is slightly off. Dots and grain are visible. Accidents are celebrated.</p>
 </header>
@@ -1978,7 +2450,7 @@ Unbundling them produces combinations no press can print.</p>
 
 
 <h2>Typography</h2>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="cmp"><div class="nm" style="font-family:&#x27;Space Grotesk&#x27;, system-ui, sans-serif;font-size:20px">Space Grotesk</div><div class="tier">content — the page</div><p style="margin:8px 0 0">Body text, titles, messages, replies, navigation, and any label above 11px. A slightly quirky grotesk that pairs well with print textures.</p></div><div class="cmp"><div class="nm" style="font-family:&#x27;JetBrains Mono&#x27;, ui-monospace, monospace;font-size:20px">JetBrains Mono</div><div class="tier">metadata — the colophon</div><p style="margin:8px 0 0">Tracked uppercase labels at 11px and below only: timestamps, issue numbers, sender tags, section headers. The monospace width gives the printed-catalog rhythm. Never for body.</p></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="cmp"><div class="nm" style="font-family:&#x27;Space Grotesk&#x27;, system-ui, sans-serif;font-size:20px">Space Grotesk</div><div class="tier">content — the page</div><p style="margin:8px 0 0">Body text, titles, messages, replies, navigation, and any label above 11px. A slightly quirky grotesk that pairs well with print textures.</p></div><div class="cmp"><div class="nm" style="font-family:&#x27;JetBrains Mono&#x27;, monospace;font-size:20px">JetBrains Mono</div><div class="tier">metadata — the colophon</div><p style="margin:8px 0 0">Tracked uppercase labels at 11px and below only: timestamps, issue numbers, sender tags, section headers. The monospace width gives the printed-catalog rhythm. Never for body.</p></div></div>
 
 <h4>Named scale</h4>
 <p>The <code>treatment</code> column is load-bearing: it names the primitive that must render the step.
@@ -2415,7 +2887,7 @@ ink density varies from 0.78 to 0.98 across the stocks.</p>
 
 
 <footer>
-  Generated from <code>systems/riso/spec.yaml</code> (spec 0.2,
+  Generated from <code>systems/riso/spec.yaml</code> (spec 0.3,
   system v3.0.0) by <code>tools/builders/build_riso_reference.py</code>.
   Regenerate after any spec change — do not hand-edit this file.
 </footer>

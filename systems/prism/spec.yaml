@@ -1,4 +1,4 @@
-spec_version: "0.2"
+spec_version: "0.3"
 
 system:
   id: prism
@@ -6,6 +6,7 @@ system:
   tagline: "Liquid Glass + Bento"
   grammar_family: contemporary_clean
   version: "1.2.0"   # bumped: project-wide no-emoji policy — single-letter monogram avatars on glass tier
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: ../design-system-integrated.jsx
 
   # NEW IN v0.2 (Change 8): Prism's glass blur is the system most affected
@@ -41,29 +42,25 @@ tokens:
   colors:
     # Prism's "colors" are mostly opacities applied over a gradient.
     # The explicit palette includes the gradient stops and the teal accent.
-    page_bg: "#5A5562"          # midpoint of the gradient — used for solid fallback
-    surface: "rgba(255,255,255,0.08)"
-    surface_elevated: "rgba(255,255,255,0.14)"
-    text_primary: "rgba(255,255,255,0.90)"
-    text_secondary: "rgba(255,255,255,0.60)"
-    text_muted: "rgba(255,255,255,0.40)"
-    accent: "#7DDFBE"
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
 
     palette:
-      - { name: gradient_stop_1, value: "#4A5D6B", role: gradient top-left }
-      - { name: gradient_stop_2, value: "#5A4A5E", role: gradient mid-1 }
-      - { name: gradient_stop_3, value: "#6B5A5A", role: gradient mid-2 }
-      - { name: gradient_stop_4, value: "#4A6058", role: gradient bottom-right }
-      - { name: glass_base, value: "rgba(255,255,255,0.08)", role: default glass }
-      - { name: glass_hover, value: "rgba(255,255,255,0.14)", role: hover/selected glass }
-      - { name: glass_user, value: "rgba(255,255,255,0.18)", role: user message glass — highest opacity }
-      - { name: glass_border, value: "rgba(255,255,255,0.12)", role: glass panel borders }
-      - { name: teal_accent, value: "#7DDFBE", role: online indicators, unread accents }
+      - { name: gradient_stop_1, token: extras.color.gradient_stop_1, role: gradient top-left }
+      - { name: gradient_stop_2, token: extras.color.gradient_stop_2, role: gradient mid-1 }
+      - { name: gradient_stop_3, token: extras.color.gradient_stop_3, role: gradient mid-2 }
+      - { name: gradient_stop_4, token: extras.color.gradient_stop_4, role: gradient bottom-right }
+      - { name: glass_base, token: color.surface, role: default glass }
+      - { name: glass_hover, token: color.surface_elevated, role: hover/selected glass }
+      - { name: glass_user, token: color.surface_inverse, role: user message glass — highest opacity }
+      - { name: glass_border, token: color.border_default, role: glass panel borders }
+      - { name: teal_accent, token: color.accent, role: online indicators, unread accents }
 
   typography:
     families:
       - id: structural
-        stack: "Outfit, system-ui, sans-serif"
+        stack: "{font.body}"
         role: all type
         mixing_rule: "single typeface"
     scale:
@@ -84,19 +81,16 @@ tokens:
       headers: -0.02   # em — slight tightening on headers
 
   spacing:
-    grid_unit: 2
-    allowed_steps: [2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32]
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
     enforcement: relaxed
 
   borders:
-    radius_default: 12
-    radius_inputs: 10
-    radius_chrome: 20
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
 
   elevation:
-    strategy: glass_blur
+    # strategy: projected from tokens.json elevation.strategy
     config:
-      base_blur: 20  # px
+      base_blur: 20  # px — equals elevation.backdrop_blur in tokens.json
       base_opacity: 0.08
       elevation_steps:
         - { name: default, opacity: 0.08, role: standard panels }
@@ -105,16 +99,16 @@ tokens:
       ambient_lighting:
         enabled: true
         orbs:
-          - { position: top-right, size: 200, color: "rgba(180,160,210,0.20)", opacity: 0.20 }
-          - { position: bottom-left, size: 160, color: "rgba(130,200,180,0.18)", opacity: 0.18 }
+          - { position: top-right, size: 200, color: "{extras.color.orb_lavender}", opacity: 0.20 }
+          - { position: bottom-left, size: 160, color: "{extras.color.orb_mint}", opacity: 0.18 }
       gradient_bg:
         type: linear
         angle_deg: 150
         stops:
-          - { position: 0, color: "#4A5D6B" }
-          - { position: 0.40, color: "#5A4A5E" }
-          - { position: 0.70, color: "#6B5A5A" }
-          - { position: 1.00, color: "#4A6058" }
+          - { position: 0, color: "{extras.color.gradient_stop_1}" }
+          - { position: 0.40, color: "{extras.color.gradient_stop_2}" }
+          - { position: 0.70, color: "{extras.color.gradient_stop_3}" }
+          - { position: 1.00, color: "{extras.color.gradient_stop_4}" }
 
 components:
   list_item:
