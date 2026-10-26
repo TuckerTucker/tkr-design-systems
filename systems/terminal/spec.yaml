@@ -1,4 +1,4 @@
-spec_version: "0.2"
+spec_version: "0.3"
 
 system:
   id: terminal
@@ -6,6 +6,7 @@ system:
   tagline: "CLI + Phosphor Heritage"
   grammar_family: character_grid
   version: "1.1.0"   # bumped: v0.2 migration adds requires_unicode_blocks
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: ../design-system-terminal.jsx
   requires_emoji: false   # Terminal uses ASCII glyphs and Unicode box-drawing, not emoji
 
@@ -15,62 +16,74 @@ system:
 
 tokens:
   colors:
-    page_bg: "#0A0F0A"
-    surface: "#0A0F0A"
-    surface_elevated: "#101810"
-    text_primary: "#C8F7C5"
-    text_secondary: "#5EAA66"
-    text_muted: "#3D7044"
-    accent: "#00FF66"
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
 
     palette:
       - name: page_dark
-        value: "#0A0F0A"
+        token: color.page_bg
         role: page and primary surface
         usage_constraint: "near-black; never pure black, never above #0F140F"
 
       - name: surface_dim
-        value: "#101810"
+        token: color.surface_elevated
         role: very subtle elevation differentiation
         usage_constraint: "use sparingly; Terminal prefers no elevation at all"
 
       - name: text_bright
-        value: "#C8F7C5"
+        token: color.text_primary
         role: primary readable text
         usage_constraint: "default body text color"
 
       - name: text_muted_2
-        value: "#5EAA66"
+        token: color.text_secondary
         role: secondary text, hover states
 
       - name: text_muted_3
-        value: "#3D7044"
+        token: color.text_muted
         role: metadata, comments, deemphasized text
 
       - name: phosphor
-        value: "#00FF66"
+        token: color.accent
         role: active state, prompts, primary signal
         usage_constraint: "the system's hero color; reserved for active/important signal"
 
       - name: amber_count
-        value: "#FFB000"
+        token: color.warning
         role: counts, attention markers
         usage_constraint: "never decorative; always indicates a numeric or count value"
 
       - name: error_red
-        value: "#FF6B6B"
+        token: color.danger
         role: errors, destructive states
         usage_constraint: "exclusively for error or destructive action"
 
+      - name: surface_panel
+        token: color.surface
+        role: panel surface one step above the page
+
+      - name: text_ai_output
+        token: extras.color.text_ai_output
+        role: AI output text, a touch brighter than text_bright
+
+      - name: accent_alt
+        token: extras.color.accent_alt
+        role: user prompt tag (user@local>)
+
+      - name: link_blue
+        token: color.info
+        role: links and informational signal
+
       - name: border_dim
-        value: "#1F2F1F"
+        token: color.border_default
         role: dashed/solid borders
         usage_constraint: "the only border color; always 1px"
 
   typography:
     families:
       - id: structural
-        stack: "'JetBrains Mono', ui-monospace, monospace"
+        stack: "{font.body}"
         role: every piece of text in the system
         mixing_rule: "monospace only; no proportional fonts permitted anywhere"
         # NEW IN v0.2 (Change 6): typeface character-set requirements.
@@ -101,29 +114,26 @@ tokens:
       headers: 0
 
   spacing:
-    grid_unit: 4    # half-step grid; mono characters fall on 4px or 8px
-    allowed_steps: [4, 8, 12, 14, 16, 20, 24, 32, 40, 48, 64]
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
     enforcement: relaxed  # character widths sometimes require half-step
 
   borders:
-    radius_default: 0
-    radius_inputs: 0
-    radius_chrome: 0
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
     no_radius_anywhere: true
 
   elevation:
-    strategy: borders_only
+    # strategy: projected from tokens.json elevation.strategy
     config:
       # v0.2 (Change 5): border style is a first-class property.
       # The dash_pattern follows SVG stroke-dasharray syntax (px values).
       border_light:
-        width: 1
-        color: "#1F2F1F"
+        width: "{border_width.default}"
+        color: "{color.border_default}"
         style: dashed
         dash_pattern: "3,2"   # 3px dash + 2px gap; characteristic Terminal frame texture
       border_strong:
-        width: 1
-        color: "#1F2F1F"
+        width: "{border_width.strong}"
+        color: "{color.border_strong}"
         style: solid
       no_shadow: true
 
@@ -142,7 +152,7 @@ components:
     variants:
       - id: default
         svg: components/list-item-default.svg
-        rendering_notes: "Indented by 14px (one mono char + space). Empty space where prompt indicator would be. Name in #5EAA66 (text_muted_2). Time top-right in #3D7044. If unread, [N] in amber inline with name. Preview on next line, prefixed with `// ` in #3D7044."
+        rendering_notes: "Indented by 14px (one mono char + space). Empty space where prompt indicator would be. Name in #5EAA66 (text_muted_2). Time top-right in #578B5D (text_muted). If unread, [N] in amber inline with name. Preview on next line, prefixed with `// ` in #578B5D."
         states: [default, hover, selected]
       - id: selected
         svg: components/list-item-selected.svg
@@ -162,6 +172,13 @@ components:
       - "Names are lowercase_snake_case to feel terminal-native (e.g. tokyo_trip, recipe_ideas)"
       - "Preview text is prefixed with `// ` to read as a code comment"
       - "Unread counts are rendered as [N] in amber, inline — never as a circular badge"
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 40
+        note: "JSX .ci fadeSlideUp 0.2s linear. Hover and selection are instant."
 
 # ────────────────────────────────────────────────────────────────────
 # RULEBOOK
@@ -286,3 +303,26 @@ grammar_extensions:
     enabled: true
     glyph: "█"
     blink_rate_ms: 1000  # for live previews; static SVG renders as solid
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 60
+        note: "JSX .mi fadeSlideUp 0.25s linear."
+    cursor:
+      - trigger: loop
+        tier: fast
+        properties: [opacity]
+        reduced: none
+        timing: { duration_ms: 1000, easing: step-end }
+        note: "JSX .term-cursor 'blink 1s step-end infinite' (grammar_extensions.cursor.blink_rate_ms). The JSX blinks even when the input is unfocused and under reduced motion; the spec says focused only."

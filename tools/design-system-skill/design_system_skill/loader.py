@@ -21,6 +21,8 @@ import yaml
 from .errors import Error, Result
 from .paths import project_root
 from .registry import Registry
+from .contrast import GATES
+from .token_file import apply_tokens_to_spec, load_token_file, token_file_path
 from .validation import validate_spec
 
 import structlog
@@ -54,7 +56,15 @@ def load_system(
     """Load and normalize a system spec by id.
 
     Returns a Result whose data is a normalized spec dict with:
-      - `_meta`: {spec_version, system_version, checksum, spec_path, library_root}
+      - `_meta`: {spec_version, system_version, checksum, spec_path, library_root,
+        and, when the spec declares a token file, tokens_path, tokens_checksum,
+        contract_version, and (validated loads) color_gates = {contrast,
+        hue_gate} per-pair reports, see contrast.GateReport.summary}
+      - `tokens.contract`: the system's canonical token document
+        (systems/<id>/tokens.json), when declared
+      - legacy token locations (`tokens.colors.page_bg`, `tokens.borders.radius_*`,
+        `tokens.spacing.grid_unit` ...) filled from the token file, and
+        `{group.token}` aliases resolved (see token_file.apply_tokens_to_spec)
       - `components.*.variants[*].svg_path`: absolute SVG path
       - `layout_templates.*.svg_path`: absolute SVG path
 
@@ -97,13 +107,20 @@ def load_system(
             {"system_id": system_id, "expected_path": str(spec_path)},
         ))
 
-    digest = _checksum(spec_path)
+    spec_digest = _checksum(spec_path)
+    digest = spec_digest
 
     # Build compound cache key when extends is present so the cache
     # invalidates when either child or parent spec changes.
     cache_key = str(spec_path)
+    tokens_path: Path | None = None
     try:
         _raw = yaml.safe_load(spec_path.read_text()) or {}
+        # The canonical token file is part of the cache identity: editing
+        # tokens.json must invalidate the cached spec just like spec.yaml.
+        tokens_path = token_file_path(spec_path, _raw)
+        if tokens_path is not None and tokens_path.exists():
+            digest = f"{spec_digest}:tokens:{_checksum(tokens_path)}"
         _extends_peek = (_raw.get("system") or {}).get("extends")
         if _extends_peek:
             parent_entry = reg.get(_extends_peek)
@@ -121,10 +138,14 @@ def load_system(
     library_root = (root / entry.library_root).resolve()
 
     warnings: list[Error] = []
+    color_gates: dict | None = None
     if validate:
         val_result = validate_spec(spec_path, library_root=library_root)
         if not val_result.ok:
             return val_result
+        if val_result.data:
+            color_gates = {key: val_result.data[key] for key, _ in GATES
+                           if key in val_result.data} or None
         if val_result.warnings:
             warnings.extend(val_result.warnings)
         if val_result.data and val_result.data.get("warnings"):
@@ -140,7 +161,15 @@ def load_system(
             {"spec_path": str(spec_path)},
         ))
 
-    spec = _normalize(spec, spec_path, library_root, entry, digest)
+    spec = _normalize(spec, spec_path, library_root, entry, spec_digest)
+
+    if tokens_path is not None:
+        tok_result = _apply_token_file(spec, tokens_path, validate, warnings)
+        if not tok_result.ok:
+            return tok_result
+        spec = tok_result.data
+    if color_gates is not None:
+        spec["_meta"]["color_gates"] = color_gates
 
     # Handle extends (inheritance)
     extends_id = (spec.get("system") or {}).get("extends")
@@ -179,6 +208,48 @@ def load_system(
 
     _CACHE[cache_key] = (digest, spec)
     return Result.success(spec, warnings=warnings or None)
+
+
+def _apply_token_file(
+    spec: dict, tokens_path: Path, validate: bool, warnings: list[Error]
+) -> Result:
+    """Apply the system's canonical token file to a normalized spec.
+
+    Token values come from ``tokens.json`` (the source of truth); see
+    ``token_file.apply_tokens_to_spec`` for the projection into the legacy
+    spec shape that pre-v0.3 consumers read.
+
+    Args:
+        spec: Normalized spec dict (has ``_meta``).
+        tokens_path: Absolute path of the declared token file.
+        validate: When True a missing/unparseable file fails the load;
+            when False it degrades to a warning and the spec is returned
+            without token values.
+        warnings: Accumulator for non-fatal problems.
+
+    Returns:
+        Result with ``data`` = the spec with tokens applied.
+    """
+    loaded = load_token_file(tokens_path)
+    if not loaded.ok:
+        if validate:
+            return loaded
+        warnings.extend(loaded.errors)
+        return Result.success(spec)
+
+    resolved, unresolved = apply_tokens_to_spec(spec, loaded.data)
+    for alias in unresolved:
+        warnings.append(Error(
+            "TOKEN_DRIFT",
+            f"spec references token '{alias}' which {tokens_path.name} does not define",
+            {"token": alias, "tokens_path": str(tokens_path)},
+        ))
+    resolved["_meta"]["tokens_path"] = str(tokens_path)
+    resolved["_meta"]["tokens_checksum"] = _checksum(tokens_path)
+    resolved["_meta"]["contract_version"] = loaded.data.get("contract_version")
+    logger.debug("tokens_applied", system_id=resolved["_meta"].get("system_id"),
+                 tokens_path=str(tokens_path), unresolved=len(unresolved))
+    return Result.success(resolved)
 
 
 def _normalize(

@@ -1,4 +1,4 @@
-spec_version: "0.2"
+spec_version: "0.3"
 
 system:
   id: editorial
@@ -6,6 +6,7 @@ system:
   tagline: "Long-form Serif + Newsprint Masthead"
   grammar_family: contemporary_clean
   version: "1.2.0"   # bumped: project-wide no-emoji policy — single-letter monogram avatars
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: ../design-system-editorial.jsx
 
   # tkr-kit project policy: no emoji glyphs anywhere (mechanically enforced
@@ -27,68 +28,64 @@ system:
 
 tokens:
   colors:
-    page_bg: "#F8F4EC"      # warm cream paper
-    surface: "#F8F4EC"
-    surface_elevated: "#FFFFFF"  # selected item / elevated content
-    text_primary: "#1A1614"      # deep ink
-    text_secondary: "#5C4F44"    # softer ink for secondary content
-    text_muted: "#8B7D6F"        # tracked metadata
-    accent: "#8B1E2D"            # masthead burgundy
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
 
     palette:
       - name: paper
-        value: "#F8F4EC"
+        token: color.page_bg
         role: page and primary surface
         usage_constraint: "warm cream — never pure white for the page"
 
       - name: paper_elevated
-        value: "#F1ECDF"
+        token: color.surface_selected
         role: selected items, secondary surface
         usage_constraint: "the only elevation tier above paper; subtle warmth"
 
       - name: paper_white
-        value: "#FFFFFF"
+        token: color.surface_elevated
         role: extreme contrast surface
         usage_constraint: "use sparingly; reserves contrast for important moments"
 
       - name: ink_deep
-        value: "#1A1614"
+        token: color.text_primary
         role: body text and headlines
         usage_constraint: "never substitute with mid-grays for body type"
 
       - name: ink_secondary
-        value: "#5C4F44"
+        token: color.text_secondary
         role: italic preview text, byline supporting type
 
       - name: metadata_muted
-        value: "#8B7D6F"
+        token: color.text_muted
         role: 9px tracked uppercase Inter metadata only
 
       - name: rule_hairline
-        value: "#E8DFCA"
+        token: extras.color.rule_hairline
         role: hairline rules between threads
 
       - name: rule_default
-        value: "#D8CEB9"
+        token: color.border_default
         role: default 1px rules (sidebar borders, dispatch dividers)
 
       - name: rule_strong
-        value: "#1A1614"
+        token: color.border_strong
         role: strong rules (top of thread list, byline divider)
 
       - name: burgundy_masthead
-        value: "#8B1E2D"
+        token: color.accent
         role: dispatch overlines, drop caps, unread counts, double rule
         usage_constraint: "the system's hero color; reserved for editorial signal"
 
   typography:
     families:
       - id: structural
-        stack: "'Fraunces', Georgia, serif"
+        stack: "{font.body}"
         role: titles, body content, drop caps, "X new" unread counts
         mixing_rule: "never on the same line as Inter"
       - id: metadata
-        stack: "'Inter', system-ui, sans-serif"
+        stack: "{font.label}"
         role: timestamps, dispatch overlines, bylines, tracked uppercase
         mixing_rule: "never on the same line as Fraunces"
 
@@ -111,43 +108,40 @@ tokens:
       headers: -0.02   # em — same
 
   spacing:
-    grid_unit: 4
-    allowed_steps: [4, 8, 10, 12, 16, 18, 20, 24, 32, 40, 48, 64]
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
     enforcement: relaxed   # editorial layout sometimes uses 10/18 for type rhythm
 
   borders:
-    radius_default: 0
-    radius_inputs: 2     # inputs allow a hint of softness
-    radius_chrome: 4
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
 
   elevation:
-    strategy: paper_tiers
+    # strategy: projected from tokens.json elevation.strategy
     config:
       tiers:
         - name: deep_recess
-          bg: "#F1ECDF"
+          bg: "{color.surface_selected}"
           role: selected list items, recessed sections
         - name: default_page
-          bg: "#F8F4EC"
+          bg: "{color.page_bg}"
           role: standard surface
         - name: elevated_card
-          bg: "#FFFFFF"
+          bg: "{color.surface_elevated}"
           role: rare; reserved for emphasized callouts
       rules:
         - weight: hairline
-          color: "#E8DFCA"
+          color: "{extras.color.rule_hairline}"
           width: 1
           style: solid
         - weight: default
-          color: "#D8CEB9"
+          color: "{color.border_default}"
           width: 1
           style: solid
         - weight: strong
-          color: "#1A1614"
+          color: "{color.border_strong}"
           width: 1
           style: solid
         - weight: masthead
-          color: "#8B1E2D"
+          color: "{color.accent}"
           width: 3
           style: double
 
@@ -165,7 +159,7 @@ components:
     variants:
       - id: default
         svg: components/list-item-default.svg
-        rendering_notes: "Top: timestamp + emoji in 9px Inter uppercase tracked, color #8B7D6F. If unread, 'N new' on right in Fraunces 11px serif weight 700, color burgundy. Title in Fraunces 15px weight 600, color #1A1614, slight negative tracking. Preview in Inter italic 11px, color #5C4F44, single-line truncated. Hairline rule below."
+        rendering_notes: "Top: timestamp + emoji in 9px Inter uppercase tracked, color #77695B (text_muted). If unread, 'N new' on right in Fraunces 11px serif weight 700, color burgundy. Title in Fraunces 15px weight 600, color #1A1614, slight negative tracking. Preview in Inter italic 11px, color #5C4F44, single-line truncated. Hairline rule below."
         states: [default, hover, selected]
       - id: selected
         svg: components/list-item-selected.svg
@@ -181,6 +175,18 @@ components:
       - "Unread counts are 'N new' in Fraunces burgundy, NEVER a circular badge or pill"
       - "Timestamps and metadata are Inter uppercase tracked; titles are Fraunces — never mix on a line"
       - "Preview text is Inter italic, single-line truncated with ellipsis"
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 60
+        note: "JSX .ci fadeSlideUp 0.35s ease-out, 8px travel."
+      - trigger: select
+        tier: fast
+        properties: [background-color, font-weight]
+        reduced: keep
+        note: "JSX selection spec 'Transition 150ms ease'; the live preview applies it instantly."
 
 # ────────────────────────────────────────────────────────────────────
 # RULEBOOK
@@ -229,7 +235,7 @@ rulebook:
     check_method: mechanical
     check_scope: component
     applies_when: "element font-size in [8.5, 9]"
-    check_implementation: "For 9px Inter <text>, verify letter-spacing >= 1.44 (0.16em * 9px) and color resolves to #8B7D6F or #8B1E2D."
+    check_implementation: "For 9px Inter <text>, verify letter-spacing >= 1.44 (0.16em * 9px) and color resolves to color.text_muted (#77695B) or #8B1E2D."
 
   - id: editorial-drop-cap-ceremony
     rule: "Drop caps are reserved for the FIRST AI message in a conversation, never elsewhere. 54px Fraunces weight 700 in burgundy, float-left, with body text wrapping for 3 lines."
@@ -307,3 +313,25 @@ grammar_extensions:
       max_width_pct: 86
       typeface_style: roman
       usage: "signals 'this is the publication speaking' — with drop cap on first only"
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 100
+        note: "JSX .mi fadeSlideUp 0.45s ease-out, 8px travel."
+    send_button:
+      - trigger: hover
+        tier: fast
+        properties: [opacity]
+        reduced: keep
+        note: "JSX .snd 'File Reply →': opacity 0.7 on hover, 0.15s."

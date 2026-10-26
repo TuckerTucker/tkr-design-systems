@@ -1,4 +1,4 @@
-spec_version: "0.2"
+spec_version: "0.3"
 
 system:
   id: wireframe
@@ -6,93 +6,90 @@ system:
   tagline: "Neutral Greyscale Reference Library"
   grammar_family: wireframe
   version: "1.1.0"   # bumped: v0.2 migration adds check_scope on all rules
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: null  # The wireframe library has no React source; the existing
                     # template SVGs and UNIVERSAL-WIREFRAMING-PROCESS.md are
                     # the canonical reference materials.
 
 # ────────────────────────────────────────────────────────────────────
-# TOKENS — adopted from the existing wireframe-skill (validated across 46+ wireframes)
+# TOKENS — adopted from the existing wireframe-skill
 # ────────────────────────────────────────────────────────────────────
 
 tokens:
   colors:
-    page_bg: "#F5F5F5"
-    surface: "#FFFFFF"
-    surface_elevated: "#FFFFFF"
-    text_primary: "#212121"
-    text_secondary: "#757575"
-    text_muted: "#BDBDBD"
-    accent: "#424242"
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
 
     palette:
       - name: background
-        value: "#F5F5F5"
+        token: color.page_bg
         role: page fill
         usage_constraint: "the only page background; use surface (#FFFFFF) for elevated content"
 
       - name: surface
-        value: "#FFFFFF"
+        token: color.surface
         role: cards, panels, headers, modals
         usage_constraint: "any container above the page background"
 
       - name: border
-        value: "#E0E0E0"
+        token: color.border_default
         role: outlines, dividers, subtle separation
         usage_constraint: "1px stroke for component boundaries"
 
       - name: disabled
-        value: "#BDBDBD"
+        token: color.text_muted
         role: placeholder text, inactive elements, disabled states
         usage_constraint: "text and shapes that should read as 'not currently usable'"
 
       - name: secondary
-        value: "#757575"
+        token: color.text_secondary
         role: subtitles, labels, help text, metadata
         usage_constraint: "secondary text hierarchy below body copy"
 
       - name: interactive
-        value: "#424242"
+        token: color.action
         role: button fills, active states, links
         usage_constraint: "the primary 'do something' color in the system"
 
       - name: primary_text
-        value: "#212121"
+        token: color.text_primary
         role: headings, body copy
         usage_constraint: "primary content text; the strongest text value"
 
       - name: inverse
-        value: "#FFFFFF"
+        token: color.text_inverse
         role: text on dark fills (e.g. on interactive #424242)
         usage_constraint: "only on dark surfaces; equivalent to surface in fills"
 
       - name: success
-        value: "#2E7D32"
+        token: color.success
         role: positive status, success states
         usage_constraint: "semantic color — use only for success communication"
 
       - name: warning
-        value: "#E65100"
+        token: color.warning
         role: caution status, warning states
         usage_constraint: "semantic color — use only for warning communication"
 
       - name: danger
-        value: "#B71C1C"
+        token: color.danger
         role: error status, destructive actions
         usage_constraint: "semantic color — use only for negative/critical communication"
 
       - name: info
-        value: "#1565C0"
+        token: color.info
         role: informational status, info banners
         usage_constraint: "semantic color — use only for neutral informational signals"
 
   typography:
     families:
       - id: structural
-        stack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        stack: "{font.body}"
         role: every text element in the system
         mixing_rule: "system font stack — wireframes deliberately do not commit to a typeface"
       - id: mono
-        stack: "'SF Mono', 'Monaco', 'Consolas', monospace"
+        stack: "{font.mono}"
         role: tokens, technical labels, code excerpts
         mixing_rule: "use sparingly — only for content that's genuinely tabular or code-like"
 
@@ -116,8 +113,7 @@ tokens:
       headers: 0
 
   spacing:
-    grid_unit: 4
-    allowed_steps: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64]
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
     enforcement: relaxed
     page_margin:
       mobile: 12   # px from edge
@@ -126,15 +122,13 @@ tokens:
     section_gap: 32
 
   borders:
-    radius_default: 6
-    radius_inputs: 6
-    radius_chrome: 8
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
 
   elevation:
-    strategy: borders_only
+    # strategy: projected from tokens.json elevation.strategy
     config:
-      border_light: { width: 1, color: "#E0E0E0", style: solid }
-      border_strong: { width: 1.5, color: "#E0E0E0", style: solid }
+      border_light: { width: "{border_width.default}", color: "{color.border_default}", style: solid }
+      border_strong: { width: "{border_width.strong}", color: "{color.border_strong}", style: solid }
       no_shadow: true
       no_radius_bias: false   # wireframes use modest radius (4-8px); not aggressive
 
@@ -166,7 +160,7 @@ components:
         states: [default, hover, active]
       - id: disabled
         svg: components/button-disabled.svg
-        rendering_notes: "48px tall, 6px radius, fill #E0E0E0 (border color used as disabled bg), text in #BDBDBD (disabled). Visually unactionable."
+        rendering_notes: "48px tall, 6px radius, fill #E0E0E0 (border color used as disabled bg), text in #707070 (disabled / text_muted). Visually unactionable."
         states: [disabled]
       - id: danger
         svg: components/button-danger.svg
@@ -188,6 +182,12 @@ components:
       - "Primary button is the screen's PRIMARY action — only one per screen"
       - "Danger button is for irreversible destructive actions only (delete, discard)"
       - "Disabled button is visually distinct from ghost button (filled #E0E0E0 vs transparent)"
+    motion:
+      - trigger: hover
+        tier: fast
+        properties: [opacity]
+        reduced: keep
+        note: "Neutral JSX .snd send: opacity 0.75 on hover, 0.12s."
 
   input:
     tier: primitive
@@ -195,7 +195,7 @@ components:
     variants:
       - id: text
         svg: components/input-text.svg
-        rendering_notes: "48px tall, 6px radius, fill #FFFFFF, 1.5px stroke #E0E0E0, placeholder in #BDBDBD, value in #212121."
+        rendering_notes: "48px tall, 6px radius, fill #FFFFFF, 1.5px stroke #949494, placeholder in #BDBDBD, value in #212121."
         states: [default, focus, filled, error, disabled]
       - id: password
         svg: components/input-password.svg
@@ -219,7 +219,7 @@ components:
     variants:
       - id: default
         svg: components/textarea-default.svg
-        rendering_notes: "Variable height starting at 96px (3 lines), 6px radius, fill #FFFFFF, 1.5px stroke #E0E0E0. Resize handle at bottom-right."
+        rendering_notes: "Variable height starting at 96px (3 lines), 6px radius, fill #FFFFFF, 1.5px stroke #949494. Resize handle at bottom-right."
         states: [default, focus, filled, error, disabled]
       - id: auto_grow
         svg: components/textarea-auto-grow.svg
@@ -232,7 +232,7 @@ components:
     variants:
       - id: dropdown
         svg: components/select-dropdown.svg
-        rendering_notes: "48px tall, 6px radius, fill #FFFFFF, 1.5px stroke #E0E0E0, current value in #212121, chevron indicator in #757575 on right."
+        rendering_notes: "48px tall, 6px radius, fill #FFFFFF, 1.5px stroke #949494, current value in #212121, chevron indicator in #757575 on right."
         states: [default, open, focus, disabled]
       - id: native
         svg: components/select-native.svg
@@ -245,7 +245,7 @@ components:
     variants:
       - id: default
         svg: components/checkbox-default.svg
-        rendering_notes: "20x20 box with 4px radius, 1.5px stroke #E0E0E0 when unchecked. When checked: fill #424242, white check mark inside."
+        rendering_notes: "20x20 box with 4px radius, 1.5px stroke #949494 when unchecked. When checked: fill #424242, white check mark inside."
         states: [unchecked, checked, disabled]
       - id: indeterminate
         svg: components/checkbox-indeterminate.svg
@@ -258,7 +258,7 @@ components:
     variants:
       - id: default
         svg: components/radio-default.svg
-        rendering_notes: "20x20 circle, 1.5px stroke #E0E0E0 when unselected. When selected: stroke #424242, inner 8px dot in #424242."
+        rendering_notes: "20x20 circle, 1.5px stroke #949494 when unselected. When selected: stroke #424242, inner 8px dot in #424242."
         states: [unselected, selected, disabled]
 
   toggle:
@@ -269,6 +269,13 @@ components:
         svg: components/toggle-default.svg
         rendering_notes: "44x24 track with 12px radius. When off: fill #E0E0E0, thumb on left. When on: fill #424242, thumb on right. Thumb is 20x20 white circle."
         states: [off, on, disabled]
+    motion:
+      - trigger: select
+        tier: fast
+        properties: [transform, background-color]
+        reduced: none
+        derived: true
+        note: "Thumb travel is a small move on a control."
 
   label:
     tier: primitive
@@ -284,7 +291,7 @@ components:
         states: [default]
       - id: optional
         svg: components/label-optional.svg
-        rendering_notes: "Same as default with '(optional)' in #BDBDBD suffixed."
+        rendering_notes: "Same as default with '(optional)' in #707070 (text_muted) suffixed."
         states: [default]
 
   icon:
@@ -400,7 +407,7 @@ components:
         states: [default, hover]
       - id: disabled
         svg: components/card-disabled.svg
-        rendering_notes: "Same as default with content faded — text in #BDBDBD, indicating non-interactive."
+        rendering_notes: "Same as default with content faded — text in #707070 (text_muted), indicating non-interactive."
         states: [disabled]
     constraints:
       - "Cards are the universal container — use them for any distinct content with a boundary"
@@ -434,6 +441,13 @@ components:
     constraints:
       - "Preview text yields horizontal space to badge: minimum 12px gap before badge's left edge. Truncate with ellipsis."
       - "Selection signaled by background surface fill (#F5F5F5), never by colored accent bar (wireframes have no accent color)"
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 40
+        note: "Neutral JSX .ci fadeSlideUp 0.2s ease. Selection is instant."
 
   form_field:
     tier: composite
@@ -490,7 +504,7 @@ components:
         states: [default]
       - id: sortable
         svg: components/table-header-sortable.svg
-        rendering_notes: "Same as default with sort chevrons (▲▼) in #BDBDBD beside sortable columns. Active sort column has chevron in #424242."
+        rendering_notes: "Same as default with sort chevrons (▲▼) in #707070 (text_muted) beside sortable columns. Active sort column has chevron in #424242."
         states: [default, sorted_asc, sorted_desc]
       - id: with_filter
         svg: components/table-header-with-filter.svg
@@ -530,7 +544,7 @@ components:
         states: [active]
       - id: disabled
         svg: components/tab-item-disabled.svg
-        rendering_notes: "Same as default but text and icon in #BDBDBD; non-interactive."
+        rendering_notes: "Same as default but text and icon in #707070 (text_muted); non-interactive."
         states: [disabled]
 
   breadcrumb_trail:
@@ -540,7 +554,7 @@ components:
     variants:
       - id: default
         svg: components/breadcrumb-trail-default.svg
-        rendering_notes: "Sequence of nav_item.breadcrumb_segment separated by ' / ' or chevron (›) in #BDBDBD. Final segment in #212121 (current page)."
+        rendering_notes: "Sequence of nav_item.breadcrumb_segment separated by ' / ' or chevron (›) in #707070 (text_muted). Final segment in #212121 (current page)."
         states: [default]
       - id: truncated
         svg: components/breadcrumb-trail-truncated.svg
@@ -580,12 +594,25 @@ components:
         states: [default]
       - id: warning
         svg: components/toast-warning.svg
-        rendering_notes: "Same as info but icon in #E65100 (warning)."
+        rendering_notes: "Same as info but icon in #D14900 (warning)."
         states: [default]
       - id: error
         svg: components/toast-error.svg
         rendering_notes: "Same as info but icon in #B71C1C (danger). Border may also be #B71C1C for stronger emphasis."
         states: [default]
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "A small element appearing."
+      - trigger: exit
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "Leaves at exit_ms."
 
   stat:
     tier: composite
@@ -674,7 +701,7 @@ components:
         states: [default]
       - id: warning
         svg: components/banner-warning.svg
-        rendering_notes: "Same as info but icon in #E65100."
+        rendering_notes: "Same as info but icon in #D14900."
         states: [default]
       - id: error
         svg: components/banner-error.svg
@@ -698,6 +725,13 @@ components:
         svg: components/accordion-item-expanded.svg
         rendering_notes: "Trigger same as collapsed but chevron rotated 90° down (▼). Content area below at variable height."
         states: [expanded]
+    motion:
+      - trigger: expand
+        tier: moderate
+        properties: [size, opacity]
+        reduced: none
+        derived: true
+        note: "Content height change in place; reduced motion snaps open."
 
   stepper:
     tier: composite
@@ -706,7 +740,7 @@ components:
     variants:
       - id: linear
         svg: components/stepper-linear.svg
-        rendering_notes: "Horizontal sequence of step circles (24px) connected by lines. Active step in #424242, completed steps in #424242 with check, future steps in #BDBDBD."
+        rendering_notes: "Horizontal sequence of step circles (24px) connected by lines. Active step in #424242, completed steps in #424242 with check, future steps in #707070 (text_muted)."
         states: [default]
       - id: numbered
         svg: components/stepper-numbered.svg
@@ -734,6 +768,13 @@ components:
         svg: components/dropdown-menu-with-search.svg
         rendering_notes: "Same as default with search input at top of panel above items."
         states: [open]
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "A small surface anchored to its trigger."
 
 
   # ═══════════════════════ PATTERNS (12) ═══════════════════════
@@ -839,6 +880,19 @@ components:
         svg: layouts/modal-wide.svg
         rendering_notes: "Up to 90% of viewport width. Used for content that needs space (table edits, image previews)."
         states: [default]
+    motion:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "A large surface over the page."
+      - trigger: exit
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "Leaves at exit_ms."
 
   drawer:
     tier: pattern
@@ -857,6 +911,19 @@ components:
         svg: layouts/drawer-bottom.svg
         rendering_notes: "Slide-up panel from bottom edge. Used on mobile for action sheets and contextual menus."
         states: [open]
+    motion:
+      - trigger: enter
+        tier: slow
+        properties: [transform]
+        reduced: fade
+        derived: true
+        note: "Slides in from its edge; reduced motion fades."
+      - trigger: exit
+        tier: slow
+        properties: [transform]
+        reduced: fade
+        derived: true
+        note: "Leaves at exit_ms."
 
   empty_state:
     tier: pattern
@@ -897,6 +964,13 @@ components:
         svg: layouts/command-palette-with-recent.svg
         rendering_notes: "Same as default with 'Recent Commands' section pinned above results when search is empty."
         states: [open_empty_search]
+    motion:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        derived: true
+        note: "A modal-sized overlay."
 
   settings_layout:
     tier: pattern
@@ -1112,3 +1186,19 @@ grammar_extensions:
         - { name: "centered_constrained", max_width_px: 640 }
         - { name: "left_sidebar", sidebar_width_px: [200, 280] }
       role: "When adapting a mobile wireframe to desktop, choose one of these patterns"
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 70
+        note: "Neutral JSX .mi fadeSlideUp 0.2s ease."

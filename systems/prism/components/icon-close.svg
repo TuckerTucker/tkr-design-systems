@@ -1,11 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
   <defs>
     <style>
-      .text-primary { fill: rgba(255,255,255,0.90); font-family: Outfit, system-ui, sans-serif; }
-      .text-secondary { fill: rgba(255,255,255,0.60); font-family: Outfit, system-ui, sans-serif; }
-      .text-muted { fill: rgba(255,255,255,0.40); font-family: Outfit, system-ui, sans-serif; }
-      .text-very-muted { fill: rgba(255,255,255,0.30); font-family: Outfit, system-ui, sans-serif; }
-      .text-accent { fill: #7DDFBE; font-family: Outfit, system-ui, sans-serif; }
+      .text-primary { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
+      .text-secondary { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
+      .text-muted { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
+      .text-accent { fill: #9CFFDD; font-family: 'Outfit', sans-serif; }
     </style>
     <linearGradient id="prism-bg-strip" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#5A4A5E"/>

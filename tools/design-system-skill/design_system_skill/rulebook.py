@@ -32,7 +32,9 @@ logger = structlog.get_logger(__name__)
 # checks (palette, type-scale, etc.) live in tools/builders/rulebook_check.py
 # alongside the no-emoji check; systems without per-system mechanical
 # checks beyond no-emoji still route through their own ruleset name so
-# the count is accurate.
+# the count is accurate. A registry alias (e.g. `neutral`, which points at
+# wireframe/spec.yaml) has no entry of its own; it resolves through the
+# id its spec declares (see _ruleset_for).
 _RULESET_BY_SYSTEM = {
     "swiss": "swiss",
     "wireframe": "wireframe",
@@ -89,18 +91,30 @@ def check_compliance(
     system_id: str,
     artifact_path: str | Path,
     scope: str | None = None,
+    exceptions_path: str | Path | None = None,
 ) -> Result:
     """Run the system's mechanical rulebook against an SVG artifact.
+
+    Violations allow-listed in the system's ``rulebook-exceptions.yaml``
+    (next to its spec.yaml; format in tools/builders/rulebook_check.py)
+    are reported with status "waived" and their reasons under
+    ``detail.waivers``; they count as passing. An entry naming this
+    artifact that matched no violation is reported as a failing
+    ``rulebook-exception-stale`` result.
 
     Args:
         system_id: The system id.
         artifact_path: Path to SVG artifact to check.
         scope: "component", "artifact", or None (auto-detect).
+        exceptions_path: Allow-list file to use instead of the system's
+            own; mainly for tests and tooling.
 
     Returns:
         Result with data={system_id, artifact_path, scope, passed, failed,
-        advisory, results=[{rule_id, status, detail}, ...], ruleset,
-        mechanical_only}.
+        advisory, waived, results=[{rule_id, status, detail}, ...],
+        ruleset, mechanical_only, exceptions_file}. status is one of
+        pass | fail | advisory | waived. Fails with EXCEPTIONS_INVALID when
+        the exceptions file doesn't validate (e.g. an entry has no reason).
     """
     artifact_path = Path(artifact_path).resolve()
     if not artifact_path.exists():
@@ -115,7 +129,7 @@ def check_compliance(
     if not sys_result.ok:
         return sys_result
 
-    ruleset = _RULESET_BY_SYSTEM.get(system_id)
+    ruleset = _ruleset_for(system_id, sys_result.data)
     if ruleset is None:
         return Result.success({
             "system_id": system_id,
@@ -124,9 +138,11 @@ def check_compliance(
             "passed": 0,
             "failed": 0,
             "advisory": 0,
+            "waived": 0,
             "results": [],
             "ruleset": None,
             "mechanical_only": True,
+            "exceptions_file": None,
             "note": (
                 f"No mechanical ruleset implemented for '{system_id}' yet. "
                 f"get_rulebook returns the declarative rulebook for human or "
@@ -155,41 +171,86 @@ def check_compliance(
     advisory_rules = rb_module.ADVISORY_BY_RULESET.get(ruleset, set())
     selected = rb_module._select_checks(all_checks, scope)
 
+    if exceptions_path is None:
+        exceptions_path = (
+            Path(sys_result.data["_meta"]["spec_path"]).parent / rb_module.EXCEPTIONS_FILENAME
+        )
+    exceptions_path = Path(exceptions_path)
+    try:
+        if exceptions_path.exists():
+            exceptions = rb_module.load_exceptions(
+                exceptions_path, rb_module.known_rule_ids(ruleset))
+        else:
+            exceptions = rb_module.ExceptionSet(base_dir=exceptions_path.parent.resolve())
+    except rb_module.ExceptionsFileError as exc:
+        logger.warning("rulebook_exceptions_invalid", path=str(exc.path), errors=exc.errors)
+        return Result.failure(Error(
+            "EXCEPTIONS_INVALID",
+            f"Invalid rulebook exceptions file {exc.path}: {'; '.join(exc.errors)}",
+            {"path": str(exc.path), "errors": exc.errors},
+        ))
+
     svg_text = artifact_path.read_text()
-    passed = 0
-    failed = 0
-    advisory = 0
+    counts = {"pass": 0, "fail": 0, "advisory": 0, "waived": 0}
     results = []
     for check_fn, _scope in selected:
-        result = check_fn(svg_text)
-        rule_id = result.get("rule_id")
-        if result.get("passed"):
-            passed += 1
-            status = "pass"
-        else:
-            if rule_id in advisory_rules:
-                advisory += 1
-                status = "advisory"
-            else:
-                failed += 1
-                status = "fail"
+        result = exceptions.apply(artifact_path, check_fn(svg_text))
+        status = rb_module.classify(result, advisory_rules)
+        counts[status] += 1
         results.append({
-            "rule_id": rule_id,
+            "rule_id": result.get("rule_id"),
             "status": status,
-            "detail": {k: v for k, v in result.items() if k not in ("rule_id", "passed")},
+            "detail": {k: v for k, v in result.items()
+                       if k not in ("rule_id", "passed", "waived")},
         })
+
+    # Stale entries for this artifact fail the check so the list can't rot.
+    stale = exceptions.stale()
+    for entry in stale:
+        counts["fail"] += 1
+        results.append({
+            "rule_id": rb_module.STALE_RULE_ID,
+            "status": "fail",
+            "detail": rb_module.stale_detail(entry),
+        })
+    if stale:
+        logger.info("rulebook_exceptions_stale", artifact=str(artifact_path),
+                    entries=[e.describe() for e in stale])
 
     return Result.success({
         "system_id": system_id,
         "artifact_path": str(artifact_path),
         "scope": scope,
-        "passed": passed,
-        "failed": failed,
-        "advisory": advisory,
+        "passed": counts["pass"],
+        "failed": counts["fail"],
+        "advisory": counts["advisory"],
+        "waived": counts["waived"],
         "results": results,
         "ruleset": ruleset,
         "mechanical_only": True,
+        "exceptions_file": str(exceptions.source) if exceptions.source else None,
     })
+
+
+def _ruleset_for(system_id: str, spec: dict[str, Any]) -> str | None:
+    """Resolve the mechanical ruleset for a registry id.
+
+    Registry aliases share another system's spec (``neutral`` →
+    wireframe/spec.yaml), so they are checked against the ruleset of the
+    system id that spec declares.
+
+    Args:
+        system_id: The registry id passed to check_compliance.
+        spec: The loaded spec for that id.
+
+    Returns:
+        The ruleset name, or None when neither id has one.
+    """
+    ruleset = _RULESET_BY_SYSTEM.get(system_id)
+    if ruleset is None:
+        spec_id = (spec.get("system") or {}).get("id")
+        ruleset = _RULESET_BY_SYSTEM.get(spec_id) if spec_id else None
+    return ruleset
 
 
 # ─── Internal: import tools/builders/rulebook_check.py ──────────────

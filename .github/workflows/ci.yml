@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install libcairo (CairoSVG runtime)
+        run: sudo apt-get update && sudo apt-get install -y libcairo2
+
+      - uses: astral-sh/setup-uv@v6.4.3
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Run tests
+        run: >-
+          uv run pytest -q
+          tools/design-system-skill/test_design_system_skill.py
+          tools/wireframe-skill/test_wireframe_skill.py
+          tools/mcp-server/test_mcp_server.py
+          tools/e2e/test_check_systems.py
+          tools/builders/test_build.py
+          tools/design-system-skill/test_jsx_drift.py
+          tools/docs/test_generate.py
+
+      - name: Check SVG libraries match their token files
+        run: uv run python tools/builders/build.py --check
+
+      - name: Check specs agree with their token files
+        run: uv run python tools/design-system-skill drift --all
+
+      - name: Check colour contrast and accent/danger hue gates
+        run: uv run python tools/design-system-skill contrast --all
+
+      - name: Rulebook-check every system library
+        run: |
+          status=0
+          for dir in systems/*/; do
+            id=$(basename "$dir")
+            for kind in components layouts; do
+              [ -d "$dir$kind" ] || continue
+              uv run python tools/builders/rulebook_check.py --batch "$dir$kind" --ruleset "$id" || status=1
+            done
+          done
+          exit $status
+
+      - name: Showcase JSX reads its design values from tokens.json (issue #4)
+        run: uv run python tools/design-system-skill jsx-drift
+
+      - name: Check generated doc regions are current (issue #14)
+        run: uv run python tools/docs/generate.py --check
+
+  showcase:
+    name: Showcase build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/showcase
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/showcase/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (imports systems/<id>/tokens.json via the @systems alias)
+        run: npm run build
+
+  e2e:
+    name: End-to-end consumer check (all systems)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install libcairo (CairoSVG runtime)
+        run: sudo apt-get update && sudo apt-get install -y libcairo2
+
+      - uses: astral-sh/setup-uv@v6.4.3
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Generate, rulebook-check and render every system
+        run: uv run python tools/e2e/check_systems.py --out output/e2e
+
+      - name: Upload previews and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-previews
+          path: output/e2e
+          if-no-files-found: warn

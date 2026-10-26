@@ -2,12 +2,12 @@
   <defs>
     <style>
       .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #636363; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #707070; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #D14900; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     </style>
   </defs>
@@ -21,7 +21,7 @@
 
   <!-- Workspace section -->
   <text x="16" y="98" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">WORKSPACE</text>
-  <rect x="8" y="112" width="264" height="32" rx="4" fill="#F5F5F5"/>
+  <rect x="8" y="112" width="264" height="32" rx="6" fill="#F5F5F5"/>
   <text x="20" y="132" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
   <text x="20" y="164" class="text-secondary" font-size="14">Projects</text>
   <text x="20" y="196" class="text-secondary" font-size="14">Reports</text>

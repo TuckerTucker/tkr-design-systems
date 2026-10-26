@@ -1,11 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
+import tokens from "@systems/swiss/tokens.json";
+import { motion, reducedMotionCss, contrastRatio, contrastText, wcagLevel, px, em, lh, typeSummary } from "../tokens.js";
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — SWISS
    Grid-strict + Rams Heritage · Single-theme standalone spec + live preview
    ═══════════════════════════════════════════════════════════════ */
 
-const TM = { name: "Swiss", tag: "Grid-strict + Rams Heritage", color: "#E3000B" };
+/* Every design value comes from systems/swiss/tokens.json (docs/specs/TOKENS.md § 4). */
+const { color: C, font: F, radius: rad, border_width: bw } = tokens;
+const X = tokens.extras.color;
+const T = { ...tokens.type, ...tokens.extras.type };
+const S = tokens.space;
+const rule = (w, col) => `${w}px solid ${col}`;
+
+const TM = { name: "Swiss", tag: "Grid-strict + Rams Heritage", color: C.accent };
 
 const chatList = [
   { id: 1, name: "Tokyo Trip", preview: "Want me to build a day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
@@ -55,81 +64,81 @@ const CBox = ({ title, parts, contract, specs, dos, donts, accent }) => {
    ═══════════════════════════════════════════════════════════════ */
 function SwissChat({ sel, setSel }) {
   return (
-    <div className="app-sh" style={{ background: "#FFFFFF", fontFamily: "'Inter', system-ui, sans-serif", borderRadius: 0, border: "1px solid #E0E0E0", color: "#000000" }}>
+    <div className="app-sh" style={{ background: C.surface, fontFamily: F.body, borderRadius: rad.chrome, border: rule(bw.default, C.border_default), color: C.text_primary }}>
       {/* Sidebar */}
-      <div className="sb" style={{ borderRight: "1px solid #E0E0E0" }}>
-        <div style={{ padding: "16px 16px 16px", borderBottom: "1px solid #000000" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#000", letterSpacing: "-0.02em", lineHeight: 1 }}>Swiss</div>
-          <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#949494", fontWeight: 600, marginTop: 8 }}>Messages — {String(chatList.length).padStart(2, '0')}</div>
+      <div className="sb" style={{ borderRight: rule(bw.default, C.border_default) }}>
+        <div style={{ padding: "16px 16px 16px", borderBottom: rule(bw.strong, C.border_strong) }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text_primary, letterSpacing: "-0.02em", lineHeight: 1 }}>Swiss</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: C.text_muted, fontWeight: 600, marginTop: 8 }}>Messages — {String(chatList.length).padStart(2, '0')}</div>
         </div>
 
-        <div style={{ padding: "16px", borderBottom: "1px solid #E0E0E0" }}>
-          <input placeholder="Search" className="si" style={{ fontFamily: "'Inter', sans-serif", color: "#000", fontSize: 12 }} />
+        <div style={{ padding: "16px", borderBottom: rule(bw.default, C.border_default) }}>
+          <input placeholder="Search" className="si" style={{ fontFamily: F.body, color: C.text_primary, fontSize: 12 }} />
         </div>
 
         <div className="cl">
           {chatList.map((c, i) => (
-            <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "16px", borderBottom: "1px solid #F0F0F0", background: sel === c.id ? "#F5F5F5" : "transparent", borderLeft: sel === c.id ? `2px solid ${TM.color}` : "2px solid transparent", cursor: "pointer", animationDelay: `${i * 40}ms` }}>
+            <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "16px", borderBottom: rule(bw.default, X.rule_hairline), background: sel === c.id ? C.surface_selected : "transparent", borderLeft: sel === c.id ? `2px solid ${TM.color}` : "2px solid transparent", cursor: "pointer", animationDelay: `${i * 40}ms` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                <span style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#949494", fontWeight: 600 }}>{String(i + 1).padStart(2, '0')} / {chatList.length}</span>
-                <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "#949494", fontWeight: 500 }}>{c.time}</span>
+                <span style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: C.text_muted, fontWeight: 600 }}>{String(i + 1).padStart(2, '0')} / {chatList.length}</span>
+                <span style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: C.text_muted, fontWeight: 500 }}>{c.time}</span>
               </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#000", letterSpacing: "-0.01em", lineHeight: 1.2 }}>{c.name}</div>
-              <div style={{ fontSize: 11, color: "#5A5A5A", marginTop: 4, lineHeight: 1.4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.preview}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: C.text_primary, letterSpacing: "-0.01em", lineHeight: 1.2 }}>{c.name}</div>
+              <div style={{ fontSize: 11, color: C.text_secondary, marginTop: 4, lineHeight: 1.4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.preview}</div>
               {c.unread > 0 && <div style={{ fontSize: 32, fontWeight: 700, color: TM.color, letterSpacing: "-0.04em", marginTop: 8, lineHeight: 1 }}>{String(c.unread).padStart(2, '0')}</div>}
             </div>
           ))}
         </div>
 
-        <div style={{ padding: "16px", borderTop: "1px solid #000000" }}>
-          <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#949494", fontWeight: 600 }}>Account</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "#000", letterSpacing: "-0.01em", marginTop: 4 }}>T. Harris</div>
+        <div style={{ padding: "16px", borderTop: rule(bw.strong, C.border_strong) }}>
+          <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: C.text_muted, fontWeight: 600 }}>Account</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: C.text_primary, letterSpacing: "-0.01em", marginTop: 4 }}>T. Harris</div>
         </div>
       </div>
 
       {/* Main */}
       <div className="ca">
-        <div style={{ padding: "24px 24px 16px", borderBottom: "1px solid #000000" }}>
+        <div style={{ padding: "24px 24px 16px", borderBottom: rule(bw.strong, C.border_strong) }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-            <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#949494", fontWeight: 600 }}>Thread · 01</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: C.text_muted, fontWeight: 600 }}>Thread · 01</div>
             <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: TM.color, fontWeight: 700 }}>● Active</div>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "#000", letterSpacing: "-0.025em", lineHeight: 1 }}>Tokyo Trip</div>
-            <div style={{ fontSize: 40, fontWeight: 700, color: "#000", letterSpacing: "-0.04em", lineHeight: 1 }}>{String(msgs.length).padStart(2, '0')}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: C.text_primary, letterSpacing: "-0.025em", lineHeight: 1 }}>Tokyo Trip</div>
+            <div style={{ fontSize: 40, fontWeight: 700, color: C.text_primary, letterSpacing: "-0.04em", lineHeight: 1 }}>{String(msgs.length).padStart(2, '0')}</div>
           </div>
-          <div style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "#949494", fontWeight: 600, marginTop: 6 }}>Exchanges</div>
+          <div style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: C.text_muted, fontWeight: 600, marginTop: 6 }}>Exchanges</div>
         </div>
 
         <div className="ma" style={{ padding: "24px" }}>
           {msgs.map((m, i) => (
             <div key={m.id} className="mi" style={{ alignSelf: m.sender === "user" ? "flex-end" : "flex-start", maxWidth: "72%", textAlign: m.sender === "user" ? "right" : "left", animationDelay: `${i * 70}ms` }}>
               <div style={{ display: "flex", gap: 8, alignItems: "baseline", justifyContent: m.sender === "user" ? "flex-end" : "flex-start", marginBottom: 6 }}>
-                <span style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: m.sender === "user" ? TM.color : "#949494", fontWeight: 700 }}>
+                <span style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: m.sender === "user" ? TM.color : C.text_muted, fontWeight: 700 }}>
                   {m.sender === "user" ? "You" : "Assistant"}
                 </span>
-                <span style={{ fontSize: 9, letterSpacing: "0.12em", color: "#949494", fontWeight: 500 }}>— {String(i + 1).padStart(2, '0')}</span>
+                <span style={{ fontSize: 9, letterSpacing: "0.12em", color: C.text_muted, fontWeight: 500 }}>— {String(i + 1).padStart(2, '0')}</span>
               </div>
-              <div style={{ fontSize: 14, color: "#000", lineHeight: 1.55, letterSpacing: "-0.005em", fontWeight: 400 }}>{m.text}</div>
+              <div style={{ fontSize: 14, color: C.text_primary, lineHeight: 1.55, letterSpacing: "-0.005em", fontWeight: 400 }}>{m.text}</div>
             </div>
           ))}
 
           <div className="mi" style={{ alignSelf: "flex-start", maxWidth: "100%", animationDelay: "320ms" }}>
-            <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#949494", fontWeight: 700, marginBottom: 8 }}>Options — 04</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 0, borderTop: "1px solid #000", borderLeft: "1px solid #000" }}>
+            <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: C.text_muted, fontWeight: 700, marginBottom: 8 }}>Options — 04</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 0, borderTop: rule(bw.strong, C.border_strong), borderLeft: rule(bw.strong, C.border_strong) }}>
               {[["01", "Temples"], ["02", "Ramen"], ["03", "Culture"], ["04", "Parks"]].map(([n, l], ti) => (
-                <div key={ti} className="bc-sw" style={{ padding: "12px", borderRight: "1px solid #000", borderBottom: "1px solid #000", cursor: "pointer" }}>
-                  <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "#949494", fontWeight: 600, marginBottom: 8 }}>{n}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#000", letterSpacing: "-0.01em" }}>{l}</div>
+                <div key={ti} className="bc-sw" style={{ padding: "12px", borderRight: rule(bw.strong, C.border_strong), borderBottom: rule(bw.strong, C.border_strong), cursor: "pointer" }}>
+                  <div style={{ fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: C.text_muted, fontWeight: 600, marginBottom: 8 }}>{n}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text_primary, letterSpacing: "-0.01em" }}>{l}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div style={{ padding: "16px 24px", borderTop: "1px solid #000000" }}>
+        <div style={{ padding: "16px 24px", borderTop: rule(bw.strong, C.border_input) }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <input placeholder="Type" className="si" style={{ fontFamily: "'Inter', sans-serif", color: "#000", fontSize: 14 }} />
+            <input placeholder="Type" className="si" style={{ fontFamily: F.body, color: C.text_primary, fontSize: 14 }} />
             <div className="snd" style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700, color: TM.color }}>Send →</div>
           </div>
         </div>
@@ -142,7 +151,7 @@ function SwissChat({ sel, setSel }) {
 function PreviewView({ sel, setSel }) {
   const notes = [
     "Inter at four fixed sizes only — 9, 11, 13, 14, 22, 32, 40. No in-between values.",
-    "Single accent (#E3000B) used only on CTAs, selection bars, user tags, active status",
+    `Single accent (${C.accent}) used only on CTAs, selection bars, user tags, active status`,
     "Unread counts rendered as 32px numerals (01, 02) — typography replaces badges",
     "Tracked uppercase labels at 0.16em — the Swiss small-caps rhythm",
     "Border-radius: 0 everywhere. Zero shadows. Structure via 1px rules only.",
@@ -180,7 +189,7 @@ function swissSpec(a) { return {
       {[
         ["Less, but better","Every element must earn its place. If removing a border, color, or decorative touch doesn't break meaning, remove it. Restraint is the style."],
         ["Typography is the grid","Type sizes, weights, and letter-spacing carry all hierarchy. The system uses seven fixed sizes (9, 11, 13, 14, 22, 32, 40). No intermediates."],
-        ["One accent, one meaning","Red (#E3000B) appears only on: CTAs, active-selection rules, user-message tags, status markers. Never decorative. Never as a fill."],
+        ["One accent, one meaning",`Red (${C.accent}) appears only on: CTAs, active-selection rules, user-message tags, status markers. Never decorative. Never as a fill.`],
         ["Numbers are visible","Counts, indices, and IDs render as typographic elements (01 / 05, 04, 02). The system exposes quantity as a first-class design material."],
       ].map(([t, d], i) => (
         <div key={i} style={{ padding: "10px 12px", borderRadius: 0, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
@@ -199,36 +208,36 @@ function swissSpec(a) { return {
     <P>Swiss uses an ascetic palette. Two grays, one black, one red. No tints, no shades, no decorative accents. Each color has a fixed role and never crosses it.</P>
     <H3>Ink &amp; Paper</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#FFFFFF" n="Paper" v="#FFFFFF" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#F5F5F5" n="Paper Subtle" v="#F5F5F5" b="1px solid rgba(255,255,255,0.15)" />
-      <Sw c="#000000" n="Ink" v="#000000" b="1px solid rgba(255,255,255,0.2)" />
+      <Sw c={C.page_bg} n="Paper" v={C.page_bg} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.surface_elevated} n="Paper Subtle" v={C.surface_elevated} b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={C.surface_inverse} n="Ink" v={C.surface_inverse} b="1px solid rgba(255,255,255,0.2)" />
     </div>
     <H3>Text</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#000000" n="Primary" v="#000000" b="1px solid rgba(255,255,255,0.2)" />
-      <Sw c="#5A5A5A" n="Secondary" v="#5A5A5A" />
-      <Sw c="#949494" n="Tertiary / Labels" v="#949494" />
-      <Sw c="#C8C8C8" n="Placeholder" v="#C8C8C8" />
+      <Sw c={C.text_primary} n="Primary" v={C.text_primary} b="1px solid rgba(255,255,255,0.2)" />
+      <Sw c={C.text_secondary} n="Secondary" v={C.text_secondary} />
+      <Sw c={C.text_muted} n="Tertiary / Labels" v={C.text_muted} />
+      <Sw c={C.text_placeholder} n="Placeholder" v={C.text_placeholder} />
     </div>
     <H3>Accent Red</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#E3000B" n="Accent" v="#E3000B" />
-      <Sw c="#B50008" n="Accent Deep (hover)" v="#B50008" />
-      <Sw c="#FCE6E7" n="Accent Tint (rare)" v="#FCE6E7" />
+      <Sw c={C.accent} n="Accent" v={C.accent} />
+      <Sw c={X.accent_hover} n="Accent Deep (hover)" v={X.accent_hover} />
+      <Sw c={X.accent_tint} n="Accent Tint (rare)" v={X.accent_tint} />
     </div>
     <Do>Use red exclusively for: send actions, active-selection left bars, user-message tags, live-status dots, unread counts</Do>
     <Dont>Use red as a background fill on anything — red is always type or a 2px accent bar</Dont>
-    <Dont>Use tints or shades of red in the middle of the palette — #E3000B only (deep variant for hover)</Dont>
+    <Dont>{`Use tints or shades of red in the middle of the palette — ${C.accent} only (deep variant for hover)`}</Dont>
 
     <H3>Structural Colors</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-      <Sw c="#F0F0F0" n="Rule Hairline" v="#F0F0F0" />
-      <Sw c="#E0E0E0" n="Rule Default" v="#E0E0E0" />
-      <Sw c="#000000" n="Rule Strong" v="#000000" b="1px solid rgba(255,255,255,0.15)" />
+      <Sw c={X.rule_hairline} n="Rule Hairline" v={X.rule_hairline} />
+      <Sw c={C.border_default} n="Rule Default" v={C.border_default} />
+      <Sw c={C.border_strong} n="Rule Strong" v={C.border_strong} b="1px solid rgba(255,255,255,0.15)" />
     </div>
     <H3>Contrast Ratios</H3>
     <div style={{ borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["Ink on Paper","21:1","AAA"],["Secondary on Paper","7.5:1","AAA"],["Tertiary on Paper","3.8:1","AA (lg)"],["Accent red on Paper","5.9:1","AA"],["Ink on Accent red","3.6:1","AA (lg)"],["Rule default on Paper","1.25:1","Decorative only"]].map((r, i) => (
+      {[["Ink on Paper", C.text_primary, C.surface], ["Secondary on Paper", C.text_secondary, C.surface], ["Tertiary on Paper", C.text_muted, C.surface], ["Accent red on Paper", C.accent, C.surface], ["Ink on Accent red", C.accent_foreground, C.accent], ["Rule default on Paper", C.border_default, C.surface, "Decorative only"]].map(([n, fg, bg, use]) => [n, contrastText(fg, bg), use ?? wcagLevel(contrastRatio(fg, bg))]).map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 70px 95px", padding: "5px 10px", borderBottom: i < 5 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
           <code className="mn" style={{ fontSize: 10, color: "#999" }}>{r[1]}</code>
@@ -241,7 +250,7 @@ function swissSpec(a) { return {
     <P>Swiss uses a single neo-grotesk typeface for the entire system. The ideal is Neue Haas Grotesk or Helvetica Now. For web, Inter serves as the open-source stand-in. No secondary family exists.</P>
     <H3>Font Family</H3>
     <div style={{ padding: 14, borderRadius: 0, border: `1px solid ${a}30`, background: `${a}04`, marginBottom: 12 }}>
-      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 26, color: "#EEE", marginBottom: 4, fontWeight: 700, letterSpacing: "-0.03em" }}>Inter</div>
+      <div style={{ fontFamily: F.body, fontSize: 26, color: "#EEE", marginBottom: 4, fontWeight: 700, letterSpacing: "-0.03em" }}>Inter</div>
       <div style={{ fontSize: 10, fontWeight: 600, color: a, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>The only family</div>
       <div style={{ fontSize: 10.5, color: "#999", lineHeight: 1.5 }}>Used for every word in the system. Body, headings, labels, metadata, buttons, numerals. Preferred alternatives: Neue Haas Grotesk Display, Helvetica Now, Söhne. Fallback: system-ui.</div>
     </div>
@@ -254,14 +263,14 @@ function swissSpec(a) { return {
     <P>Swiss forbids intermediate sizes. Every text element in the system uses one of these exactly. If a value between 13 and 14 "feels right," choose 13 or 14 — never 13.5.</P>
     <div style={{ borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
       {[
-        ["display-lg","40px","700","1.0","-0.04em","Count displays (03, 12)"],
-        ["display","32px","700","1.0","-0.04em","Unread counts in sidebar"],
-        ["title","22px","700","1.0","-0.025em","Thread titles, masthead"],
-        ["body","14px","400","1.55","-0.005em","Message text"],
-        ["item","13px","600","1.2","-0.01em","Sidebar item titles"],
-        ["preview","11px","400","1.4","0","Preview text, caption"],
-        ["label","9px","600–700","1.3","0.16em UPPER","All metadata + labels"],
-      ].map((t, i) => (
+        ["display-lg", T.display, "Count displays (03, 12)"],
+        ["display", T.display_medium, "Unread counts in sidebar"],
+        ["title", T.title, "Thread titles, masthead"],
+        ["body", T.body, "Message text"],
+        ["item", T.item, "Sidebar item titles"],
+        ["preview", T.small, "Preview text, caption"],
+        ["label", T.label, "All metadata + labels", "600–700"],
+      ].map(([n, t, use, weight]) => [n, px(t.size), weight ?? String(t.weight), lh(t.line_height), em(t.tracking) + (t.case === "uppercase" ? " UPPER" : ""), use]).map((t, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "80px 48px 50px 38px 80px 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none", background: t[0] === "label" ? `${a}06` : "transparent" }}>
           <code className="mn" style={{ fontSize: 10, color: "#CCC" }}>{t[0]}</code>
           {t.slice(1).map((v, vi) => <span key={vi} style={{ fontSize: 10, color: vi < 4 ? "#999" : "#666" }}>{v}</span>)}
@@ -282,14 +291,14 @@ function swissSpec(a) { return {
   elevation: () => (<div>
     <P>Swiss has no elevation system. No shadows, no blurs, no translucency, no rounded corners. Depth is communicated through typography (weight, size, tracking) and whitespace. Rules (1px horizontal and vertical borders) define containers.</P>
     <H3>Rule Tokens</H3>
-    <Tk n="rule.hairline" v="1px solid #F0F0F0" d="Between sidebar items" a={a} />
-    <Tk n="rule.default" v="1px solid #E0E0E0" d="Standard boundaries" a={a} />
-    <Tk n="rule.strong" v="1px solid #000000" d="Section separators, inputs" a={a} />
-    <Tk n="rule.accent" v="2px solid #E3000B" d="Active-selection left bar only" a={a} />
+    <Tk n="rule.hairline" v={rule(bw.default, X.rule_hairline)} d="Between sidebar items" a={a} />
+    <Tk n="rule.default" v={rule(bw.default, C.border_default)} d="Standard boundaries" a={a} />
+    <Tk n="rule.strong" v={rule(bw.strong, C.border_strong)} d="Section separators, inputs" a={a} />
+    <Tk n="rule.accent" v={rule(2, C.accent)} d="Active-selection left bar only" a={a} />
 
     <H3>Border Radius</H3>
     <div style={{ display: "flex", gap: 14, marginBottom: 10 }}>
-      {[{ r: 0, l: "All elements", t: "radius.none" }].map(item => (
+      {[{ r: rad.default, l: "All elements", t: "radius.none" }].map(item => (
         <div key={item.t} style={{ textAlign: "center" }}>
           <div style={{ width: 44, height: 44, borderRadius: item.r, border: `2px solid ${a}40`, background: "rgba(255,255,255,0.02)", marginBottom: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <code className="mn" style={{ fontSize: 9, color: "#999" }}>{item.r}px</code>
@@ -303,7 +312,7 @@ function swissSpec(a) { return {
     <H3>The 8-Point Grid</H3>
     <P>Every spacing value in Swiss is a multiple of 8. Padding, margin, gap, and size values come from a closed set: 8, 16, 24, 32, 40, 48, 64. No intermediate values exist.</P>
     <div style={{ borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
-      {[["Base unit", "8px"], ["Sidebar item padding", "16px"], ["Section padding", "24px"], ["Major section gap", "32px"], ["Container margin", "40px"], ["Generous whitespace", "48px"], ["Hero spacing", "64px"]].map((r, i) => (
+      {[["Base unit", S.unit], ["Sidebar item padding", S.steps[1]], ["Section padding", S.steps[2]], ["Major section gap", S.steps[3]], ["Container margin", S.steps[4]], ["Generous whitespace", S.steps[5]], ["Hero spacing", S.steps[6]]].map(([n, v]) => [n, px(v)]).map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "160px 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
           <code className="mn" style={{ fontSize: 10, color: a }}>{r[1]}</code>
@@ -319,37 +328,37 @@ function swissSpec(a) { return {
 
     <CBox title="ThreadMessage" parts={["label-row", "body"]} accent={a}
       contract="Render messages as typographic blocks — never bubbles or cards. Small sender tag above in uppercase tracked labels, body in Inter 14px. User messages right-aligned, assistant messages left-aligned. No container, no background."
-      specs={[["padding", "0", "No intrinsic padding"], ["max-width", "72%"], ["label-row.font", "Inter, 9px, 700, 0.16em UPPER"], ["label-row.gap", "8px"], ["label.assistant", "Color #949494, 'Assistant'"], ["label.user", "Color #E3000B, 'You'"], ["index.format", "'— 01', '— 02'"], ["body.font", "Inter, 14px, 400"], ["body.color", "#000000"], ["body.line-height", "1.55"], ["body.letter-spacing", "-0.005em"]]}
+      specs={[["padding", "0", "No intrinsic padding"], ["max-width", "72%"], ["label-row.font", "Inter, 9px, 700, 0.16em UPPER"], ["label-row.gap", "8px"], ["label.assistant", `Color ${C.text_muted}, 'Assistant'`], ["label.user", `Color ${C.accent}, 'You'`], ["index.format", "'— 01', '— 02'"], ["body.font", "Inter, 14px, 400"], ["body.color", C.text_primary], ["body.line-height", "1.55"], ["body.letter-spacing", "-0.005em"]]}
       dos={["Render user messages right-aligned; assistant left-aligned — structural, not decorative", "Use the red sender tag (YOU) as the only color cue for user messages"]}
       donts={["Wrap messages in bordered containers, bubbles, or backgrounds — messages are prose", "Use avatars or icons next to sender tags — typography alone"]} />
 
     <CBox title="SidebarItem" parts={["index", "time", "name", "preview", "count"]} accent={a}
       contract="Render each thread as a stacked typographic block. Index label on top-left, time on top-right. Name in 13px/600, preview in 11px/400. Unread count rendered as 32px numeral below preview."
-      specs={[["padding", "16px"], ["border-bottom", "1px solid #F0F0F0"], ["border-left.selected", "2px solid #E3000B"], ["border-left.unselected", "2px solid transparent"], ["background.selected", "#F5F5F5"], ["index.format", "'01 / 05'"], ["index.font", "Inter, 9px, 600, 0.14em UPPER"], ["index.color", "#949494"], ["name.font", "Inter, 13px, 600, -0.01em"], ["preview.font", "Inter, 11px, 400"], ["preview.color", "#5A5A5A"], ["count.font", "Inter, 32px, 700, -0.04em"], ["count.color", "#E3000B"], ["count.format", "'02' (always 2-digit padded)"]]}
+      specs={[["padding", "16px"], ["border-bottom", rule(bw.default, X.rule_hairline)], ["border-left.selected", rule(2, C.accent)], ["border-left.unselected", "2px solid transparent"], ["background.selected", C.surface_selected], ["index.format", "'01 / 05'"], ["index.font", "Inter, 9px, 600, 0.14em UPPER"], ["index.color", C.text_muted], ["name.font", "Inter, 13px, 600, -0.01em"], ["preview.font", "Inter, 11px, 400"], ["preview.color", C.text_secondary], ["count.font", "Inter, 32px, 700, -0.04em"], ["count.color", C.accent], ["count.format", "'02' (always 2-digit padded)"]]}
       dos={["Zero-pad all counts (01, 02) — numerical consistency is the signature", "Use the 2px left red bar only for selection — it is the only red UI structure"]}
       donts={["Use a bubble, badge, or background for unread count — the 32px numeral is the pattern", "Use the left bar for hover or focus — selection only"]} />
 
     <CBox title="Masthead (Thread Header)" parts={["meta-row", "title", "count"]} accent={a}
       contract="Render the thread header as a two-line block. Top row: thread index in uppercase tracked labels + red active-status indicator. Bottom row: title (22px/700) with right-aligned count numeral (40px/700)."
-      specs={[["padding", "24px 24px 16px"], ["border-bottom", "1px solid #000000"], ["meta.font", "Inter, 9px, 700, 0.16em UPPER"], ["meta.format", "'Thread · 01'"], ["meta.color", "#949494"], ["status.format", "'● Active'"], ["status.color", "#E3000B"], ["title.font", "Inter, 22px, 700, -0.025em"], ["title.color", "#000"], ["count.font", "Inter, 40px, 700, -0.04em"], ["count.label", "'Exchanges' (9px UPPER below)"]]}
+      specs={[["padding", "24px 24px 16px"], ["border-bottom", rule(bw.strong, C.border_strong)], ["meta.font", "Inter, 9px, 700, 0.16em UPPER"], ["meta.format", "'Thread · 01'"], ["meta.color", C.text_muted], ["status.format", "'● Active'"], ["status.color", C.accent], ["title.font", "Inter, 22px, 700, -0.025em"], ["title.color", C.text_primary], ["count.font", "Inter, 40px, 700, -0.04em"], ["count.label", "'Exchanges' (9px UPPER below)"]]}
       dos={["Show exchange count as 40px display numeral — the system's number hierarchy", "Use the ● Active red dot as the only non-typographic status element"]}
       donts={["Use avatars, icons, or images in the masthead — Swiss is wordmarks only", "Use more than one numeral in the masthead — the exchange count is the lead figure"]} />
 
     <CBox title="OptionGrid (Suggestions)" parts={["intro-label", "cells"]} accent={a}
       contract="Render suggestions as a 1×N or 2×N grid of equal-width cells, framed by 1px black rules on all sides. Each cell has a zero-padded index label above and a 13px/600 label below."
-      specs={[["intro.format", "'Options — 04'"], ["intro.font", "Inter, 9px, 700, 0.16em UPPER"], ["grid.frame", "1px solid #000000"], ["cell.padding", "12px"], ["cell.index.format", "'01', '02', etc."], ["cell.index.font", "Inter, 9px, 600, 0.16em UPPER"], ["cell.index.color", "#949494"], ["cell.label.font", "Inter, 13px, 600, -0.01em"], ["cell.label.color", "#000"]]}
+      specs={[["intro.format", "'Options — 04'"], ["intro.font", "Inter, 9px, 700, 0.16em UPPER"], ["grid.frame", rule(bw.strong, C.border_strong)], ["cell.padding", "12px"], ["cell.index.format", "'01', '02', etc."], ["cell.index.font", "Inter, 9px, 600, 0.16em UPPER"], ["cell.index.color", C.text_muted], ["cell.label.font", "Inter, 13px, 600, -0.01em"], ["cell.label.color", C.text_primary]]}
       dos={["Use zero-padded indices (01, 02, 03, 04) — consistent numerical treatment", "Frame with hard black 1px rules — no softer variants"]}
       donts={["Add hover color fills or animations — Swiss grids are static", "Use emoji or icons as prefixes — labels are words only"]} />
 
     <CBox title="TextInput" parts={["input", "action"]} accent={a}
       contract="Single-line input with no bordered container. Hard 1px black rule above separating input from messages. Placeholder single word. Send action rendered as a red uppercase tracked label, not a button."
-      specs={[["container.padding", "16px 24px"], ["container.border-top", "1px solid #000000"], ["input.font", "Inter, 14px, 400"], ["input.color", "#000"], ["placeholder.text", "'Type'", "Single word — never a sentence"], ["placeholder.color", "#C8C8C8"], ["action.font", "Inter, 10px, 700, 0.16em UPPER"], ["action.label", "'Send →'"], ["action.color", "#E3000B"]]}
+      specs={[["container.padding", "16px 24px"], ["container.border-top", rule(bw.strong, C.border_input)], ["input.font", "Inter, 14px, 400"], ["input.color", C.text_primary], ["placeholder.text", "'Type'", "Single word — never a sentence"], ["placeholder.color", C.text_placeholder], ["action.font", "Inter, 10px, 700, 0.16em UPPER"], ["action.label", "'Send →'"], ["action.color", C.action]]}
       dos={["Use a single word for the placeholder ('Type', 'Search', 'Ask')", "Render the send label in red UPPER — the only red verb in the interface"]}
       donts={["Wrap the input in a bordered container or give it a background fill", "Use sentence-case placeholders ('Type your message...')"]} />
 
     <CBox title="StatusIndicator" parts={["dot", "label"]} accent={a}
       contract="Render status as a Unicode bullet (●) followed by a tracked uppercase label. Red for active, gray for inactive."
-      specs={[["dot.char", "'●'"], ["label.text-transform", "uppercase"], ["label.letter-spacing", "0.16em"], ["label.font-size", "9px"], ["label.font-weight", "700"], ["color.active", "#E3000B"], ["color.inactive", "#949494"]]}
+      specs={[["dot.char", "'●'"], ["label.text-transform", "uppercase"], ["label.letter-spacing", "0.16em"], ["label.font-size", "9px"], ["label.font-weight", "700"], ["color.active", C.accent], ["color.inactive", C.text_muted]]}
       dos={["Use ● with tracked uppercase label — character + type, not colored divs"]}
       donts={["Use a pill or bordered badge around the status — type only"]} />
   </div>),
@@ -357,9 +366,9 @@ function swissSpec(a) { return {
   patterns: () => (<div>
     <P>Composition rules for Swiss layouts.</P>
     {[
-      { n: "Sidebar + Main", rows: [["Sidebar width", "280px fixed"], ["Main area", "Fluid, fills remaining"], ["Sidebar order", "Brand block → Search → Thread list → Account block"], ["Vertical divider", "1px solid #E0E0E0"], ["Major section rule", "1px solid #000000"], ["Background", "#FFFFFF for both panes"]] },
+      { n: "Sidebar + Main", rows: [["Sidebar width", "280px fixed"], ["Main area", "Fluid, fills remaining"], ["Sidebar order", "Brand block → Search → Thread list → Account block"], ["Vertical divider", rule(bw.default, C.border_default)], ["Major section rule", rule(bw.strong, C.border_strong)], ["Background", `${C.surface} for both panes`]] },
       { n: "Message Flow", rows: [["Direction", "Vertical stack, chronological"], ["Alignment", "Assistant → left, You → right"], ["Max width", "72% of container"], ["Gap", "24px between messages — 8-grid compliant"], ["Entrance", "fadeSlideUp, 200ms ease, 70ms stagger"], ["Metadata", "Above body, 6px gap, Inter UPPER"]] },
-      { n: "Active Selection", rows: [["Model", "Single selection only"], ["Trigger", "Click or Enter/Space"], ["Visual", "2px solid #E3000B left bar + #F5F5F5 background"], ["Transition", "Instant — no animation"], ["Focus outline", "2px solid #000000 offset 2px"]] },
+      { n: "Active Selection", rows: [["Model", "Single selection only"], ["Trigger", "Click or Enter/Space"], ["Visual", `${rule(2, C.accent)} left bar + ${C.surface_selected} background`], ["Transition", "Instant — no animation"], ["Focus outline", `${rule(bw.focus, C.focus_ring)} offset 2px`]] },
       { n: "Numerical Hierarchy", rows: [["Thread ID", "01, 02, 03 — always 2-digit padded"], ["Item index", "01 / 05 — pair notation"], ["Unread count", "32px Inter 700, red"], ["Exchange count", "40px Inter 700, black"], ["Option number", "01, 02, 03, 04 — in grids"]] },
     ].map((p, pi) => (<div key={pi} style={{ marginBottom: 14 }}><H4>{p.n}</H4>
       <div style={{ borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
@@ -374,9 +383,9 @@ function swissSpec(a) { return {
   extensions: () => (<div>
     <H3>1. Numerical Hierarchy</H3>
     <P>Swiss's most distinct typographic moment. Counts, indices, IDs, and quantities are rendered as visible typographic elements — not hidden in badges. Zero-padded (01, 02) for consistency. Three display sizes: 22px, 32px, 40px.</P>
-    <Tk n="count.lg" v="40px / 700 / -0.04em" d="Exchange counts in masthead" a={a} />
-    <Tk n="count.md" v="32px / 700 / -0.04em" d="Unread counts in sidebar" a={a} />
-    <Tk n="count.sm" v="22px / 700 / -0.025em" d="Section headers with numbers" a={a} />
+    <Tk n="count.lg" v={typeSummary(T.display)} d="Exchange counts in masthead" a={a} />
+    <Tk n="count.md" v={typeSummary(T.display_medium)} d="Unread counts in sidebar" a={a} />
+    <Tk n="count.sm" v={typeSummary(T.title)} d="Section headers with numbers" a={a} />
     <Tk n="format" v="Zero-padded 2-digit" d="01, 02, … 12 (not 1, 2)" a={a} />
     <Tk n="pair.format" v="'01 / 05'" d="Current of total — spaced with slash" a={a} />
     <H4>Placement Rules</H4>
@@ -386,35 +395,37 @@ function swissSpec(a) { return {
     <Dont>Use numerical display in accent red unless it is an unread count</Dont>
 
     <H3>2. The One-Accent Rule</H3>
-    <P>Red (#E3000B) appears in exactly four places in the entire system. Nowhere else. If a new red moment is proposed, audit the existing four before adding a fifth.</P>
+    <P>{`Red (${C.accent}) appears in exactly four places in the entire system. Nowhere else. If a new red moment is proposed, audit the existing four before adding a fifth.`}</P>
     <Tk n="1. CTA labels" v="'Send →', 'Save', 'File'" d="Action verbs only" a={a} />
-    <Tk n="2. Selection bar" v="2px solid #E3000B" d="Sidebar active item, left bar" a={a} />
+    <Tk n="2. Selection bar" v={rule(2, C.accent)} d="Sidebar active item, left bar" a={a} />
     <Tk n="3. User-message tag" v="'YOU' 9px UPPER 0.16em" d="Sender label only" a={a} />
     <Tk n="4. Status dot + count" v="'● Active' + unread numerals" d="Live indicators" a={a} />
     <Do>Treat red as a finite resource — each new use dilutes the others</Do>
     <Dont>Use red for hover states, warning messages, or decorative underlines</Dont>
     <Dont>Use red as any kind of background fill — red is type and 2px accent bars only</Dont>
+    <Do>{`Set errors and warnings in ink (${C.text_primary}): danger shares the accent red, so "Error: send failed." is never red — only a recovery CTA label ("Retry →") may be`}</Do>
+    <Dont>Use red for menu items ('Sign out') or severity labels ('ATTENTION') — neither is one of the four places</Dont>
 
     <H3>3. The Fixed Type Scale</H3>
     <P>Swiss forbids intermediate sizes. Exactly seven text sizes exist. Every piece of type in the system uses one of them. This is more restrictive than standard design systems — on purpose.</P>
-    <Tk n="40px" v="display-lg" d="Exchange counts" a={a} />
-    <Tk n="32px" v="display" d="Unread counts" a={a} />
-    <Tk n="22px" v="title" d="Thread titles" a={a} />
-    <Tk n="14px" v="body" d="Message text" a={a} />
-    <Tk n="13px" v="item" d="Sidebar item names" a={a} />
-    <Tk n="11px" v="preview" d="Preview text" a={a} />
-    <Tk n="9px" v="label" d="All metadata" a={a} />
+    <Tk n={px(T.display.size)} v="display-lg" d="Exchange counts" a={a} />
+    <Tk n={px(T.display_medium.size)} v="display" d="Unread counts" a={a} />
+    <Tk n={px(T.title.size)} v="title" d="Thread titles" a={a} />
+    <Tk n={px(T.body.size)} v="body" d="Message text" a={a} />
+    <Tk n={px(T.item.size)} v="item" d="Sidebar item names" a={a} />
+    <Tk n={px(T.small.size)} v="preview" d="Preview text" a={a} />
+    <Tk n={px(T.label.size)} v="label" d="All metadata" a={a} />
     <Do>If a size "between 13 and 14" feels right, pick one — never 13.5</Do>
     <Do>Enforce the scale at the component level — fixed prop values only</Do>
     <Dont>Add an 8th size even for one edge case — refactor the design instead</Dont>
 
     <H3>4. The 8-Point Grid</H3>
     <P>Every spacing, padding, margin, and gap value is a multiple of 8. The closed set is 8, 16, 24, 32, 40, 48, 64. Nothing between. This is the invisible infrastructure of the Swiss rhythm.</P>
-    <Tk n="spacing.xs" v="8px" a={a} />
-    <Tk n="spacing.sm" v="16px" d="Sidebar item padding, input gap" a={a} />
-    <Tk n="spacing.md" v="24px" d="Main area padding, message gap" a={a} />
-    <Tk n="spacing.lg" v="32px" d="Section separation" a={a} />
-    <Tk n="spacing.xl" v="48px" d="Major block breaks" a={a} />
+    <Tk n="spacing.xs" v={px(S.xs)} a={a} />
+    <Tk n="spacing.sm" v={px(S.sm)} d="Sidebar item padding, input gap" a={a} />
+    <Tk n="spacing.md" v={px(S.md)} d="Main area padding, message gap" a={a} />
+    <Tk n="spacing.lg" v={px(S.lg)} d="Section separation" a={a} />
+    <Tk n="spacing.xl" v={px(S.xl)} d="Major block breaks" a={a} />
     <Do>Snap every CSS spacing value to the scale. Audit for 10px, 12px, 20px violations.</Do>
     <Dont>Use "tight" intermediate values (10, 12, 18, 20) — refactor the design to work on 8</Dont>
   </div>),
@@ -440,10 +451,22 @@ function swissSpec(a) { return {
       ].map((p, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "140px 1fr 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{p[0]}</span>
-          <span style={{ fontSize: 11, color: "#000", fontFamily: "'Inter', sans-serif", background: "#F5F5F5", padding: "2px 6px", display: "inline-block", fontWeight: 500 }}>{p[1]}</span>
+          <span style={{ fontSize: 11, color: C.text_primary, fontFamily: F.body, background: C.surface_elevated, padding: "2px 6px", display: "inline-block", fontWeight: 500 }}>{p[1]}</span>
           <span style={{ fontSize: 9.5, color: "#666" }}>{p[2]}</span>
         </div>))}
     </div>
+
+    <H3>Error &amp; Warning Treatment</H3>
+    <P>Errors and warnings are carried by copy and type, never by hue: Swiss's danger reuses the accent red, so colour cannot say "this is broken".</P>
+    <Tk n="error.copy" v="Error: send failed." d="'Error:' + lowercase failure + period" />
+    <Tk n="error.color" v={C.text_primary} d="Ink, 11px under a field / 13px in a toast" />
+    <Tk n="error.field" v={rule(bw.default, C.border_input)} d="Input rule unchanged — no red, no thickening" />
+    <Tk n="warning.label" v={C.text_secondary} d="9px tracked uppercase, grey like every label" />
+    <Tk n="warning.copy" v={C.text_primary} d="Declarative sentence + period, ink" />
+    <Do>Name what failed after the prefix ('Error: could not connect to the server.')</Do>
+    <Do>Keep a recovery action as an ordinary CTA label ('Retry →') — it counts toward red's four uses</Do>
+    <Dont>Use 'ERROR', icons, pills, fills, a red rule or a ● for errors — the red ● means "live"</Dont>
+    <Dont>Set a warning label or warning message in red — red warnings are a Don't</Dont>
 
     <H3>Vocabulary</H3>
     <Do>Use one-syllable verbs when possible: Send, Save, File, Close, Open, Add, Edit</Do>
@@ -462,7 +485,7 @@ function swissSpec(a) { return {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
       {[["→", "Forward action (Send →)"], ["←", "Back action"], ["·", "Middle dot separator"], ["—", "Em dash range/status"], ["●", "Status indicator"], ["/", "Pair separator (01 / 05)"], ["01", "Zero-padded index"], ["03", "Zero-padded count"], ["× 04", "Multiplier label"]].map(([s, u]) => (
         <div key={s} style={{ padding: "6px 8px", borderRadius: 0, border: "1px solid rgba(255,255,255,0.05)" }}>
-          <span style={{ fontSize: 14, fontFamily: "'Inter', sans-serif", color: a, fontWeight: 700 }}>{s}</span>
+          <span style={{ fontSize: 14, fontFamily: F.body, color: a, fontWeight: 700 }}>{s}</span>
           <div style={{ fontSize: 9.5, color: "#777", marginTop: 1 }}>{u}</div>
         </div>))}
     </div>
@@ -525,12 +548,13 @@ export default function App() {
         .ma { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 24px }
         .si { border: none; outline: none; background: transparent; flex: 1; font-size: 12px; width: 100% }
         input::placeholder { opacity: 0.5 }
-        .snd { cursor: pointer; transition: opacity 0.12s; flex-shrink: 0 }
+        .snd { cursor: pointer; transition: opacity ${motion(tokens, "fast")}; flex-shrink: 0 }
         .snd:hover { opacity: 0.75 }
-        .mi { animation: fadeSlideUp 0.2s ease both }
-        .ci { animation: fadeSlideUp 0.2s ease both }
-        .ci:hover { background: #FAFAFA }
-        .bc-sw:hover { background: #F5F5F5 !important }
+        .mi { animation: fadeSlideUp ${motion(tokens, "slow")} both }
+        .ci { animation: fadeSlideUp ${motion(tokens, "moderate")} both }
+        .ci:hover { background: ${X.row_hover} }
+        .bc-sw:hover { background: ${C.surface_elevated} !important }
+        ${reducedMotionCss(tokens, { scope: ".app-sh" })}
       `}</style>
 
       {/* TOP NAV */}

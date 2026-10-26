@@ -2,12 +2,12 @@
   <defs>
     <style>
       .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .text-disabled { fill: #BDBDBD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #636363; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-disabled { fill: #707070; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-success { fill: #2E7D32; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-      .text-warning { fill: #E65100; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-warning { fill: #D14900; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       .text-info { fill: #1565C0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     </style>
   </defs>
@@ -18,6 +18,6 @@
   <text x="200" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">EMAIL</text>
   <text x="440" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">ROLE</text>
   <text x="600" y="26" text-anchor="end" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">STATUS</text>
-  <line x1="0" y1="38.5" x2="640" y2="38.5" stroke="#757575" stroke-width="1.5"/>
+  <line x1="0" y1="38.5" x2="640" y2="38.5" stroke="#636363" stroke-width="1.5"/>
 
 </svg>

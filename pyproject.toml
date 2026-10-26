@@ -1,0 +1,20 @@
+[project]
+name = "tkr-design-systems"
+version = "0.1.0"
+description = "Design system specs, component libraries, and the skills + MCP server that operate on them."
+requires-python = ">=3.12"
+dependencies = [
+    # mcp.server.fastmcp was removed in mcp 2.x; tools/mcp-server/server.py needs 1.x.
+    "mcp>=1.26,<2",
+    "structlog>=24.1",
+    "pyyaml>=6.0",
+    "cairosvg>=2.7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.uv]
+package = false

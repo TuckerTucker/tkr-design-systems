@@ -1,4 +1,4 @@
-spec_version: "0.2"
+spec_version: "0.3"
 
 system:
   id: sketch
@@ -6,6 +6,7 @@ system:
   tagline: "Linear + Hand-Drawn"
   grammar_family: contemporary_clean
   version: "1.2.0"   # bumped: project-wide no-emoji policy — single-letter monogram avatars
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: ../design-system-integrated.jsx
 
   # tkr-kit project policy: no emoji glyphs anywhere (mechanically enforced
@@ -25,33 +26,30 @@ system:
 
 tokens:
   colors:
-    page_bg: "#FAFAF8"
-    surface: "#FAFAF8"
-    surface_elevated: "#F0EDE8"
-    text_primary: "#2C2C2C"
-    text_secondary: "#555555"
-    text_muted: "#8A8680"
-    accent: "#B8A9C8"
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
 
     palette:
-      - { name: paper_warm, value: "#FAFAF8", role: page background }
-      - { name: surface_warm, value: "#F0EDE8", role: selected/elevated surface }
-      - { name: ink_soft, value: "#2C2C2C", role: body and headlines }
-      - { name: ink_secondary, value: "#555555", role: secondary text }
-      - { name: muted_warm, value: "#8A8680", role: preview text }
-      - { name: muted_warmer, value: "#B0ADA8", role: timestamps }
-      - { name: rule_warm, value: "#E5E3DE", role: 1px borders }
-      - { name: purple_lavender, value: "#B8A9C8", role: Caveat annotations + unread badges; the system's hero accent }
-      - { name: purple_light, value: "#C4B8D4", role: subtler annotation variant }
+      - { name: paper_warm, token: color.page_bg, role: page background }
+      - { name: surface_warm, token: color.surface, role: selected/elevated surface }
+      - { name: ink_soft, token: color.text_primary, role: body and headlines }
+      - { name: ink_secondary, token: color.text_secondary, role: secondary text }
+      - { name: muted_warm, token: color.text_muted, role: preview text }
+      - { name: muted_warmer, token: color.text_placeholder, role: timestamps }
+      - { name: rule_warm, token: color.border_default, role: 1px borders }
+      - { name: purple_lavender, token: color.accent, role: Caveat annotations + unread badges; the system's hero accent }
+      - { name: purple_light, token: extras.color.accent_light, role: subtler annotation variant }
+      - { name: paper_white, token: color.surface_elevated, role: "composer input and elevated cards" }
 
   typography:
     families:
       - id: structural
-        stack: "'IBM Plex Sans', system-ui, sans-serif"
+        stack: "{font.body}"
         role: titles, body, navigation, all structural type
         mixing_rule: "always for content; never for annotations"
       - id: decorative
-        stack: "Caveat, cursive"
+        stack: "{extras.font.annotation}"
         role: editorial annotations, send labels, asides
         mixing_rule: "annotations only; never for body or navigation"
 
@@ -77,20 +75,17 @@ tokens:
       headers: -0.02
 
   spacing:
-    grid_unit: 2
-    allowed_steps: [2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32]
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
     enforcement: relaxed
 
   borders:
-    radius_default: 10
-    radius_inputs: 8
-    radius_chrome: 14
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
 
   elevation:
-    strategy: borders_only
+    # strategy: projected from tokens.json elevation.strategy
     config:
-      border_light: { width: 1, color: "#E5E3DE", style: solid }
-      border_strong: { width: 1, color: "#D5CFC8", style: solid }
+      border_light: { width: "{border_width.default}", color: "{color.border_default}", style: solid }
+      border_strong: { width: "{border_width.strong}", color: "{color.border_strong}", style: solid }
       no_shadow: true
 
 components:
@@ -106,7 +101,7 @@ components:
     variants:
       - id: default
         svg: components/list-item-default.svg
-        rendering_notes: "Avatar 34px square emoji on warm surface with 1px border, 8px radius. Title in IBM Plex 12.5px weight 600. Timestamp top-right 10px in #B0ADA8. Preview in 11px #8A8680. Unread badge: 18px purple square (#B8A9C8) with white digit, 6px radius. Preview text MUST end at least 8px before the unread_badge x-position when badge is present; truncate with ellipsis (…) at a natural word break. Without truncation, the preview will overflow into the badge."
+        rendering_notes: "Avatar 34px square emoji on warm surface with 1px border, 8px radius. Title in IBM Plex 12.5px weight 600. Timestamp top-right 10px in #B0ADA8. Preview in 11px #6F6B66 (text_muted). Unread badge: 18px purple square (#B8A9C8) with white digit, 6px radius. Preview text MUST end at least 8px before the unread_badge x-position when badge is present; truncate with ellipsis (…) at a natural word break. Without truncation, the preview will overflow into the badge."
         states: [default, hover, selected]
       - id: selected
         svg: components/list-item-selected.svg
@@ -122,19 +117,31 @@ components:
       - "Unread is a small purple rounded square with white digit, not a circle"
       - "Avatars are 34px squares with 8px radius, not circles"
       - "Preview text yields horizontal space to unread_badge: minimum 8px gap before the badge's left edge. Truncate the preview content (do not let SVG text overflow). See SCHEMA v0.2 finding 11.5 for the formal yields_to constraint this rule encodes."
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 60
+        note: "JSX .ci fadeSlideUp 0.2s linear."
+      - trigger: select
+        tier: moderate
+        properties: [background-color, border-color]
+        reduced: keep
+        note: "JSX selection doc row 'Transition 200ms ease'; the live preview applies it instantly."
 
 rulebook:
   # NEW IN v0.2: every rule annotates check_method (Change 9) and
   # check_scope (Change 12) so consumers know how and where to verify.
 
   - id: sketch-purple-on-annotations-only
-    rule: "Purple (#B8A9C8) is used on Caveat annotation elements and unread badges. NEVER on button backgrounds or fill regions."
+    rule: "Purple (#7F718E) is used on Caveat annotation elements and unread badges. NEVER on button backgrounds or fill regions."
     rationale: "Purple is the editorial layer's signature; using it for navigation or surfaces breaks the layer separation."
     severity: required
     check_method: both
     check_scope: artifact
     check_implementation: |
-      Mechanical: count <text> elements with effective fill #B8A9C8 by font-family.
+      Mechanical: count <text> elements with effective fill #7F718E by font-family.
       Caveat-family text and small unread-badge rects are permitted; flag any
       large rect/path with purple fill. Semantic: verify each purple element
       serves an annotation or unread role.
@@ -192,3 +199,25 @@ grammar_extensions:
       color_ref: tokens.colors.accent                # purple
       size_px: 13                                   # default annotation size
       usage: "asides above AI messages, send labels, section headers like '↓ your chats'"
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: fade
+        stagger_ms: 80
+        note: "JSX .mi fadeSlideUp 0.25s linear (doc row: 400ms ease)."
+    send_button:
+      - trigger: hover
+        tier: fast
+        properties: [transform]
+        reduced: none
+        note: "JSX .snd scale(1.05), transform 0.1s."

@@ -1,10 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 32" width="200" height="32">
   <defs>
     <style>
-      .text-primary { fill: #111111; font-family: 'Space Mono', ui-monospace, monospace; }
-      .text-secondary { fill: #666666; font-family: 'Space Mono', ui-monospace, monospace; }
-      .text-muted { fill: #999999; font-family: 'Space Mono', ui-monospace, monospace; }
-      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', ui-monospace, monospace; }
+      .text-primary { fill: #111111; font-family: 'Space Mono', monospace; }
+      .text-secondary { fill: #666666; font-family: 'Space Mono', monospace; }
+      .text-muted { fill: #757575; font-family: 'Space Mono', monospace; }
+      .text-inverse { fill: #FFFFFF; font-family: 'Space Mono', monospace; }
+      .text-on-accent { fill: #111111; font-family: 'Space Mono', monospace; }
+      .text-on-danger { fill: #111111; font-family: 'Space Mono', monospace; }
     </style>
   </defs>
   <!-- ==================== INPUT-SEARCH ==================== -->

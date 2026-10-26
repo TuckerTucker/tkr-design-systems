@@ -46,6 +46,9 @@ def assert_(condition: bool, label: str, detail: str = "") -> None:
     else:
         FAILED += 1
         print(f"  FAIL  {label}" + (f"\n        {detail}" if detail else ""))
+        # Under pytest a counted failure would pass silently; fail the test instead.
+        if "pytest" in sys.modules:
+            raise AssertionError(f"{label}: {detail}" if detail else label)
 
 
 def section(name: str) -> None:
@@ -94,7 +97,7 @@ def test_swiss_dashboard_desktop():
         assert_(ds.get("id") == "swiss", "design_system.id is swiss")
         assert_(ds.get("layout_template_used") == "dashboard",
                 f"layout_template_used is 'dashboard' (got {ds.get('layout_template_used')})")
-        assert_(ds.get("spec_version") == "0.2", "spec_version recorded")
+        assert_(ds.get("spec_version") == "0.3", "spec_version recorded")
 
         # Compliance summary
         comp = ds.get("rulebook_compliance") or {}
@@ -1055,6 +1058,65 @@ def test_full_composition_e2e():
                 "SVG contains the chosen button component")
 
 
+# ─── token contract consumption (schema v0.3) ────────────────────
+
+
+def test_export_tokens_uses_system_contract():
+    section("export_tokens_for_authoring: fills come from the system's token contract")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    from design_system_skill.loader import load_system
+    res = load_system("terminal")
+    assert_(res.ok, "load_system('terminal') ok")
+    if not res.ok:
+        return
+    out = export_tokens_for_authoring(res.data)
+    css = out["typography"]["css_class_block"]
+    assert_("fill: #C8F7C5" in css, "text-primary uses terminal text_primary (#C8F7C5)")
+    assert_("#212121" not in css, "wireframe grey no longer leaks into other systems")
+    assert_("fill: #FF4E4E" in css, "text-danger uses terminal danger (#FF4E4E)")
+    rules = out["drawing_rules"]
+    assert_(rules["focus_ring"] == "#00FF66", f"drawing_rules.focus_ring (got {rules.get('focus_ring')})")
+    assert_(rules["text_inverse"] == "#0A0F0A", f"text_inverse from contract (got {rules['text_inverse']})")
+    assert_("stroke='#1F2F1F' stroke-width='1'" == rules["stroke_border"],
+            f"aliased elevation border resolves (got {rules['stroke_border']})")
+    assert_(out.get("contract", {}).get("system") == "terminal", "contract returned to agents")
+    assert_(out["typography"]["font_stack_structural"] == "'JetBrains Mono', monospace",
+            "font stack alias resolved")
+
+
+def test_export_tokens_without_contract_keeps_defaults():
+    section("export_tokens_for_authoring: specs without a contract keep wireframe defaults")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    out = export_tokens_for_authoring({"system": {"id": "legacy"}, "tokens": {"colors": {}}})
+    css = out["typography"]["css_class_block"]
+    assert_("fill: #212121" in css and "fill: #B71C1C" in css, "legacy defaults retained")
+    assert_("contract" not in out, "no contract key when the spec has none")
+    assert_("motion" not in out, "no motion key when the spec has no contract")
+
+
+def test_export_tokens_includes_motion():
+    section("export_tokens_for_authoring: motion tiers and declarations (issue #10)")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    from design_system_skill.loader import load_system
+    res = load_system("terminal")
+    assert_(res.ok, "load_system('terminal') ok")
+    if not res.ok:
+        return
+    motion = export_tokens_for_authoring(res.data).get("motion") or {}
+    assert_(set(motion.get("tiers", {})) == {"fast", "moderate", "slow", "expressive"},
+            f"all four tiers exported ({sorted(motion.get('tiers', {}))})")
+    assert_(motion["tiers"]["slow"]["css_enter"] == "250ms cubic-bezier(0, 0, 1, 1)",
+            f"slow tier CSS shorthand (got {motion['tiers']['slow'].get('css_enter')})")
+    assert_(motion.get("reduced_motion") == "none", "terminal reduced-motion policy is none")
+    cursor = motion.get("declarations", {}).get("cursor") or [{}]
+    assert_(cursor[0].get("timing", {}).get("easing") == "step-end",
+            "motion.elements.cursor declaration exported with its step-end timing")
+    assert_("list_item" in motion["declarations"], "component declarations exported")
+    css = motion.get("css_custom_properties", "")
+    assert_("--motion-fast-enter: 0ms;" in css and "prefers-reduced-motion: reduce" in css,
+            "CSS custom properties with a reduced-motion override")
+
+
 def main():
     print("wireframe-skill v3.0 end-to-end tests\n" + "=" * 50)
     test_swiss_dashboard_desktop()
@@ -1103,6 +1165,9 @@ def main():
     test_wireframe_compose_takes_precedence()
     test_emit_with_components_used()
     test_full_composition_e2e()
+    test_export_tokens_uses_system_contract()
+    test_export_tokens_without_contract_keeps_defaults()
+    test_export_tokens_includes_motion()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

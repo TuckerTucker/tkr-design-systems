@@ -33,11 +33,13 @@ from typing import Any
 from urllib.parse import quote
 
 import structlog
-import yaml
 
 logger = structlog.get_logger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "tools" / "design-system-skill"))
+
+from design_system_skill.token_file import read_spec_with_tokens  # noqa: E402
 SPEC_PATH = REPO_ROOT / "systems" / "riso" / "spec.yaml"
 DEFAULT_OUT = REPO_ROOT / "systems" / "riso" / "riso-reference.html"
 
@@ -1370,7 +1372,16 @@ def main() -> int:
         logger.error("spec_missing", path=str(args.spec))
         return 1
 
-    spec = yaml.safe_load(args.spec.read_text())
+    # Token values live in systems/riso/tokens.json (schema v0.3); resolve
+    # aliases and palette token references before rendering.
+    loaded = read_spec_with_tokens(args.spec)
+    if not loaded.ok:
+        for err in loaded.errors:
+            logger.error("spec_load_failed", code=err.code, message=err.message)
+        return 1
+    for warn in loaded.warnings:
+        logger.warning("spec_token_warning", message=warn.message)
+    spec = loaded.data
     logger.info(
         "spec_loaded",
         system=spec["system"]["id"],

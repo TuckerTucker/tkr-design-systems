@@ -10,7 +10,8 @@ opens to see the entire library at a glance.
 from pathlib import Path
 import sys
 
-# Same standard wrapper used by build_wireframe_library.py
+# Same standard wrapper the builder engine renders for the wireframe library
+# (tools/builders/engine/templates.py)
 STANDARD_DEFS = """  <defs>
     <style>
       .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }

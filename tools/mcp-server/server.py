@@ -51,7 +51,11 @@ from design_system_skill import (  # noqa: E402
     unregister_system,
     get_rulebook,
     check_compliance,
+    check_color_gates_all,
+    check_color_gates_for_spec,
 )
+from design_system_skill.paths import project_root  # noqa: E402
+from design_system_skill.registry import Registry  # noqa: E402
 from wireframe_skill import (  # noqa: E402
     wireframe,
     build_substitution_request,
@@ -85,7 +89,7 @@ def _error_result(exc: Exception) -> dict[str, Any]:
     return {"ok": False, "errors": [str(exc)]}
 
 
-# ─── design-system-skill tools (7) ────────────────────────────────────
+# ─── design-system-skill tools ────────────────────────────────────────
 
 
 @mcp.tool()
@@ -122,8 +126,12 @@ def ds_validate_spec(
 ) -> dict[str, Any]:
     """Validate a spec.yaml against the schema without modifying the registry.
 
-    Returns {valid, system_id, spec_version, errors, warnings}. Use when
-    authoring a new design system spec before registering it.
+    Returns {valid, system_id, spec_version, errors, warnings, contrast,
+    hue_gate}. contrast / hue_gate are the colour-gate reports for the
+    spec's tokens.json (worst ratio per pair with its minimum, pass flag
+    and mode; failures also appear in errors as CONTRAST_FAIL /
+    HUE_GATE_FAIL). Use when authoring a new design system spec before
+    registering it.
     """
     try:
         return validate_spec(spec_path, library_root=library_root).to_dict()
@@ -183,9 +191,14 @@ def ds_check_compliance(
 ) -> dict[str, Any]:
     """Check an SVG artifact against a design system's mechanical rulebook.
 
-    Returns {passed, failed, advisory, results} where results is a list of
-    {rule_id, status, detail}. Scope auto-detects from the artifact path
-    (component vs artifact); pass scope explicitly to override.
+    Returns {passed, failed, advisory, waived, results} where results is a
+    list of {rule_id, status, detail}. Scope auto-detects from the artifact
+    path (component vs artifact); pass scope explicitly to override.
+    Violations allow-listed in systems/<id>/rulebook-exceptions.yaml come
+    back as status "waived" with their reasons; an allow-list entry for
+    this artifact that matched nothing is a failing
+    "rulebook-exception-stale" result. The system itself must pass its
+    colour gates (see ds_check_contrast) or the check fails to load it.
     """
     try:
         return check_compliance(system_id, artifact_path, scope=scope).to_dict()
@@ -193,7 +206,35 @@ def ds_check_compliance(
         return _error_result(exc)
 
 
-# ─── wireframe-skill tools (4) ────────────────────────────────────────
+@mcp.tool()
+def ds_check_contrast(system_id: str | None = None, verbose: bool = False) -> dict[str, Any]:
+    """Run the WCAG contrast and accent/danger hue gates on a system's tokens.
+
+    Checks every required fg/bg pair (text 4.5:1, large_text 3:1, ui 3:1;
+    advisory pairs reported only) in every mode combination and over every
+    declared page backdrop, compositing translucent colours, plus the
+    40-degree OKLCH hue gap between accent/action and danger. Omit
+    system_id to check every registered system. Returns per-pair worst
+    ratio, minimum, pass flag, mode and any waiver reason; verbose=True
+    adds every evaluated result.
+    """
+    try:
+        if system_id is None:
+            return check_color_gates_all(
+                checker=lambda p: check_color_gates_for_spec(p, verbose=verbose)).to_dict()
+        reg = Registry.load()
+        if not reg.ok:
+            return reg.to_dict()
+        entry = reg.data.get(system_id)
+        if entry is None:
+            return {"ok": False, "errors": [{"code": "SYSTEM_NOT_FOUND",
+                                             "message": f"System '{system_id}' is not registered"}]}
+        return check_color_gates_for_spec(project_root() / entry.spec, verbose=verbose).to_dict()
+    except Exception as exc:
+        return _error_result(exc)
+
+
+# ─── wireframe-skill tools ────────────────────────────────────────────
 
 
 @mcp.tool()
@@ -404,6 +445,8 @@ def wf_assemble_from_blueprint(
     system_id: str,
     output_dir: str | None = None,
     filename_stem: str = "wireframe",
+    brief: str = "assembled from blueprint",
+    platform: str = "desktop",
 ) -> dict[str, Any]:
     """Validate and assemble a component layout blueprint into a composited SVG.
 
@@ -414,7 +457,8 @@ def wf_assemble_from_blueprint(
 
     When output_dir is provided, writes SVG + spec.yaml with components_used
     extracted from the blueprint. Returns svg_path and spec_path in addition
-    to svg_text.
+    to svg_text. brief and platform ("mobile" or "desktop") are recorded in
+    that spec.yaml.
 
     Validation runs first: unknown component_ids and out-of-bounds placements
     block assembly. Returns {ok, svg_text, validation_errors, warnings}.
@@ -470,8 +514,8 @@ def wf_assemble_from_blueprint(
             svg_path, spec_path = emit_artifact(
                 Path(output_dir),
                 svg_text,
-                brief="assembled from blueprint",
-                platform="desktop",
+                brief=brief,
+                platform=platform,
                 spec=spec,
                 selection=None,
                 compliance=None,
@@ -496,7 +540,10 @@ def wf_get_tokens(system_id: str) -> dict[str, Any]:
     Returns the system's visual vocabulary restructured for direct use
     in SVG: palette colors with roles, drawing rules as SVG attribute
     strings (e.g. stroke='#E0E0E0' stroke-width='1'), typography scale,
-    CSS class block for <defs><style>, and layout constants.
+    CSS class block for <defs><style>, and layout constants. v0.3 systems
+    also return their token contract under ``contract`` and their motion
+    vocabulary under ``motion`` (tiers, reduced-motion policy, and which
+    tier each component animates at).
 
     Use this before drawing custom SVG to ensure all fills, strokes,
     font sizes, and radii come from the system's token set.

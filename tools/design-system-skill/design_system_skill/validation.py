@@ -1,11 +1,16 @@
 """Schema validation for design system specs.
 
 This module is the source of truth for which spec shapes are accepted.
-It accepts both v0.1 and v0.2 specs (v0.2 is fully backwards-compatible
-with v0.1 per docs/SCHEMA-V0.2.md).
+It accepts v0.1, v0.2 and v0.3 specs (v0.2 is fully backwards-compatible
+with v0.1 per docs/specs/SCHEMA-V0.2.md; v0.3 adds the semantic token
+contract per docs/specs/SCHEMA-V0.3.md).
 
 The validator's job:
   - Required top-level fields are present (`spec_version`, `system`, `tokens`).
+  - v0.3 specs declare `system.tokens_file`, and that file supplies every
+    contract token in a valid shape (see contract.py / token_file.py).
+  - Motion declarations name a contract motion tier and a reduced-motion
+    behaviour the system's policy allows.
   - Enum values are within their allowed range (`grammar_family`,
     `severity`, `check_method`, `check_scope`, `selection_signal`).
   - Referenced SVG paths actually exist on disk.
@@ -29,6 +34,14 @@ from typing import Any
 import yaml
 
 from .errors import Error, Result
+from .contrast import check_color_gates
+from .drift import find_drift
+from .token_file import (
+    load_token_file,
+    token_file_path,
+    validate_motion_declarations,
+    validate_token_document,
+)
 
 import structlog
 
@@ -67,7 +80,11 @@ KNOWN_SELECTION_SIGNALS = {
     "text_treatment",
 }
 
-VALID_SPEC_VERSIONS = {"0.1", "0.2"}
+VALID_SPEC_VERSIONS = {"0.1", "0.2", "0.3"}
+
+# Spec versions that must declare a canonical token file supplying every
+# contract token (docs/specs/SCHEMA-V0.3.md). Earlier versions may opt in.
+TOKEN_CONTRACT_REQUIRED_VERSIONS = {"0.3"}
 
 
 # ─── Public entry point ─────────────────────────────────────────────
@@ -85,7 +102,12 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
             registry's library_root for accurate path warnings.
 
     Returns:
-        Result with data={valid, system_id, spec_version, errors, warnings}.
+        Result with data={valid, system_id, spec_version, errors, warnings}
+        plus, when the spec has a contract-valid token file, ``contrast``
+        and ``hue_gate`` (``contrast.GateReport.summary()``: counts, the
+        worst result per pair with ratio / minimum / pass / mode, and the
+        gate's errors). Gate failures are also in ``errors``
+        (``CONTRAST_FAIL``, ``HUE_GATE_FAIL`` ...).
     """
     spec_path = Path(spec_path).resolve()
     if not spec_path.exists():
@@ -118,6 +140,8 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
     _check_spec_version(data, errors)
     _check_system_block(data, errors, warnings)
     _check_tokens(data, errors, warnings)
+    color_gates: dict[str, Any] = {}
+    _check_token_contract(data, spec_path, errors, warnings, color_gates)
     _check_components(data, spec_dir, errors, warnings, lib_root)
     _check_layout_templates(data, spec_dir, errors, warnings, lib_root)
     _check_rulebook(data, errors, warnings)
@@ -134,6 +158,7 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
             "spec_version": data.get("spec_version"),
             "errors": [{"code": e.code, "message": e.message, "detail": e.detail} for e in errors],
             "warnings": [{"code": w.code, "message": w.message, "detail": w.detail} for w in warnings],
+            **color_gates,
         }
         return result
 
@@ -144,6 +169,7 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
             "spec_version": data.get("spec_version"),
             "errors": [],
             "warnings": [{"code": w.code, "message": w.message, "detail": w.detail} for w in warnings],
+            **color_gates,
         },
         warnings=warnings or None,
     )
@@ -241,6 +267,92 @@ def _check_tokens(data: dict, errors: list[Error], warnings: list[Error]) -> Non
                 f"Known values: {sorted(KNOWN_ELEVATION_STRATEGIES)}",
                 {"strategy": strategy},
             ))
+
+
+def _check_token_contract(
+    data: dict, spec_path: Path, errors: list[Error], warnings: list[Error],
+    color_gates: dict[str, Any] | None = None,
+) -> None:
+    """Validate the spec's canonical token file against the contract.
+
+    v0.3 specs must declare ``system.tokens_file``; earlier versions may.
+    When declared, the file must exist, parse, name the same system, and
+    supply every contract token (``token_file.validate_token_document``),
+    and spec.yaml must not drift from it (``drift.find_drift``). Motion
+    declarations (``components.<id>.motion``, ``motion.elements``) are
+    checked against the contract tiers and the file's reduced-motion
+    policy (``token_file.validate_motion_declarations``). When the token
+    document is contract-valid, the colour gates run over every mode
+    (``contrast.check_color_gates``: WCAG contrast, accent/danger hue).
+
+    Args:
+        data: Parsed spec mapping.
+        spec_path: Absolute path of the spec file (token file resolves
+            relative to its directory).
+        errors: Blocking errors accumulator.
+        warnings: Advisory warnings accumulator.
+        color_gates: Filled with ``{gate_key: summary}`` (``contrast``,
+            ``hue_gate``) when the gates ran.
+    """
+    sys_block = data.get("system") if isinstance(data.get("system"), dict) else {}
+    version = data.get("spec_version")
+    tok_path = token_file_path(spec_path, data)
+    if tok_path is None:
+        if version in TOKEN_CONTRACT_REQUIRED_VERSIONS:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"spec_version {version} requires system.tokens_file "
+                f"(the canonical token file, conventionally 'tokens.json')",
+                {"missing": "system.tokens_file"},
+            ))
+        errors.extend(validate_motion_declarations(data))
+        return
+
+    loaded = load_token_file(tok_path)
+    if not loaded.ok:
+        errors.extend(loaded.errors)
+        return
+    doc = loaded.data
+    errors.extend(validate_motion_declarations(data, doc))
+
+    tok_errors, tok_warnings = validate_token_document(doc, str(tok_path))
+    errors.extend(tok_errors)
+    warnings.extend(tok_warnings)
+
+    # Colour gates need every contract colour present and parseable.
+    if not tok_errors:
+        for key, report in check_color_gates(doc).items():
+            errors.extend(
+                Error(e.code, e.message, {**e.detail, "tokens_path": str(tok_path)})
+                for e in report.errors
+            )
+            if color_gates is not None:
+                color_gates[key] = report.summary()
+
+    if isinstance(doc.get("system"), str) and sys_block.get("id") and doc["system"] != sys_block["id"]:
+        errors.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            f"token file system '{doc['system']}' does not match spec system.id "
+            f"'{sys_block['id']}'",
+            {"tokens_path": str(tok_path)},
+        ))
+
+    strategy = (doc.get("elevation") or {}).get("strategy")
+    if isinstance(strategy, str) and strategy not in KNOWN_ELEVATION_STRATEGIES:
+        warnings.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            f"elevation.strategy '{strategy}' (token file) is not a known convention. "
+            f"Known values: {sorted(KNOWN_ELEVATION_STRATEGIES)}",
+            {"strategy": strategy, "tokens_path": str(tok_path)},
+        ))
+
+    # spec.yaml must not disagree with its own source of truth.
+    for item in find_drift(data, doc):
+        errors.append(Error(
+            "TOKEN_DRIFT",
+            item.message,
+            {"kind": item.kind, "location": item.location, "tokens_path": str(tok_path)},
+        ))
 
 
 def _resolve_svg_for_check(svg_rel: str, spec_dir: Path, library_root: Path | None) -> Path:

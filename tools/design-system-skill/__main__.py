@@ -9,6 +9,9 @@ Usage from the project root:
     python3 design-system-skill check --id swiss --artifact systems/swiss/layouts/dashboard.svg
     python3 design-system-skill register --spec /abs/path/to/new-spec.yaml [--replace]
     python3 design-system-skill unregister --id <id>
+    python3 design-system-skill drift [--all | --id swiss | --spec systems/swiss/spec.yaml]
+    python3 design-system-skill contrast [--all | --id swiss | --spec systems/swiss/spec.yaml] [--verbose]
+    python3 design-system-skill jsx-drift [--id swiss ...] [--allowlist PATH]
 
 All commands print a JSON Result to stdout. Exit code 0 if ok, 1 otherwise.
 """
@@ -45,7 +48,14 @@ def main(argv: list[str] | None = None) -> int:
         unregister_system,
         get_rulebook,
         check_compliance,
+        check_drift,
+        check_drift_all,
+        check_color_gates_all,
+        check_color_gates_for_spec,
+        check_jsx_drift,
     )
+    from design_system_skill.paths import project_root  # noqa: E402
+    from design_system_skill.registry import Registry  # noqa: E402
 
     parser = argparse.ArgumentParser(
         prog="design-system-skill",
@@ -81,6 +91,34 @@ def main(argv: list[str] | None = None) -> int:
     p_unregister = sub.add_parser("unregister", help="Remove a system from the registry.")
     p_unregister.add_argument("--id", required=True)
 
+    p_drift = sub.add_parser(
+        "drift",
+        help="Check spec.yaml against its canonical tokens.json (default: all registered systems).",
+    )
+    target = p_drift.add_mutually_exclusive_group()
+    target.add_argument("--all", action="store_true", help="Check every registered system (default).")
+    target.add_argument("--id", help="Check one registered system.")
+    target.add_argument("--spec", help="Check one spec.yaml by path.")
+
+    p_contrast = sub.add_parser(
+        "contrast",
+        help="WCAG contrast + accent/danger hue gates over every mode "
+             "(default: all registered systems).",
+    )
+    c_target = p_contrast.add_mutually_exclusive_group()
+    c_target.add_argument("--all", action="store_true", help="Check every registered system (default).")
+    c_target.add_argument("--id", help="Check one registered system.")
+    c_target.add_argument("--spec", help="Check one spec.yaml by path.")
+    p_contrast.add_argument("--verbose", action="store_true",
+                            help="Include every pair in every mode, not just the worst per pair.")
+    p_jsx = sub.add_parser(
+        "jsx-drift",
+        help="Check the showcase JSX for colour literals that bypass tokens.json (default: every page).",
+    )
+    p_jsx.add_argument("--id", action="append", dest="ids",
+                       help="Showcase system id (repeatable), e.g. neutral, swiss.")
+    p_jsx.add_argument("--allowlist", help="Allow-list YAML (default: apps/showcase/jsx-color-allowlist.yaml).")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "list":
@@ -97,6 +135,33 @@ def main(argv: list[str] | None = None) -> int:
         return _emit(register_system(args.spec, replace=args.replace))
     if args.cmd == "unregister":
         return _emit(unregister_system(args.id))
+    if args.cmd in ("drift", "contrast"):
+        if args.cmd == "drift":
+            one, every = check_drift, check_drift_all
+        else:
+            def one(path):
+                return check_color_gates_for_spec(path, verbose=args.verbose)
+
+            def every():
+                return check_color_gates_all(
+                    checker=lambda p: check_color_gates_for_spec(p, verbose=args.verbose))
+        if args.spec:
+            return _emit(one(args.spec))
+        if args.id:
+            reg = Registry.load()
+            if not reg.ok:
+                return _emit(reg)
+            entry = reg.data.get(args.id)
+            if entry is None:
+                print(json.dumps({"ok": False, "errors": [
+                    {"code": "SYSTEM_NOT_FOUND", "message": f"System '{args.id}' is not registered"}]},
+                    indent=2))
+                return 1
+            return _emit(one(project_root() / entry.spec))
+        return _emit(every())
+    if args.cmd == "jsx-drift":
+        allow = Path(args.allowlist).resolve() if args.allowlist else None
+        return _emit(check_jsx_drift(args.ids, allowlist=allow))
     parser.error(f"Unknown command: {args.cmd}")
     return 2
 

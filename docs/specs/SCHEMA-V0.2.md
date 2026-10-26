@@ -2,6 +2,8 @@
 
 This document defines schema v0.2 — the next major revision after v0.1. All changes are **additive**: every v0.1 spec remains valid as a v0.2 spec without modification. New fields are optional. Systems opt into v0.2 features when they need them.
 
+> **v0.3** (`SCHEMA-V0.3.md`) adds the fixed semantic token contract and the canonical per-system `tokens.json`. Everything in this document still applies to v0.3 specs.
+
 The v0.2 changes are derived from 11 documented findings across two stress-test sessions (Riso authoring + the remaining 5 systems). Each change is justified by a specific gap a real system surfaced.
 
 This document supersedes `SCHEMA.md` (v0.1). The v0.1 document is retained for historical reference and migration tracing; runtime consumers should target v0.2.

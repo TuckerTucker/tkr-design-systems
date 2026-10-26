@@ -1,11 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
   <defs>
     <style>
-      .text-primary { fill: rgba(255,255,255,0.90); font-family: Outfit, system-ui, sans-serif; }
-      .text-secondary { fill: rgba(255,255,255,0.60); font-family: Outfit, system-ui, sans-serif; }
-      .text-muted { fill: rgba(255,255,255,0.40); font-family: Outfit, system-ui, sans-serif; }
-      .text-very-muted { fill: rgba(255,255,255,0.30); font-family: Outfit, system-ui, sans-serif; }
-      .text-accent { fill: #7DDFBE; font-family: Outfit, system-ui, sans-serif; }
+      .text-primary { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
+      .text-secondary { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
+      .text-muted { fill: rgba(255,255,255,0.98); font-family: 'Outfit', sans-serif; }
+      .text-accent { fill: #9CFFDD; font-family: 'Outfit', sans-serif; }
     </style>
     <linearGradient id="prism-bg" x1="0" y1="0" x2="1" y2="1" gradientTransform="rotate(0)">
       <stop offset="0" stop-color="#4A5D6B"/>
@@ -28,10 +27,10 @@
   <rect x="0" y="0" width="1280" height="800" fill="url(#prism-bg)"/>
 
   <!-- Dimming overlay -->
-  <rect x="0" y="0" width="1280" height="800" fill="rgba(0,0,0,0.30)"/>
+  <rect x="0" y="0" width="1280" height="800" fill="rgba(0,0,0,0.3)"/>
 
   <!-- Centered modal panel: 480×320 -->
-  <rect x="400" y="240" width="480" height="320" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="14" ry="14"/>
+  <rect x="400" y="240" width="480" height="320" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="20" ry="20"/>
 
   <!-- Header -->
   <text x="416" y="272" class="text-secondary" font-size="9" font-weight="600">CONFIRM</text>
@@ -49,6 +48,10 @@
 
   <!-- Actions -->
   <text x="416" y="536" class="text-secondary" font-size="12" font-weight="500">Cancel</text>
-  <text x="864" y="536" text-anchor="end" class="text-accent" font-size="12" font-weight="500">Delete</text>
+  <!-- Destructive action: a danger fill with danger_foreground. Coloured
+       text straight on elevated glass cannot reach 4.5:1 over the light
+       gradient stops (#7). -->
+  <rect x="792" y="516" width="72" height="30" fill="#FFCBC9" rx="10" ry="10"/>
+  <text x="828" y="535" text-anchor="middle" font-family="'Outfit', sans-serif" fill="#1F2B28" font-size="12" font-weight="500">Delete</text>
 
 </svg>

@@ -30,11 +30,13 @@ from server import (  # noqa: E402
     ds_unregister_system,
     ds_get_rulebook,
     ds_check_compliance,
+    ds_check_contrast,
     wf_generate,
     wf_build_substitution_request,
     wf_apply_substitutions,
     wf_assemble_from_blueprint,
     wf_select_layout,
+    wf_get_tokens,
 )
 
 
@@ -50,6 +52,9 @@ def assert_(condition: bool, label: str, detail: str = "") -> None:
     else:
         FAILED += 1
         print(f"  FAIL  {label}" + (f"\n        {detail}" if detail else ""))
+        # Under pytest a counted failure would pass silently; fail the test instead.
+        if "pytest" in sys.modules:
+            raise AssertionError(f"{label}: {detail}" if detail else label)
 
 
 def section(name: str) -> None:
@@ -88,8 +93,9 @@ def test_ds_list_systems():
     assert_(result["ok"] is True, "ok is True")
 
     ids = {s["id"] for s in result["data"]}
-    expected = {"wireframe", "swiss", "terminal", "editorial", "sketch", "prism", "revolt", "riso"}
-    assert_(ids == expected, f"all 8 systems present", f"got {ids}")
+    # `neutral` is a registry alias of the wireframe library.
+    expected = {"wireframe", "swiss", "terminal", "editorial", "sketch", "prism", "revolt", "riso", "neutral"}
+    assert_(ids == expected, "all 9 systems present", f"got {ids}")
 
     for system in result["data"]:
         assert_(
@@ -186,6 +192,32 @@ def test_ds_check_compliance():
             "passed" in result.get("data", {}),
             "result contains passed count",
         )
+
+
+# ─── ds_check_contrast (issues #7, #8) ───────────────────────────────
+
+def test_ds_check_contrast():
+    section("ds_check_contrast")
+    one = ds_check_contrast("riso")
+    assert_(one["ok"] is True, "riso passes both colour gates", str(one.get("errors"))[:300])
+    contrast = one.get("data", {}).get("contrast", {})
+    assert_(contrast.get("modes") == 30, f"every riso press combination checked ({contrast.get('modes')})")
+    worst = contrast.get("worst", [])
+    assert_(worst and all({"pair", "ratio", "minimum", "passes", "mode"} <= set(r) for r in worst),
+            "per-pair report carries pair, ratio, minimum, passes and mode")
+    assert_("hue_gate" in one.get("data", {}), "hue gate report included")
+
+    every = ds_check_contrast()
+    assert_(every["ok"] is True, "every registered system passes", str(every.get("errors"))[:300])
+    assert_(every.get("data", {}).get("systems", {}).get("neutral") == {"alias_of": "wireframe"},
+            "neutral reported as an alias of wireframe")
+
+    missing = ds_check_contrast("does_not_exist")
+    assert_(missing["ok"] is False, "unknown system fails cleanly")
+
+    validated = ds_validate_spec(str(SYSTEMS_DIR / "swiss" / "spec.yaml"))
+    assert_("contrast" in validated.get("data", {}) and "hue_gate" in validated.get("data", {}),
+            "ds_validate_spec returns the colour-gate reports")
 
 
 # ─── ds_register_system / ds_unregister_system ───────────────────────
@@ -602,6 +634,21 @@ def test_wf_assemble_with_output_dir():
                     "components_used populated in spec.yaml")
 
 
+# ─── wf_get_tokens: motion (issue #10) ────────────────────────────────
+
+def test_wf_get_tokens_motion():
+    section("wf_get_tokens returns the motion vocabulary")
+    result = wf_get_tokens("editorial")
+    assert_(result.get("ok") is True, "wf_get_tokens('editorial') ok")
+    motion = result.get("motion") or {}
+    assert_(motion.get("tiers", {}).get("slow", {}).get("enter_ms") == 450,
+            f"editorial slow tier enter_ms 450 (got {motion.get('tiers', {}).get('slow')})")
+    assert_(motion.get("reduced_motion") == "fade", "editorial reduced-motion policy is fade")
+    assert_("message" in motion.get("declarations", {}),
+            "motion.elements.message declaration returned")
+    assert_("motion" in result.get("contract", {}), "contract carries the motion group")
+
+
 # ─── Run all tests ────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -613,6 +660,7 @@ if __name__ == "__main__":
     test_ds_validate_spec_missing()
     test_ds_get_rulebook()
     test_ds_check_compliance()
+    test_ds_check_contrast()
     test_ds_register_unregister_roundtrip()
     test_wf_generate_with_system()
     test_wf_generate_neutral()
@@ -632,6 +680,7 @@ if __name__ == "__main__":
     test_wf_generate_layout_id()
     test_wf_select_layout()
     test_wf_assemble_with_output_dir()
+    test_wf_get_tokens_motion()
 
     print(f"\n{'='*50}")
     print(f"  {PASSED} passed, {FAILED} failed")

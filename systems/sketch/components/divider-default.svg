@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 1" width="320" height="1">
   <defs>
     <style>
-      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
-      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
-      .text-muted { fill: #8A8680; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
-      .text-accent { fill: #B8A9C8; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
-      .text-annotation { fill: #B8A9C8; font-family: Caveat, cursive; }
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
     </style>
   </defs>
   <!-- ==================== DIVIDER-DEFAULT ==================== -->
