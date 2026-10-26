@@ -3,6 +3,11 @@
 Transforms the raw spec token structure into an SVG-authoring-ready
 vocabulary. Agents use these tokens to draw freehand SVG that stays
 on-brand without being constrained to the component library.
+
+Specs on schema v0.3 carry their canonical token document (the system's
+``tokens.json``) at ``tokens.contract`` after ``load_system``; values from
+it take precedence. Specs without one fall back to the legacy
+``tokens.colors`` keys and the wireframe defaults below.
 """
 
 from __future__ import annotations
@@ -29,14 +34,23 @@ def export_tokens_for_authoring(spec: dict) -> dict[str, Any]:
     tokens = spec.get("tokens", {})
     system_id = spec.get("system", {}).get("id", "unknown")
     grammar_ext = spec.get("grammar_extensions", {})
+    contract = tokens.get("contract") or {}
 
-    return {
+    result: dict[str, Any] = {
         "system_id": system_id,
         "palette": _build_palette(tokens.get("colors", {})),
         "drawing_rules": _build_drawing_rules(tokens),
-        "typography": _build_typography_section(tokens.get("typography", {})),
+        "typography": _build_typography_section(
+            tokens.get("typography", {}), contract.get("color") or {}
+        ),
         "layout": _build_layout_section(tokens.get("spacing", {}), grammar_ext),
     }
+    if contract:
+        # The full semantic contract (docs/specs/SCHEMA-V0.3.md): fixed token
+        # names, so an agent can author against color.danger, type.label ...
+        # without knowing the system's private vocabulary.
+        result["contract"] = contract
+    return result
 
 
 def _build_palette(colors: dict) -> list[dict[str, str]]:
@@ -73,6 +87,7 @@ def _build_drawing_rules(tokens: dict) -> dict[str, Any]:
         Dict of drawing rule keys to SVG-ready values.
     """
     colors = tokens.get("colors", {})
+    contract_colors = (tokens.get("contract") or {}).get("color") or {}
     borders = tokens.get("borders", {})
     elevation = tokens.get("elevation", {})
     strategy = elevation.get("strategy", "borders_only")
@@ -86,11 +101,22 @@ def _build_drawing_rules(tokens: dict) -> dict[str, Any]:
         "text_primary": colors.get("text_primary", "#212121"),
         "text_secondary": colors.get("text_secondary", "#757575"),
         "text_disabled": colors.get("text_muted", "#BDBDBD"),
-        "text_inverse": "#FFFFFF",
+        "text_inverse": contract_colors.get("text_inverse", "#FFFFFF"),
         "radius_default": borders.get("radius_default", 6),
         "radius_inputs": borders.get("radius_inputs", 6),
         "radius_chrome": borders.get("radius_chrome", 8),
     }
+    if contract_colors:
+        rules.update({
+            "fill_surface_selected": contract_colors["surface_selected"],
+            "fill_surface_inverse": contract_colors["surface_inverse"],
+            "fill_action": contract_colors["action"],
+            "text_on_action": contract_colors["action_foreground"],
+            "text_on_accent": contract_colors["accent_foreground"],
+            "text_placeholder": contract_colors["text_placeholder"],
+            "stroke_input": contract_colors["border_input"],
+            "focus_ring": contract_colors["focus_ring"],
+        })
 
     if strategy == "borders_only":
         border_light = config.get("border_light", {})
@@ -118,11 +144,15 @@ def _build_drawing_rules(tokens: dict) -> dict[str, Any]:
     return rules
 
 
-def _build_typography_section(typography: dict) -> dict[str, Any]:
+def _build_typography_section(
+    typography: dict, contract_colors: dict | None = None
+) -> dict[str, Any]:
     """Build typography section with font stacks, scale, and CSS classes.
 
     Args:
         typography: The tokens.typography dict from spec.
+        contract_colors: The ``color`` group of the system's token contract,
+            when the spec has one; drives the CSS class fills.
 
     Returns:
         Dict with font stacks, type scale, case rules, and a ready-to-use
@@ -145,7 +175,7 @@ def _build_typography_section(typography: dict) -> dict[str, Any]:
     case_rules = typography.get("case", {})
     tracking = typography.get("tracking", {})
 
-    css_block = _build_css_class_block(structural_stack)
+    css_block = _build_css_class_block(structural_stack, contract_colors or {})
 
     return {
         "font_stack_structural": structural_stack,
@@ -157,28 +187,52 @@ def _build_typography_section(typography: dict) -> dict[str, Any]:
     }
 
 
-def _build_css_class_block(font_stack: str) -> str:
+# Wireframe values, used when a spec carries no token contract.
+_DEFAULT_CLASS_FILLS: dict[str, str] = {
+    "text_primary": "#212121",
+    "text_secondary": "#757575",
+    "text_muted": "#BDBDBD",
+    "text_inverse": "#FFFFFF",
+    "danger": "#B71C1C",
+    "success": "#2E7D32",
+    "warning": "#E65100",
+    "info": "#1565C0",
+}
+
+# CSS class -> contract colour token.
+_CLASS_TOKENS: tuple[tuple[str, str], ...] = (
+    ("text-primary", "text_primary"),
+    ("text-secondary", "text_secondary"),
+    ("text-disabled", "text_muted"),
+    ("text-inverse", "text_inverse"),
+    ("text-danger", "danger"),
+    ("text-success", "success"),
+    ("text-warning", "warning"),
+    ("text-info", "info"),
+)
+
+
+def _build_css_class_block(font_stack: str, contract_colors: dict | None = None) -> str:
     """Build the CSS class block for text elements.
+
+    Before v0.3 these fills were the wireframe's greys for every system;
+    they now come from the system's token contract.
 
     Args:
         font_stack: The structural font stack string.
+        contract_colors: The token contract's ``color`` group; any missing
+            token falls back to the wireframe default.
 
     Returns:
         A complete <style> block ready to paste into <defs>.
     """
     font = font_stack or "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    return (
-        "<style>\n"
-        f"  .text-primary {{ fill: #212121; font-family: {font}; }}\n"
-        f"  .text-secondary {{ fill: #757575; font-family: {font}; }}\n"
-        f"  .text-disabled {{ fill: #BDBDBD; font-family: {font}; }}\n"
-        f"  .text-inverse {{ fill: #FFFFFF; font-family: {font}; }}\n"
-        f"  .text-danger {{ fill: #B71C1C; font-family: {font}; }}\n"
-        f"  .text-success {{ fill: #2E7D32; font-family: {font}; }}\n"
-        f"  .text-warning {{ fill: #E65100; font-family: {font}; }}\n"
-        f"  .text-info {{ fill: #1565C0; font-family: {font}; }}\n"
-        "</style>"
+    fills = {**_DEFAULT_CLASS_FILLS, **(contract_colors or {})}
+    rows = "".join(
+        f"  .{cls} {{ fill: {fills[token]}; font-family: {font}; }}\n"
+        for cls, token in _CLASS_TOKENS
     )
+    return "<style>\n" + rows + "</style>"
 
 
 def _build_layout_section(

@@ -97,7 +97,7 @@ def test_swiss_dashboard_desktop():
         assert_(ds.get("id") == "swiss", "design_system.id is swiss")
         assert_(ds.get("layout_template_used") == "dashboard",
                 f"layout_template_used is 'dashboard' (got {ds.get('layout_template_used')})")
-        assert_(ds.get("spec_version") == "0.2", "spec_version recorded")
+        assert_(ds.get("spec_version") == "0.3", "spec_version recorded")
 
         # Compliance summary
         comp = ds.get("rulebook_compliance") or {}
@@ -1058,6 +1058,41 @@ def test_full_composition_e2e():
                 "SVG contains the chosen button component")
 
 
+# ─── token contract consumption (schema v0.3) ────────────────────
+
+
+def test_export_tokens_uses_system_contract():
+    section("export_tokens_for_authoring: fills come from the system's token contract")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    from design_system_skill.loader import load_system
+    res = load_system("terminal")
+    assert_(res.ok, "load_system('terminal') ok")
+    if not res.ok:
+        return
+    out = export_tokens_for_authoring(res.data)
+    css = out["typography"]["css_class_block"]
+    assert_("fill: #C8F7C5" in css, "text-primary uses terminal text_primary (#C8F7C5)")
+    assert_("#212121" not in css, "wireframe grey no longer leaks into other systems")
+    assert_("fill: #FF4E4E" in css, "text-danger uses terminal danger (#FF4E4E)")
+    rules = out["drawing_rules"]
+    assert_(rules["focus_ring"] == "#00FF66", f"drawing_rules.focus_ring (got {rules.get('focus_ring')})")
+    assert_(rules["text_inverse"] == "#0A0F0A", f"text_inverse from contract (got {rules['text_inverse']})")
+    assert_("stroke='#1F2F1F' stroke-width='1'" == rules["stroke_border"],
+            f"aliased elevation border resolves (got {rules['stroke_border']})")
+    assert_(out.get("contract", {}).get("system") == "terminal", "contract returned to agents")
+    assert_(out["typography"]["font_stack_structural"] == "'JetBrains Mono', monospace",
+            "font stack alias resolved")
+
+
+def test_export_tokens_without_contract_keeps_defaults():
+    section("export_tokens_for_authoring: specs without a contract keep wireframe defaults")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    out = export_tokens_for_authoring({"system": {"id": "legacy"}, "tokens": {"colors": {}}})
+    css = out["typography"]["css_class_block"]
+    assert_("fill: #212121" in css and "fill: #B71C1C" in css, "legacy defaults retained")
+    assert_("contract" not in out, "no contract key when the spec has none")
+
+
 def main():
     print("wireframe-skill v3.0 end-to-end tests\n" + "=" * 50)
     test_swiss_dashboard_desktop()
@@ -1106,6 +1141,8 @@ def main():
     test_wireframe_compose_takes_precedence()
     test_emit_with_components_used()
     test_full_composition_e2e()
+    test_export_tokens_uses_system_contract()
+    test_export_tokens_without_contract_keeps_defaults()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

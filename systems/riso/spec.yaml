@@ -1,4 +1,4 @@
-spec_version: "0.2"
+spec_version: "0.3"
 
 # ════════════════════════════════════════════════════════════════════
 # RISO — Duotone Print + Tweakable Press
@@ -25,6 +25,7 @@ system:
   tagline: "Duotone Print + Tweakable Press"
   grammar_family: print_texture
   version: "3.0.0"
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: ../../apps/showcase/src/systems/design-system-riso.jsx
   reference_export: riso-reference.html
 
@@ -111,39 +112,35 @@ system:
 
 tokens:
   colors:
-    page_bg: "#F4EFE4"          # paper cream
-    surface: "#F4EFE4"          # no elevated surfaces — paper is the only ground
-    surface_elevated: "#F4EFE4" # identical by design; see rulebook riso-no-shadows
-    text_primary: "#1A1614"     # paper.text_ink for cream — NOT an ink
-    text_secondary: "rgba(26,22,20,0.75)"
-    text_muted: "rgba(26,22,20,0.65)"
-    accent: "#FF48B0"           # ink-2 of the classic drum pair
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
 
     # Every ink shipped across all six drum presets, plus every paper stock.
     palette:
-      - { name: paper_cream,     value: "#F4EFE4", role: "paper — default, warm, forgiving" }
-      - { name: paper_kraft,     value: "#D4BE94", role: "paper — earthier, colors shift muddy" }
-      - { name: paper_white,     value: "#FDFCF8", role: "paper — clinical, max ink saturation" }
-      - { name: paper_gray,      value: "#BFBDB5", role: "paper — industrial zine feel" }
-      - { name: paper_newsprint, value: "#E4DCC9", role: "paper — bleached, grainy, most 'printed'" }
-      - { name: ink_federal_blue,      value: "#3255A4", role: "ink — classic ink-1, spritz ink-1" }
-      - { name: ink_fluorescent_pink,  value: "#FF48B0", role: "ink — classic ink-2, electric ink-1, ink ink-2" }
-      - { name: ink_green,             value: "#00A95C", role: "ink — electric ink-2, forest ink-2" }
-      - { name: ink_red,               value: "#FF665E", role: "ink — sunset ink-1" }
-      - { name: ink_yellow,            value: "#E8C700", role: "ink — sunset ink-2, spritz ink-2" }
-      - { name: ink_teal,              value: "#00838F", role: "ink — forest ink-1" }
-      - { name: ink_black,             value: "#1A1A1A", role: "ink — ink preset ink-1" }
+      - { name: paper_cream,     token: extras.color.paper_cream, role: "paper — default, warm, forgiving" }
+      - { name: paper_kraft,     token: extras.color.paper_kraft, role: "paper — earthier, colors shift muddy" }
+      - { name: paper_white,     token: extras.color.paper_white, role: "paper — clinical, max ink saturation" }
+      - { name: paper_gray,      token: extras.color.paper_gray, role: "paper — industrial zine feel" }
+      - { name: paper_newsprint, token: extras.color.paper_newsprint, role: "paper — bleached, grainy, most 'printed'" }
+      - { name: ink_federal_blue,      token: extras.color.ink_federal_blue, role: "ink — classic ink-1, spritz ink-1" }
+      - { name: ink_fluorescent_pink,  token: extras.color.ink_fluorescent_pink, role: "ink — classic ink-2, electric ink-1, ink ink-2" }
+      - { name: ink_green,             token: extras.color.ink_green, role: "ink — electric ink-2, forest ink-2" }
+      - { name: ink_red,               token: extras.color.ink_red, role: "ink — sunset ink-1" }
+      - { name: ink_yellow,            token: extras.color.ink_yellow, role: "ink — sunset ink-2, spritz ink-2" }
+      - { name: ink_teal,              token: extras.color.ink_teal, role: "ink — forest ink-1" }
+      - { name: ink_black,             token: extras.color.ink_black, role: "ink — ink preset ink-1" }
 
   typography:
     families:
       - id: structural
-        stack: "'Space Grotesk', system-ui, sans-serif"
+        stack: "{font.body}"
         role: "content — the page"
         mixing_rule: >
           Body text, titles, messages, replies, navigation, and any label above
           11px. A slightly quirky grotesk that pairs well with print textures.
       - id: metadata
-        stack: "'JetBrains Mono', ui-monospace, monospace"
+        stack: "{font.label}"
         role: "metadata — the colophon"
         mixing_rule: >
           Tracked uppercase labels at 11px and below only: timestamps, issue
@@ -179,8 +176,7 @@ tokens:
       tremor: "translate(±random, ±random) per letter — display only, 0 by default"
 
   spacing:
-    grid_unit: 8
-    allowed_steps: [6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
     enforcement: relaxed
     note: >
       Riso's rhythm is editorial, not modular. The implementation uses
@@ -189,9 +185,7 @@ tokens:
       by design; do not "fix" these to the grid.
 
   borders:
-    radius_default: 0
-    radius_inputs: 0
-    radius_chrome: 0
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
     note: "Radius 4 appears ONLY in spec-panel chrome, never in the system itself."
     rules:
       hairline: "1px solid rgba(0,0,0,0.1)"    # between items within a sidebar
@@ -200,7 +194,7 @@ tokens:
       vertical: "1px solid rgba(0,0,0,0.15)"   # sidebar/main divider
 
   elevation:
-    strategy: duotone_filter
+    # strategy: projected from tokens.json elevation.strategy
     premise: >
       Riso has no traditional elevation system. Depth is communicated through
       ink layering: which color sits on top, where halftone fields accumulate,

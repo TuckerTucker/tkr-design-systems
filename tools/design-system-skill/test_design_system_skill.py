@@ -737,6 +737,103 @@ def test_v02_spec_without_token_file_still_valid():
     assert_(res.ok, "v0.2 spec without tokens_file is valid")
 
 
+# ─── test: canonical token files (issue #4) ───────────────────────
+
+ALL_REGISTERED = ["wireframe", "neutral", "swiss", "terminal", "editorial",
+                  "sketch", "prism", "revolt", "riso"]
+
+
+def _strings(node):
+    if isinstance(node, dict):
+        for v in node.values():
+            yield from _strings(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _strings(v)
+    elif isinstance(node, str):
+        yield node
+
+
+def test_every_system_loads_tokens_from_token_file():
+    section("load_system: every registered system reads tokens from tokens.json")
+    from design_system_skill.token_file import ALIAS_RE, LEGACY_PROJECTION, get_spec_path, get_token
+    clear_cache()
+    for sys_id in ALL_REGISTERED:
+        res = load_system(sys_id)
+        assert_(res.ok, f"load_system('{sys_id}') ok",
+                "; ".join(e.message for e in res.errors)[:300] if not res.ok else "")
+        if not res.ok:
+            continue
+        spec = res.data
+        contract = spec["tokens"].get("contract")
+        assert_(isinstance(contract, dict) and contract.get("contract_version") == "1.0",
+                f"{sys_id}: tokens.contract attached")
+        assert_(spec["_meta"].get("tokens_path", "").endswith("tokens.json"),
+                f"{sys_id}: _meta.tokens_path points at tokens.json")
+        for keys, token_path in LEGACY_PROJECTION:
+            assert_(get_spec_path(spec, keys) == get_token(contract, token_path),
+                    f"{sys_id}: {'.'.join(keys)} projected from {token_path}")
+        palette = spec["tokens"]["colors"].get("palette") or []
+        assert_(all("value" in p for p in palette),
+                f"{sys_id}: every palette entry has a resolved value")
+        leftovers = [s for s in _strings({k: v for k, v in spec["tokens"].items() if k != "contract"})
+                     if ALIAS_RE.search(s)]
+        assert_(not leftovers, f"{sys_id}: no unresolved aliases in tokens ({leftovers[:3]})")
+
+
+def test_neutral_alias_shares_wireframe_tokens():
+    section("load_system: 'neutral' registry alias shares wireframe's token file")
+    clear_cache()
+    wf, nt = load_system("wireframe"), load_system("neutral")
+    assert_(wf.ok and nt.ok, "both ids load")
+    if wf.ok and nt.ok:
+        assert_(wf.data["_meta"]["tokens_path"] == nt.data["_meta"]["tokens_path"],
+                "same tokens_path")
+        assert_(nt.data["tokens"]["contract"]["system"] == "wireframe",
+                "token file system id is the canonical 'wireframe'")
+
+
+def test_riso_modes_cover_every_press():
+    section("riso tokens: paper x ink modes resolve every press combination")
+    from design_system_skill.token_file import iter_mode_selections, resolve_mode
+    doc = json.loads((SYSTEMS_DIR / "riso" / "tokens.json").read_text())
+    selections = list(iter_mode_selections(doc))
+    assert_(len(selections) == 30, f"5 papers x 6 inks = 30 selections (got {len(selections)})")
+    kraft_sunset = resolve_mode(doc, {"paper": "kraft", "ink": "sunset"})
+    assert_(kraft_sunset["color"]["page_bg"] == "#D4BE94", "kraft paper sets page_bg")
+    assert_(kraft_sunset["color"]["text_primary"] == "#2A1F12", "kraft paper sets text ink")
+    assert_(kraft_sunset["color"]["accent"] == "#E8C700", "sunset ink-2 sets accent")
+    default = resolve_mode(doc)
+    assert_(default["color"] == doc["color"], "default selection equals base values")
+
+
+def test_token_file_edit_invalidates_cache():
+    section("load_system: editing tokens.json invalidates the spec cache")
+    import os
+    import shutil
+    with tempfile.TemporaryDirectory() as td:
+        td_path = Path(td)
+        temp_registry = td_path / "registry.yaml"
+        shutil.copy2(SYSTEMS_DIR / "registry.yaml", temp_registry)
+        shutil.copytree(SYSTEMS_DIR / "swiss", td_path / "swiss")
+        os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"] = str(temp_registry)
+        try:
+            clear_cache()
+            first = load_system("swiss")
+            assert_(first.ok and first.data["tokens"]["colors"]["accent"] == "#E3000B",
+                    "swiss accent loads from tokens.json")
+            tok = td_path / "swiss" / "tokens.json"
+            doc = json.loads(tok.read_text())
+            doc["color"]["accent"] = "#0000FF"
+            tok.write_text(json.dumps(doc))
+            second = load_system("swiss")
+            assert_(second.ok and second.data["tokens"]["colors"]["accent"] == "#0000FF",
+                    "edited accent is picked up without clear_cache()")
+        finally:
+            del os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"]
+            clear_cache()
+
+
 # ─── runner ─────────────────────────────────────────────────────────
 
 def main():
@@ -767,6 +864,10 @@ def main():
     test_modes_validation()
     test_v03_spec_requires_token_file()
     test_v02_spec_without_token_file_still_valid()
+    test_every_system_loads_tokens_from_token_file()
+    test_neutral_alias_shares_wireframe_tokens()
+    test_riso_modes_cover_every_press()
+    test_token_file_edit_invalidates_cache()
 
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")

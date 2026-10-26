@@ -1,4 +1,4 @@
-spec_version: "0.2"
+spec_version: "0.3"
 
 system:
   id: wireframe
@@ -6,6 +6,7 @@ system:
   tagline: "Neutral Greyscale Reference Library"
   grammar_family: wireframe
   version: "1.1.0"   # bumped: v0.2 migration adds check_scope on all rules
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: null  # The wireframe library has no React source; the existing
                     # template SVGs and UNIVERSAL-WIREFRAMING-PROCESS.md are
                     # the canonical reference materials.
@@ -16,83 +17,79 @@ system:
 
 tokens:
   colors:
-    page_bg: "#F5F5F5"
-    surface: "#FFFFFF"
-    surface_elevated: "#FFFFFF"
-    text_primary: "#212121"
-    text_secondary: "#757575"
-    text_muted: "#BDBDBD"
-    accent: "#424242"
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
 
     palette:
       - name: background
-        value: "#F5F5F5"
+        token: color.page_bg
         role: page fill
         usage_constraint: "the only page background; use surface (#FFFFFF) for elevated content"
 
       - name: surface
-        value: "#FFFFFF"
+        token: color.surface
         role: cards, panels, headers, modals
         usage_constraint: "any container above the page background"
 
       - name: border
-        value: "#E0E0E0"
+        token: color.border_default
         role: outlines, dividers, subtle separation
         usage_constraint: "1px stroke for component boundaries"
 
       - name: disabled
-        value: "#BDBDBD"
+        token: color.text_muted
         role: placeholder text, inactive elements, disabled states
         usage_constraint: "text and shapes that should read as 'not currently usable'"
 
       - name: secondary
-        value: "#757575"
+        token: color.text_secondary
         role: subtitles, labels, help text, metadata
         usage_constraint: "secondary text hierarchy below body copy"
 
       - name: interactive
-        value: "#424242"
+        token: color.action
         role: button fills, active states, links
         usage_constraint: "the primary 'do something' color in the system"
 
       - name: primary_text
-        value: "#212121"
+        token: color.text_primary
         role: headings, body copy
         usage_constraint: "primary content text; the strongest text value"
 
       - name: inverse
-        value: "#FFFFFF"
+        token: color.text_inverse
         role: text on dark fills (e.g. on interactive #424242)
         usage_constraint: "only on dark surfaces; equivalent to surface in fills"
 
       - name: success
-        value: "#2E7D32"
+        token: color.success
         role: positive status, success states
         usage_constraint: "semantic color — use only for success communication"
 
       - name: warning
-        value: "#E65100"
+        token: color.warning
         role: caution status, warning states
         usage_constraint: "semantic color — use only for warning communication"
 
       - name: danger
-        value: "#B71C1C"
+        token: color.danger
         role: error status, destructive actions
         usage_constraint: "semantic color — use only for negative/critical communication"
 
       - name: info
-        value: "#1565C0"
+        token: color.info
         role: informational status, info banners
         usage_constraint: "semantic color — use only for neutral informational signals"
 
   typography:
     families:
       - id: structural
-        stack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+        stack: "{font.body}"
         role: every text element in the system
         mixing_rule: "system font stack — wireframes deliberately do not commit to a typeface"
       - id: mono
-        stack: "'SF Mono', 'Monaco', 'Consolas', monospace"
+        stack: "{font.mono}"
         role: tokens, technical labels, code excerpts
         mixing_rule: "use sparingly — only for content that's genuinely tabular or code-like"
 
@@ -116,8 +113,7 @@ tokens:
       headers: 0
 
   spacing:
-    grid_unit: 4
-    allowed_steps: [4, 8, 12, 16, 20, 24, 32, 40, 48, 64]
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
     enforcement: relaxed
     page_margin:
       mobile: 12   # px from edge
@@ -126,15 +122,13 @@ tokens:
     section_gap: 32
 
   borders:
-    radius_default: 6
-    radius_inputs: 6
-    radius_chrome: 8
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
 
   elevation:
-    strategy: borders_only
+    # strategy: projected from tokens.json elevation.strategy
     config:
-      border_light: { width: 1, color: "#E0E0E0", style: solid }
-      border_strong: { width: 1.5, color: "#E0E0E0", style: solid }
+      border_light: { width: "{border_width.default}", color: "{color.border_default}", style: solid }
+      border_strong: { width: "{border_width.strong}", color: "{color.border_strong}", style: solid }
       no_shadow: true
       no_radius_bias: false   # wireframes use modest radius (4-8px); not aggressive
 
