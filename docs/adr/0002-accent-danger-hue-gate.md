@@ -1,6 +1,7 @@
 # ADR-0002: Accent-vs-danger hue gate for every design system
 
-- **Status:** Accepted (the Revolt waiver is provisional, see Decision 4)
+- **Status:** Accepted (owner decisions on Revolt, Editorial and Swiss
+  recorded 2026-10-26, see Decisions 3–5)
 - **Date:** 2026-10-26
 - **Deciders:** Tucker Harley Brown
 
@@ -45,41 +46,66 @@ Measured in OKLCH hue, before this decision:
    `"color.action vs color.danger"`. A waiver that no longer matches a failure
    is stale and fails, as with `rulebook-exceptions.yaml`.
 3. **Swiss is waived** (the owner's decision): Swiss has exactly one chromatic
-   colour and its danger state is meant to be carried by type and copy, not by
-   a second hue.
-4. **Revolt is waived provisionally, pending the owner's confirmation.** The
-   JSX marks the five-colour palette INVIOLABLE ("No new colors"). Its only
-   chromatic colours are pink (accent) and lime (action, success); any danger
-   40° away from pink would be a sixth colour and change the system's
-   identity, so no fix was made. Revolt distinguishes error states by the
-   uppercase status label (JSX status variants `LIVE / TYPING / OFFLINE /
-   ERROR`) and black text on pink. Action (lime) passes at 110.6°.
-5. **Editorial is fixed, not waived.** Danger is a derived token, not a
-   signature colour, so it moved: `#6B1623` → `#5F1B4F`, hue 17.6° → 338.5°
-   (gap 40.3°), lightness and chroma unchanged. It stays a deep wine on the
-   paper (danger_foreground 10.9:1). The warm side (~59°) was rejected because
-   it lands next to warning `#8A5A12` (~70°). "Masthead Deep" remains available
+   colour and its danger state is carried by type and copy, not by a second
+   hue. On 2026-10-26 the owner had the spec give Swiss an explicit error
+   treatment so the waiver describes enforced behaviour (see "Swiss's error
+   treatment" below).
+4. **Revolt is waived permanently** (owner decision, confirmed 2026-10-26).
+   The five-colour palette is inviolable (the JSX marks it INVIOLABLE: "No
+   new colors"), so danger reuses pink. Its only chromatic colours are pink
+   (accent) and lime (action, success); any danger 40° away from pink would
+   be a sixth colour and change the system's identity. Errors are carried by
+   the uppercase `ERROR` status label (JSX status pill variants `LIVE /
+   TYPING / OFFLINE / ERROR`) and black text on pink (`danger_foreground
+   #111111`, 5.3:1). `systems/revolt/spec.yaml` now states this as the
+   judgment rule `revolt-error-status` and the
+   `grammar_extensions.per_system_signature.error_status` block. Action
+   (lime) passes at 110.6°.
+5. **Editorial is fixed, not waived; the owner accepted the fix on
+   2026-10-26.** Danger is a derived token, not a signature colour, so it
+   moved: `#6B1623` → `#5F1B4F` (plum), hue 17.6° → 338.5° (gap 40.3°),
+   lightness and chroma unchanged. It stays a deep wine on the paper
+   (danger_foreground 10.9:1). The warm side (~59°) was rejected because it
+   lands next to warning `#8A5A12` (~70°). "Masthead Deep" remains available
    as `extras.color.accent_deep`.
 
-### Does Swiss actually carry danger by typography or shape?
+### Owner decisions (2026-10-26)
 
-Partly, and only in the showcase JSX:
+| System | Decision | Recorded in |
+|--------|----------|-------------|
+| Revolt | Confirm the accent-vs-danger waiver permanently | `systems/revolt/tokens.json` `hue_waivers`; spec rule `revolt-error-status` |
+| Editorial | Accept the plum danger `#5F1B4F` (no value change) | `systems/editorial/tokens.json` `color.danger` |
+| Swiss | Add an explicit, partly enforced error treatment to the spec | `systems/swiss/spec.yaml` `components.error_message`; rules `swiss-error-prefix`, `swiss-error-not-red`, `swiss-error-typographic` |
 
-- The JSX voice table prescribes error copy as a lowercase `Error:` prefix
-  ("Error: send failed."), which is a verbal and typographic marker.
-- The red is bounded to four contexts by `swiss-red-finite-resource` (CTAs,
-  selection bars, user tags, status dots), and the JSX lists "Use red for
-  hover states, warning messages, or decorative underlines" as a Don't. Error
-  and destructive states are not among red's four contexts.
-- **But** `systems/swiss/spec.yaml` defines no error or destructive component,
-  no shape cue and no typographic treatment for danger; `color.danger =
-  #E3000B` is itself a derived value (`notes["color.danger"]`). A red `●` is
-  also Swiss's *active* status dot, so a red danger mark would read as "live".
+### Swiss's error treatment
 
-The waiver therefore rests on the JSX voice table, not on anything the spec
-enforces. Follow-up (not done here): give Swiss's spec an explicit error
-treatment (for example the `Error:` prefix rule and a non-red danger mark)
-so the waiver describes enforced behaviour.
+Before this decision the Swiss waiver rested only on the showcase JSX voice
+table (Error: "Error: send failed.", "Lowercase 'Error:' + what failed"); the
+spec defined no error treatment. `systems/swiss/spec.yaml` now defines one,
+grounded in that table and in the JSX's red budget:
+
+- **Copy, not colour.** Error copy reads `Error: <what failed>.`: the prefix
+  `Error:` (capital E, colon), the failure as a lowercase sentence, a closing
+  period. Never `ERROR`, `error:` or `Error -`.
+- **No icon, shape or fill.** No glyph, badge, pill, fill, coloured or
+  thickened border; the input keeps its ordinary black rule. No `●`: a red
+  `●` is Swiss's *active* status dot and would read as "live".
+- **No red.** The JSX gives red four contexts (CTA labels, selection bar,
+  user-message tag, status dot + unread count) and lists "Use red for hover
+  states, warning messages, or decorative underlines" as a Don't, so error
+  copy is ink. A recovery action inside an error surface ("Retry →") is a
+  CTA label and counts toward the four-use red budget
+  (`swiss-red-finite-resource`).
+
+Enforcement: `swiss-error-prefix` and `swiss-error-not-red` are mechanical
+(`tools/builders/rulebook_check.py`, swiss ruleset): any text starting with
+the word "error" must have the `Error: … .` form, a builder component named
+`*-ERROR` / `*-WITH-ERROR` must carry such a text, and `Error:` text must not
+resolve to the accent red. `swiss-error-typographic` (no icons or shapes,
+lowercase message naming what failed) is a semantic rule, checked by
+judgment. The Swiss builder's `form-field-with-error` (was a red rule and a
+red "Please enter a valid email address.") and `toast-error` (was a red
+`ERROR` label) were brought into line.
 
 ## Alternatives Considered
 
@@ -107,10 +133,15 @@ so the waiver describes enforced behaviour.
   as danger fails validation until it moves danger or adds a reasoned waiver.
 - Editorial's destructive states become plum rather than oxblood; builders
   and the showcase pick this up from `tokens.json`.
-- Two systems carry waivers. The Revolt waiver needs an owner decision: keep
-  it, or admit a sixth colour for danger.
-- Swiss's waiver documents intent that its spec does not yet enforce (see
-  above).
+- Two systems carry waivers, both confirmed by the owner. Revolt keeps its
+  five colours; its error treatment is a judgment rule only (the revolt
+  ruleset has no mechanical error check). The Revolt builder's error
+  components (`banner-error`, `toast-error`, `form-field-with-error`) do not
+  yet follow it: they set `ERROR` as pink text on white with no pill, and
+  the field marks the error with a pink border. Bringing them into line is a
+  follow-up.
+- Swiss's waiver now points at an error treatment its spec defines and the
+  rulebook check partly enforces (see "Swiss's error treatment").
 - Reversal cost is low: the gate is one function and one key in the token
   file; removing it is a code change, and waivers can be deleted once a
   system changes its danger colour (the stale-waiver check forces that

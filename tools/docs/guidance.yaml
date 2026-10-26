@@ -1,0 +1,191 @@
+# Hand-written agent guidance rendered into the skills by tools/docs/generate.py
+# (issues #11, #14). Edit this file, then run:
+#
+#     uv run python tools/docs/generate.py
+#
+# Everything here is checked when it is rendered:
+#   - which_component: every `use` / `not` entry is `component` or
+#     `component.variant`; the component must be in the LIBRARY-SPEC
+#     vocabulary (docs/specs/LIBRARY-SPEC.md) and the variant one of its
+#     variants there.
+#   - which_system.suits: exactly one entry per registered system (aliases
+#     such as `neutral` inherit their target's entry).
+#   - rules_agents_get_wrong: every ref resolves — `rule:<system>/<rule-id>`
+#     to a rulebook entry in systems/<system>/spec.yaml, `check:<id>` to a
+#     check id in tools/builders/rulebook_check.py, `doc:<path>[#anchor]` to a
+#     file in the repo.
+#
+# Policies cited are claude.md § UX Philosophy unless noted.
+
+which_component:
+  - job: Status that persists (sync failed, offline, plan expiring)
+    use: [banner]
+    not: [toast]
+    why: >-
+      NO toast notifications: a toast forces a context switch and is gone
+      before it is read. A banner stays in place until the condition clears.
+  - job: Result of one action (saved, sent, failed to send)
+    use: [badge.status]
+    not: [toast, modal]
+    why: >-
+      Status and errors appear contextual to the action: mark the item that
+      was acted on, in place.
+  - job: Destructive action (delete, archive, remove)
+    use: [button.destructive, banner]
+    not: [modal.confirmation]
+    why: >-
+      NO "Are you sure?" dialogs: act immediately and offer undo (a banner
+      with an undo action), so responsibility is not shifted to the user.
+  - job: List or table under 100 items
+    use: [list_item, data_table.default, search_bar]
+    not: [pagination, data_table.with_pagination]
+    why: >-
+      NO pagination for small datasets: show every row; filter with search
+      instead of making the user page.
+  - job: Required and optional form fields
+    use: [label.required, label.optional]
+    not: [label.default]
+    why: >-
+      NO required fields without indication: an unmarked required field is
+      an error discovered after the fact.
+  - job: Invalid input
+    use: [form_field.with_error]
+    not: [modal, toast]
+    why: >-
+      Validate inline as they type and show how to fix it, in place; constrain
+      inputs so invalid states are impossible where you can.
+  - job: Action that is not available yet
+    use: [button]
+    not: []
+    why: >-
+      Render it in its disabled state, not hidden; a tooltip says what is
+      required to enable it. Disable instead of erroring after the fact.
+  - job: Edit a value or a setting
+    use: [input, toggle, settings_layout]
+    not: [modal.form_modal]
+    why: >-
+      Edit in place, not in modals; keep context visible during the
+      operation.
+  - job: On/off setting that applies immediately
+    use: [toggle]
+    not: [checkbox]
+    why: >-
+      LIBRARY-SPEC: toggle is the settings-context boolean; checkbox is for
+      multiple-select context or a form that is submitted.
+  - job: Advanced or secondary detail
+    use: [accordion_item, drawer]
+    not: [modal]
+    why: >-
+      Progressive disclosure: basics first, reveal on demand without leaving
+      the page.
+  - job: Missing, empty, failed or denied content
+    use: [empty_state.no_data, empty_state.no_results, empty_state.first_use, empty_state.error]
+    not: []
+    why: >-
+      Never a blank region. Edge cases are first-class deliverables
+      (wireframe-edge-cases-first-class) and say what went wrong and how to
+      fix it.
+  - job: A count or metric that matters
+    use: [stat]
+    not: [badge.count]
+    why: >-
+      Numbers carry meaning as display type (swiss-numerical-display); Swiss
+      forbids count badges outright.
+  - job: Identity of a person or thread
+    use: [avatar.monogram, avatar.index, avatar.none]
+    not: [avatar.emoji, avatar.photo]
+    why: >-
+      Follow the system's avatar_strategy; emoji are banned (ADR-0001) and
+      photos are content, not structure.
+
+which_system:
+  # What each system suits, grounded in LIBRARY-SPEC.md § Coverage Targets,
+  # the spec's premise / format_fitness, and the showcase JSX. Intent, grammar
+  # and library counts are read from the specs and libraries at render time.
+  suits:
+    wireframe: >-
+      Structure before a visual language is chosen. The default when the user
+      names no system, and the fallback library for components another system
+      has not authored.
+    swiss: >-
+      General-purpose product UI: dashboards, settings, forms, data tables,
+      sign-in. Dense information where hierarchy comes from type and grid,
+      with one accent.
+    terminal: >-
+      Developer tools, logs, monitoring and command palettes; keyboard-first
+      surfaces. Not long-form reading or consumer sign-in.
+    editorial: >-
+      Long-form reading: articles, briefings, newsletters, transcripts. The
+      article pattern is its strength.
+    sketch: >-
+      Early product UI that carries an annotation layer: design reviews,
+      onboarding, explained flows.
+    prism: >-
+      Atmospheric, short compositions: dashboards, modals, drawers. Built for
+      HTML/CSS; its SVG glass is an approximation for layout review only.
+    revolt: >-
+      Expressive, loud moments: launches, campaigns, banners, playful sign-in.
+    riso: >-
+      Content-heavy, print-flavoured surfaces: zines, features, articles,
+      with parametric ink and paper presets.
+
+rules_agents_get_wrong:
+  - wrong: Spacing of 12px or 20px in Swiss
+    why: Every Swiss spacing value is a multiple of 8; off-grid breaks the rhythm.
+    refs: [rule:swiss/swiss-grid-alignment]
+  - wrong: A fifth red mark in Swiss, or an error set in red
+    why: >-
+      Red is finite: CTA, selection bar, identity tag, status dot, at most four
+      per screen. Swiss danger reuses that red (hue-gate waiver), so an error is
+      ink copy reading "Error: what failed." with no icon, badge, fill or
+      border change.
+    refs: [rule:swiss/swiss-red-finite-resource, rule:swiss/swiss-error-not-red, rule:swiss/swiss-error-typographic, doc:docs/adr/0002-accent-danger-hue-gate.md]
+  - wrong: An error in Revolt shown only by a new colour
+    why: >-
+      Revolt's five colours are fixed; an error is labelled with the uppercase
+      ERROR status pill, not recoloured.
+    refs: [rule:revolt/revolt-error-status]
+  - wrong: Emoji in an avatar, label, status or decoration
+    why: >-
+      Emoji depend on system fonts and degrade silently in CairoSVG. Identity
+      uses the system's avatar_strategy; functional icons come from Lucide.
+    refs: [rule:swiss/swiss-no-emoji-imagery, rule:riso/riso-no-emoji, doc:docs/adr/0001-lucide-as-icon-source.md]
+  - wrong: A font size between steps (12px in Swiss, 15px in the wireframe library)
+    why: Each system has a fixed type scale; nudge to the nearest allowed size (sizes per system below).
+    refs: [rule:swiss/swiss-fixed-type-scale, rule:wireframe/wireframe-type-scale-discipline]
+  - wrong: A colour literal instead of a token (a hex in a template, an off-palette fill)
+    why: >-
+      tokens.json is canonical. Read colours through the token file
+      (wf_get_tokens); the drift check flags literals the file does not
+      produce, and the rulebook flags off-palette fills.
+    refs: [doc:docs/specs/TOKENS.md, rule:wireframe/wireframe-palette-discipline]
+  - wrong: An unescaped < or > in SVG text, such as `[ < prev ]`
+    why: The SVG is no longer well-formed XML and the rulebook check aborts. Write `&lt;` and `&gt;`.
+    refs: [check:xml-well-formed]
+  - wrong: A double hyphen inside an SVG comment
+    why: XML forbids `--` inside a comment body; the file will not parse.
+    refs: [rule:wireframe/wireframe-no-double-hyphens-in-comments]
+  - wrong: An animation with no tier, or one that ignores reduced motion
+    why: >-
+      Every animation names a motion tier and a reduced behaviour within the
+      system's reduced_motion policy; keep is not allowed on anything that
+      moves.
+    refs: [doc:docs/specs/SCHEMA-V0.3.md#motion]
+  - wrong: Rounded corners or soft shadows in Swiss, Terminal or Revolt
+    why: Radius is 0 in all three. Swiss and Terminal use no shadows; Revolt's only shadow is the hard 4px 4px 0 offset.
+    refs: [rule:swiss/swiss-zero-radius, rule:swiss/swiss-no-shadows, rule:terminal/terminal-no-radius, rule:revolt/revolt-hard-shadows-only]
+  - wrong: A pure white page in Editorial or Sketch
+    why: Both pages are warm paper; white is reserved for deliberate emphasis.
+    refs: [rule:editorial/editorial-paper-bg-required, rule:sketch/sketch-warm-paper-bg]
+  - wrong: Status shown twice (a red border and a red badge on one card)
+    why: One status, one visual channel; doubling it adds noise, not meaning.
+    refs: [rule:wireframe/wireframe-one-channel-per-message]
+  - wrong: Selection shown with a background fill in Terminal
+    why: Terminal selects by changing characters (' ' to '>') and colour, never by fill.
+    refs: [rule:terminal/terminal-selection-via-character]
+  - wrong: A third ink in Riso
+    why: Exactly two inks per artifact from one press preset; neutrals come from the paper.
+    refs: [rule:riso/riso-two-inks-only, rule:riso/riso-paper-is-the-neutral]
+  - wrong: A toast for status, or an "Are you sure?" dialog before deleting
+    why: Use a banner or inline status, and undo. See the Which component table.
+    refs: [doc:claude.md]

@@ -1,7 +1,7 @@
 # Unified Foundation — wireframe + design-system
 
 This document reconciles three things:
-1. What the existing `wireframe-skill` (v2.0) brings — battle-tested across 46+ wireframes
+1. What the existing `wireframe-skill` (v2.0) brings — battle-tested across production wireframes
 2. What we built today in this conversation — schema, six per-system specs, signature components
 3. What the unified system should look like going forward
 
@@ -83,7 +83,7 @@ For each of the six systems, a list_item (default + selected variants) and a ful
 
 ### Library spec
 
-`LIBRARY-SPEC.md` proposing a 3-tier (Primitives/Composites/Patterns) component library structure with 42 components total.
+`LIBRARY-SPEC.md` proposing a 3-tier (Primitives/Composites/Patterns) component library structure with <!-- generated:library-vocabulary-count -->42<!-- /generated:library-vocabulary-count --> components total.
 
 ### Findings docs
 
@@ -97,11 +97,11 @@ The honest synthesis: the existing wireframe-skill has the **philosophy** right 
 
 ### Architectural Decision 1: One vocabulary, two rendering modes
 
-The unified system has ONE component vocabulary (the LIBRARY-SPEC's 42 components) rendered in two modes:
+The unified system has ONE component vocabulary (the LIBRARY-SPEC's <!-- generated:library-vocabulary-count -->42<!-- /generated:library-vocabulary-count --> components) rendered in two modes:
 
 **Wireframe mode** — neutral, greyscale, system-agnostic. Uses the existing wireframe-skill's 7-token palette and 6-tier typography. This becomes the "default design system" — same schema, same composition rules, just a system whose grammar is "deliberately neutral."
 
-**Design-system mode** — same 42-component vocabulary, rendered in each per-system grammar. Swiss's button, Terminal's button, Riso's button — same component, different rendering.
+**Design-system mode** — same component vocabulary, rendered in each per-system grammar. Swiss's button, Terminal's button, Riso's button — same component, different rendering.
 
 This means:
 - The wireframe library IS a design system in the schema sense (`grammar_family: wireframe`, a new family value)
@@ -222,7 +222,7 @@ tkr-design-systems/
       components/
         primitive-button-primary.svg
         primitive-button-secondary.svg
-        ... (all 42 components)
+        ... (every LIBRARY-SPEC component)
       layouts/
         pattern-dashboard.svg
         pattern-form.svg

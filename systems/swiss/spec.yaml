@@ -202,6 +202,34 @@ components:
         stagger_ms: 40
         note: "JSX .ci fadeSlideUp 0.2s ease, 6px travel. Selection is instant."
 
+  error_message:
+    # Swiss's error treatment (ADR-0002, issue #8). Swiss has one chromatic
+    # colour and color.danger reuses the accent red (hue waiver in
+    # tokens.json), so an error is carried by copy and type, never by hue.
+    # Grounded in the JSX voice table: Error -> "Error: send failed."
+    # ("Lowercase 'Error:' + what failed"). The JSX gives red exactly four
+    # contexts (CTA labels, selection bar, user-message tag, status dot +
+    # unread count) and lists "Use red for ... warning messages" as a Don't;
+    # error copy is not one of the four, so it is set in ink.
+    anatomy:
+      - prefix
+      - message
+    variants:
+      - id: inline
+        svg: components/form-field-with-error.svg
+        rendering_notes: "Below the field, one line of 11px ink (color.text_primary): 'Error: invalid email address.' The input keeps its ordinary 1px black top rule (border_input); the rule does not turn red, thicken or gain an icon."
+        states: [default]
+      - id: toast
+        svg: components/toast-error.svg
+        rendering_notes: "Toast grammar unchanged (1px black top rule, 9px tracked uppercase grey subject label, × dismiss). The body is 13px ink: 'Error: could not connect to the server.' The label names the subject, not the severity; it is grey, not red."
+        states: [default]
+    constraints:
+      - "Error copy begins with the prefix 'Error:' (capital E, colon), then the failure as a lowercase sentence ending with a period: 'Error: send failed.' Never 'ERROR', 'error:', 'Error -' or 'Error!' (swiss-error-prefix)"
+      - "Errors are typographic only: no icon, glyph, shape, badge, pill, fill, border change or second colour (swiss-error-typographic)"
+      - "Error copy is ink (color.text_primary), never red; red is not one of its four contexts (swiss-error-not-red, swiss-red-finite-resource)"
+      - "A recovery action inside an error surface (e.g. 'Retry →') is a CTA and may be red as a CTA label; it counts toward the 4-use red budget"
+      - "Never use ● for errors: the red ● is the active-status dot and would read as 'live'"
+
   badge:
     anatomy: []
     variants: []
@@ -398,6 +426,30 @@ rulebook:
     severity: required
     check_method: semantic
     check_scope: both
+
+  - id: swiss-error-prefix
+    rule: "Error copy reads 'Error: <what failed>.' — the prefix 'Error:' with a capital E and a colon, a space, the failure, and a closing period (JSX voice table: 'Error: send failed.'). Any text starting with the word 'error' in another form ('ERROR', 'error: x', 'Error - x', 'Error: x' without a period) fails, and an error component carries at least one text in this form."
+    rationale: "Swiss's danger reuses the accent red (hue-gate waiver, ADR-0002), so colour cannot say 'this is broken'. The fixed verbal prefix is the error signal; one spelling keeps it recognisable."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "tools/builders/rulebook_check.py check_error_prefix: every <text> whose content starts with 'error' (any case) must match 'Error: \\S.*\\.'; an SVG whose builder banner comment names it an error component (*-ERROR, *-WITH-ERROR) must contain such a text."
+
+  - id: swiss-error-not-red
+    rule: "Text beginning 'Error:' is set in ink (color.text_primary), never in the accent red."
+    rationale: "Red's four contexts (swiss-red-finite-resource) do not include errors, and the JSX lists red warning messages as a Don't. A red error line would also spend the red budget on a state, not an action or mark."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "tools/builders/rulebook_check.py check_error_not_red: the inline or CSS-class fill of each 'Error:' <text> must not resolve to color.accent."
+
+  - id: swiss-error-typographic
+    rule: "Error states are carried by copy and type alone: no icon, glyph, shape, badge, pill, fill, coloured or thickened border, and no ● (the red ● is the active-status dot). After the 'Error:' prefix the message is a lowercase sentence (proper nouns excepted) naming what failed. A recovery action in an error surface is an ordinary CTA label and counts toward the 4-use red budget."
+    rationale: "Swiss has one chromatic colour and no icons (ADR-0001: Swiss renders nothing; typography carries the meaning). With danger sharing the accent red, only the words can distinguish an error from the brand signal."
+    severity: required
+    check_method: semantic
+    check_scope: both
+    applies_when: "artifact or component shows an error or failure state"
 
 # ────────────────────────────────────────────────────────────────────
 # GRAMMAR EXTENSIONS

@@ -261,7 +261,7 @@ def test_get_rulebook():
     res = get_rulebook("swiss")
     assert_(res.ok, "get_rulebook('swiss') returns ok=True")
     rules = res.data
-    assert_(len(rules) == 10, f"swiss has 10 rulebook entries (got {len(rules)})")
+    assert_(len(rules) == 13, f"swiss has 13 rulebook entries (got {len(rules)})")
     rule_ids = {r["id"] for r in rules}
     assert_("swiss-red-finite-resource" in rule_ids,
             "swiss rulebook includes red-finite-resource")
@@ -287,6 +287,96 @@ def test_check_compliance_swiss_component():
             f"no failures (got {res.data['failed']}: {[r['rule_id'] for r in res.data['results'] if r['status']=='fail']})")
     assert_(res.data["scope"] == "component",
             f"scope auto-detected as component (got {res.data['scope']})")
+
+
+_SWISS_STYLE = (
+    "<defs><style>.text-primary { fill: #000000; } "
+    ".text-accent { fill: #E3000B; }</style></defs>"
+)
+
+
+def _swiss_svg(body: str, banner: str = "") -> str:
+    """Build a minimal Swiss SVG fragment with the builder class styles.
+
+    Args:
+        body: Inner SVG markup.
+        banner: Optional builder banner name (e.g. ``TOAST-ERROR``).
+
+    Returns:
+        SVG source text.
+    """
+    comment = f"<!-- ==================== {banner} ==================== -->" if banner else ""
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64">'
+            f"{_SWISS_STYLE}{comment}{body}</svg>")
+
+
+def test_swiss_error_prefix_rule():
+    section("swiss-error-prefix: error copy reads 'Error: <what failed>.'")
+    rb = _rb()
+    good = _swiss_svg('<text class="text-primary">Error: send failed.</text>')
+    res = rb.check_error_prefix(good)
+    assert_(res["rule_id"] == "swiss-error-prefix" and res["passed"],
+            f"'Error: send failed.' passes (got {res})")
+
+    for bad in ("ERROR", "error: send failed.", "Error - send failed.",
+                "Error: send failed", "Error:send failed.", "Errors: two failed."):
+        res = rb.check_error_prefix(_swiss_svg(f'<text class="text-primary">{bad}</text>'))
+        if bad == "Errors: two failed.":
+            assert_(res["passed"], "'Errors' is not the word 'error' and is not checked")
+            continue
+        assert_(not res["passed"] and len(res["violations"]) == 1,
+                f"{bad!r} fails (got {res['violations']})")
+
+    nested = _swiss_svg('<text class="text-primary"><tspan>Error:</tspan> '
+                        "<tspan>save failed.</tspan></text>")
+    assert_(rb.check_error_prefix(nested)["passed"], "tspans are flattened before matching")
+
+    plain = _swiss_svg('<text class="text-primary">Sent.</text>')
+    res = rb.check_error_prefix(plain)
+    assert_(res["passed"] and res["vacuous"], "a fragment with no error copy passes vacuously")
+
+    missing = _swiss_svg('<text class="text-primary">Could not connect.</text>', "TOAST-ERROR")
+    res = rb.check_error_prefix(missing)
+    assert_(not res["passed"] and res["error_component"]
+            and any("missing prefix" in v for v in res["violations"]),
+            f"an error component without the prefix fails (got {res})")
+    field = _swiss_svg('<text class="text-primary">Error: invalid email address.</text>',
+                       "FORM-FIELD-WITH-ERROR")
+    assert_(rb.check_error_prefix(field)["passed"], "an error component with the prefix passes")
+    other = _swiss_svg('<text class="text-primary">Could not connect.</text>', "TOAST-INFO")
+    assert_(rb.check_error_prefix(other)["passed"], "a non-error banner is not an error component")
+
+
+def test_swiss_error_not_red_rule():
+    section("swiss-error-not-red: 'Error:' copy is ink, never the accent red")
+    rb = _rb()
+    ink = _swiss_svg('<text class="text-primary">Error: send failed.</text>')
+    assert_(rb.check_error_not_red(ink)["passed"], "ink error copy passes")
+    by_class = _swiss_svg('<text class="text-accent">Error: send failed.</text>')
+    res = rb.check_error_not_red(by_class)
+    assert_(not res["passed"] and res["rule_id"] == "swiss-error-not-red",
+            f"red via CSS class fails (got {res})")
+    inline = _swiss_svg('<text fill="#e3000b">Error: send failed.</text>')
+    assert_(not rb.check_error_not_red(inline)["passed"], "red via inline fill fails")
+    cta = _swiss_svg('<text class="text-accent">Retry →</text>')
+    assert_(rb.check_error_not_red(cta)["passed"], "a red CTA label is not error copy")
+
+
+def test_swiss_library_follows_error_treatment():
+    section("swiss library: error components follow the spec's error treatment")
+    rb = _rb()
+    ids = {fn.__name__ for fn, _ in rb.CHECKS_BY_RULESET["swiss"]}
+    assert_({"check_error_prefix", "check_error_not_red"} <= ids,
+            "the swiss ruleset runs both error checks")
+    rule_ids = {r["id"] for r in get_rulebook("swiss").data}
+    assert_({"swiss-error-prefix", "swiss-error-not-red", "swiss-error-typographic"} <= rule_ids,
+            "spec.yaml rulebook declares the three error rules")
+    for name in ("form-field-with-error", "toast-error"):
+        svg = (SYSTEMS_DIR / "swiss" / "components" / f"{name}.svg").read_text()
+        prefix = rb.check_error_prefix(svg)
+        assert_(prefix["passed"] and prefix["error_component"],
+                f"{name} carries 'Error:' copy (got {prefix['violations']})")
+        assert_(rb.check_error_not_red(svg)["passed"], f"{name} error copy is not red")
 
 
 def test_check_compliance_wireframe_pattern():
@@ -1668,6 +1758,9 @@ def main():
     test_exception_match_does_not_cover_new_violation()
     test_exception_missing_reason_rejected()
     test_exception_stale_entry_fails()
+    test_swiss_error_prefix_rule()
+    test_swiss_error_not_red_rule()
+    test_swiss_library_follows_error_treatment()
     test_exception_outside_scope_not_stale()
     test_register_unregister_roundtrip()
     test_extends_loads_merged_spec()
