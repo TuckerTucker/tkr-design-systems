@@ -24,17 +24,27 @@ if str(_DSS) not in sys.path:
 from .discovery import RegistryError, SystemTarget, discover_systems, select_targets  # noqa: E402
 from .plugin import BuilderDataError, load_plugin, validate_builder  # noqa: E402
 from .runner import (  # noqa: E402
+    AllowListError,
     BuildResult,
     RenderedFile,
     build,
+    load_orphan_allowlist,
     load_tokens,
+    orphan_files,
     render_kind,
     stale_files,
     write_files,
 )
-from .templates import TemplateError, TextClass, default_wrap, resolve  # noqa: E402
+from .templates import (  # noqa: E402
+    TemplateError,
+    TextClass,
+    TokenFilter,
+    default_wrap,
+    resolve,
+)
 
 __all__ = [
+    "AllowListError",
     "BuildResult",
     "BuilderDataError",
     "RegistryError",
@@ -42,11 +52,14 @@ __all__ = [
     "SystemTarget",
     "TemplateError",
     "TextClass",
+    "TokenFilter",
     "build",
     "default_wrap",
     "discover_systems",
     "load_plugin",
+    "load_orphan_allowlist",
     "load_tokens",
+    "orphan_files",
     "render_kind",
     "resolve",
     "select_targets",

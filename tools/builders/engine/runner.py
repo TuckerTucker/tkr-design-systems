@@ -14,6 +14,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+import yaml
 from design_system_skill.token_file import read_spec_with_tokens
 
 from .discovery import SystemTarget
@@ -188,6 +189,81 @@ def stale_files(files: Iterable[RenderedFile]) -> list[tuple[RenderedFile, str]]
         elif f.path.read_text(encoding="utf-8") != f.text:
             out.append((f, "differs"))
     return out
+
+
+class AllowListError(ValueError):
+    """The orphan allow-list file is missing or malformed."""
+
+
+def load_orphan_allowlist(path: Path, base: Path) -> dict[Path, str]:
+    """Read the orphan allow-list.
+
+    The file is YAML: ``allow: [{path: <relative to base>, reason: <text>}]``.
+    A missing file means an empty list.
+
+    Args:
+        path: Allow-list file.
+        base: Directory entry paths are relative to (the registry's).
+
+    Returns:
+        ``{absolute path: reason}``.
+
+    Raises:
+        AllowListError: If the file is malformed or an entry has no reason.
+    """
+    if not Path(path).exists():
+        return {}
+    try:
+        raw = yaml.safe_load(Path(path).read_text()) or {}
+    except (OSError, yaml.YAMLError) as exc:
+        raise AllowListError(f"cannot read orphan allow-list {path}: {exc}") from exc
+    entries = raw.get("allow") if isinstance(raw, Mapping) else None
+    if not isinstance(entries, list):
+        raise AllowListError(f"orphan allow-list {path}: expected 'allow: [...]'")
+    out: dict[Path, str] = {}
+    for entry in entries:
+        if not (isinstance(entry, Mapping) and isinstance(entry.get("path"), str)
+                and isinstance(entry.get("reason"), str) and entry["reason"].strip()):
+            raise AllowListError(f"orphan allow-list {path}: entry {entry!r} needs "
+                                 f"a 'path' and a non-empty 'reason'")
+        out[(Path(base) / entry["path"]).resolve()] = entry["reason"]
+    return out
+
+
+def orphan_files(targets: Iterable[SystemTarget], files: Iterable[RenderedFile],
+                 kinds: Iterable[str] | None = None,
+                 allow: Mapping[Path, str] | None = None) -> tuple[list[Path], list[Path]]:
+    """Find library SVGs no template produces, and stale allow-list entries.
+
+    A hand-authored SVG in ``components/`` or ``layouts/`` escapes
+    ``--check`` (nothing re-renders it from tokens), so every such file
+    must either come from a template or be allow-listed with a reason.
+
+    Args:
+        targets: Systems in scope (with or without a builder module).
+        files: Files the engine rendered for those systems.
+        kinds: Kinds in scope (default: all), selecting the directories.
+        allow: ``{absolute path: reason}`` of tolerated orphans.
+
+    Returns:
+        ``(orphans, stale)``: unlisted SVGs no template produces, and
+        allow-list entries in scope that are missing or now produced.
+    """
+    allow = allow or {}
+    produced = {f.path.resolve() for f in files}
+    dirs = [KIND_OUT_DIRS[k] for k in (kinds or KIND_OUT_DIRS)]
+    orphans: list[Path] = []
+    stale: list[Path] = []
+    for target in targets:
+        for d in dirs:
+            root = (target.library_root / d).resolve()
+            for svg in sorted(root.glob("*.svg")):
+                svg = svg.resolve()
+                if svg not in produced and svg not in allow:
+                    orphans.append(svg)
+            stale.extend(p for p in allow
+                         if p.parent == root and (not p.exists() or p in produced))
+    return orphans, sorted(set(stale))
 
 
 def write_files(files: Iterable[RenderedFile]) -> list[RenderedFile]:

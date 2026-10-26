@@ -9,11 +9,22 @@ They reference the system's token file with placeholders:
     {extras.color.orb_lavender|alpha=0.25}
                                        -> the token's RGB with this alpha,
                                           as ``rgba(r,g,b,0.25)``
+    {extras.radius.message|rrect=10,20,300,40,br:extras.radius.message_tail}
+                                       -> path data for a rounded rectangle
+                                          whose corners take the token radius
+                                          (per-corner overrides name tokens)
+    {full:24}                          -> 12: fully round on a 24px side
 
 A placeholder is a brace pair around a dotted path of lowercase
 identifiers (at least two segments), optionally followed by one
 ``|filter=arg``. Anything else in braces (CSS rule bodies, prose) is
 left alone, so templates can carry inline ``<style>`` blocks.
+
+Corner radii follow one rule: every ``rx``/``ry`` is a radius token,
+``0``, or ``{full:N}`` -- half of the element's shorter side ``N``, for
+pills, toggle tracks and round knobs whose rounding is geometry rather
+than a design decision. Rounded corners in path data come from
+``|rrect``. ``tools/builders/test_build.py`` enforces both.
 
 Resolved values are XML-escaped (``&``, ``<``, ``>``, ``"``) because
 placeholders sit inside attribute values and ``<style>`` text.
@@ -34,14 +45,31 @@ PLACEHOLDER_RE = re.compile(
     r"(?:\|(?P<filter>[a-z_]+)=(?P<arg>[^{}|\s]+))?\}"
 )
 
+#: ``{full:N}``: half of ``N`` (the shorter side of a fully round shape).
+FULL_RE = re.compile(r"\{full:(?P<side>\d+(?:\.\d+)?)\}")
+
 _XML_ENTITIES = {'"': "&quot;"}
 
-#: Signature of a filter: (token value, argument text) -> rendered string.
+#: Signature of a plain filter: (token value, argument text) -> rendered string.
 Filter = Callable[[Any, str], str]
 
 
 class TemplateError(ValueError):
     """A template references a token path or filter that cannot be resolved."""
+
+
+@dataclass(frozen=True)
+class TokenFilter:
+    """A filter that reads further tokens named in its argument.
+
+    Attributes:
+        render: ``(token value, argument text, token document) -> text``.
+        paths: ``argument text -> token paths it references`` (checked by
+            ``missing_paths`` like the placeholder's own path).
+    """
+
+    render: Callable[[Any, str, Any], str]
+    paths: Callable[[str], list[str]]
 
 
 def _alpha(value: Any, arg: str) -> str:
@@ -70,8 +98,95 @@ def _alpha(value: Any, arg: str) -> str:
     return f"rgba({r},{g},{b},{arg})"
 
 
+_CORNERS = ("tl", "tr", "br", "bl")
+
+
+def _rrect_parts(arg: str) -> tuple[list[float], dict[str, str]]:
+    """Split an ``rrect`` argument into geometry and corner overrides.
+
+    Args:
+        arg: ``x,y,w,h`` followed by any ``corner:token.path`` overrides,
+            e.g. ``10,20,300,40,br:extras.radius.message_tail``.
+
+    Returns:
+        ``([x, y, w, h], {corner: token path})``.
+
+    Raises:
+        TemplateError: If the geometry or an override is malformed.
+    """
+    parts = arg.split(",")
+    try:
+        geometry = [float(v) for v in parts[:4]]
+    except ValueError as exc:
+        raise TemplateError(f"rrect geometry {arg!r} is not x,y,w,h") from exc
+    if len(geometry) != 4:
+        raise TemplateError(f"rrect geometry {arg!r} is not x,y,w,h")
+    overrides: dict[str, str] = {}
+    for part in parts[4:]:
+        corner, _, path = part.partition(":")
+        if corner not in _CORNERS or not path:
+            raise TemplateError(f"rrect override {part!r} is not corner:token.path "
+                                f"(corner one of {', '.join(_CORNERS)})")
+        overrides[corner] = path
+    return geometry, overrides
+
+
+def _rrect_paths(arg: str) -> list[str]:
+    """Token paths an ``rrect`` argument references (empty if malformed)."""
+    try:
+        return list(_rrect_parts(arg)[1].values())
+    except TemplateError:
+        return []
+
+
+def _rrect(value: Any, arg: str, tokens: Any) -> str:
+    """Path data for a rectangle with per-corner radii from tokens.
+
+    SVG ``rect`` takes one radius; a chat bubble whose tail corner is
+    tighter than the rest needs a path. The placeholder's token is the
+    radius of every corner not overridden in ``arg``.
+
+    Args:
+        value: Default corner radius (a number token).
+        arg: ``x,y,w,h[,corner:token.path...]``.
+        tokens: Token document, for the override paths.
+
+    Returns:
+        ``M ... Z`` path data drawn clockwise from the top-left corner.
+
+    Raises:
+        TemplateError: For malformed arguments, unknown override tokens or
+            non-numeric radii.
+    """
+    (x, y, w, h), overrides = _rrect_parts(arg)
+    radii = {}
+    for corner in _CORNERS:
+        r = value
+        if corner in overrides:
+            try:
+                r = get_token(tokens, overrides[corner])
+            except KeyError:
+                raise TemplateError(f"unknown token '{overrides[corner]}'") from None
+        if isinstance(r, bool) or not isinstance(r, (int, float)):
+            raise TemplateError(f"rrect radius {r!r} is not a number")
+        radii[corner] = float(r)
+    tl, tr, br, bl = (radii[c] for c in _CORNERS)
+    n = format_value
+
+    def arc(r: float, ex: float, ey: float) -> str:
+        return f"A {n(r)} {n(r)} 0 0 1 {n(ex)} {n(ey)}"
+
+    return (f"M {n(x + tl)} {n(y)} H {n(x + w - tr)} {arc(tr, x + w, y + tr)} "
+            f"V {n(y + h - br)} {arc(br, x + w - br, y + h)} "
+            f"H {n(x + bl)} {arc(bl, x, y + h - bl)} "
+            f"V {n(y + tl)} {arc(tl, x + tl, y)} Z")
+
+
 #: Filters available to every template. Plugins may pass extra ones.
-FILTERS: dict[str, Filter] = {"alpha": _alpha}
+FILTERS: dict[str, Filter | TokenFilter] = {
+    "alpha": _alpha,
+    "rrect": TokenFilter(_rrect, _rrect_paths),
+}
 
 
 def format_value(value: Any) -> str:
@@ -99,7 +214,7 @@ def iter_placeholders(template: str) -> Iterator[re.Match[str]]:
 
 
 def missing_paths(template: str, tokens: dict[str, Any],
-                  filters: dict[str, Filter] | None = None) -> list[str]:
+                  filters: dict[str, Filter | TokenFilter] | None = None) -> list[str]:
     """List placeholders in ``template`` that cannot be resolved.
 
     Args:
@@ -114,18 +229,20 @@ def missing_paths(template: str, tokens: dict[str, Any],
     filters = FILTERS if filters is None else filters
     out: list[str] = []
     for m in iter_placeholders(template):
-        problem = None
+        problems = []
         if get_token(tokens, m["path"], None) is None:
-            problem = m["path"]
+            problems.append(m["path"])
         elif m["filter"] and m["filter"] not in filters:
-            problem = f"{m['path']}|{m['filter']}"
-        if problem and problem not in out:
-            out.append(problem)
+            problems.append(f"{m['path']}|{m['filter']}")
+        elif m["filter"] and isinstance(filters[m["filter"]], TokenFilter):
+            problems.extend(p for p in filters[m["filter"]].paths(m["arg"])
+                            if get_token(tokens, p, None) is None)
+        out.extend(p for p in dict.fromkeys(problems) if p not in out)
     return out
 
 
 def resolve(template: str, tokens: dict[str, Any],
-            filters: dict[str, Filter] | None = None) -> str:
+            filters: dict[str, Filter | TokenFilter] | None = None) -> str:
     """Substitute every placeholder in ``template`` from ``tokens``.
 
     Args:
@@ -151,12 +268,19 @@ def resolve(template: str, tokens: dict[str, Any],
         if name:
             if name not in filters:
                 raise TemplateError(f"unknown filter '{name}' on '{path}'")
-            text = filters[name](value, m["arg"])
+            fn = filters[name]
+            if isinstance(fn, TokenFilter):
+                text = fn.render(value, m["arg"], tokens)
+            else:
+                text = fn(value, m["arg"])
         else:
             text = format_value(value)
         return escape(text, _XML_ENTITIES)
 
-    return PLACEHOLDER_RE.sub(sub, template)
+    def full(m: re.Match[str]) -> str:
+        return format_value(float(m["side"]) / 2)
+
+    return FULL_RE.sub(full, PLACEHOLDER_RE.sub(sub, template))
 
 
 # ─── Envelope ─────────────────────────────────────────────────────────

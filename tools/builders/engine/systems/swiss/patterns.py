@@ -10,7 +10,7 @@ Swiss's distinctive grammar at the pattern level:
   - Tracked uppercase metadata
   - 280px fixed sidebar
 
-Already authored in v0.1: dashboard.svg (chat dashboard variant)
+dashboard (chat dashboard variant): template at the end of PATTERNS
 Adding here: settings_layout, form, data_table, auth (sign_in)
 Deferred: header (no strong Swiss opinion), modal/drawer (use defaults),
           empty_state (defaults are fine), command_palette/article (not Swiss-native)
@@ -428,6 +428,308 @@ PATTERNS = {
   <text x="640" y="392" text-anchor="middle" class="text-secondary" font-size="9" font-weight="500" letter-spacing="1.44">NO MATCHES</text>
   <text x="640" y="432" text-anchor="middle" class="text-primary" font-size="22" font-weight="500">No results for "tokyo"</text>
   <text x="640" y="464" text-anchor="middle" class="text-secondary" font-size="13">Try a different search or clear filters.</text>
+"""),
+
+    # ═════ DASHBOARD — the chat dashboard (formerly hand-authored layouts/dashboard.svg) ═════
+    "dashboard": (1280, 800, """
+  <!-- Swiss dashboard layout — desktop 1280×800
+       Layout: sidebar (280px fixed) + main (1000px fluid)
+       Per swiss-spec layout_templates.dashboard
+
+       Red usage audit (rulebook: exactly 4 per screen):
+         (1) Selection bar on active sidebar item — accent_bar (rect)
+         (2) LIVE status dot in chat header — status dot (circle)
+         (3) "TUCKER" user identity tag in session header — user/identity tag (text, set once)
+         (4) "Send →" button in composer — primary CTA (text)
+       Unread count (32px) rendered in color.text_primary; red reserved for the 4 categories above.
+       Earlier draft put TUCKER per-message (5 red uses) — fixed by establishing identity once at session level.
+
+       Grid audit: every spacing value is 8 / 16 / 24 / 32 / 40 / 48 / 64.
+       Type scale audit: only 9, 11, 13, 14, 22, 32, 40 are used.
+       No radii, no shadows, single Inter typeface throughout.
+  -->
+
+  <!-- Page background -->
+  <rect x="0" y="0" width="1280" height="800" fill="{color.page_bg}"/>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SIDEBAR (280px fixed)
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Sidebar background (white — same as page) -->
+  <rect x="0" y="0" width="280" height="800" fill="{color.surface}"/>
+
+  <!-- Strong rule separating sidebar from main is drawn at the end of this
+       document (just before </svg>) so it always paints over any list-item
+       selection surfaces that extend toward x=280. -->
+
+  <!-- Brand: 14px Inter medium -->
+  <text class="text-primary" x="16" y="32"
+        font-size="14"
+        font-weight="500">Swiss Chat</text>
+
+  <!-- Strong rule below brand (per nav.sidebar: 1px black) -->
+  <line x1="0" y1="48" x2="280" y2="48" stroke="{color.border_strong}" stroke-width="1"/>
+
+  <!-- Search input (per components.input.text)
+       White bg, 1px black top rule, single-word lowercase placeholder
+       Position: y=48 to y=96 (48px height = 6 grid units)
+  -->
+  <line x1="16" y1="64" x2="264" y2="64" stroke="{color.border_strong}" stroke-width="1"/>
+  <text class="text-secondary" x="16" y="84"
+        font-size="13"
+        font-weight="400">type</text>
+
+  <!-- Hairline below search -->
+  <line x1="0" y1="104" x2="280" y2="104" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+
+  <!-- Section header (metadata): 9px uppercase tracked, color color.text_secondary -->
+  <text class="text-secondary" x="16" y="128"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44">SESSIONS</text>
+
+  <!-- ─── List Item 01: SELECTED ─────────────────────────────────
+       Per components.list_item.selected:
+       - 2px red accent bar on left
+       - color.surface_selected gray surface background
+       - title weight 700
+       Position: y=144 to y=240 (96px height)
+       Surface stops at x=279 to preserve the 1px black divider at x=280.
+  -->
+  <rect x="0" y="144" width="279" height="96" fill="{color.surface_selected}"/>
+  <rect x="0" y="144" width="2" height="96" fill="{color.accent}"/>
+  <line x1="0" y1="239.5" x2="279" y2="239.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+
+  <text class="text-primary" x="18" y="172"
+        font-size="14"
+        font-weight="500">01</text>
+  <text class="text-secondary" x="264" y="172"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44"
+        text-anchor="end">2M</text>
+  <text class="text-primary" x="42" y="172"
+        font-size="13"
+        font-weight="700">Tokyo Trip</text>
+  <text class="text-secondary" x="42" y="190"
+        font-size="11"
+        font-weight="400">Build day-by-day itinerary?</text>
+  <text class="text-primary" x="42" y="224"
+        font-size="32"
+        font-weight="500">02</text>
+
+  <!-- ─── List Item 02: default ──────────────────────────────────
+       Position: y=240 to y=336
+  -->
+  <line x1="0" y1="335.5" x2="280" y2="335.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+  <text class="text-primary" x="16" y="268"
+        font-size="14"
+        font-weight="500">02</text>
+  <text class="text-secondary" x="264" y="268"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44"
+        text-anchor="end">1H</text>
+  <text class="text-primary" x="40" y="268"
+        font-size="13"
+        font-weight="500">Recipe Ideas</text>
+  <text class="text-secondary" x="40" y="286"
+        font-size="11"
+        font-weight="400">5 ramen variations you'll love</text>
+
+  <!-- ─── List Item 03 ───────────────────────────────────────────
+       Position: y=336 to y=432
+  -->
+  <line x1="0" y1="431.5" x2="280" y2="431.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+  <text class="text-primary" x="16" y="364"
+        font-size="14"
+        font-weight="500">03</text>
+  <text class="text-secondary" x="264" y="364"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44"
+        text-anchor="end">3H</text>
+  <text class="text-primary" x="40" y="364"
+        font-size="13"
+        font-weight="500">Book Club</text>
+  <text class="text-secondary" x="40" y="382"
+        font-size="11"
+        font-weight="400">Recommend starting with Murakami</text>
+  <text class="text-primary" x="40" y="416"
+        font-size="32"
+        font-weight="500">01</text>
+
+  <!-- ─── List Item 04 ───────────────────────────────────────────
+       Position: y=432 to y=528
+  -->
+  <line x1="0" y1="527.5" x2="280" y2="527.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+  <text class="text-primary" x="16" y="460"
+        font-size="14"
+        font-weight="500">04</text>
+  <text class="text-secondary" x="264" y="460"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44"
+        text-anchor="end">1D</text>
+  <text class="text-primary" x="40" y="460"
+        font-size="13"
+        font-weight="500">Fitness Plan</text>
+  <text class="text-secondary" x="40" y="478"
+        font-size="11"
+        font-weight="400">4-week progressive routine ready</text>
+
+  <!-- ─── List Item 05 ───────────────────────────────────────────
+       Position: y=528 to y=624
+  -->
+  <line x1="0" y1="623.5" x2="280" y2="623.5" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+  <text class="text-primary" x="16" y="556"
+        font-size="14"
+        font-weight="500">05</text>
+  <text class="text-secondary" x="264" y="556"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44"
+        text-anchor="end">2D</text>
+  <text class="text-primary" x="40" y="556"
+        font-size="13"
+        font-weight="500">Code Review</text>
+  <text class="text-secondary" x="40" y="574"
+        font-size="11"
+        font-weight="400">Auth middleware looks solid, but…</text>
+
+  <!-- Account block at bottom of sidebar
+       Per nav.sidebar: separated by 1px hairline rule
+       Position: y=720 onwards
+  -->
+  <line x1="0" y1="720" x2="280" y2="720" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+  <text class="text-secondary" x="16" y="752"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44">ACCOUNT</text>
+  <text class="text-primary" x="16" y="776"
+        font-size="13"
+        font-weight="500">tucker@local</text>
+
+  <!-- ════════════════════════════════════════════════════════════
+       MAIN AREA (1000px fluid, starts at x=281)
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Chat header
+       Height 96px (12 grid units)
+       Per layout_templates.dashboard: display type for primary,
+       metadata above title.
+  -->
+
+  <!-- Hairline below header -->
+  <line x1="281" y1="96" x2="1280" y2="96" stroke="{color.border_default}" stroke-width="1"/>
+
+  <!-- Metadata above title: 9px uppercase tracked -->
+  <text class="text-secondary" x="313" y="32"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44">SESSION 01 / 05</text>
+  <!-- User identity tag — RED USE #3 (user/identity tag, established once at the session level) -->
+  <text class="text-accent" x="430" y="32"
+        font-size="9"
+        font-weight="700"
+        letter-spacing="1.44">TUCKER</text>
+
+  <!-- Title: display medium (32px), zero-padded count -->
+  <text class="text-primary" x="313" y="64"
+        font-size="32"
+        font-weight="500">Tokyo Trip</text>
+
+  <!-- Subtitle: 13px Inter, color color.text_secondary -->
+  <text class="text-secondary" x="313" y="84"
+        font-size="13"
+        font-weight="400">04 exchanges · connected</text>
+
+  <!-- Right side of header: status block (LIVE indicator) -->
+  <!-- LIVE status dot — RED USE #2 (status dot category) -->
+  <circle cx="1192" cy="44" r="4" fill="{color.accent}"/>
+  <text class="text-primary" x="1208" y="48"
+        font-size="9"
+        font-weight="700"
+        letter-spacing="1.44">LIVE</text>
+
+  <!-- ════════════════════════════════════════════════════════════
+       MESSAGES (centered column, 72% max width per spec)
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Message 01 — USER -->
+  <text class="text-secondary" x="313" y="144"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44">USER · 00:01</text>
+  <text class="text-primary" x="313" y="168"
+        font-size="14"
+        font-weight="400">Hey, can you help me plan a trip to Tokyo?</text>
+
+  <!-- Message 02 — AI -->
+  <text class="text-secondary" x="313" y="216"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44">AI · 00:02</text>
+  <text class="text-primary" x="313" y="240"
+        font-size="14"
+        font-weight="400">Absolutely. Tokyo is incredible. Are you looking for a culture-focused trip,</text>
+  <text class="text-primary" x="313" y="264"
+        font-size="14"
+        font-weight="400">food adventure, or a mix of everything?</text>
+
+  <!-- Message 03 — USER -->
+  <text class="text-secondary" x="313" y="312"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44">USER · 00:03</text>
+  <text class="text-primary" x="313" y="336"
+        font-size="14"
+        font-weight="400">Definitely a mix — temples in the morning, ramen at night.</text>
+
+  <!-- Message 04 — AI -->
+  <text class="text-secondary" x="313" y="384"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="1.44">AI · 00:04</text>
+  <text class="text-primary" x="313" y="408"
+        font-size="14"
+        font-weight="400">Perfect combo. I'd suggest starting in Asakusa for Senso-ji, then heading</text>
+  <text class="text-primary" x="313" y="432"
+        font-size="14"
+        font-weight="400">to Shibuya for the evening food scene. Want me to build a day-by-day</text>
+  <text class="text-primary" x="313" y="456"
+        font-size="14"
+        font-weight="400">itinerary?</text>
+
+  <!-- ════════════════════════════════════════════════════════════
+       COMPOSER (input + send)
+       Position: bottom of main, above account block alignment
+       Per components.input.text:
+       - White bg, 1px black top rule, single-word lowercase placeholder
+       - Send affordance in red on right
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Composer container — height 96px, sits at y=704 to y=800 -->
+  <line x1="281" y1="704" x2="1280" y2="704" stroke="{color.border_default}" stroke-width="1"/>
+
+  <!-- Input top rule -->
+  <line x1="313" y1="744" x2="1192" y2="744" stroke="{color.border_strong}" stroke-width="1"/>
+
+  <!-- Placeholder: single lowercase word -->
+  <text class="text-secondary" x="313" y="768"
+        font-size="14"
+        font-weight="400">type</text>
+
+  <!-- Send button — RED USE #4 (primary CTA) -->
+  <text class="text-accent" x="1192" y="768"
+        font-size="14"
+        font-weight="500"
+        text-anchor="end">Send →</text>
+
+  <!-- Strong rule separating sidebar from main (per separator.strong: 1px color.text_primary)
+       Drawn last so it paints over any list-item selection surfaces. -->
+  <line x1="280" y1="0" x2="280" y2="800" stroke="{color.border_strong}" stroke-width="1"/>
 """),
 
 }

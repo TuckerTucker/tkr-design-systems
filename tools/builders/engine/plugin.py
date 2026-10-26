@@ -28,11 +28,11 @@ item and the missing key or token.
 from __future__ import annotations
 
 import importlib
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from types import ModuleType
 from typing import Any
 
-from .templates import FILTERS, TextClass, missing_paths
+from .templates import FILTERS, Filter, TextClass, TokenFilter, missing_paths
 
 #: Kinds the engine knows, with the default output directory of each.
 KIND_OUT_DIRS: dict[str, str] = {"library": "components", "patterns": "layouts"}
@@ -93,7 +93,7 @@ def text_classes(raw: Any) -> list[TextClass]:
     return [c if isinstance(c, TextClass) else TextClass(*c) for c in raw]
 
 
-def kind_filters(kind_data: Mapping[str, Any]) -> dict[str, Callable[[Any, str], str]]:
+def kind_filters(kind_data: Mapping[str, Any]) -> dict[str, Filter | TokenFilter]:
     """Return the filters available to one kind's templates."""
     return {**FILTERS, **dict(kind_data.get("filters") or {})}
 

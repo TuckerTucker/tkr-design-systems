@@ -312,7 +312,7 @@ PATTERNS = {
 """),
 
     # ═══════════════════ DASHBOARD (preserve existing signature layout) ═══════════════════
-    # The Editorial dashboard.svg already exists and is the canonical example.
+    # The canonical "dashboard" template is at the end of PATTERNS.
     # We preserve it as-is rather than regenerate it. But let's create a variant
     # (dashboard-narrow) for completeness — 1024×600 mobile-oriented version.
 
@@ -477,6 +477,334 @@ PATTERNS = {
         font-size="9"
         font-weight="700"
         letter-spacing="1.44">FILE →</text>
+"""),
+
+    # ═════ DASHBOARD — canonical example (formerly hand-authored layouts/dashboard.svg) ═════
+    "dashboard": (1280, 800, """
+  <!-- Editorial dashboard — desktop 1280×800
+       grammar_family: contemporary_clean, elevation.strategy: paper_tiers
+       Sidebar 280px + main 1000px on cream paper.
+  -->
+
+  <!-- Page background: cream paper -->
+  <rect x="0" y="0" width="1280" height="800" fill="{color.page_bg}"/>
+
+  <!-- ════════════════════════════════════════════════════════════
+       SIDEBAR
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Brand: serif title -->
+  <text x="16" y="40"
+        font-family="{font.body}"
+        font-size="24"
+        font-weight="700"
+        fill="{color.text_primary}"
+        letter-spacing="-0.48">Editorial</text>
+
+  <!-- Volume/issue overline: tracked Inter uppercase, burgundy -->
+  <text x="16" y="58"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.accent}"
+        letter-spacing="1.44">VOL. I · NO. 04 · APRIL</text>
+
+  <!-- 3px double burgundy rule (masthead rule per grammar_extensions) -->
+  <line x1="16" y1="76" x2="264" y2="76" stroke="{color.accent}" stroke-width="1"/>
+  <line x1="16" y1="80" x2="264" y2="80" stroke="{color.accent}" stroke-width="1"/>
+
+  <!-- Search input: Fraunces italic placeholder, 1px hairline rule below -->
+  <text x="16" y="108"
+        font-family="{font.body}"
+        font-size="12"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_muted}">Search the archives…</text>
+  <line x1="16" y1="116" x2="264" y2="116" stroke="{color.border_default}" stroke-width="1"/>
+
+  <!-- Section header: tracked uppercase Inter -->
+  <text x="16" y="140"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.62">RECENT DISPATCHES</text>
+
+  <!-- Strong rule above first dispatch -->
+  <line x1="0" y1="152" x2="280" y2="152" stroke="{color.border_strong}" stroke-width="1"/>
+
+  <!-- ─── Dispatch 01: Tokyo Trip — SELECTED ────────────────────── -->
+  <rect x="0" y="152" width="280" height="90" fill="{color.surface_selected}"/>
+  <text x="16" y="174"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">2M AGO · DISPATCH</text>
+  <text x="264" y="174"
+        font-family="{font.body}"
+        font-size="11"
+        font-weight="700"
+        fill="{color.accent}"
+        text-anchor="end">2 new</text>
+  <text x="16" y="198"
+        font-family="{font.body}"
+        font-size="15"
+        font-weight="700"
+        fill="{color.text_primary}"
+        letter-spacing="-0.15">Tokyo Trip</text>
+  <text x="16" y="218"
+        font-family="{font.label}"
+        font-size="11"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_secondary}">Want me to build a day-by-day itinerary?</text>
+  <line x1="0" y1="241" x2="280" y2="241" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+
+  <!-- ─── Dispatch 02: Recipe Ideas ──────────────────────────────── -->
+  <text x="16" y="263"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">1H AGO · DISPATCH</text>
+  <text x="16" y="287"
+        font-family="{font.body}"
+        font-size="15"
+        font-weight="600"
+        fill="{color.text_primary}"
+        letter-spacing="-0.15">Recipe Ideas</text>
+  <text x="16" y="307"
+        font-family="{font.label}"
+        font-size="11"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_secondary}">Here are 5 ramen variations you'll love…</text>
+  <line x1="0" y1="330" x2="280" y2="330" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+
+  <!-- ─── Dispatch 03: Book Club ─────────────────────────────────── -->
+  <text x="16" y="352"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">3H AGO · DISPATCH</text>
+  <text x="264" y="352"
+        font-family="{font.body}"
+        font-size="11"
+        font-weight="700"
+        fill="{color.accent}"
+        text-anchor="end">1 new</text>
+  <text x="16" y="376"
+        font-family="{font.body}"
+        font-size="15"
+        font-weight="600"
+        fill="{color.text_primary}"
+        letter-spacing="-0.15">Book Club</text>
+  <text x="16" y="396"
+        font-family="{font.label}"
+        font-size="11"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_secondary}">I'd recommend starting with Murakami's…</text>
+  <line x1="0" y1="419" x2="280" y2="419" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+
+  <!-- ─── Dispatch 04: Fitness Plan ──────────────────────────────── -->
+  <text x="16" y="441"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">1D AGO · DISPATCH</text>
+  <text x="16" y="465"
+        font-family="{font.body}"
+        font-size="15"
+        font-weight="600"
+        fill="{color.text_primary}"
+        letter-spacing="-0.15">Fitness Plan</text>
+  <text x="16" y="485"
+        font-family="{font.label}"
+        font-size="11"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_secondary}">Your 4-week progressive routine is ready.</text>
+  <line x1="0" y1="508" x2="280" y2="508" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+
+  <!-- ─── Dispatch 05: Code Review ───────────────────────────────── -->
+  <text x="16" y="530"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">2D AGO · DISPATCH</text>
+  <text x="16" y="554"
+        font-family="{font.body}"
+        font-size="15"
+        font-weight="600"
+        fill="{color.text_primary}"
+        letter-spacing="-0.15">Code Review</text>
+  <text x="16" y="574"
+        font-family="{font.label}"
+        font-size="11"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_secondary}">The auth middleware looks solid, but…</text>
+  <line x1="0" y1="597" x2="280" y2="597" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+
+  <!-- Byline footer: strong rule above, tracked metadata + serif name -->
+  <line x1="0" y1="744" x2="280" y2="744" stroke="{color.border_strong}" stroke-width="1"/>
+  <text x="16" y="764"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">YOUR BYLINE</text>
+  <text x="16" y="784"
+        font-family="{font.body}"
+        font-size="13"
+        font-weight="600"
+        fill="{color.text_primary}">T. Harris</text>
+
+  <!-- ════════════════════════════════════════════════════════════
+       MAIN AREA
+       ════════════════════════════════════════════════════════════ -->
+
+  <!-- Masthead: dispatch overline + title + filing metadata
+       Strong rule below per editorial-rules-not-boxes
+  -->
+  <text x="320" y="40"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="700"
+        fill="{color.accent}"
+        letter-spacing="1.8">DISPATCH · TOKYO DESK</text>
+
+  <text x="320" y="74"
+        font-family="{font.body}"
+        font-size="24"
+        font-weight="700"
+        fill="{color.text_primary}"
+        letter-spacing="-0.48">Tokyo Trip</text>
+
+  <text x="1264" y="74"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.26"
+        text-anchor="end">FILED 14:23 · 4 EXCHANGES</text>
+
+  <line x1="320" y1="92" x2="1264" y2="92" stroke="{color.border_strong}" stroke-width="1"/>
+
+  <!-- ─── Messages ─────────────────────────────────────────────────
+       AI left-aligned, max 86%, roman Fraunces.
+       User right-aligned, max 68%, italic Fraunces with 2px burgundy left rule.
+       First AI message gets a 54px Fraunces drop cap in burgundy.
+  -->
+
+  <!-- Message 01 — USER (right-aligned italic, 2px burgundy left rule) -->
+  <text x="320" y="132"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">YOU · 14:23</text>
+  <line x1="540" y1="142" x2="540" y2="172" stroke="{color.accent}" stroke-width="2"/>
+  <text x="558" y="160"
+        font-family="{font.body}"
+        font-size="14"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_primary}">Hey, can you help me plan a trip to Tokyo?</text>
+
+  <!-- Message 02 — AI (left-aligned, drop cap on first message) -->
+  <text x="320" y="216"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">EDITORIAL · 14:24</text>
+
+  <!-- DROP CAP per drop-cap-ceremony rule: 54px Fraunces 700 burgundy float-left -->
+  <text x="320" y="276"
+        font-family="{font.body}"
+        font-size="54"
+        font-weight="700"
+        fill="{color.accent}">A</text>
+
+  <!-- Body text wraps around drop cap for ~3 lines (drop cap reaches y~276) -->
+  <text x="368" y="244"
+        font-family="{font.body}"
+        font-size="14"
+        font-weight="400"
+        fill="{color.text_primary}">bsolutely. Tokyo is incredible. Are you looking</text>
+  <text x="368" y="266"
+        font-family="{font.body}"
+        font-size="14"
+        font-weight="400"
+        fill="{color.text_primary}">for a culture-focused trip, a food adventure,</text>
+  <text x="368" y="288"
+        font-family="{font.body}"
+        font-size="14"
+        font-weight="400"
+        fill="{color.text_primary}">or a mix of everything?</text>
+
+  <!-- Message 03 — USER -->
+  <text x="320" y="352"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">YOU · 14:26</text>
+  <line x1="500" y1="362" x2="500" y2="392" stroke="{color.accent}" stroke-width="2"/>
+  <text x="518" y="380"
+        font-family="{font.body}"
+        font-size="14"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_primary}">Definitely a mix — temples in the morning, ramen at night.</text>
+
+  <!-- Message 04 — AI (NO drop cap, only the first gets one) -->
+  <text x="320" y="436"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">EDITORIAL · 14:27</text>
+  <text x="320" y="464"
+        font-family="{font.body}"
+        font-size="14"
+        font-weight="400"
+        fill="{color.text_primary}">Perfect combination. I'd suggest starting in Asakusa for Senso-ji at sunrise,</text>
+  <text x="320" y="486"
+        font-family="{font.body}"
+        font-size="14"
+        font-weight="400"
+        fill="{color.text_primary}">then heading to Shibuya for the evening food scene. Want me to build</text>
+  <text x="320" y="508"
+        font-family="{font.body}"
+        font-size="14"
+        font-weight="400"
+        fill="{color.text_primary}">a day-by-day itinerary?</text>
+
+  <!-- Composer: hairline above, italic Fraunces input, "Reply →" in burgundy uppercase Inter -->
+  <line x1="320" y1="704" x2="1264" y2="704" stroke="{color.border_default}" stroke-width="1"/>
+  <text x="320" y="744"
+        font-family="{font.body}"
+        font-size="14"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_muted}">Compose a reply…</text>
+  <text x="1264" y="744"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="700"
+        fill="{color.accent}"
+        letter-spacing="1.44"
+        text-anchor="end">FILE REPLY →</text>
+
+  <!-- Strong sidebar/main divider drawn last -->
+  <line x1="280" y1="0" x2="280" y2="800" stroke="{color.border_default}" stroke-width="1"/>
 """),
 
 }

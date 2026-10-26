@@ -9,7 +9,9 @@ Prism grammar:
   Gradient bg: 150deg (#4A5D6B → #5A4A5E → #6B5A5A → #4A6058)
   Text: 0.90 primary, 0.60 secondary, 0.40 muted, 0.30 very-muted (white with opacity)
   Teal accent: #7DDFBE (ONLY for status signals: online dots, unread badges)
-  Border radius: 12 default, 10 inputs, 20 chrome
+  Border radius: radius.default (items, cards), radius.input (44px fields,
+  composer), radius.chrome (shell, modals); extras.radius.control for 32px
+  controls, avatar/avatar_small/badge/message(+_tail) per the JSX
   No box-shadow; no emoji; single-letter monogram avatars
   Tracking: -0.02em on headers, 0 elsewhere
 
@@ -41,21 +43,21 @@ COMPONENTS = {
     # secondary uses white-0.85, ghost is transparent with text.
 
     "button-primary": (140, 48, """
-  <rect x="8" y="8" width="124" height="32" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="8" y="8" width="124" height="32" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.control}" ry="{extras.radius.control}"/>
   <text x="70" y="32" text-anchor="middle" class="text-accent" font-size="13" font-weight="500">Send</text>
 """),
 
     "button-secondary": (140, 48, """
-  <rect x="8" y="8" width="124" height="32" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="8" y="8" width="124" height="32" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.control}" ry="{extras.radius.control}"/>
   <text x="70" y="32" text-anchor="middle" class="text-primary" font-size="13" font-weight="500">Cancel</text>
 """),
 
     "button-ghost": (140, 48, """
-  <rect x="8" y="8" width="124" height="32" fill="none" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="8" y="8" width="124" height="32" fill="none" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.control}" ry="{extras.radius.control}"/>
   <text x="70" y="32" text-anchor="middle" class="text-secondary" font-size="13" font-weight="500">Dismiss</text>
 """),
 
-    # Input — glass panel with Outfit text, rounded corners per inputs rule (10px)
+    # Input — glass panel with Outfit text, rounded corners per radius.input
     "input-text": (240, 44, """
   <rect x="0" y="0" width="240" height="44" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="14" y="28" class="text-muted" font-size="13">your message</text>
@@ -87,13 +89,13 @@ COMPONENTS = {
 
     # Checkbox — glass square, teal check when selected
     "checkbox-checked": (120, 32, """
-  <rect x="0" y="6" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="6" ry="6"/>
+  <rect x="0" y="6" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.checkbox}" ry="{extras.radius.checkbox}"/>
   <path d="M 5 14 L 8 17 L 15 9" fill="none" stroke="{color.accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   <text x="28" y="22" class="text-primary" font-size="13">Option</text>
 """),
 
     "checkbox-unchecked": (120, 32, """
-  <rect x="0" y="6" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="6" ry="6"/>
+  <rect x="0" y="6" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.checkbox}" ry="{extras.radius.checkbox}"/>
   <text x="28" y="22" class="text-primary" font-size="13">Option</text>
 """),
 
@@ -111,13 +113,13 @@ COMPONENTS = {
 
     # Toggle — glass track with teal thumb when on
     "toggle-on": (100, 32, """
-  <rect x="0" y="10" width="44" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
-  <rect x="24" y="12" width="16" height="16" fill="{color.accent}" rx="8" ry="8"/>
+  <rect x="0" y="10" width="44" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{full:20}" ry="{full:20}"/>
+  <rect x="24" y="12" width="16" height="16" fill="{color.accent}" rx="{full:16}" ry="{full:16}"/>
 """),
 
     "toggle-off": (100, 32, """
-  <rect x="0" y="10" width="44" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
-  <rect x="4" y="12" width="16" height="16" fill="{color.surface_elevated}" rx="8" ry="8"/>
+  <rect x="0" y="10" width="44" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{full:20}" ry="{full:20}"/>
+  <rect x="4" y="12" width="16" height="16" fill="{color.surface_elevated}" rx="{full:16}" ry="{full:16}"/>
 """),
 
     # Label — text with optional asterisk
@@ -143,17 +145,17 @@ COMPONENTS = {
 """),
 
     "icon-placeholder": (24, 24, """
-  <rect x="2" y="2" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="6" ry="6"/>
+  <rect x="2" y="2" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.icon}" ry="{extras.radius.icon}"/>
 """),
 
     # Avatar — single-letter monogram on glass square, with optional status dot
     "avatar-monogram": (34, 34, """
-  <rect x="0" y="0" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="0" y="0" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
   <text x="17" y="24" text-anchor="middle" class="text-primary" font-size="15" font-weight="500">T</text>
 """),
 
     "avatar-with-status": (34, 34, """
-  <rect x="0" y="0" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="0" y="0" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
   <text x="17" y="24" text-anchor="middle" class="text-primary" font-size="15" font-weight="500">T</text>
   <circle cx="28" cy="28" r="4" fill="{color.accent}" stroke="{extras.color.status_ring}" stroke-width="1.5"/>
 """),
@@ -209,30 +211,30 @@ COMPONENTS = {
     # List item — signature Prism component (default/selected/compact)
     "list-item-default": (280, 64, """
   <rect x="8" y="8" width="264" height="48" fill="none" stroke="none" rx="{radius.default}" ry="{radius.default}"/>
-  <rect x="14" y="15" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="14" y="15" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
   <text x="31" y="38" text-anchor="middle" class="text-primary" font-size="15" font-weight="500">T</text>
   <circle cx="46" cy="47" r="4" fill="{color.accent}" stroke="{extras.color.status_ring}" stroke-width="2"/>
   <text x="58" y="29" class="text-primary" font-size="12.5" font-weight="500">Tokyo Trip</text>
   <text x="266" y="29" class="text-very-muted" font-size="10" text-anchor="end">2m</text>
   <text x="58" y="46" class="text-muted" font-size="11">Build day-by-day itinerary…</text>
-  <rect x="244" y="38" width="18" height="18" fill="{extras.color.accent_tint}" stroke="{extras.color.accent_border}" stroke-width="1" rx="6" ry="6"/>
+  <rect x="244" y="38" width="18" height="18" fill="{extras.color.accent_tint}" stroke="{extras.color.accent_border}" stroke-width="1" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="253" y="51" class="text-accent" font-size="9" font-weight="600" text-anchor="middle">2</text>
 """),
 
     "list-item-selected": (280, 64, """
   <rect x="8" y="8" width="264" height="48" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
-  <rect x="14" y="15" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="14" y="15" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
   <text x="31" y="38" text-anchor="middle" class="text-primary" font-size="15" font-weight="500">T</text>
   <circle cx="46" cy="47" r="4" fill="{color.accent}" stroke="{extras.color.status_ring}" stroke-width="2"/>
   <text x="58" y="29" class="text-primary" font-size="12.5" font-weight="500">Tokyo Trip</text>
   <text x="266" y="29" class="text-very-muted" font-size="10" text-anchor="end">2m</text>
   <text x="58" y="46" class="text-muted" font-size="11">Build day-by-day itinerary…</text>
-  <rect x="244" y="38" width="18" height="18" fill="{extras.color.accent_tint}" stroke="{extras.color.accent_border}" stroke-width="1" rx="6" ry="6"/>
+  <rect x="244" y="38" width="18" height="18" fill="{extras.color.accent_tint}" stroke="{extras.color.accent_border}" stroke-width="1" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="253" y="51" class="text-accent" font-size="9" font-weight="600" text-anchor="middle">2</text>
 """),
 
     "list-item-compact": (280, 40, """
-  <rect x="14" y="6" width="34" height="28" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="14" y="6" width="34" height="28" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar_small}" ry="{extras.radius.avatar_small}"/>
   <text x="31" y="26" text-anchor="middle" class="text-primary" font-size="13" font-weight="500">R</text>
   <text x="58" y="26" class="text-primary" font-size="12.5" font-weight="500">Recipe ideas</text>
   <text x="266" y="26" class="text-very-muted" font-size="10" text-anchor="end">1h</text>
@@ -241,20 +243,20 @@ COMPONENTS = {
     # Form field — label + input + optional help/error
     "form-field-default": (240, 60, """
   <text x="0" y="14" class="text-secondary" font-size="11">Email</text>
-  <rect x="0" y="20" width="240" height="32" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
+  <rect x="0" y="20" width="240" height="32" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{extras.radius.control}" ry="{extras.radius.control}"/>
   <text x="12" y="44" class="text-muted" font-size="13">user@example.com</text>
 """),
 
     "form-field-with-help": (240, 80, """
   <text x="0" y="14" class="text-secondary" font-size="11">Email</text>
-  <rect x="0" y="20" width="240" height="32" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
+  <rect x="0" y="20" width="240" height="32" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{extras.radius.control}" ry="{extras.radius.control}"/>
   <text x="12" y="44" class="text-primary" font-size="13">user@example.com</text>
   <text x="0" y="68" class="text-muted" font-size="10">We'll use this for login and notifications.</text>
 """),
 
     "form-field-with-error": (240, 80, """
   <text x="0" y="14" class="text-secondary" font-size="11">Email</text>
-  <rect x="0" y="20" width="240" height="32" fill="{color.surface}" stroke="{color.danger}" stroke-width="1" rx="{radius.input}" ry="{radius.input}"/>
+  <rect x="0" y="20" width="240" height="32" fill="{color.surface}" stroke="{color.danger}" stroke-width="1" rx="{extras.radius.control}" ry="{extras.radius.control}"/>
   <text x="12" y="44" class="text-primary" font-size="13">invalid-email</text>
   <text x="0" y="68" fill="{color.danger}" font-size="10">Please enter a valid email address.</text>
 """),
@@ -269,14 +271,14 @@ COMPONENTS = {
 """),
 
     "table-row-header": (480, 32, """
-  <rect x="0" y="0" width="480" height="32" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="0" y="0" width="480" height="32" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="12" y="21" class="text-secondary" font-size="10" font-weight="600">Name</text>
   <text x="200" y="21" class="text-secondary" font-size="10" font-weight="600">Email</text>
   <text x="380" y="21" class="text-secondary" font-size="10" font-weight="600">Role</text>
 """),
 
     "table-row-selected": (480, 40, """
-  <rect x="0" y="0" width="480" height="40" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="0" y="0" width="480" height="40" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="12" y="28" class="text-primary" font-size="12.5" font-weight="500">Alex Rivera</text>
   <text x="200" y="28" class="text-secondary" font-size="12">alex@northwind.com</text>
   <text x="380" y="28" class="text-secondary" font-size="12">Administrator</text>
@@ -284,7 +286,7 @@ COMPONENTS = {
 
     # Table header — column headers row
     "table-header-default": (480, 32, """
-  <rect x="0" y="0" width="480" height="32" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="0" y="0" width="480" height="32" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="12" y="21" class="text-secondary" font-size="10" font-weight="600">Name</text>
   <text x="200" y="21" class="text-secondary" font-size="10" font-weight="600">Email</text>
   <text x="380" y="21" class="text-secondary" font-size="10" font-weight="600">Role</text>
@@ -319,7 +321,7 @@ COMPONENTS = {
     # Pagination
     "pagination-default": (240, 28, """
   <text x="0" y="20" class="text-secondary" font-size="10">1 of 12</text>
-  <rect x="160" y="8" width="20" height="20" fill="{extras.color.accent_tint}" stroke="{extras.color.accent_border}" stroke-width="1" rx="4" ry="4"/>
+  <rect x="160" y="8" width="20" height="20" fill="{extras.color.accent_tint}" stroke="{extras.color.accent_border}" stroke-width="1" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="170" y="22" text-anchor="middle" class="text-accent" font-size="10" font-weight="600">2</text>
   <text x="196" y="20" class="text-secondary" font-size="10">›</text>
 """),
@@ -356,7 +358,7 @@ COMPONENTS = {
 
     # Button group — segmented
     "button-group-segmented": (240, 40, """
-  <rect x="0" y="0" width="240" height="40" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="240" height="40" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.control}" ry="{extras.radius.control}"/>
   <text x="40" y="26" text-anchor="middle" class="text-primary" font-size="12" font-weight="500">All</text>
   <line x1="80" y1="8" x2="80" y2="32" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="120" y="26" text-anchor="middle" class="text-secondary" font-size="12">Active</text>
@@ -373,13 +375,13 @@ COMPONENTS = {
 
     # Accordion item — default / expanded
     "accordion-default": (240, 48, """
-  <rect x="0" y="0" width="240" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="240" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="12" y="30" class="text-primary" font-size="12.5" font-weight="500">Notifications</text>
   <text x="228" y="30" class="text-secondary" font-size="12" text-anchor="end">▾</text>
 """),
 
     "accordion-expanded": (240, 128, """
-  <rect x="0" y="0" width="240" height="128" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="240" height="128" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="12" y="30" class="text-primary" font-size="12.5" font-weight="500">Notifications</text>
   <text x="228" y="30" class="text-secondary" font-size="12" text-anchor="end">▴</text>
   <line x1="0" y1="47.5" x2="240" y2="47.5" stroke="{extras.color.divider_subtle}" stroke-width="1"/>
@@ -390,14 +392,14 @@ COMPONENTS = {
 
     # Banner — info / error (full width; we'll show 240px)
     "banner-info": (240, 48, """
-  <rect x="0" y="0" width="240" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="240" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <circle cx="12" cy="24" r="3" fill="{color.accent}"/>
   <text x="24" y="20" class="text-secondary" font-size="9" font-weight="600">UPDATE</text>
   <text x="24" y="36" class="text-primary" font-size="11">New version available.</text>
 """),
 
     "banner-error": (240, 48, """
-  <rect x="0" y="0" width="240" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="240" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <circle cx="12" cy="24" r="3" fill="{color.danger}"/>
   <text x="24" y="20" class="text-secondary" font-size="9" font-weight="600">ERROR</text>
   <text x="24" y="36" class="text-primary" font-size="11">Connection failed.</text>

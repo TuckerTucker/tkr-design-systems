@@ -11,7 +11,8 @@ Sketch grammar:
            purple-light #C4B8D4, text #2C2C2C, text-secondary #555555,
            muted #8A8680, warm-rule #E5E3DE
   Spacing: 2-grid (2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32)
-  Borders: 8-14px radius (cards/chrome), 6-8px radius (avatars/badges—rounded squares)
+  Borders: radius.input fields/buttons, radius.default containers, radius.chrome
+  shell/dialogs; extras.radius.avatar/badge/checkbox for the rounded squares
   Elevation: 1px borders + warm-surface fills, no shadows
   Avatar: 34×34 rounded-square (8px radius) with monogram
   Badge: 18×18 purple rounded-square (6px radius) with white digit
@@ -41,12 +42,12 @@ COMPONENTS = {
     # Disabled: muted text, no interaction.
 
     "button-primary": (140, 48, """
-  <rect x="0" y="0" width="140" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
+  <rect x="0" y="0" width="140" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="70" y="32" text-anchor="middle" class="text-primary" font-size="14" font-weight="600" letter-spacing="-0.02em">Send</text>
 """),
 
     "button-secondary": (140, 48, """
-  <rect x="0" y="0" width="140" height="48" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
+  <rect x="0" y="0" width="140" height="48" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="70" y="32" text-anchor="middle" class="text-primary" font-size="14" font-weight="600" letter-spacing="-0.02em">Cancel</text>
 """),
 
@@ -56,87 +57,87 @@ COMPONENTS = {
 """),
 
     "button-disabled": (140, 48, """
-  <rect x="0" y="0" width="140" height="48" fill="{extras.color.surface_subtle}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
+  <rect x="0" y="0" width="140" height="48" fill="{extras.color.surface_subtle}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="70" y="32" text-anchor="middle" class="text-muted" font-size="14" font-weight="600" letter-spacing="-0.02em">Unavailable</text>
 """),
 
-    # Input — rounded 10px, single line. Placeholder in muted text.
+    # Input — rounded radius.input, single line. Placeholder in muted text.
     "input-text": (320, 56, """
-  <rect x="0" y="0" width="320" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="320" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="35" class="text-muted" font-size="14" letter-spacing="-0.02em">Enter text here</text>
 """),
 
     "input-password": (320, 56, """
-  <rect x="0" y="0" width="320" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="320" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="35" class="text-muted" font-size="14" letter-spacing="-0.02em">••••••••</text>
 """),
 
     "input-search": (320, 56, """
-  <rect x="0" y="0" width="320" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="320" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="35" class="text-muted" font-size="14" letter-spacing="-0.02em">Search...</text>
 """),
 
     # Textarea — multi-line input with rounded corners.
     "textarea-default": (320, 120, """
-  <rect x="0" y="0" width="320" height="120" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="320" height="120" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="28" class="text-muted" font-size="14" letter-spacing="-0.02em">Enter your message...</text>
 """),
 
     "textarea-autogrow": (320, 80, """
-  <rect x="0" y="0" width="320" height="80" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="320" height="80" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="28" class="text-primary" font-size="14" letter-spacing="-0.02em">This field grows as you type.</text>
   <text x="12" y="54" class="text-primary" font-size="14" letter-spacing="-0.02em">Useful for long-form input.</text>
 """),
 
     # Select — rounded input with chevron indicator (rotated Caveat ↓).
     "select-default": (320, 56, """
-  <rect x="0" y="0" width="320" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="320" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="35" class="text-primary" font-size="14" letter-spacing="-0.02em">Choose one</text>
   <g transform="rotate(-2, 308, 28)">
     <text x="308" y="35" text-anchor="end" font-family="{extras.font.annotation}" font-size="14" font-weight="700" fill="{color.text_muted}">↓</text>
   </g>
 """),
 
-    # Checkbox — rounded square 6px, unchecked/checked/indeterminate.
+    # Checkbox — rounded square (extras.radius.checkbox), unchecked/checked/indeterminate.
     "checkbox-default": (200, 24, """
-  <rect x="0" y="0" width="20" height="20" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="6" ry="6"/>
+  <rect x="0" y="0" width="20" height="20" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.checkbox}" ry="{extras.radius.checkbox}"/>
   <text x="32" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Unchecked</text>
 """),
 
     "checkbox-checked": (200, 24, """
-  <rect x="0" y="0" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="6" ry="6"/>
+  <rect x="0" y="0" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.checkbox}" ry="{extras.radius.checkbox}"/>
   <path d="M 3 10 L 8 15 L 17 6" fill="none" stroke="{color.text_primary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   <text x="32" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Checked</text>
 """),
 
     "checkbox-indeterminate": (200, 24, """
-  <rect x="0" y="0" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="6" ry="6"/>
+  <rect x="0" y="0" width="20" height="20" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.checkbox}" ry="{extras.radius.checkbox}"/>
   <line x1="5" y1="10" x2="15" y2="10" stroke="{color.text_primary}" stroke-width="2" stroke-linecap="round"/>
   <text x="32" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Indeterminate</text>
 """),
 
-    # Radio — single-select, rounded square 6px (sketch grammar: no circles).
+    # Radio — single-select, rounded square (extras.radius.checkbox; sketch grammar: no circles).
     "radio-default": (200, 24, """
-  <rect x="0" y="0" width="20" height="20" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="6" ry="6"/>
+  <rect x="0" y="0" width="20" height="20" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.checkbox}" ry="{extras.radius.checkbox}"/>
   <text x="32" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Option</text>
 """),
 
     "radio-selected": (200, 24, """
-  <rect x="0" y="0" width="20" height="20" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="6" ry="6"/>
-  <rect x="6" y="6" width="8" height="8" fill="{color.text_primary}" rx="3" ry="3"/>
+  <rect x="0" y="0" width="20" height="20" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.checkbox}" ry="{extras.radius.checkbox}"/>
+  <rect x="6" y="6" width="8" height="8" fill="{color.text_primary}" rx="{full:8}" ry="{full:8}"/>
   <text x="32" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Selected</text>
 """),
 
     # Toggle — on/off switch with track + thumb.
     "toggle-on": (200, 24, """
-  <rect x="0" y="0" width="44" height="24" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="12" ry="12"/>
-  <rect x="24" y="4" width="16" height="16" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="4" ry="4"/>
+  <rect x="0" y="0" width="44" height="24" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{full:24}" ry="{full:24}"/>
+  <rect x="24" y="4" width="16" height="16" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.knob}" ry="{extras.radius.knob}"/>
   <text x="56" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">On</text>
 """),
 
     "toggle-off": (200, 24, """
-  <rect x="0" y="0" width="44" height="24" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="12" ry="12"/>
-  <rect x="4" y="4" width="16" height="16" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="4" ry="4"/>
+  <rect x="0" y="0" width="44" height="24" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{full:24}" ry="{full:24}"/>
+  <rect x="4" y="4" width="16" height="16" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.knob}" ry="{extras.radius.knob}"/>
   <text x="56" y="16" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Off</text>
 """),
 
@@ -163,24 +164,24 @@ COMPONENTS = {
 """),
 
     "icon-placeholder": (24, 24, """
-  <rect x="0" y="0" width="24" height="24" fill="{extras.color.surface_subtle}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="4" ry="4"/>
+  <rect x="0" y="0" width="24" height="24" fill="{extras.color.surface_subtle}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.icon}" ry="{extras.radius.icon}"/>
 """),
 
     # Avatar — 34×34 rounded-square with monogram in IBM Plex Sans.
     "avatar-default": (34, 34, """
-  <rect x="0" y="0" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="0" y="0" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
   <text x="17" y="24" text-anchor="middle" class="text-primary" font-size="14" font-weight="600">T</text>
 """),
 
     "avatar-with-status": (40, 40, """
-  <rect x="0" y="0" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="0" y="0" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
   <text x="17" y="24" text-anchor="middle" class="text-primary" font-size="14" font-weight="600">A</text>
   <circle cx="36" cy="36" r="4" fill="{color.accent}"/>
 """),
 
     # Badge — 18×18 purple rounded-square with white digit or status dot.
     "badge-count": (18, 18, """
-  <rect x="0" y="0" width="18" height="18" fill="{color.accent}" rx="6" ry="6"/>
+  <rect x="0" y="0" width="18" height="18" fill="{color.accent}" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="9" y="14" text-anchor="middle" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}">2</text>
 """),
 
@@ -212,14 +213,14 @@ COMPONENTS = {
 """),
 
     "card-elevated": (320, 120, """
-  <rect x="0" y="0" width="320" height="120" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="14" ry="14"/>
+  <rect x="0" y="0" width="320" height="120" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="16" y="28" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Elevated</text>
   <text x="16" y="58" class="text-primary" font-size="14" letter-spacing="-0.02em">This card has a warm-surface background</text>
   <text x="16" y="78" class="text-primary" font-size="14" letter-spacing="-0.02em">for visual elevation without shadows.</text>
 """),
 
     "card-outlined": (320, 120, """
-  <rect x="0" y="0" width="320" height="120" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="14" ry="14"/>
+  <rect x="0" y="0" width="320" height="120" fill="{color.surface_elevated}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="16" y="28" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Outlined</text>
   <text x="16" y="58" class="text-primary" font-size="14" letter-spacing="-0.02em">Subtle border defines the boundary.</text>
   <text x="16" y="78" class="text-primary" font-size="14" letter-spacing="-0.02em">No fill color.</text>
@@ -229,7 +230,7 @@ COMPONENTS = {
     # These are the same structure:
     "list-item-compact": (280, 48, """
   <rect x="0" y="0" width="280" height="48" fill="{color.page_bg}"/>
-  <rect x="14" y="7" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="8" ry="8"/>
+  <rect x="14" y="7" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
   <text x="31" y="30" font-family="{font.body}" font-size="14" font-weight="600" text-anchor="middle">R</text>
   <text x="58" y="29" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Recipe ideas</text>
   <text x="266" y="29" font-family="{font.body}" font-size="10" fill="{color.text_placeholder}" text-anchor="end">1h</text>
@@ -238,20 +239,20 @@ COMPONENTS = {
     # Form field — label above input, optional help/error below.
     "form-field-default": (320, 56, """
   <text x="0" y="14" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Email</text>
-  <rect x="0" y="24" width="320" height="32" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="24" width="320" height="32" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="46" class="text-muted" font-size="14" letter-spacing="-0.02em">user@example.com</text>
 """),
 
     "form-field-with-help": (320, 80, """
   <text x="0" y="14" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Password</text>
-  <rect x="0" y="24" width="320" height="32" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="24" width="320" height="32" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="46" class="text-primary" font-size="14" letter-spacing="-0.02em">••••••••</text>
   <text x="0" y="68" class="text-muted" font-size="11" letter-spacing="-0.02em">Minimum 8 characters required.</text>
 """),
 
     "form-field-with-error": (320, 80, """
   <text x="0" y="14" class="text-secondary" font-size="12" font-weight="600" letter-spacing="-0.02em">Username</text>
-  <rect x="0" y="24" width="320" height="32" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="1.5" rx="10" ry="10"/>
+  <rect x="0" y="24" width="320" height="32" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="1.5" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="46" class="text-primary" font-size="14" letter-spacing="-0.02em">invalid-user</text>
   <g transform="rotate(-1, 0, 62)">
     <text x="0" y="62" font-family="{extras.font.annotation}" font-size="14" font-weight="700" fill="{color.accent}">letters and numbers only</text>
@@ -296,7 +297,7 @@ COMPONENTS = {
 
     "nav-item-with-badge": (240, 32, """
   <text x="0" y="22" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Inbox</text>
-  <rect x="224" y="12" width="18" height="18" fill="{color.accent}" rx="6" ry="6"/>
+  <rect x="224" y="12" width="18" height="18" fill="{color.accent}" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
   <text x="233" y="26" text-anchor="middle" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}">3</text>
 """),
 
@@ -344,28 +345,28 @@ COMPONENTS = {
 
     # Toast — transient notification.
     "toast-info": (400, 64, """
-  <rect x="0" y="0" width="400" height="64" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="14" ry="14"/>
+  <rect x="0" y="0" width="400" height="64" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="16" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">INFO</text>
   <text x="16" y="48" class="text-primary" font-size="13" letter-spacing="-0.02em">Profile updated successfully.</text>
   <text x="384" y="26" text-anchor="end" class="text-muted" font-size="14">×</text>
 """),
 
     "toast-success": (400, 64, """
-  <rect x="0" y="0" width="400" height="64" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="14" ry="14"/>
+  <rect x="0" y="0" width="400" height="64" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="16" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">SUCCESS</text>
   <text x="16" y="48" class="text-primary" font-size="13" letter-spacing="-0.02em">Changes saved.</text>
   <text x="384" y="26" text-anchor="end" class="text-muted" font-size="14">×</text>
 """),
 
     "toast-warning": (400, 64, """
-  <rect x="0" y="0" width="400" height="64" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="14" ry="14"/>
+  <rect x="0" y="0" width="400" height="64" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="16" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">WARNING</text>
   <text x="16" y="48" class="text-primary" font-size="13" letter-spacing="-0.02em">This action cannot be undone.</text>
   <text x="384" y="26" text-anchor="end" class="text-muted" font-size="14">×</text>
 """),
 
     "toast-error": (400, 64, """
-  <rect x="0" y="0" width="400" height="64" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="14" ry="14"/>
+  <rect x="0" y="0" width="400" height="64" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="16" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">ERROR</text>
   <text x="16" y="48" class="text-primary" font-size="13" letter-spacing="-0.02em">Could not complete request.</text>
   <text x="384" y="26" text-anchor="end" class="text-muted" font-size="14">×</text>
@@ -397,7 +398,7 @@ COMPONENTS = {
 
     # Button group — related buttons separated by borders.
     "button-group-default": (320, 48, """
-  <rect x="0" y="0" width="320" height="48" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
+  <rect x="0" y="0" width="320" height="48" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="40" y="32" text-anchor="middle" class="text-primary" font-size="14" font-weight="600" letter-spacing="-0.02em">All</text>
   <line x1="80" y1="8" x2="80" y2="40" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="120" y="32" text-anchor="middle" class="text-secondary" font-size="14" letter-spacing="-0.02em">Active</text>
@@ -408,19 +409,19 @@ COMPONENTS = {
 """),
 
     "button-group-segmented": (320, 48, """
-  <rect x="0" y="0" width="80" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
+  <rect x="0" y="0" width="80" height="48" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="40" y="32" text-anchor="middle" class="text-primary" font-size="14" font-weight="600" letter-spacing="-0.02em">Day</text>
   <rect x="80" y="0" width="80" height="48" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="120" y="32" text-anchor="middle" class="text-secondary" font-size="14" letter-spacing="-0.02em">Week</text>
   <rect x="160" y="0" width="80" height="48" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="200" y="32" text-anchor="middle" class="text-secondary" font-size="14" letter-spacing="-0.02em">Month</text>
-  <rect x="240" y="0" width="80" height="48" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
+  <rect x="240" y="0" width="80" height="48" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="280" y="32" text-anchor="middle" class="text-secondary" font-size="14" letter-spacing="-0.02em">Year</text>
 """),
 
     # Search bar — input with optional annotation.
     "search-bar-default": (480, 56, """
-  <rect x="0" y="0" width="480" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="10" ry="10"/>
+  <rect x="0" y="0" width="480" height="56" fill="{color.surface_elevated}" stroke="{color.border_input}" stroke-width="{border_width.default}" rx="{radius.input}" ry="{radius.input}"/>
   <text x="12" y="35" class="text-muted" font-size="14" letter-spacing="-0.02em">Search conversations...</text>
   <g transform="rotate(-1.5, 460, 28)">
     <text x="460" y="35" text-anchor="end" font-family="{extras.font.annotation}" font-size="14" font-weight="700" fill="{extras.color.accent_light}">↓ your chats</text>
@@ -429,14 +430,14 @@ COMPONENTS = {
 
     # Banner — full-width emphasis notice.
     "banner-info": (640, 56, """
-  <rect x="0" y="0" width="640" height="56" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="14" ry="14"/>
+  <rect x="0" y="0" width="640" height="56" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="16" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">INFO</text>
   <text x="80" y="34" class="text-primary" font-size="13" letter-spacing="-0.02em">A new version is available.</text>
   <text x="624" y="34" text-anchor="end" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Refresh →</text>
 """),
 
     "banner-warning": (640, 56, """
-  <rect x="0" y="0" width="640" height="56" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="14" ry="14"/>
+  <rect x="0" y="0" width="640" height="56" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}" rx="{radius.default}" ry="{radius.default}"/>
   <text x="16" y="26" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">WARNING</text>
   <text x="80" y="34" class="text-primary" font-size="13" letter-spacing="-0.02em">Your trial ends in 3 days.</text>
   <text x="624" y="34" text-anchor="end" class="text-primary" font-size="13" letter-spacing="-0.02em" font-weight="600">Upgrade →</text>
@@ -461,6 +462,47 @@ COMPONENTS = {
   <text x="16" y="78" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">EMAIL DIGEST</text>
   <text x="16" y="102" class="text-primary" font-size="13" letter-spacing="-0.02em">Daily digest at 09:00</text>
   <text x="16" y="126" class="text-muted" font-size="13" letter-spacing="-0.02em">Replies in real time</text>
+"""),
+
+    # ═════ List item — default (formerly hand-authored) ═════
+    "list-item-default": (280, 64, """
+  <!-- Sketch list item — default state.
+       Avatar 34x34 emoji rounded square, title + preview right of avatar,
+       timestamp top-right, optional purple unread badge.
+  -->
+  <rect x="0" y="0" width="280" height="64" fill="{color.page_bg}"/>
+
+  <!-- Avatar: 34px warm-surface square with 1px border -->
+  <rect x="14" y="15" width="34" height="34" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
+  <text x="31" y="38" font-family="{font.body}" font-size="14" font-weight="600" fill="{color.text_primary}" text-anchor="middle">T</text>
+
+  <!-- Title row -->
+  <text x="58" y="29" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Tokyo Trip</text>
+  <text x="266" y="29" font-family="{font.body}" font-size="10" font-weight="400" fill="{color.text_placeholder}" text-anchor="end">2m</text>
+
+  <!-- Preview -->
+  <text x="58" y="46" font-family="{font.body}" font-size="11" font-weight="400" fill="{color.text_muted}">Want me to build a day-by-day…</text>
+
+  <!-- Unread badge: 18px purple rounded square (extras.radius.badge) -->
+  <rect x="244" y="38" width="18" height="18" fill="{color.accent}" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
+  <text x="253" y="51" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}" text-anchor="middle">2</text>
+"""),
+
+    # ═════ List item — selected (formerly hand-authored) ═════
+    "list-item-selected": (280, 64, """
+  <!-- Sketch list item — selected state. Surface fill + 1px border, no shadow. -->
+  <rect x="6" y="6" width="268" height="52" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="1" rx="{radius.default}" ry="{radius.default}"/>
+
+  <rect x="20" y="15" width="34" height="34" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="1" rx="{extras.radius.avatar}" ry="{extras.radius.avatar}"/>
+  <text x="37" y="38" font-family="{font.body}" font-size="14" font-weight="600" fill="{color.text_primary}" text-anchor="middle">T</text>
+
+  <text x="64" y="29" font-family="{font.body}" font-size="12.5" font-weight="600" fill="{color.text_primary}">Tokyo Trip</text>
+  <text x="260" y="29" font-family="{font.body}" font-size="10" font-weight="400" fill="{color.text_placeholder}" text-anchor="end">2m</text>
+
+  <text x="64" y="46" font-family="{font.body}" font-size="11" font-weight="400" fill="{color.text_muted}">Want me to build a day-by-day…</text>
+
+  <rect x="238" y="38" width="18" height="18" fill="{color.accent}" rx="{extras.radius.badge}" ry="{extras.radius.badge}"/>
+  <text x="247" y="51" font-family="{font.body}" font-size="9" font-weight="700" fill="{color.accent_foreground}" text-anchor="middle">2</text>
 """),
 
 }

@@ -309,7 +309,8 @@ should only hit documentation chrome.
 
 One engine renders every system's component library and layout patterns
 (issue #5). It discovers systems from `systems/registry.yaml` (the
-`neutral` alias builds `wireframe` once; Riso has no SVG builder), loads
+`neutral` alias builds `wireframe` once; every system, Riso included, has
+a builder), loads
 each spec's token file with `read_spec_with_tokens`, validates the
 system's builder data and renders it:
 
@@ -317,7 +318,7 @@ system's builder data and renders it:
 uv run python tools/builders/build.py                   # every system
 uv run python tools/builders/build.py --system swiss    # one (repeatable)
 uv run python tools/builders/build.py --kind patterns   # layouts only
-uv run python tools/builders/build.py --check           # exit 1 if a committed SVG is stale
+uv run python tools/builders/build.py --check           # exit 1 if a committed SVG is stale or orphaned
 uv run python tools/builders/build.py --png             # also refresh existing PNG previews
 ```
 
@@ -351,8 +352,20 @@ unknown token or malformed entry with the system, kind, item and key.
 - Strokes: `color.border_default` at `border_width.default`,
   `color.border_strong` at `border_width.strong`, inputs `color.border_input`,
   focus `color.focus_ring` at `border_width.focus`.
-- Radii: `radius.default` (containers), `radius.input` (controls),
-  `radius.chrome` (shell/modals); pill and glyph geometry stays literal.
+- Radii: every `rx`/`ry` is a token, `0`, or `{full:N}` (half of the
+  element's shorter side `N`: pills, toggle tracks, round knobs). Roles:
+  `radius.default` (containers, list items, cards), `radius.input` (fields,
+  buttons), `radius.chrome` (shell, modals, dialog panels); anything else is
+  an `extras.radius.<role>` (`avatar`, `avatar_small`, `badge`, `checkbox`,
+  `knob`, `icon`, `control`, `message`, `message_tail`) with a `notes` entry
+  citing the JSX or marked `derived: true`. Corners with different radii
+  (chat-bubble tails) use path data from
+  `{extras.radius.message|rrect=x,y,w,h,br:extras.radius.message_tail}`.
+  `test_build.py` fails on radius literals like it does on colour literals.
+- Orphans: `--check` also fails when a system's `components/` or `layouts/`
+  holds an SVG no template produces (hand-authored files that token changes
+  never reach), unless `tools/builders/orphan-allowlist.yaml` lists it with
+  a reason; allow-list entries that are missing or now produced fail too.
 - SVG cannot composite CSS `rgba()` the way the browser does over a gradient;
   for Prism the glass tiers stay white-with-alpha fills painted over a slice
   of `extras.color.gradient_stop_*`, and for Riso flatten per the spec's

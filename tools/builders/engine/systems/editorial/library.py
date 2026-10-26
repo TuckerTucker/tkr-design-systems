@@ -526,4 +526,104 @@ COMPONENTS = {
   <line x1="0" y1="95" x2="400" y2="95" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
 """),
 
+    # ═════ List item — default (formerly hand-authored) ═════
+    "list-item-default": (280, 90, """
+  <!-- Editorial list item — default state
+       Per project no-emoji policy: metadata is timestamp only; identity
+       comes from the Fraunces title and (when present) the burgundy 'N new'.
+       Top: timestamp in Inter uppercase tracked
+       Optional 'N new' top-right in Fraunces burgundy (only when unread)
+       Title: Fraunces 15px weight 600
+       Preview: Inter italic 11px in color.text_secondary
+       Hairline rule below
+  -->
+
+  <!-- Background: paper (cream) — same as page so transparent in composition -->
+  <rect x="0" y="0" width="280" height="90" fill="{color.page_bg}"/>
+
+  <!-- Timestamp + emoji overline: Inter uppercase tracked
+       Per editorial-tracked-metadata: 9px, 0.16em (1.44px) tracking, color color.text_muted
+  -->
+  <text x="16" y="22"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">2M AGO · DISPATCH</text>
+
+  <!-- Unread "2 new" — Fraunces burgundy, NOT a badge per rulebook -->
+  <text x="264" y="22"
+        font-family="{font.body}"
+        font-size="11"
+        font-weight="700"
+        fill="{color.accent}"
+        text-anchor="end">2 new</text>
+
+  <!-- Title: Fraunces 15px weight 600, slight negative tracking -->
+  <text x="16" y="46"
+        font-family="{font.body}"
+        font-size="15"
+        font-weight="600"
+        fill="{color.text_primary}"
+        letter-spacing="-0.15">Tokyo Trip</text>
+
+  <!-- Preview: Inter italic 11px in color.text_secondary -->
+  <text x="16" y="66"
+        font-family="{font.label}"
+        font-size="11"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_secondary}">Want me to build a day-by-day itinerary?</text>
+
+  <!-- Hairline rule below -->
+  <line x1="0" y1="89" x2="280" y2="89" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+"""),
+
+    # ═════ List item — selected (formerly hand-authored) ═════
+    "list-item-selected": (280, 90, """
+  <!-- Editorial list item — selected state
+       Per editorial paper-tier elevation: background fills with color.surface_selected (paper_elevated)
+       Title weight bumps from 600 to 700.
+       NO accent bar, NO border highlight.
+  -->
+
+  <!-- Background: elevated paper — the only selection signal -->
+  <rect x="0" y="0" width="280" height="90" fill="{color.surface_selected}"/>
+
+  <!-- Timestamp + emoji overline -->
+  <text x="16" y="22"
+        font-family="{font.label}"
+        font-size="9"
+        font-weight="600"
+        fill="{color.text_muted}"
+        letter-spacing="1.44">2M AGO · DISPATCH</text>
+
+  <!-- Unread "2 new" — Fraunces burgundy -->
+  <text x="264" y="22"
+        font-family="{font.body}"
+        font-size="11"
+        font-weight="700"
+        fill="{color.accent}"
+        text-anchor="end">2 new</text>
+
+  <!-- Title: Fraunces 15px weight 700 (bumped from 600 for selection) -->
+  <text x="16" y="46"
+        font-family="{font.body}"
+        font-size="15"
+        font-weight="700"
+        fill="{color.text_primary}"
+        letter-spacing="-0.15">Tokyo Trip</text>
+
+  <!-- Preview: Inter italic 11px -->
+  <text x="16" y="66"
+        font-family="{font.label}"
+        font-size="11"
+        font-style="italic"
+        font-weight="400"
+        fill="{color.text_secondary}">Want me to build a day-by-day itinerary?</text>
+
+  <!-- Hairline rule below -->
+  <line x1="0" y1="89" x2="280" y2="89" stroke="{extras.color.rule_hairline}" stroke-width="1"/>
+"""),
+
 }

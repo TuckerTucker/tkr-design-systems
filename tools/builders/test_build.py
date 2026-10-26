@@ -37,8 +37,14 @@ from engine.plugin import builder_of  # noqa: E402
 
 REPO = HERE.parents[1]
 REGISTRY = REPO / "systems" / "registry.yaml"
-BUILT_SYSTEMS = ["wireframe", "swiss", "terminal", "editorial", "sketch", "prism", "revolt"]
+BUILT_SYSTEMS = ["wireframe", "swiss", "terminal", "editorial", "sketch", "prism", "revolt", "riso"]
 COLOUR_LITERAL = re.compile(r"#[0-9A-Fa-f]{3,8}\b|rgba?\(")
+ELEMENT = re.compile(r"<(?P<tag>[a-zA-Z]+)\b(?P<attrs>[^>]*)>")
+RADIUS_ATTR = re.compile(r'\b(?P<name>rx|ry)="(?P<value>[^"]*)"')
+RADIUS_TOKEN = re.compile(r"\{(?:extras\.)?radius\.[a-z0-9_]+\}")
+FULL_ROUND = re.compile(r"\{full:(?P<side>\d+(?:\.\d+)?)\}")
+CSS_RADIUS = re.compile(r"border-radius\s*:\s*(?P<value>[^;\"'}]*)")
+PATH_DATA = re.compile(r'\bd="(?P<d>[^"]*)"')
 
 
 @pytest.fixture(scope="module")
@@ -70,7 +76,7 @@ def _set_token(tokens_path: Path, group: str, key: str, value: Any) -> None:
 
 def test_discovers_registry_systems_and_folds_aliases(targets) -> None:
     ids = [t.id for t in targets]
-    assert ids == BUILT_SYSTEMS + ["riso"]
+    assert ids == BUILT_SYSTEMS
     wireframe = next(t for t in targets if t.id == "wireframe")
     assert wireframe.aliases == ("neutral",)
     assert wireframe.library_root == (REPO / "systems" / "wireframe").resolve()
@@ -86,7 +92,7 @@ def test_alias_selects_owner_and_unknown_id_is_an_error(targets) -> None:
 
 def test_every_system_with_a_library_has_a_builder(targets) -> None:
     result = build(targets)
-    assert result.skipped == [("riso", "no builder module")]
+    assert result.skipped == []
     assert {f.system for f in result.files} == set(BUILT_SYSTEMS)
     assert {f.kind for f in result.files} == {"library", "patterns"}
     assert all(f.path.parent.name in ("components", "layouts") for f in result.files)
@@ -170,6 +176,100 @@ def test_templates_hold_no_colour_or_font_literals(system_id: str) -> None:
             assert not re.search(r'font-family="[^{]', text), (system_id, kind)
 
 
+def _template_texts(system_id: str) -> list[tuple[str, str, str]]:
+    """``(kind, item, text)`` for every template of a system (defs included)."""
+    data = builder_of(system_id, load_plugin(system_id))
+    out = []
+    for kind, kd in data.items():
+        out.append((kind, "<defs_extra>", kd.get("defs_extra", "")))
+        out.extend((kind, item, body) for item, (_w, _h, body) in kd["items"].items())
+    return out
+
+
+def radius_problems(text: str) -> list[str]:
+    """Corner radii in a template that are neither tokens, 0 nor documented geometry.
+
+    Allowed: ``rx``/``ry`` of ``0``, ``{radius.*}`` or ``{extras.radius.*}``,
+    or ``{full:N}`` where ``N`` is the element's shorter side (fully round
+    pills, tracks and knobs); ``border-radius`` only as ``0`` or a token;
+    curved path corners only from the ``|rrect`` filter.
+    """
+    problems = []
+    for el in ELEMENT.finditer(text):
+        attrs = el["attrs"]
+        for m in RADIUS_ATTR.finditer(attrs):
+            value = m["value"]
+            if value == "0" or RADIUS_TOKEN.fullmatch(value):
+                continue
+            full = FULL_ROUND.fullmatch(value)
+            if full:
+                w = re.search(r'\bwidth="([0-9.]+)"', attrs)
+                h = re.search(r'\bheight="([0-9.]+)"', attrs)
+                if w and h and float(full["side"]) == min(float(w[1]), float(h[1])):
+                    continue
+                problems.append(f'<{el["tag"]}> {m["name"]}="{value}" is not its shorter side')
+                continue
+            problems.append(f'<{el["tag"]}> {m["name"]}="{value}"')
+        d = PATH_DATA.search(attrs)
+        if (el["tag"] == "path" and d and not d["d"].startswith("{")
+                and re.search(r"[AaQqCcSsTt]", d["d"])):
+            problems.append(f"<path> curved corners in literal path data: {d['d'][:40]}")
+    for m in CSS_RADIUS.finditer(text):
+        value = m["value"].strip()
+        if value != "0" and not RADIUS_TOKEN.fullmatch(value):
+            problems.append(f"border-radius: {value}")
+    return problems
+
+
+@pytest.mark.parametrize("system_id", BUILT_SYSTEMS)
+def test_templates_hold_no_radius_literals(system_id: str) -> None:
+    bad = [(kind, item, p) for kind, item, text in _template_texts(system_id)
+           for p in radius_problems(text)]
+    assert not bad, bad
+
+
+def test_radius_rule_rejects_literals_and_wrong_full_sides() -> None:
+    assert radius_problems('<rect width="40" height="20" rx="{radius.input}" ry="0"/>') == []
+    assert radius_problems('<rect width="40" height="20" rx="{full:20}"/>') == []
+    assert radius_problems('<rect width="40" height="20" rx="10"/>') == ['<rect> rx="10"']
+    assert radius_problems('<rect width="40" height="20" rx="{full:40}"/>') \
+        == ['<rect> rx="{full:40}" is not its shorter side']
+    assert radius_problems('<path d="M 0 0 Q 4 0 4 4"/>')
+    assert radius_problems('<path d="M 0 0 L 4 4"/>') == []
+    assert radius_problems('<path d="{extras.radius.message|rrect=0,0,40,20}"/>') == []
+    assert radius_problems("<div style='border-radius: 6px'/>") == ["border-radius: 6px"]
+
+
+def test_full_round_and_rrect_placeholders() -> None:
+    tokens = {"radius": {"default": 8}, "extras": {"radius": {"tail": 2}}}
+    assert resolve('rx="{full:24}" ry="{full:7}"', tokens) == 'rx="12" ry="3.5"'
+    assert resolve('d="{radius.default|rrect=0,0,40,20,br:extras.radius.tail}"', tokens) == (
+        'd="M 8 0 H 32 A 8 8 0 0 1 40 8 V 18 A 2 2 0 0 1 38 20 '
+        'H 8 A 8 8 0 0 1 0 12 V 8 A 8 8 0 0 1 8 0 Z"')
+    with pytest.raises(TemplateError, match="extras.radius.nope"):
+        resolve("{radius.default|rrect=0,0,40,20,tl:extras.radius.nope}", tokens)
+    with pytest.raises(TemplateError, match="x,y,w,h"):
+        resolve("{radius.default|rrect=0,0,40}", tokens)
+
+
+def test_validation_names_unknown_rrect_override_token() -> None:
+    tokens = load_tokens(select_targets(discover_systems(REGISTRY), ["prism"])[0])
+    body = '<path d="{extras.radius.message|rrect=0,0,9,9,br:extras.radius.nope}"/>'
+    data = {"library": {"classes": [], "items": {"bubble": (10, 10, body)}}}
+    assert validate_builder("prism", data, tokens) == [
+        "prism: library.items['bubble']: unknown token 'extras.radius.nope'"]
+
+
+@pytest.mark.parametrize("system_id", BUILT_SYSTEMS)
+def test_extra_radii_used_by_templates_are_documented(system_id: str) -> None:
+    """Every ``extras.radius.*`` a template uses has a ``notes`` entry citing its source."""
+    tokens = load_tokens(select_targets(discover_systems(REGISTRY), [system_id])[0])
+    notes = tokens.get("notes") or {}
+    used = {m for _k, _i, text in _template_texts(system_id)
+            for m in re.findall(r"extras\.radius\.[a-z0-9_]+", text)}
+    assert not [u for u in sorted(used) if u not in notes], (system_id, sorted(used))
+
+
 # ─── CLI: build and --check ────────────────────────────────────────────
 
 def test_check_passes_on_a_clean_tree_and_fails_after_a_token_change(
@@ -194,6 +294,49 @@ def test_check_reports_missing_files_and_writes_nothing(swiss_tree: Path) -> Non
     target.unlink()
     assert build_cli.main(["--registry", str(swiss_tree), "--check", "--kind", "library"]) == 1
     assert not target.exists()
+
+
+def test_check_fails_on_orphan_svgs_unless_allow_listed(
+        swiss_tree: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    allow = tmp_path / "allow.yaml"
+    args = ["--registry", str(swiss_tree), "--orphan-allowlist", str(allow), "-q"]
+    assert build_cli.main(args) == 0                   # regenerate the copy
+    assert build_cli.main(args + ["--check"]) == 0
+    orphan = swiss_tree.parent / "swiss" / "layouts" / "hand-made.svg"
+    orphan.write_text("<svg/>")
+    capsys.readouterr()
+    assert build_cli.main(args + ["--check"]) == 1
+    assert f"orphan {orphan.resolve()}" in capsys.readouterr().out
+    assert build_cli.main(args + ["--check", "--kind", "library"]) == 0   # layouts out of scope
+
+    allow.write_text(yaml.safe_dump({"allow": [
+        {"path": "swiss/layouts/hand-made.svg", "reason": "pending a template"}]}))
+    assert build_cli.main(args + ["--check"]) == 0
+
+    orphan.unlink()                                    # the entry is now stale
+    capsys.readouterr()
+    assert build_cli.main(args + ["--check"]) == 1
+    assert "stale-allow" in capsys.readouterr().out
+
+
+def test_allow_list_entries_need_a_reason_and_must_not_name_produced_files(
+        swiss_tree: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    allow = tmp_path / "allow.yaml"
+    args = ["--registry", str(swiss_tree), "--orphan-allowlist", str(allow), "--check", "-q"]
+    assert build_cli.main(args[:-2] + ["-q"]) == 0     # regenerate the copy
+    allow.write_text(yaml.safe_dump({"allow": [{"path": "swiss/layouts/x.svg"}]}))
+    assert build_cli.main(args) == 2
+    assert "non-empty 'reason'" in capsys.readouterr().err
+    allow.write_text(yaml.safe_dump({"allow": [
+        {"path": "swiss/components/button-primary.svg", "reason": "was hand-made"}]}))
+    assert build_cli.main(args) == 1
+    assert "stale-allow" in capsys.readouterr().out
+
+
+def test_repository_allow_list_is_well_formed() -> None:
+    doc = yaml.safe_load(build_cli.DEFAULT_ALLOWLIST.read_text())
+    assert isinstance(doc.get("allow"), list)
+    assert all(e.get("reason") for e in doc["allow"])
 
 
 def test_cli_rejects_invalid_builder_data(swiss_tree: Path,

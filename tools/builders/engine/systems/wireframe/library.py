@@ -43,12 +43,12 @@ COMPONENTS = {
 """),
 
     "button-small": (100, 32, """
-  <rect width="100" height="32" rx="4" fill="{color.action}"/>
+  <rect width="100" height="32" rx="{radius.input}" fill="{color.action}"/>
   <text x="50" y="21" text-anchor="middle" class="text-inverse" font-size="12" font-weight="500">Small</text>
 """),
 
     "button-large": (200, 56, """
-  <rect width="200" height="56" rx="8" fill="{color.action}"/>
+  <rect width="200" height="56" rx="{radius.input}" fill="{color.action}"/>
   <text x="100" y="34" text-anchor="middle" class="text-inverse" font-size="16" font-weight="500">Large</text>
 """),
 
@@ -118,13 +118,13 @@ COMPONENTS = {
     # Checkbox
 
     "checkbox-default": (200, 28, """
-  <rect width="20" height="20" rx="4" fill="{color.accent}"/>
+  <rect width="20" height="20" rx="{extras.radius.checkbox}" fill="{color.accent}"/>
   <path d="M 4 10 L 8 14 L 16 6" fill="none" stroke="{color.text_inverse}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   <text x="32" y="15" class="text-primary" font-size="14">Checked option</text>
 """),
 
     "checkbox-indeterminate": (200, 28, """
-  <rect width="20" height="20" rx="4" fill="{color.accent}"/>
+  <rect width="20" height="20" rx="{extras.radius.checkbox}" fill="{color.accent}"/>
   <line x1="5" y1="10" x2="15" y2="10" stroke="{color.text_inverse}" stroke-width="2" stroke-linecap="round"/>
   <text x="32" y="15" class="text-primary" font-size="14">Some selected</text>
 """),
@@ -140,7 +140,7 @@ COMPONENTS = {
     # Toggle
 
     "toggle-default": (200, 24, """
-  <rect width="44" height="24" rx="12" fill="{color.accent}"/>
+  <rect width="44" height="24" rx="{full:24}" fill="{color.accent}"/>
   <circle cx="32" cy="12" r="10" fill="{color.surface}"/>
   <text x="56" y="17" class="text-primary" font-size="14">On</text>
 """),
@@ -164,11 +164,11 @@ COMPONENTS = {
     # Icon (16x16 generic placeholders, drawn as outlined)
 
     "icon-outlined": (16, 16, """
-  <rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="2" y="2" width="12" height="12" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
 """),
 
     "icon-filled": (16, 16, """
-  <rect x="2" y="2" width="12" height="12" rx="2" fill="{color.text_secondary}"/>
+  <rect x="2" y="2" width="12" height="12" rx="{extras.radius.icon}" fill="{color.text_secondary}"/>
 """),
 
     # Avatar
@@ -200,17 +200,17 @@ COMPONENTS = {
     # Badge
 
     "badge-count": (32, 20, """
-  <rect width="32" height="20" rx="10" fill="{color.accent}"/>
+  <rect width="32" height="20" rx="{full:20}" fill="{color.accent}"/>
   <text x="16" y="14" text-anchor="middle" class="text-inverse" font-size="11" font-weight="600">12</text>
 """),
 
     "badge-status": (80, 20, """
-  <rect width="80" height="20" rx="10" fill="{color.success}"/>
+  <rect width="80" height="20" rx="{full:20}" fill="{color.success}"/>
   <text x="40" y="14" text-anchor="middle" class="text-inverse" font-size="11" font-weight="600" letter-spacing="0.5">ACTIVE</text>
 """),
 
     "badge-tag": (80, 20, """
-  <rect width="80" height="20" rx="10" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect width="80" height="20" rx="{full:20}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="40" y="14" text-anchor="middle" class="text-secondary" font-size="11">category</text>
 """),
 
@@ -347,7 +347,7 @@ COMPONENTS = {
 
     "form-field-inline": (320, 28, """
   <text x="0" y="20" class="text-secondary" font-size="13">Notify me</text>
-  <rect x="276" width="44" height="24" rx="12" fill="{color.accent}"/>
+  <rect x="276" width="44" height="24" rx="{full:24}" fill="{color.accent}"/>
   <circle cx="308" cy="12" r="10" fill="{color.surface}"/>
 """),
 
@@ -399,7 +399,7 @@ COMPONENTS = {
   <text x="16" y="30" class="text-primary" font-size="13">Alex Rivera</text>
   <path d="M 600 22 L 608 30 L 616 22" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
   <line x1="0" y1="47.5" x2="640" y2="47.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="16" y="56" width="608" height="56" fill="{color.surface_selected}" rx="4"/>
+  <rect x="16" y="56" width="608" height="56" fill="{color.surface_selected}" rx="{radius.default}"/>
   <text x="32" y="78" class="text-secondary" font-size="12">Expanded detail content here.</text>
   <text x="32" y="98" class="text-secondary" font-size="12">Lorem ipsum dolor sit amet.</text>
 """),
@@ -437,8 +437,8 @@ COMPONENTS = {
     # Nav item
 
     "nav-item-top-level": (240, 32, """
-  <rect width="240" height="32" rx="4" fill="{color.surface_selected}"/>
-  <rect x="8" y="8" width="16" height="16" rx="2" fill="none" stroke="{color.accent}" stroke-width="1.5"/>
+  <rect width="240" height="32" rx="{radius.default}" fill="{color.surface_selected}"/>
+  <rect x="8" y="8" width="16" height="16" rx="{extras.radius.icon}" fill="none" stroke="{color.accent}" stroke-width="1.5"/>
   <text x="32" y="21" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
 """),
 
@@ -492,7 +492,7 @@ COMPONENTS = {
 
     "pagination-numbered": (400, 32, """
   <text x="0" y="20" class="text-secondary" font-size="13">‹ Prev</text>
-  <rect x="64" y="0" width="32" height="32" rx="4" fill="{color.surface_selected}"/>
+  <rect x="64" y="0" width="32" height="32" rx="{radius.input}" fill="{color.surface_selected}"/>
   <text x="80" y="20" text-anchor="middle" class="text-primary" font-size="13" font-weight="600">1</text>
   <text x="112" y="20" text-anchor="middle" class="text-secondary" font-size="13">2</text>
   <text x="144" y="20" text-anchor="middle" class="text-secondary" font-size="13">3</text>
@@ -632,9 +632,9 @@ COMPONENTS = {
   <circle cx="20" cy="24" r="6" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
   <line x1="25" y1="29" x2="30" y2="34" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
   <text x="40" y="30" class="text-disabled" font-size="14">Search</text>
-  <rect x="0" y="60" width="80" height="20" rx="10" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}"/>
+  <rect x="0" y="60" width="80" height="20" rx="{full:20}" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}"/>
   <text x="40" y="74" text-anchor="middle" class="text-secondary" font-size="11">Active</text>
-  <rect x="88" y="60" width="80" height="20" rx="10" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}"/>
+  <rect x="88" y="60" width="80" height="20" rx="{full:20}" fill="{color.surface}" stroke="{color.border_input}" stroke-width="{border_width.default}"/>
   <text x="128" y="74" text-anchor="middle" class="text-secondary" font-size="11">This week</text>
 """),
 
@@ -680,10 +680,10 @@ COMPONENTS = {
 """),
 
     "banner-promotional": (640, 96, """
-  <rect width="640" height="96" rx="{radius.default}" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect width="640" height="96" rx="{radius.input}" fill="{color.surface_selected}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="24" y="36" class="text-primary" font-size="16" font-weight="700">Upgrade to Pro</text>
   <text x="24" y="58" class="text-secondary" font-size="13">Unlock advanced features, unlimited usage, and priority support.</text>
-  <rect x="24" y="68" width="120" height="32" rx="4" fill="{color.accent}"/>
+  <rect x="24" y="68" width="120" height="32" rx="{radius.input}" fill="{color.accent}"/>
   <text x="84" y="89" text-anchor="middle" class="text-inverse" font-size="13" font-weight="500">Upgrade</text>
 """),
 
@@ -780,7 +780,7 @@ COMPONENTS = {
   <text x="16" y="26" class="text-primary" font-size="13">Select user</text>
   <path d="M 214 18 L 218 22 L 222 18" fill="none" stroke="{color.text_secondary}" stroke-width="1.5" stroke-linecap="round"/>
   <rect x="0" y="48" width="240" height="184" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="8" y="56" width="224" height="32" rx="4" fill="{color.surface_selected}"/>
+  <rect x="8" y="56" width="224" height="32" rx="{radius.default}" fill="{color.surface_selected}"/>
   <text x="20" y="76" class="text-disabled" font-size="13">Search users...</text>
   <text x="16" y="116" class="text-primary" font-size="14">Alex Rivera</text>
   <text x="16" y="148" class="text-primary" font-size="14">Jordan Chen</text>

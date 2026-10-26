@@ -341,4 +341,104 @@ COMPONENTS = {
   <text x="2" y="76" class="text-secondary" font-size="10" font-weight="400">└──────────┘</text>
 """),
 
+    # ═════ List item — default (formerly hand-authored) ═════
+    "list-item-default": (280, 64, """
+  <!-- Terminal list item — default (unselected) state
+       Height 64px (16 chars at default mono row height ~12px + padding).
+       No surface background — just text on the page bg.
+       Indented 14px to leave space where the > prompt would appear in selected.
+  -->
+
+  <!-- Page background -->
+  <rect x="0" y="0" width="280" height="64" fill="{color.page_bg}"/>
+
+  <!-- Empty space for prompt indicator (would be > in selected) -->
+  <!-- Name + count line, y=20 -->
+  <text x="14" y="22"
+        font-family="{font.body}"
+        font-size="12"
+        font-weight="500"
+        fill="{color.text_secondary}">tokyo_trip</text>
+
+  <!-- Unread count [N] in amber, inline -->
+  <text x="92" y="22"
+        font-family="{font.body}"
+        font-size="11"
+        font-weight="700"
+        fill="{color.warning}">[2]</text>
+
+  <!-- Timestamp top-right in muted dark green -->
+  <text x="266" y="22"
+        font-family="{font.body}"
+        font-size="10"
+        font-weight="500"
+        fill="{color.text_muted}"
+        text-anchor="end">2m</text>
+
+  <!-- Preview line, y=40 — prefixed with `// ` per terminal-prompt-style-labels -->
+  <text x="14" y="40"
+        font-family="{font.body}"
+        font-size="10"
+        font-weight="400"
+        fill="{color.text_muted}">// build day-by-day itinerary?</text>
+
+  <!-- Dashed rule below per elevation.borders_only.border_light -->
+  <line x1="0" y1="63" x2="280" y2="63"
+        stroke="{color.border_default}" stroke-width="1" stroke-dasharray="3,2"/>
+"""),
+
+    # ═════ List item — selected (formerly hand-authored) ═════
+    "list-item-selected": (280, 64, """
+  <!-- Terminal list item — selected state
+       Per terminal-selection-via-character: NO background fill.
+       Selection is signaled by:
+         - > prompt indicator at left edge in phosphor green
+         - name color shifts from color.text_secondary to color.text_primary
+         - name weight bumps to 700
+  -->
+
+  <!-- Page background (unchanged from default) -->
+  <rect x="0" y="0" width="280" height="64" fill="{color.page_bg}"/>
+
+  <!-- Prompt indicator > in phosphor green, weight 700 -->
+  <text x="2" y="22"
+        font-family="{font.body}"
+        font-size="12"
+        font-weight="700"
+        fill="{color.accent}">&gt;</text>
+
+  <!-- Name in bright text, weight 700 -->
+  <text x="14" y="22"
+        font-family="{font.body}"
+        font-size="12"
+        font-weight="700"
+        fill="{color.text_primary}">tokyo_trip</text>
+
+  <!-- Unread count [N] in amber, inline -->
+  <text x="92" y="22"
+        font-family="{font.body}"
+        font-size="11"
+        font-weight="700"
+        fill="{color.warning}">[2]</text>
+
+  <!-- Timestamp top-right -->
+  <text x="266" y="22"
+        font-family="{font.body}"
+        font-size="10"
+        font-weight="500"
+        fill="{color.text_muted}"
+        text-anchor="end">2m</text>
+
+  <!-- Preview line — prefixed with `// ` -->
+  <text x="14" y="40"
+        font-family="{font.body}"
+        font-size="10"
+        font-weight="400"
+        fill="{color.text_secondary}">// build day-by-day itinerary?</text>
+
+  <!-- Dashed rule below -->
+  <line x1="0" y1="63" x2="280" y2="63"
+        stroke="{color.border_default}" stroke-width="1" stroke-dasharray="3,2"/>
+"""),
+
 }

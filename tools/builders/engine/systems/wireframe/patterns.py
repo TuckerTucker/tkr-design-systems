@@ -30,20 +30,20 @@ PATTERNS = {
   <text x="50" y="103" class="text-disabled" font-size="13">Search</text>
 
   <!-- Nav items -->
-  <rect x="8" y="140" width="264" height="36" rx="4" fill="{color.page_bg}"/>
-  <rect x="20" y="152" width="14" height="14" rx="2" fill="none" stroke="{color.accent}" stroke-width="1.5"/>
+  <rect x="8" y="140" width="264" height="36" rx="{radius.default}" fill="{color.page_bg}"/>
+  <rect x="20" y="152" width="14" height="14" rx="{extras.radius.icon}" fill="none" stroke="{color.accent}" stroke-width="1.5"/>
   <text x="44" y="163" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
 
-  <rect x="20" y="194" width="14" height="14" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="20" y="194" width="14" height="14" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
   <text x="44" y="205" class="text-secondary" font-size="14">Projects</text>
 
-  <rect x="20" y="234" width="14" height="14" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="20" y="234" width="14" height="14" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
   <text x="44" y="245" class="text-secondary" font-size="14">Reports</text>
 
-  <rect x="20" y="274" width="14" height="14" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="20" y="274" width="14" height="14" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
   <text x="44" y="285" class="text-secondary" font-size="14">Settings</text>
 
-  <rect x="20" y="314" width="14" height="14" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="20" y="314" width="14" height="14" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
   <text x="44" y="325" class="text-secondary" font-size="14">Team</text>
 
   <!-- Footer / account area -->
@@ -59,17 +59,17 @@ PATTERNS = {
   <line x1="63.5" y1="0" x2="63.5" y2="800" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Brand mark -->
-  <rect x="20" y="20" width="24" height="24" rx="4" fill="{color.accent}"/>
+  <rect x="20" y="20" width="24" height="24" rx="{radius.default}" fill="{color.accent}"/>
   <line x1="0" y1="64" x2="64" y2="64" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Icon-only nav items -->
-  <rect x="12" y="80" width="40" height="40" rx="4" fill="{color.page_bg}"/>
-  <rect x="24" y="92" width="16" height="16" rx="2" fill="none" stroke="{color.accent}" stroke-width="1.5"/>
+  <rect x="12" y="80" width="40" height="40" rx="{radius.default}" fill="{color.page_bg}"/>
+  <rect x="24" y="92" width="16" height="16" rx="{extras.radius.icon}" fill="none" stroke="{color.accent}" stroke-width="1.5"/>
 
-  <rect x="24" y="140" width="16" height="16" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
-  <rect x="24" y="188" width="16" height="16" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
-  <rect x="24" y="236" width="16" height="16" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
-  <rect x="24" y="284" width="16" height="16" rx="2" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="24" y="140" width="16" height="16" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="24" y="188" width="16" height="16" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="24" y="236" width="16" height="16" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
+  <rect x="24" y="284" width="16" height="16" rx="{extras.radius.icon}" fill="none" stroke="{color.text_secondary}" stroke-width="1.5"/>
 
   <!-- Footer -->
   <line x1="0" y1="744" x2="64" y2="744" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -86,7 +86,7 @@ PATTERNS = {
 
   <!-- Workspace section -->
   <text x="16" y="98" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">WORKSPACE</text>
-  <rect x="8" y="112" width="264" height="32" rx="4" fill="{color.page_bg}"/>
+  <rect x="8" y="112" width="264" height="32" rx="{radius.default}" fill="{color.page_bg}"/>
   <text x="20" y="132" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
   <text x="20" y="164" class="text-secondary" font-size="14">Projects</text>
   <text x="20" y="196" class="text-secondary" font-size="14">Reports</text>
@@ -436,7 +436,7 @@ PATTERNS = {
   <text x="16" y="320" class="text-secondary" font-size="13">Showing 1–5 of 247 employees</text>
 
   <text x="624" y="320" class="text-secondary" font-size="13">‹ Prev</text>
-  <rect x="688" y="304" width="32" height="32" rx="4" fill="{color.page_bg}"/>
+  <rect x="688" y="304" width="32" height="32" rx="{radius.input}" fill="{color.page_bg}"/>
   <text x="704" y="324" text-anchor="middle" class="text-primary" font-size="13" font-weight="600">1</text>
   <text x="736" y="324" text-anchor="middle" class="text-secondary" font-size="13">2</text>
   <text x="768" y="324" text-anchor="middle" class="text-secondary" font-size="13">3</text>
@@ -450,13 +450,13 @@ PATTERNS = {
 
   <!-- Filter row above table -->
   <text x="0" y="14" class="text-secondary" font-size="12" font-weight="600" letter-spacing="0.5">FILTERS</text>
-  <rect x="0" y="22" width="80" height="28" rx="14" fill="{color.accent}"/>
+  <rect x="0" y="22" width="80" height="28" rx="{full:28}" fill="{color.accent}"/>
   <text x="40" y="40" text-anchor="middle" class="text-inverse" font-size="11" font-weight="500">All</text>
-  <rect x="88" y="22" width="80" height="28" rx="14" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="88" y="22" width="80" height="28" rx="{full:28}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="128" y="40" text-anchor="middle" class="text-secondary" font-size="11">Active</text>
-  <rect x="176" y="22" width="100" height="28" rx="14" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="176" y="22" width="100" height="28" rx="{full:28}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="226" y="40" text-anchor="middle" class="text-secondary" font-size="11">Pending</text>
-  <rect x="284" y="22" width="80" height="28" rx="14" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="284" y="22" width="80" height="28" rx="{full:28}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="324" y="40" text-anchor="middle" class="text-secondary" font-size="11">Inactive</text>
 
   <text x="960" y="40" text-anchor="end" class="text-secondary" font-size="12">247 results</text>
@@ -660,7 +660,7 @@ PATTERNS = {
   <line x1="0" y1="499.5" x2="1280" y2="499.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Drag handle -->
-  <rect x="612" y="512" width="56" height="4" rx="2" fill="{color.border_default}"/>
+  <rect x="612" y="512" width="56" height="4" rx="{full:4}" fill="{color.border_default}"/>
 
   <text x="32" y="552" class="text-primary" font-size="16" font-weight="700">Action sheet</text>
   <text x="1248" y="556" text-anchor="end" class="text-secondary" font-size="18">×</text>
@@ -681,7 +681,7 @@ PATTERNS = {
   <rect width="640" height="400" fill="{color.surface}"/>
 
   <!-- Illustration placeholder -->
-  <rect x="288" y="80" width="64" height="64" rx="8" fill="none" stroke="{color.text_muted}" stroke-width="2" stroke-dasharray="4,4"/>
+  <rect x="288" y="80" width="64" height="64" rx="{radius.default}" fill="none" stroke="{color.text_muted}" stroke-width="2" stroke-dasharray="4,4"/>
   <line x1="296" y1="100" x2="344" y2="100" stroke="{color.text_muted}" stroke-width="1.5"/>
   <line x1="296" y1="116" x2="344" y2="116" stroke="{color.text_muted}" stroke-width="1.5"/>
   <line x1="296" y1="132" x2="320" y2="132" stroke="{color.text_muted}" stroke-width="1.5"/>
@@ -713,7 +713,7 @@ PATTERNS = {
   <rect width="640" height="400" fill="{color.surface}"/>
 
   <!-- Welcome-illustration placeholder -->
-  <rect x="288" y="64" width="64" height="64" rx="32" fill="none" stroke="{color.text_muted}" stroke-width="2"/>
+  <rect x="288" y="64" width="64" height="64" rx="{full:64}" fill="none" stroke="{color.text_muted}" stroke-width="2"/>
   <text x="320" y="106" text-anchor="middle" class="text-secondary" font-size="24">+</text>
 
   <text x="320" y="180" text-anchor="middle" class="text-primary" font-size="18" font-weight="700">Welcome aboard</text>
@@ -757,7 +757,7 @@ PATTERNS = {
   <text x="430" y="153" class="text-primary" font-size="14">Type a command or search...</text>
 
   <!-- Result items -->
-  <rect x="396" y="192" width="488" height="40" rx="4" fill="{color.page_bg}"/>
+  <rect x="396" y="192" width="488" height="40" rx="{radius.input}" fill="{color.page_bg}"/>
   <text x="412" y="216" class="text-primary" font-size="14" font-weight="500">Create new project</text>
   <text x="868" y="216" text-anchor="end" class="text-secondary" font-size="12">⌘N</text>
 
@@ -791,7 +791,7 @@ PATTERNS = {
 
   <!-- Group: Recent -->
   <text x="396" y="184" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">RECENT</text>
-  <rect x="396" y="196" width="488" height="40" rx="4" fill="{color.page_bg}"/>
+  <rect x="396" y="196" width="488" height="40" rx="{radius.input}" fill="{color.page_bg}"/>
   <text x="412" y="220" class="text-primary" font-size="14" font-weight="500">Create new project</text>
 
   <text x="412" y="260" class="text-primary" font-size="14">Create new task</text>
@@ -844,7 +844,7 @@ PATTERNS = {
   <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Settings</text>
   <line x1="0" y1="64" x2="240" y2="64" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
-  <rect x="8" y="80" width="224" height="36" rx="4" fill="{color.page_bg}"/>
+  <rect x="8" y="80" width="224" height="36" rx="{radius.default}" fill="{color.page_bg}"/>
   <text x="24" y="103" class="text-primary" font-size="14" font-weight="500">Profile</text>
 
   <text x="24" y="143" class="text-secondary" font-size="14">Account</text>
@@ -897,7 +897,7 @@ PATTERNS = {
 
   <!-- Section: Personal -->
   <text x="24" y="98" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">PERSONAL</text>
-  <rect x="8" y="112" width="224" height="32" rx="4" fill="{color.page_bg}"/>
+  <rect x="8" y="112" width="224" height="32" rx="{radius.default}" fill="{color.page_bg}"/>
   <text x="24" y="132" class="text-primary" font-size="14" font-weight="500">Profile</text>
   <text x="24" y="164" class="text-secondary" font-size="14">Account</text>
   <text x="24" y="196" class="text-secondary" font-size="14">Preferences</text>
@@ -1033,11 +1033,11 @@ PATTERNS = {
 
   <!-- Tags -->
   <text x="800" y="160" class="text-secondary" font-size="11" font-weight="600" letter-spacing="0.5">TAGS</text>
-  <rect x="800" y="172" width="60" height="22" rx="11" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="800" y="172" width="60" height="22" rx="{full:22}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="830" y="187" text-anchor="middle" class="text-secondary" font-size="11">design</text>
-  <rect x="868" y="172" width="80" height="22" rx="11" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="868" y="172" width="80" height="22" rx="{full:22}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="908" y="187" text-anchor="middle" class="text-secondary" font-size="11">wireframes</text>
-  <rect x="800" y="204" width="60" height="22" rx="11" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="800" y="204" width="60" height="22" rx="{full:22}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="830" y="219" text-anchor="middle" class="text-secondary" font-size="11">tools</text>
 
   <line x1="800" y1="252" x2="1020" y2="252" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
@@ -1064,7 +1064,7 @@ PATTERNS = {
   <line x1="240" y1="0" x2="240" y2="800" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Brand</text>
   <line x1="0" y1="64" x2="240" y2="64" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="8" y="80" width="224" height="36" rx="4" fill="{color.page_bg}"/>
+  <rect x="8" y="80" width="224" height="36" rx="{radius.default}" fill="{color.page_bg}"/>
   <text x="24" y="103" class="text-primary" font-size="14" font-weight="500">Dashboard</text>
   <text x="24" y="143" class="text-secondary" font-size="14">Reports</text>
   <text x="24" y="183" class="text-secondary" font-size="14">Settings</text>
@@ -1169,18 +1169,18 @@ PATTERNS = {
   <text x="380" y="46" class="text-secondary" font-size="12">Active now</text>
 
   <!-- Messages -->
-  <rect x="368" y="100" width="320" height="48" rx="{radius.default}" fill="{color.page_bg}"/>
+  <rect x="368" y="100" width="320" height="48" rx="{extras.radius.message}" fill="{color.page_bg}"/>
   <text x="384" y="128" class="text-primary" font-size="14">Hey, can we sync on the project today?</text>
 
-  <rect x="900" y="172" width="320" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="900" y="172" width="320" height="48" rx="{extras.radius.message}" fill="{color.accent}"/>
   <text x="916" y="200" class="text-inverse" font-size="14">Sure! 3pm works great.</text>
 
-  <rect x="368" y="244" width="380" height="80" rx="{radius.default}" fill="{color.page_bg}"/>
+  <rect x="368" y="244" width="380" height="80" rx="{extras.radius.message}" fill="{color.page_bg}"/>
   <text x="384" y="272" class="text-primary" font-size="14">Perfect. I'll send the agenda over so we</text>
   <text x="384" y="294" class="text-primary" font-size="14">can hit the ground running.</text>
   <text x="384" y="316" class="text-secondary" font-size="11">2:14 PM</text>
 
-  <rect x="900" y="348" width="320" height="48" rx="{radius.default}" fill="{color.accent}"/>
+  <rect x="900" y="348" width="320" height="48" rx="{extras.radius.message}" fill="{color.accent}"/>
   <text x="916" y="376" class="text-inverse" font-size="14">Thanks!</text>
 
   <!-- Composer -->
@@ -1199,7 +1199,7 @@ PATTERNS = {
   <line x1="240" y1="0" x2="240" y2="800" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Brand</text>
   <line x1="0" y1="64" x2="240" y2="64" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="8" y="80" width="224" height="36" rx="4" fill="{color.page_bg}"/>
+  <rect x="8" y="80" width="224" height="36" rx="{radius.default}" fill="{color.page_bg}"/>
   <text x="24" y="103" class="text-primary" font-size="14" font-weight="500">Projects</text>
   <text x="24" y="143" class="text-secondary" font-size="14">Tasks</text>
   <text x="24" y="183" class="text-secondary" font-size="14">Team</text>
@@ -1254,7 +1254,7 @@ PATTERNS = {
   <line x1="240" y1="0" x2="240" y2="800" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Brand</text>
   <line x1="0" y1="64" x2="240" y2="64" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="8" y="80" width="224" height="36" rx="4" fill="{color.page_bg}"/>
+  <rect x="8" y="80" width="224" height="36" rx="{radius.default}" fill="{color.page_bg}"/>
   <text x="24" y="103" class="text-primary" font-size="14" font-weight="500">Overview</text>
   <text x="24" y="143" class="text-secondary" font-size="14">Projects</text>
   <text x="24" y="183" class="text-secondary" font-size="14">Reports</text>
@@ -1383,7 +1383,7 @@ PATTERNS = {
   <text x="488" y="442" class="text-disabled" font-size="14">8+ characters</text>
 
   <!-- Terms checkbox -->
-  <rect x="472" y="488" width="20" height="20" rx="4" fill="none" stroke="{color.border_default}" stroke-width="1.5"/>
+  <rect x="472" y="488" width="20" height="20" rx="{extras.radius.checkbox}" fill="none" stroke="{color.border_default}" stroke-width="1.5"/>
   <text x="500" y="503" class="text-secondary" font-size="12">I agree to the <tspan class="text-primary">Terms of Service</tspan></text>
 
   <rect x="472" y="528" width="336" height="48" rx="{radius.default}" fill="{color.accent}"/>
@@ -1598,10 +1598,10 @@ PATTERNS = {
   <rect width="375" height="720" fill="{color.page_bg}"/>
 
   <!-- Sheet -->
-  <rect x="0" y="320" width="375" height="400" rx="16" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="0" y="320" width="375" height="400" rx="{radius.chrome}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Drag handle -->
-  <rect x="171.5" y="336" width="32" height="4" rx="2" fill="{color.text_muted}"/>
+  <rect x="171.5" y="336" width="32" height="4" rx="{full:4}" fill="{color.text_muted}"/>
 
   <text x="16" y="384" class="text-primary" font-size="18" font-weight="700">Delete this thread?</text>
   <text x="16" y="412" class="text-secondary" font-size="13">Tokyo Trip will be moved to your archive.</text>
@@ -1621,8 +1621,8 @@ PATTERNS = {
   <rect width="375" height="720" fill="{color.page_bg}"/>
 
   <!-- Drawer sheet -->
-  <rect x="0" y="160" width="375" height="560" rx="16" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
-  <rect x="171.5" y="176" width="32" height="4" rx="2" fill="{color.text_muted}"/>
+  <rect x="0" y="160" width="375" height="560" rx="{radius.chrome}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="171.5" y="176" width="32" height="4" rx="{full:4}" fill="{color.text_muted}"/>
 
   <!-- Header -->
   <text x="16" y="216" class="text-primary" font-size="18" font-weight="700">Filter threads</text>
@@ -1630,11 +1630,11 @@ PATTERNS = {
 
   <!-- Filter sections -->
   <text x="16" y="264" class="text-secondary" font-size="11" font-weight="600">STATUS</text>
-  <rect x="16" y="276" width="80" height="32" rx="16" fill="{color.text_primary}"/>
+  <rect x="16" y="276" width="80" height="32" rx="{full:32}" fill="{color.text_primary}"/>
   <text x="56" y="296" text-anchor="middle" class="text-inverse" font-size="12" font-weight="500">Active</text>
-  <rect x="104" y="276" width="80" height="32" rx="16" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="104" y="276" width="80" height="32" rx="{full:32}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="144" y="296" text-anchor="middle" class="text-primary" font-size="12">Archived</text>
-  <rect x="192" y="276" width="80" height="32" rx="16" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="192" y="276" width="80" height="32" rx="{full:32}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="232" y="296" text-anchor="middle" class="text-primary" font-size="12">Drafts</text>
 
   <text x="16" y="356" class="text-secondary" font-size="11" font-weight="600">DATE RANGE</text>
@@ -1659,7 +1659,7 @@ PATTERNS = {
   <rect width="375" height="600" fill="{color.surface}"/>
 
   <!-- Illustration placeholder -->
-  <rect x="151.5" y="184" width="72" height="72" rx="8" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="151.5" y="184" width="72" height="72" rx="{radius.default}" fill="{color.page_bg}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <line x1="167.5" y1="220" x2="207.5" y2="220" stroke="{color.text_muted}" stroke-width="1.5"/>
   <line x1="187.5" y1="200" x2="187.5" y2="240" stroke="{color.text_muted}" stroke-width="1.5"/>
 
@@ -1807,12 +1807,12 @@ PATTERNS = {
   <line x1="0" y1="55.5" x2="375" y2="55.5" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
   <!-- Stat row 1 -->
-  <rect x="16" y="80" width="343" height="88" rx="8" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="16" y="80" width="343" height="88" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="32" y="108" class="text-secondary" font-size="11" font-weight="600">REVENUE</text>
   <text x="32" y="148" class="text-primary" font-size="24" font-weight="700">$24,580</text>
   <text x="343" y="148" text-anchor="end" class="text-success" font-size="12" font-weight="600">+8%</text>
 
-  <rect x="16" y="184" width="343" height="88" rx="8" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="16" y="184" width="343" height="88" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <text x="32" y="212" class="text-secondary" font-size="11" font-weight="600">ACTIVE SESSIONS</text>
   <text x="32" y="252" class="text-primary" font-size="24" font-weight="700">1,247</text>
   <text x="343" y="252" text-anchor="end" class="text-success" font-size="12" font-weight="600">+12%</text>
@@ -1822,21 +1822,21 @@ PATTERNS = {
   <text x="343" y="304" text-anchor="end" class="text-secondary" font-size="12">View all</text>
 
   <!-- List rows -->
-  <rect x="16" y="320" width="343" height="72" rx="8" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="16" y="320" width="343" height="72" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <circle cx="48" cy="356" r="16" fill="{color.page_bg}"/>
   <text x="48" y="361" text-anchor="middle" class="text-primary" font-size="12" font-weight="600">TR</text>
   <text x="80" y="348" class="text-primary" font-size="14" font-weight="600">Tokyo Trip</text>
   <text x="80" y="370" class="text-secondary" font-size="12">Build day-by-day…</text>
   <text x="343" y="348" text-anchor="end" class="text-secondary" font-size="11">2m</text>
 
-  <rect x="16" y="408" width="343" height="72" rx="8" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="16" y="408" width="343" height="72" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <circle cx="48" cy="444" r="16" fill="{color.page_bg}"/>
   <text x="48" y="449" text-anchor="middle" class="text-primary" font-size="12" font-weight="600">RC</text>
   <text x="80" y="436" class="text-primary" font-size="14" font-weight="600">Recipe ideas</text>
   <text x="80" y="458" class="text-secondary" font-size="12">Ramen variations…</text>
   <text x="343" y="436" text-anchor="end" class="text-secondary" font-size="11">14m</text>
 
-  <rect x="16" y="496" width="343" height="72" rx="8" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+  <rect x="16" y="496" width="343" height="72" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
   <circle cx="48" cy="532" r="16" fill="{color.page_bg}"/>
   <text x="48" y="537" text-anchor="middle" class="text-primary" font-size="12" font-weight="600">BC</text>
   <text x="80" y="524" class="text-primary" font-size="14" font-weight="600">Book club</text>
