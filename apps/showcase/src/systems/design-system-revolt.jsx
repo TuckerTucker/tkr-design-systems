@@ -1,11 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
+import tokens from "@systems/revolt/tokens.json";
+import { alpha, motion, reducedMotionCss, contrastRatio, contrastText, wcagLevel, px, em } from "../tokens.js";
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — REVOLT
    Neobrutalist + Y2K · Single-theme standalone spec + live preview
    ═══════════════════════════════════════════════════════════════ */
 
-const TM = { name: "Revolt", tag: "Neobrutalist + Y2K", color: "#FF3366" };
+/* Every design value comes from systems/revolt/tokens.json (docs/specs/TOKENS.md § 4). */
+const { color: C, font: F, radius: rad, border_width: bw } = tokens;
+const X = tokens.extras.color;
+const XS = tokens.extras.shadow;
+const T = { ...tokens.type, ...tokens.extras.type };
+const rule = (w, col) => `${w}px solid ${col}`;
+
+const TM = { name: "Revolt", tag: "Neobrutalist + Y2K", color: C.accent };
 
 const chatList = [
   { id: 1, name: "Tokyo Trip", preview: "Want me to build a day-by-day itinerary?", time: "2m", unread: 2, avatar: "🗼", online: true },
@@ -56,65 +65,65 @@ const CBox = ({ title, parts, contract, specs, dos, donts, accent }) => {
 function RevoltChat({ sel, setSel }) {
   const [hov, setHov] = useState(null);
   return (
-    <div className="app-sh" style={{ background: "#FFFEF5", fontFamily: "'Space Mono', monospace", borderRadius: 0, border: "3px solid #111" }}>
+    <div className="app-sh" style={{ background: C.page_bg, fontFamily: F.body, borderRadius: rad.chrome, border: rule(bw.strong, C.border_strong) }}>
       {/* Sidebar */}
-      <div className="sb" style={{ borderRight: "3px solid #111" }}>
-        <div style={{ padding: "12px 12px 10px", background: "#C8FF00", borderBottom: "3px solid #111" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#111", textTransform: "uppercase", letterSpacing: "0.08em" }}>REVOLT.chat</div>
+      <div className="sb" style={{ borderRight: rule(bw.strong, C.border_strong) }}>
+        <div style={{ padding: "12px 12px 10px", background: C.action, borderBottom: rule(bw.strong, C.border_strong) }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text_primary, textTransform: "uppercase", letterSpacing: "0.08em" }}>REVOLT.chat</div>
         </div>
         <div style={{ padding: "10px 10px 6px" }}>
-          <div style={{ display: "flex", border: "2px solid #111" }}>
-            <input placeholder="FIND..." className="si" style={{ fontFamily: "'Space Mono', monospace", color: "#111", textTransform: "uppercase", fontSize: 10, letterSpacing: "0.05em", padding: "8px 10px" }} />
+          <div style={{ display: "flex", border: rule(bw.default, C.border_default) }}>
+            <input placeholder="FIND..." className="si" style={{ fontFamily: F.body, color: C.text_primary, textTransform: "uppercase", fontSize: 10, letterSpacing: "0.05em", padding: "8px 10px" }} />
           </div>
         </div>
         <div className="cl">
           {chatList.map((c, i) => (
-            <div key={c.id} onClick={() => setSel(c.id)} onMouseEnter={() => setHov(c.id)} onMouseLeave={() => setHov(null)} className="ci" style={{ padding: "10px 12px", cursor: "pointer", margin: "0 8px 4px", border: sel === c.id ? "2px solid #111" : "2px solid transparent", background: sel === c.id ? "#C8FF00" : "transparent", boxShadow: sel === c.id ? "3px 3px 0 #111" : "none", transform: hov === c.id ? "rotate(-0.5deg)" : "none", transition: "transform 0.12s", animationDelay: `${i * 50}ms` }}>
+            <div key={c.id} onClick={() => setSel(c.id)} onMouseEnter={() => setHov(c.id)} onMouseLeave={() => setHov(null)} className="ci" style={{ padding: "10px 12px", cursor: "pointer", margin: "0 8px 4px", border: sel === c.id ? rule(bw.default, C.border_default) : "2px solid transparent", background: sel === c.id ? C.surface_selected : "transparent", boxShadow: sel === c.id ? XS.md : "none", transform: hov === c.id ? "rotate(-0.5deg)" : "none", transition: `transform ${motion(tokens, "fast")}`, animationDelay: `${i * 50}ms` }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 30, height: 30, border: "2px solid #111", background: sel === c.id ? "#FF3366" : "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>{c.avatar}</div>
+                <div style={{ width: 30, height: 30, border: rule(bw.default, C.border_default), background: sel === c.id ? C.accent : C.surface, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>{c.avatar}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#111", textTransform: "uppercase" }}>{c.name}</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: "#999" }}>{c.time}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.text_primary, textTransform: "uppercase" }}>{c.name}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: C.text_muted }}>{c.time}</span>
                   </div>
-                  <div style={{ fontSize: 10, color: "#666", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{c.preview}</div>
+                  <div style={{ fontSize: 10, color: C.text_secondary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{c.preview}</div>
                 </div>
-                {c.unread > 0 && <div style={{ padding: "2px 6px", border: "2px solid #111", background: "#FF3366", fontSize: 9, fontWeight: 700, color: "#FFF" }}>{c.unread}</div>}
+                {c.unread > 0 && <div style={{ padding: "2px 6px", border: rule(bw.default, C.border_default), background: C.accent, fontSize: 9, fontWeight: 700, color: C.accent_foreground }}>{c.unread}</div>}
               </div>
             </div>
           ))}
         </div>
-        <div style={{ padding: "10px 12px", borderTop: "3px solid #111", background: "#FFF" }}>
+        <div style={{ padding: "10px 12px", borderTop: rule(bw.strong, C.border_strong), background: C.surface }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 26, height: 26, border: "2px solid #111", background: "#C8FF00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900 }}>U</div>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#111" }}>USER_01</div>
+            <div style={{ width: 26, height: 26, border: rule(bw.default, C.border_default), background: C.action, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900 }}>U</div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: C.text_primary }}>USER_01</div>
           </div>
         </div>
       </div>
 
       {/* Main */}
       <div className="ca">
-        <div style={{ borderBottom: "3px solid #111", padding: "10px 16px", background: "#FF3366" }}>
+        <div style={{ borderBottom: rule(bw.strong, C.border_strong), padding: "10px 16px", background: C.accent }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 16 }}>🗼</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#FFF", textTransform: "uppercase", letterSpacing: "0.06em" }}>TOKYO TRIP</span>
-            <div style={{ marginLeft: "auto", padding: "2px 8px", border: "2px solid #FFF", fontSize: 9, fontWeight: 700, color: "#FFF" }}>LIVE</div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.accent_foreground, textTransform: "uppercase", letterSpacing: "0.06em" }}>TOKYO TRIP</span>
+            <div style={{ marginLeft: "auto", padding: "2px 8px", border: rule(bw.default, C.accent_foreground), fontSize: 9, fontWeight: 700, color: C.accent_foreground }}>LIVE</div>
           </div>
         </div>
 
         <div className="ma" style={{ padding: 16 }}>
           {msgs.map((m, i) => (
             <div key={m.id} className="mi" style={{ alignSelf: m.sender === "user" ? "flex-end" : "flex-start", maxWidth: "80%", animationDelay: `${i * 60}ms` }}>
-              <div style={{ padding: "10px 14px", border: "2px solid #111", fontSize: 11.5, lineHeight: 1.5, ...(m.sender === "user" ? { background: "#FF3366", color: "#FFF", boxShadow: "4px 4px 0 #111" } : { background: "#FFF", boxShadow: "4px 4px 0 #111", color: "#111" }) }}>{m.text}</div>
-              <div style={{ fontSize: 8, fontWeight: 700, color: "#999", marginTop: 3, textTransform: "uppercase", letterSpacing: "0.1em", textAlign: m.sender === "user" ? "right" : "left" }}>{m.sender === "user" ? "YOU" : "BOT"} // 00:{i + 1}</div>
+              <div style={{ padding: "10px 14px", border: rule(bw.default, C.border_default), fontSize: 11.5, lineHeight: 1.5, ...(m.sender === "user" ? { background: C.accent, color: C.accent_foreground, boxShadow: XS.lg } : { background: C.surface, boxShadow: XS.lg, color: C.text_primary }) }}>{m.text}</div>
+              <div style={{ fontSize: 8, fontWeight: 700, color: C.text_muted, marginTop: 3, textTransform: "uppercase", letterSpacing: "0.1em", textAlign: m.sender === "user" ? "right" : "left" }}>{m.sender === "user" ? "YOU" : "BOT"} // 00:{i + 1}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ padding: "10px 16px", borderTop: "3px solid #111" }}>
-          <div style={{ display: "flex", border: "2px solid #111" }}>
-            <input placeholder="SAY SOMETHING..." className="si" style={{ fontFamily: "'Space Mono', monospace", color: "#111", textTransform: "uppercase", fontSize: 11, letterSpacing: "0.04em", padding: "10px 12px" }} />
-            <div className="snd" style={{ width: 44, borderLeft: "2px solid #111", background: "#C8FF00", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: "#111" }}>→</div>
+        <div style={{ padding: "10px 16px", borderTop: rule(bw.strong, C.border_strong) }}>
+          <div style={{ display: "flex", border: rule(bw.default, C.border_default) }}>
+            <input placeholder="SAY SOMETHING..." className="si" style={{ fontFamily: F.body, color: C.text_primary, textTransform: "uppercase", fontSize: 11, letterSpacing: "0.04em", padding: "10px 12px" }} />
+            <div className="snd" style={{ width: 44, borderLeft: rule(bw.default, C.border_default), background: C.action, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: C.text_primary }}>→</div>
           </div>
         </div>
       </div>
@@ -125,12 +134,12 @@ function RevoltChat({ sel, setSel }) {
 /* ─── PREVIEW WRAPPER ─── */
 function PreviewView({ sel, setSel }) {
   const notes = [
-    "Hard-offset shadows: 4px 4px 0 #111 — zero blur always",
-    "2px solid #111 borders on every component boundary",
+    `Hard-offset shadows: ${XS.lg} — zero blur always`,
+    `${rule(bw.default, C.border_default)} borders on every component boundary`,
     "border-radius: 0 on all elements — rectangles only",
     "Code-style timestamps: YOU // 00:1 below every message",
-    "Lime (#C8FF00) active state with hard shadow on selection",
-    "Pink (#FF3366) header bar + user message fills",
+    `Lime (${C.action}) active state with hard shadow on selection`,
+    `Pink (${C.accent}) header bar + user message fills`,
     "Hover rotation: -0.5deg counterclockwise on sidebar items",
   ];
   return (<div>
@@ -160,7 +169,7 @@ function revoltSpec(a) { return {
     <P>The system's identity is confrontational clarity. Every element announces itself with thick black borders and hard shadows. Color is restricted to five values. Typography is monospaced and uppercase.</P>
     <H3>Core Principles</H3>
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-      {[["Black borders define everything","Every element has a 2–3px solid black border. This is the system's skeleton. Remove the borders and the interface collapses."],["Zero blur, hard offset shadows","All shadows use 0px blur radius. Shadow = offset only (e.g., 4px 4px 0 #111). The hard edge is the aesthetic."],["Five colors, no exceptions","Black, white, cream, neon lime, hot pink. That's the entire palette. Every color has a strict role. No gradients. No opacity variations."],["Zero radius everywhere","border-radius: 0 on every element. Rectangles only. No rounding, no pills, no circles. Structural rule."]].map(([t, d], i) => (
+      {[["Black borders define everything","Every element has a 2–3px solid black border. This is the system's skeleton. Remove the borders and the interface collapses."],["Zero blur, hard offset shadows",`All shadows use 0px blur radius. Shadow = offset only (e.g., ${XS.lg}). The hard edge is the aesthetic.`],["Five colors, no exceptions","Black, white, cream, neon lime, hot pink. That's the entire palette. Every color has a strict role. No gradients. No opacity variations."],["Zero radius everywhere","border-radius: 0 on every element. Rectangles only. No rounding, no pills, no circles. Structural rule."]].map(([t, d], i) => (
         <div key={i} style={{ padding: "10px 12px", border: "2px solid rgba(255,255,255,0.08)" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#DDD", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.02em" }}>{t}</div>
           <div style={{ fontSize: 10.5, color: "#888", lineHeight: 1.5 }}>{d}</div>
@@ -173,15 +182,15 @@ function revoltSpec(a) { return {
   color: () => (<div>
     <P>Five colors total. Each has exactly one role. Adding a sixth would break the system.</P>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 12 }}>
-      <Sw c="#111" n="Black" v="#111" b="2px solid #333" />
-      <Sw c="#FFF" n="White" v="#FFF" b="2px solid #111" />
-      <Sw c="#FFFEF5" n="Cream" v="#FFFEF5" b="2px solid #111" />
-      <Sw c="#C8FF00" n="Lime" v="#C8FF00" b="2px solid #111" />
-      <Sw c="#FF3366" n="Pink" v="#FF3366" b="2px solid #111" />
+      <Sw c={C.text_primary} n="Black" v={C.text_primary} b="2px solid #333" />
+      <Sw c={C.surface} n="White" v={C.surface} b={rule(bw.default, C.border_default)} />
+      <Sw c={C.page_bg} n="Cream" v={C.page_bg} b={rule(bw.default, C.border_default)} />
+      <Sw c={C.action} n="Lime" v={C.action} b={rule(bw.default, C.border_default)} />
+      <Sw c={C.accent} n="Pink" v={C.accent} b={rule(bw.default, C.border_default)} />
     </div>
     <H3>Color Roles</H3>
     <div style={{ border: "2px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
-      {[["#111","Black","Borders, shadows, text","Backgrounds"],["#FFF","White","Card surfaces, AI messages","Text on light"],["#FFFEF5","Cream","Page background only","Any other role"],["#C8FF00","Lime","Active states, send button","Text or borders"],["#FF3366","Pink","User msgs, headers, badges","AI msgs or structural"]].map((c, i) => (
+      {[[C.text_primary,"Black","Borders, shadows, text","Backgrounds"],[C.surface,"White","Card surfaces, AI messages","Text on light"],[C.page_bg,"Cream","Page background only","Any other role"],[C.action,"Lime","Active states, send button","Text or borders"],[C.accent,"Pink","User msgs, headers, badges","AI msgs or structural"]].map((c, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "30px 50px 1fr 1fr", padding: "6px 10px", borderBottom: i < 4 ? "2px solid rgba(255,255,255,0.04)" : "none" }}>
           <div style={{ width: 18, height: 18, background: c[0], border: "2px solid #333" }} />
           <span style={{ fontSize: 10, fontWeight: 700, color: "#DDD" }}>{c[1]}</span>
@@ -191,11 +200,11 @@ function revoltSpec(a) { return {
     </div>
     <H3>Contrast Ratios</H3>
     <div style={{ border: "2px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
-      {[["Black on Cream","18.5:1","AAA"],["Black on White","19.9:1","AAA"],["Black on Lime","15.3:1","AAA"],["White on Pink","4.2:1","AA"],["Black on Pink","4.8:1","AA"]].map((r, i) => (
+      {[["Black on Cream", C.text_primary, C.page_bg], ["Black on White", C.text_primary, C.surface], ["Black on Lime", C.action_foreground, C.action], ["White on Pink", C.accent_foreground, C.accent], ["Black on Pink", C.danger_foreground, C.danger]].map(([n, fg, bg]) => [n, contrastText(fg, bg), wcagLevel(contrastRatio(fg, bg))]).map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 65px 50px", padding: "5px 10px", borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{r[0]}</span>
           <code className="mn" style={{ fontSize: 10, color: "#999" }}>{r[1]}</code>
-          <span style={{ fontSize: 9, fontWeight: 600, color: "#34D399" }}>{r[2]}</span>
+          <span style={{ fontSize: 9, fontWeight: 600, color: r[2].includes("AAA") ? "#34D399" : "#FBBF24" }}>{r[2]}</span>
         </div>))}
     </div>
     <P>High-contrast palette naturally passes WCAG AA on all combinations.</P>
@@ -204,7 +213,7 @@ function revoltSpec(a) { return {
   typography: () => (<div>
     <P>Single monospaced font — Space Mono — everywhere. No secondary font. Everything except body text is uppercase.</P>
     <div style={{ padding: "14px", border: "2px solid rgba(255,255,255,0.08)", marginBottom: 12 }}>
-      <div style={{ fontFamily: "'Space Mono'", fontSize: 18, fontWeight: 700, color: "#EEE", textTransform: "uppercase", letterSpacing: "0.06em" }}>Space Mono</div>
+      <div style={{ fontFamily: F.body, fontSize: 18, fontWeight: 700, color: "#EEE", textTransform: "uppercase", letterSpacing: "0.06em" }}>Space Mono</div>
       <div style={{ fontSize: 10.5, color: "#888" }}>Regular 400 · Bold 700. Two weights only.</div>
     </div>
     <H3>Transform Rules</H3>
@@ -214,7 +223,7 @@ function revoltSpec(a) { return {
     <Tk n="transform.meta" v="uppercase" d="Timestamps, status" a={a} />
     <H3>Type Scale</H3>
     <div style={{ border: "2px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
-      {[["display","14px","700","0.08em","Brand, titles"],["title","12px","700","0.06em","Headers, labels"],["body","11.5px","400","0","Messages (not uppercase)"],["label","11px","700","0.04em","Sidebar items"],["caption","10px","400","0","Preview text"],["micro","9px","700","0.1em","Status pills"],["micro-sm","8px","700","0.1em","Code metadata"]].map((t, i) => (
+      {[["display", T.display, "Brand, titles"], ["title", T.title, "Headers, labels"], ["body", T.body, "Messages (not uppercase)"], ["label", { size: 11, weight: 700, tracking: 0.04 }, "Sidebar items"], ["caption", T.small, "Preview text"], ["micro", T.label, "Status pills"], ["micro-sm", T.micro, "Code metadata"]].map(([n, t, use]) => [n, px(t.size), String(t.weight), em(t.tracking), use]).map((t, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "70px 48px 38px 50px 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <code className="mn" style={{ fontSize: 10, color: "#CCC" }}>{t[0]}</code>
           {t.slice(1).map((v, vi) => <span key={vi} style={{ fontSize: 10, color: vi < 3 ? "#999" : "#666" }}>{v}</span>)}
@@ -229,26 +238,26 @@ function revoltSpec(a) { return {
     <P>Hard-offset box-shadows with zero blur. The shadow is a solid rectangle displaced from the element.</P>
     <H3>Shadow Scale</H3>
     <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
-      {[["sm","2px 2px 0 #111"],["md","3px 3px 0 #111"],["lg","4px 4px 0 #111"],["xl","6px 6px 0 #111"]].map(([n, v]) => (
+      {[["sm",XS.sm],["md",XS.md],["lg",XS.lg],["xl",XS.xl]].map(([n, v]) => (
         <div key={n} style={{ textAlign: "center" }}>
-          <div style={{ width: 52, height: 36, background: "#FFF", border: "2px solid #111", boxShadow: v, marginBottom: 6 }} />
+          <div style={{ width: 52, height: 36, background: C.surface, border: rule(bw.default, C.border_default), boxShadow: v, marginBottom: 6 }} />
           <code className="mn" style={{ fontSize: 9, color: "#CCC" }}>{n}</code>
           <div><code className="mn" style={{ fontSize: 8, color: "#666" }}>{v}</code></div>
         </div>))}
     </div>
     <Tk n="blur" v="0px" d="ALWAYS. No exceptions." a={a} />
-    <Tk n="shadow.color" v="#111" d="Always black" a={a} />
+    <Tk n="shadow.color" v={X.shadow} d="Always black" a={a} />
     <H3>Border System</H3>
-    <Tk n="border.width.component" v="2px" d="Buttons, inputs, cards, avatars" a={a} />
-    <Tk n="border.width.structural" v="3px" d="Sidebar divider, header, footer" a={a} />
-    <Tk n="border.color" v="#111111" d="Always black" a={a} />
+    <Tk n="border.width.component" v={px(bw.default)} d="Buttons, inputs, cards, avatars" a={a} />
+    <Tk n="border.width.structural" v={px(bw.strong)} d="Sidebar divider, header, footer" a={a} />
+    <Tk n="border.color" v={C.border_default} d="Always black" a={a} />
     <Tk n="border.radius" v="0" d="All elements. No exceptions." a={a} />
     <H3>Rule Hierarchy</H3>
     <div style={{ border: "2px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
-      {[["border-radius: 0","INVIOLABLE","Zero everywhere"],["Shadow blur: 0","INVIOLABLE","Hard offset only"],["5-color palette","INVIOLABLE","No new colors"],["Border color: #111","INVIOLABLE","Always black"],["Shadow offset (2–6px)","FLEXIBLE","Can vary"],["Hover rotation angle","FLEXIBLE","±1° max"],["Letter-spacing","FLEXIBLE","Adjustable"]].map((r, i) => (
+      {[["border-radius: 0","INVIOLABLE","Zero everywhere"],["Shadow blur: 0","INVIOLABLE","Hard offset only"],["5-color palette","INVIOLABLE","No new colors"],[`Border color: ${C.border_default}`,"INVIOLABLE","Always black"],["Shadow offset (2–6px)","FLEXIBLE","Can vary"],["Hover rotation angle","FLEXIBLE","±1° max"],["Letter-spacing","FLEXIBLE","Adjustable"]].map((r, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <code className="mn" style={{ fontSize: 10, color: "#CCC" }}>{r[0]}</code>
-          <span style={{ fontSize: 9.5, fontWeight: 700, color: r[1] === "INVIOLABLE" ? "#FF3366" : "#C8FF00" }}>{r[1]}</span>
+          <span style={{ fontSize: 9.5, fontWeight: 700, color: r[1] === "INVIOLABLE" ? C.accent : C.action }}>{r[1]}</span>
           <span style={{ fontSize: 10, color: "#888" }}>{r[2]}</span>
         </div>))}
     </div>
@@ -258,25 +267,25 @@ function revoltSpec(a) { return {
     <P>Each component obeys the hard-border, zero-radius, 5-color system. Click to expand.</P>
     <CBox title="ChatBubble" parts={["bordered-box", "text", "code-meta"]} accent={a}
       contract="Must distinguish user from AI through fill color. Must show code-style metadata below every message. Must use hard shadows."
-      specs={[["padding","10px 14px"],["border","2px solid #111"],["border-radius","0"],["shadow","4px 4px 0 #111","shadow.lg"],["user.background","#FF3366","Pink"],["user.color","#FFFFFF"],["ai.background","#FFFFFF"],["ai.color","#111111"],["font","body (11.5px/1.5)"],["meta.format","'YOU // 00:1'","Code-style"],["meta.font","micro-sm (8px/700)"],["meta.color","#999999"],["meta.transform","uppercase"],["meta.spacing","0.1em"]]}
+      specs={[["padding","10px 14px"],["border",rule(bw.default, C.border_default)],["border-radius","0"],["shadow",XS.lg,"shadow.lg"],["user.background",C.accent,"Pink"],["user.color",C.accent_foreground],["ai.background",C.surface],["ai.color",C.text_primary],["font","body (11.5px/1.5)"],["meta.format","'YOU // 00:1'","Code-style"],["meta.font","micro-sm (8px/700)"],["meta.color",C.text_muted],["meta.transform","uppercase"],["meta.spacing","0.1em"]]}
       dos={["Show code-style metadata below every message","Use hard shadows on every bubble"]}
       donts={["Use rounded corners","Hide metadata","Use colored shadows"]} />
 
     <CBox title="SidebarItem" parts={["bordered-container", "bordered-avatar", "title", "preview", "badge"]} accent={a}
       contract="Must show selected state with lime fill + border + shadow. Must rotate on hover. Avatar fills pink when selected."
-      specs={[["padding","10px 12px"],["border-radius","0"],["selected.bg","#C8FF00","Lime"],["selected.border","2px solid #111"],["selected.shadow","3px 3px 0 #111"],["hover.transform","rotate(-0.5deg)"],["avatar.size","30px"],["avatar.border","2px solid #111"],["avatar.bg.default","#FFFFFF"],["avatar.bg.selected","#FF3366","Pink when active"],["title.transform","uppercase"]]}
+      specs={[["padding","10px 12px"],["border-radius","0"],["selected.bg",C.surface_selected,"Lime"],["selected.border",rule(bw.default, C.border_default)],["selected.shadow",XS.md],["hover.transform","rotate(-0.5deg)"],["avatar.size","30px"],["avatar.border",rule(bw.default, C.border_default)],["avatar.bg.default",C.surface],["avatar.bg.selected",C.accent,"Pink when active"],["title.transform","uppercase"]]}
       dos={["Rotate -0.5deg on hover — signature interaction","Swap avatar bg to pink when selected"]}
       donts={["Use subtle opacity changes","Round any corners"]} />
 
     <CBox title="TextInput" parts={["bordered-container", "input", "bordered-button"]} accent={a}
       contract="Must use 2px black border. Send button integrated in container. Button uses lime fill."
-      specs={[["border","2px solid #111"],["border-radius","0"],["placeholder.transform","uppercase"],["placeholder.text","'SAY SOMETHING...'"],["button.width","44px"],["button.bg","#C8FF00","Lime"],["button.border-left","2px solid #111","Internal divider"],["button.icon","→","Right arrow, not ↑"],["button.font","16px / 900"]]}
+      specs={[["border",rule(bw.default, C.border_default)],["border-radius","0"],["placeholder.transform","uppercase"],["placeholder.text","'SAY SOMETHING...'"],["button.width","44px"],["button.bg",C.action,"Lime"],["button.border-left",rule(bw.default, C.border_default),"Internal divider"],["button.icon","→","Right arrow, not ↑"],["button.font","16px / 900"]]}
       dos={["Use → (right arrow) for send, not ↑","Integrate button in input container","Uppercase placeholder"]}
       donts={["Separate button visually","Use cursive labels"]} />
 
     <CBox title="Header" parts={["accent-bar", "icon", "title", "status-pill"]} accent={a}
       contract="Must use accent fill (pink) as background. Must show status in bordered pill."
-      specs={[["padding","10px 16px"],["background","#FF3366","Pink fill"],["border-bottom","3px solid #111"],["title.color","#FFFFFF"],["title.transform","uppercase"],["status.border","2px solid #FFF"],["status.padding","2px 8px"],["status.text","'LIVE'","Uppercase pill"]]}
+      specs={[["padding","10px 16px"],["background",C.accent,"Pink fill"],["border-bottom",rule(bw.strong, C.border_strong)],["title.color",C.accent_foreground],["title.transform","uppercase"],["status.border",rule(bw.default, C.accent_foreground)],["status.padding","2px 8px"],["status.text","'LIVE'","Uppercase pill"]]}
       dos={["Fill header with pink","Show status in bordered rectangular pill"]}
       donts={["Transparent header (Sketch)","Glass header (Prism)"]} />
   </div>),
@@ -284,7 +293,7 @@ function revoltSpec(a) { return {
   patterns: () => (<div>
     <P>Composition rules for Revolt layouts.</P>
     {[
-      { n: "Sidebar + Main", rows: [["Sidebar width","260px fixed"],["Divider","3px solid #111 (structural weight)"],["Header bg","Lime (#C8FF00) for brand"],["Section dividers","3px solid #111"]] },
+      { n: "Sidebar + Main", rows: [["Sidebar width","260px fixed"],["Divider",`${rule(bw.strong, C.border_strong)} (structural weight)`],["Header bg",`Lime (${C.action}) for brand`],["Section dividers",rule(bw.strong, C.border_strong)]] },
       { n: "Chat Message Flow", rows: [["Alignment","User → right, AI → left"],["Max width","80% (widest of all themes)"],["Gap","12px"],["Entrance","fadeSlideUp, 300ms ease-out, 60ms stagger"],["Metadata","Below every message: code-style"],["Shadows","shadow.lg on every bubble"]] },
       { n: "Active Selection", rows: [["Model","Single select"],["Visual","Lime bg + 2px border + shadow.md"],["Avatar change","Fills pink"],["Transition","150ms linear (instant)"]] },
       { n: "Search", rows: [["Container","2px black border, no radius"],["Placeholder","'FIND...' — uppercase mono"],["No icon","Too decorative for Revolt"]] },
@@ -303,7 +312,7 @@ function revoltSpec(a) { return {
     <P>Metadata rendered as monospace code comments. Makes chat feel like reading a terminal log.</P>
     <Tk n="format" v="SENDER // 00:INDEX" d="e.g., 'YOU // 00:1'" a={a} />
     <Tk n="font" v="micro-sm (8px/700)" a={a} />
-    <Tk n="color" v="#999999" a={a} />
+    <Tk n="color" v={C.text_muted} a={a} />
     <Tk n="transform" v="uppercase" a={a} />
     <Tk n="spacing" v="0.1em" a={a} />
     <Tk n="position" v="Below message, aligned to sender side" a={a} />
@@ -322,7 +331,7 @@ function revoltSpec(a) { return {
     <Dont>Exceed 1 degree</Dont>
 
     <H3>3. Zero-Blur Shadows</H3>
-    <P>All box-shadows use 0px blur radius. Always #111. Always bottom-right offset. The most inviolable visual rule.</P>
+    <P>{`All box-shadows use 0px blur radius. Always ${X.shadow}. Always bottom-right offset. The most inviolable visual rule.`}</P>
     <Dont>Add blur to any shadow for any reason</Dont>
     <Dont>Use colored shadows or negative offsets</Dont>
 
@@ -349,7 +358,7 @@ function revoltSpec(a) { return {
       {[["Chat input","SAY SOMETHING...","Imperative, uppercase"],["Search","FIND...","One word, commanding"],["Status","LIVE","Bordered pill"],["User label","USER_01","Underscore-separated"],["Empty state","NO_DATA","Code variable format"],["Loading","LOADING...","Uppercase + ellipsis"],["Metadata","YOU // 00:1","Comment-style"]].map((p, i) => (
         <div key={i} style={{ display: "grid", gridTemplateColumns: "100px 1fr 1fr", padding: "5px 10px", borderBottom: i < 6 ? "1px solid rgba(255,255,255,0.025)" : "none" }}>
           <span style={{ fontSize: 10.5, color: "#BBB" }}>{p[0]}</span>
-          <span style={{ fontSize: 10.5, color: "#C8FF00", fontFamily: "'Space Mono'", fontWeight: 700 }}>{p[1]}</span>
+          <span style={{ fontSize: 10.5, color: C.action, fontFamily: F.body, fontWeight: 700 }}>{p[1]}</span>
           <span style={{ fontSize: 9.5, color: "#666" }}>{p[2]}</span>
         </div>))}
     </div>
@@ -414,12 +423,13 @@ export default function App() {
         .ma { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px }
         .si { border: none; outline: none; background: transparent; flex: 1; font-size: 11px; width: 100% }
         input::placeholder { opacity: 0.4 }
-        .snd { cursor: pointer; transition: transform 0.1s; flex-shrink: 0 }
+        .snd { cursor: pointer; transition: transform ${motion(tokens, "fast")}; flex-shrink: 0 }
         .snd:hover { transform: scale(1.05) }
-        .mi { animation: fadeSlideUp 0.25s linear both }
-        .ci { animation: fadeSlideUp 0.2s linear both }
-        .ci:hover { background: rgba(255,51,102,0.04) }
-        .bc-rev:hover { background: rgba(200,255,0,0.08) !important }
+        .mi { animation: fadeSlideUp ${motion(tokens, "slow")} both }
+        .ci { animation: fadeSlideUp ${motion(tokens, "moderate")} both }
+        .ci:hover { background: ${alpha(C.accent, 0.04)} }
+        .bc-rev:hover { background: ${alpha(C.action, 0.08)} !important }
+        ${reducedMotionCss(tokens, { scope: ".app-sh" })}
       `}</style>
 
       {/* TOP NAV */}
