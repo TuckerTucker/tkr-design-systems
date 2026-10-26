@@ -72,7 +72,7 @@ function RevoltChat({ sel, setSel }) {
           <div style={{ fontSize: 14, fontWeight: 700, color: C.text_primary, textTransform: "uppercase", letterSpacing: "0.08em" }}>REVOLT.chat</div>
         </div>
         <div style={{ padding: "10px 10px 6px" }}>
-          <div style={{ display: "flex", border: rule(bw.default, C.border_default) }}>
+          <div style={{ display: "flex", border: rule(bw.default, C.border_input) }}>
             <input placeholder="FIND..." className="si" style={{ fontFamily: F.body, color: C.text_primary, textTransform: "uppercase", fontSize: 10, letterSpacing: "0.05em", padding: "8px 10px" }} />
           </div>
         </div>
@@ -121,7 +121,7 @@ function RevoltChat({ sel, setSel }) {
         </div>
 
         <div style={{ padding: "10px 16px", borderTop: rule(bw.strong, C.border_strong) }}>
-          <div style={{ display: "flex", border: rule(bw.default, C.border_default) }}>
+          <div style={{ display: "flex", border: rule(bw.default, C.border_input) }}>
             <input placeholder="SAY SOMETHING..." className="si" style={{ fontFamily: F.body, color: C.text_primary, textTransform: "uppercase", fontSize: 11, letterSpacing: "0.04em", padding: "10px 12px" }} />
             <div className="snd" style={{ width: 44, borderLeft: rule(bw.default, C.border_default), background: C.action, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: C.text_primary }}>→</div>
           </div>

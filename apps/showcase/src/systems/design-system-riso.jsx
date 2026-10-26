@@ -66,9 +66,18 @@ const inkLabels = { classic: "Blue + Pink", electric: "Pink + Green", sunset: "R
 /**
  * The press bundle a resolved token document describes.
  * @param {object} t token document after resolveMode
- * @returns {{paper: string, textInk: string, blend: string, density: number, c1: string, c2: string}}
+ * c1/c2 are the drum colours (duotone, halftone, ghost layers); text set in an
+ * ink uses the contrast-checked roles instead: ink1Text (extras.color.ink_1_text)
+ * and action (color.action, ink-2 InkTag text). accent is the ink-2 badge fill,
+ * focus the focus ring.
+ * @returns {{paper: string, textInk: string, blend: string, density: number, c1: string, c2: string,
+ *   ink1Text: string, action: string, accent: string, focus: string}}
  */
-const pressOf = (t) => ({ paper: t.extras.color.paper, textInk: t.extras.color.text_ink, blend: t.extras.press.blend, density: t.extras.press.density, c1: t.extras.color.ink_1, c2: t.extras.color.ink_2 });
+const pressOf = (t) => ({
+  paper: t.extras.color.paper, textInk: t.extras.color.text_ink, blend: t.extras.press.blend, density: t.extras.press.density,
+  c1: t.extras.color.ink_1, c2: t.extras.color.ink_2,
+  ink1Text: t.extras.color.ink_1_text, action: t.color.action, accent: t.color.accent, focus: t.color.focus_ring,
+});
 
 /** Per-option bundles for the selectors and the spec tables (each axis resolved on its own). */
 const paperPresets = Object.fromEntries(modeOptions(tokens, "paper").map(k => {
@@ -147,6 +156,10 @@ function RisoProvider({ children, tweaks, setTweaks }) {
     "--riso-text":         paper.textInk,
     "--riso-ink-1":        ink.c1,
     "--riso-ink-2":        ink.c2,
+    "--riso-ink-1-text":   press.ink1Text,
+    "--riso-action":       press.action,
+    "--riso-accent":       press.accent,
+    "--riso-focus":        press.focus,
     "--riso-blend":        paper.blend,
     "--riso-ink-density":  String(paper.density),
     "--riso-off-x":        `${tweaks.offsetX}px`,
@@ -256,7 +269,8 @@ function HalftoneStrip({ height = 14, ink = 1, opacity = 1, style = {} }) {
 }
 
 function InkTag({ children, ink = 1, size = 9 }) {
-  const color = ink === 1 ? "var(--riso-ink-1)" : "var(--riso-ink-2)";
+  // Text, so the contrast-checked text roles rather than the raw drum colours.
+  const color = ink === 1 ? "var(--riso-ink-1-text)" : "var(--riso-action)";
   return (
     <span style={{
       fontFamily: F.label,
@@ -404,7 +418,7 @@ function RisoChat({ sel, setSel }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 2 }}>
                 <InkTag size={8.5}>№{String(i + 1).padStart(2, "0")} · {c.time}</InkTag>
                 {c.unread > 0 && (
-                  <span style={{ padding: "1px 6px", background: "var(--riso-ink-2)", color: "var(--riso-paper)", fontFamily: F.label, fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", mixBlendMode: "var(--riso-blend)", opacity: "var(--riso-ink-density)" }}>{c.unread}</span>
+                  <span style={{ padding: "1px 6px", background: "var(--riso-accent)", color: "var(--riso-paper)", fontFamily: F.label, fontSize: 9, fontWeight: 700, letterSpacing: "0.04em", mixBlendMode: "var(--riso-blend)", opacity: "var(--riso-ink-density)" }}>{c.unread}</span>
                 )}
               </div>
               <div style={{ fontFamily: F.body, fontSize: 14, fontWeight: sel === c.id ? 700 : 600, color: "var(--riso-text)", letterSpacing: "-0.01em", lineHeight: 1.2 }}>
@@ -841,7 +855,7 @@ function risoSpec(a) { return {
 
     <CBox title="InkTag" parts={["label-text"]} accent={a}
       contract="Render a small uppercase tracked monospace label in one of the two inks. Carries all metadata (timestamps, section labels, sender tags, counts). Always Mix-blends with the paper."
-      specs={[["font-family", F.label], ["font-size", "8.5–10px"], ["font-weight", "700"], ["text-transform", "uppercase"], ["letter-spacing", "0.14–0.16em"], ["color.ink-1", "var(--riso-ink-1)"], ["color.ink-2", "var(--riso-ink-2)"], ["mix-blend-mode", "var(--riso-blend)"], ["opacity", "var(--riso-ink-density)"]]}
+      specs={[["font-family", F.label], ["font-size", "8.5–10px"], ["font-weight", "700"], ["text-transform", "uppercase"], ["letter-spacing", "0.14–0.16em"], ["color.ink-1", "var(--riso-ink-1-text)"], ["color.ink-2", "var(--riso-action)"], ["mix-blend-mode", "var(--riso-blend)"], ["opacity", "var(--riso-ink-density)"]]}
       dos={["Use ink-1 for structural metadata (issue numbers, section labels), ink-2 for status and action cues"]}
       donts={["Use InkTag at sizes above 11px — use DuotoneText or plain text instead"]} />
 
@@ -869,7 +883,7 @@ function risoSpec(a) { return {
     {[
       { n: "Sidebar + Main", rows: [["Sidebar width", "260px fixed"], ["Main area", "Fluid, fills remaining"], ["Sidebar order", "Brand (duotone) → halftone strip → Section label → Items → Press Operator"], ["Vertical divider", rule(bw.default, X.rule_vertical)], ["Background (both)", "var(--riso-paper)"]] },
       { n: "Message Flow", rows: [["Direction", "Vertical stack, chronological"], ["Alignment", "AI → left (84%), user → right (70%)"], ["Gap", "18px between messages"], ["Entrance", "fadeSlideUp, 400ms ease-out, 80ms stagger"], ["Sender row", "InkTag (ink-1 for AI, ink-2 for user) + timestamp"], ["Body filter", "blur(calc(var(--riso-bleed) * 0.4))"]] },
-      { n: "Active Selection", rows: [["Model", "Single selection only"], ["Trigger", "Click or Enter/Space"], ["Visual", `Background: ${C.surface_selected}; name wraps in DuotoneText`], ["Transition", "Instant"], ["Focus outline", "2px solid var(--riso-ink-2) offset 2px"]] },
+      { n: "Active Selection", rows: [["Model", "Single selection only"], ["Trigger", "Click or Enter/Space"], ["Visual", `Background: ${C.surface_selected}; name wraps in DuotoneText`], ["Transition", "Instant"], ["Focus outline", `${bw.focus}px solid var(--riso-focus) offset 2px`]] },
       { n: "Grain + Halftone Composition", rows: [["Grain scope", "Theme root only — one layer"], ["Halftone scope", "Explicit strips and blocks, never full-page"], ["Rotation policy", "Halftone rotates; grain does not"], ["Blend stacking", "Paper → ink-1 → ink-2 (duotone) → halftone → grain"]] },
       { n: "Tweakability", rows: [["Scope", "Global — one press, one configuration per session"], ["Persistence", "Settings panel state; serializable to JSON"], ["Preset bundles", "Paper {color, blend, density, textInk}; Ink {c1, c2}"], ["Slider constraints", "Snap to taste-appropriate steps (0.5px, 5°, 1px)"], ["Randomize range", "Offset ±3px, angle ∈ {0,15,45,75}, grain 0.2–0.6"]] },
       { n: "Image Composition", rows: [["Wrapper", "RisoImage — required for every raster asset"], ["Layer stack", "primary duotone → ghost (offset) → halftone overlay → container blend"], ["Filter source", "SVG feColorMatrix defs, scoped per provider (useId)"], ["Registration", "Ghost layer offset uses same --riso-off-x / --riso-off-y as text"], ["Halftone", "Same dot pitch + softness vars as decorative strips, at reduced opacity"], ["Bleed", "container filter: blur(calc(var(--riso-bleed) * 0.5))"]] },
@@ -1072,7 +1086,7 @@ export default function App() {
         .riso-nav-btn { background: transparent; border: ${rule(bw.default, X.rule_vertical)}; padding: 6px 10px; cursor: pointer; font-family: inherit; transition: background ${motion(tokens, "fast")} }
         .riso-nav-btn:hover { background: ${X.row_hover} }
         ${reducedMotionCss(tokens, { scope: ".riso-root" })}
-        .riso-nav-btn:focus-visible { outline: 2px solid var(--riso-ink-2); outline-offset: 2px }
+        .riso-nav-btn:focus-visible { outline: ${bw.focus}px solid var(--riso-focus); outline-offset: 2px }
         input[type="range"] { height: 4px; -webkit-appearance: none; background: rgba(255,255,255,0.08); border-radius: 0 }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: ${TM.color}; border-radius: 0; cursor: pointer }
         input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; background: ${TM.color}; border-radius: 0; cursor: pointer; border: none }

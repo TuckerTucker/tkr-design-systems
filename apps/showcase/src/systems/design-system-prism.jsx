@@ -75,7 +75,7 @@ function PrismChat({ sel, setSel }) {
       <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, background: `radial-gradient(circle,${X.orb_lavender} 0%,transparent 70%)`, borderRadius: "50%", pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, background: `radial-gradient(circle,${X.orb_mint} 0%,transparent 70%)`, borderRadius: "50%", pointerEvents: "none" }} />
       <div className="sb" style={{ borderRight: rule(bw.default, X.divider), position: "relative", zIndex: 1 }}>
-        <div style={{ padding: "18px 14px 12px" }}><div style={{ fontSize: 16, fontWeight: 500, color: X.text_title, letterSpacing: "-0.02em", marginBottom: 14 }}>Prism</div><div style={{ ...g, borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 12, color: X.text_faint }}>⌕</span><input placeholder="Search..." className="si gi" style={{ fontFamily: F.body, color: C.text_secondary }} /></div></div>
+        <div style={{ padding: "18px 14px 12px" }}><div style={{ fontSize: 16, fontWeight: 500, color: X.text_title, letterSpacing: "-0.02em", marginBottom: 14 }}>Prism</div><div style={{ ...g, border: rule(bw.default, C.border_input), borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 12, color: X.text_faint }}>⌕</span><input placeholder="Search..." className="si gi" style={{ fontFamily: F.body, color: C.text_secondary }} /></div></div>
         <div className="cl">{chatList.map((c, i) => (
           <div key={c.id} onClick={() => setSel(c.id)} className="ci" style={{ padding: "10px 12px", cursor: "pointer", borderRadius: rad.default, margin: "0 6px 3px", ...(sel===c.id?gs:{}), transition: `all ${motion(tokens, "moderate")}`, animationDelay: `${i*70}ms` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -94,7 +94,7 @@ function PrismChat({ sel, setSel }) {
             <div style={{ padding: "12px 16px", borderRadius: m.sender==="user"?`${XR.message}px ${XR.message}px 4px ${XR.message}px`:`${XR.message}px ${XR.message}px ${XR.message}px 4px`, fontSize: 13, lineHeight: 1.6, ...g, ...(m.sender==="user"?{ background: C.surface_inverse, color: C.text_primary }:{ color: C.text_secondary }) }}>{m.text}</div>
           </div>))}
         </div>
-        <div style={{ padding: "14px 16px", borderTop: rule(bw.default, X.divider_subtle) }}><div style={{ ...g, borderRadius: rad.input, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}><input placeholder="Message..." className="si gi" style={{ fontFamily: F.body, color: X.text_item }} /><div className="snd" style={{ width: 30, height: 30, borderRadius: 10, ...g, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: C.action_foreground }}>↑</div></div></div>
+        <div style={{ padding: "14px 16px", borderTop: rule(bw.default, X.divider_subtle) }}><div style={{ ...g, border: rule(bw.default, C.border_input), borderRadius: rad.input, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10 }}><input placeholder="Message..." className="si gi" style={{ fontFamily: F.body, color: X.text_item }} /><div className="snd" style={{ width: 30, height: 30, borderRadius: 10, ...g, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, color: C.action_foreground }}>↑</div></div></div>
       </div>
     </div>
   );
