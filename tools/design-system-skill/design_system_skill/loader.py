@@ -19,7 +19,6 @@ from typing import Any
 import yaml
 
 from .errors import Error, Result
-from .paths import project_root
 from .registry import Registry
 from .contrast import GATES
 from .token_file import apply_tokens_to_spec, load_token_file, token_file_path
@@ -69,8 +68,10 @@ def load_system(
       - `layout_templates.*.svg_path`: absolute SVG path
 
     When `system.extends` is set, the parent spec is loaded recursively
-    and merged (child wins on conflict). See `_merge_specs` for merge
-    semantics.
+    and merged (child wins on conflict). Parent lookup goes through the
+    layered registry, so a user-overlay system can extend a built-in one
+    (each side's SVG paths are resolved against its own library before
+    the merge). See `_merge_specs` for merge semantics.
 
     Caching is per-process; survives multiple invocations but doesn't leak
     across processes.
@@ -98,8 +99,7 @@ def load_system(
             {"system_id": system_id, "available": available},
         ))
 
-    root = project_root()
-    spec_path = (root / entry.spec).resolve()
+    spec_path = entry.spec_path()
     if not spec_path.exists():
         return Result.failure(Error(
             "SPEC_FILE_MISSING",
@@ -124,19 +124,19 @@ def load_system(
         _extends_peek = (_raw.get("system") or {}).get("extends")
         if _extends_peek:
             parent_entry = reg.get(_extends_peek)
-            if parent_entry:
-                parent_spec_path = (root / parent_entry.spec).resolve()
+            if parent_entry is not None:
+                parent_spec_path = parent_entry.spec_path()
                 if parent_spec_path.exists():
                     cache_key = f"{spec_path}:extends:{_checksum(parent_spec_path)}"
-    except Exception:
+    except yaml.YAMLError:
         pass
-
     cached = _CACHE.get(cache_key)
     if cached is not None and cached[0] == digest:
         return Result.success(cached[1])
 
-    library_root = (root / entry.library_root).resolve()
+    library_root = entry.library_path()
 
+    # Validate (pass library_root so SVG path warnings are accurate)
     warnings: list[Error] = []
     color_gates: dict | None = None
     if validate:
@@ -171,7 +171,7 @@ def load_system(
     if color_gates is not None:
         spec["_meta"]["color_gates"] = color_gates
 
-    # Handle extends (inheritance)
+    # Handle extends (inheritance).
     extends_id = (spec.get("system") or {}).get("extends")
     if extends_id:
         chain = _chain or []
@@ -343,6 +343,10 @@ def _merge_specs(child: dict, parent: dict) -> dict:
       grammar_extensions: recursive dict merge (child keys override)
       system/spec_version/artifact_treatments: child wins entirely
       _meta:             preserve child's _meta (includes lineage)
+
+    Both specs are already normalized, so inherited component/layout
+    entries keep their absolute svg_path resolved against the parent's
+    own library — cross-layer inheritance needs no path fixups here.
 
     Args:
         child: Normalized child spec dict (already has _meta).

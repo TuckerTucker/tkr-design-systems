@@ -12,6 +12,7 @@ Run:
 from __future__ import annotations
 
 import json
+import os
 import sys
 from dataclasses import replace
 from pathlib import Path
@@ -120,6 +121,7 @@ def _fake_tools(**overrides: Any) -> ConsumerTools:
         return Path(dst)
 
     tools = ConsumerTools(
+        builtin_ids=lambda: ["alpha", "beta"],
         list_systems=lambda: {"ok": True, "data": [{"id": "alpha"}, {"id": "beta"}]},
         generate=generate,
         read_component=lambda *a, **k: {"ok": False, "errors": ["not used"]},
@@ -191,3 +193,51 @@ def test_render_and_missing_component_failures(tmp_path: Path) -> None:
 
 def test_unknown_system_is_usage_error(tmp_path: Path) -> None:
     assert main(["--system", "nope", "--out", str(tmp_path)], tools=_fake_tools()) == 2
+
+
+# ─── population: the built-in registry only ───────────────────────────
+
+REPO = Path(__file__).resolve().parents[2]
+
+
+def test_user_overlay_systems_are_not_examined(tmp_path: Path, real_tools: ConsumerTools,
+                                               capsys: pytest.CaptureFixture[str]) -> None:
+    """A system the user overlay adds is listed by the tools but never checked.
+
+    The overlay is injected through the skill's own configuration input
+    (``DESIGN_SYSTEM_SKILL_USER_REGISTRY``), pointing at a real registry
+    file whose entry names the repository's terminal spec.
+    """
+    overlay = tmp_path / "registry.yaml"
+    overlay.write_text(yaml.safe_dump({"version": 1, "systems": [{
+        "id": "overlay-leak",
+        "spec": str(REPO / "systems" / "terminal" / "spec.yaml"),
+        "status": "available",
+        "library_root": str(REPO / "systems" / "terminal"),
+    }]}))
+    key = "DESIGN_SYSTEM_SKILL_USER_REGISTRY"
+    previous = os.environ.get(key)
+    os.environ[key] = str(overlay)
+    try:
+        listed = [s["id"] for s in real_tools.list_systems()["data"]]
+        assert "overlay-leak" in listed, "the overlay was injected (the case is live)"
+
+        population = check_systems._registered_ids(real_tools)
+        assert "overlay-leak" not in population
+        assert population == check_systems.read_registry_ids(REPO / "systems" / "registry.yaml")
+
+        # Asking for it by name is a usage error: it is not a built-in system.
+        assert main(["--system", "overlay-leak", "--out", str(tmp_path / "o")],
+                    tools=real_tools) == 2
+        assert "Unknown system id(s): overlay-leak" in capsys.readouterr().err
+    finally:
+        if previous is None:
+            del os.environ[key]
+        else:
+            os.environ[key] = previous
+
+
+def test_a_builtin_the_tools_cannot_list_fails_the_run(tmp_path: Path) -> None:
+    tools = _fake_tools(builtin_ids=lambda: ["alpha", "beta", "gamma"])
+    with pytest.raises(RuntimeError, match="gamma"):
+        main(["--out", str(tmp_path)], tools=tools)

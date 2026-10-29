@@ -15,16 +15,10 @@ A consumer calls:
 from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
-import sys
 from typing import Any
 
-# Make the sibling design-system-skill package importable. The two skills
-# live as siblings under tools/; we add design-system-skill/ to sys.path
-# so consumers don't need to install either as a wheel.
-_TOOLS_DIR = Path(__file__).resolve().parent.parent.parent
-_DSS_DIR = _TOOLS_DIR / "design-system-skill"
-if str(_DSS_DIR) not in sys.path:
-    sys.path.insert(0, str(_DSS_DIR))
+# The sibling design-system-skill package is put on sys.path by
+# wireframe_skill/__init__.py (see _design_system_path.py).
 
 from design_system_skill import (  # noqa: E402
     load_system,
@@ -38,9 +32,12 @@ from .compose import (  # noqa: E402
 )
 from .emit import emit_artifact  # noqa: E402
 from .placement import (  # noqa: E402
+    select_layout_pattern,
     derive_content_substitutions,
     LayoutSelection,
+    EscalateToDecomposition,
 )
+from .decomposition import build_decomposition_request  # noqa: E402
 
 import structlog
 
@@ -71,16 +68,31 @@ class GenerationResult:
     compliance: dict | None = None
     selection: LayoutSelection | None = None
     system_id: str | None = None
+    # Layer 1 — escalation to the two-pass decomposition flow.
+    # When True, the skill could not select a pre-authored pattern AND the
+    # brief's nouns don't overlap the system's catalog. The orchestrator
+    # (e.g. /wireframe-compose) should run the decomposition pass using
+    # `pass_request` as the payload for Claude.
+    requires_orchestrator_pass: bool = False
+    pass_request: dict | None = None
+    escalation_reason: str | None = None
+    # Agent-driven routing — populated when the caller requested the routing
+    # inventory (request_routing=True) instead of heuristic selection. The
+    # agent reviews available patterns/components and calls again with
+    # layout_id=<pattern_id> or via the decomposition flow.
+    routing_request: dict | None = None
+    # Two-turn flows: substitute=True returns the substitution request for
+    # the selected pattern; compose=True returns the decomposition request.
     substitution_request: dict | None = None
     decomposition_request: dict | None = None
-    routing_request: dict | None = None
 
     def to_dict(self) -> dict:
         """Serialize to dict for non-Python consumers.
 
         Returns:
             A dict with ok, svg_path, spec_path, errors, warnings, compliance_summary,
-            selection, system_id, and optional request dicts.
+            selection, system_id, escalation fields and the optional
+            request dicts (routing, substitution, decomposition).
         """
         return {
             "ok": self.ok,
@@ -106,9 +118,12 @@ class GenerationResult:
                 }
             ),
             "system_id": self.system_id,
+            "requires_orchestrator_pass": self.requires_orchestrator_pass,
+            "pass_request": self.pass_request,
+            "escalation_reason": self.escalation_reason,
+            "routing_request": self.routing_request,
             "substitution_request": self.substitution_request,
             "decomposition_request": self.decomposition_request,
-            "routing_request": self.routing_request,
         }
 
 
@@ -120,9 +135,11 @@ def wireframe(
     output_dir: str | Path = ".",
     spec_version: str | None = None,
     filename_stem: str = "wireframe",
+    escalate: bool = True,
+    layout_id: str | None = None,
+    request_routing: bool = False,
     substitute: bool = False,
     compose: bool = False,
-    layout_id: str | None = None,
 ) -> GenerationResult:
     """Generate a wireframe SVG and metadata spec.
 
@@ -139,13 +156,19 @@ def wireframe(
         output_dir: Directory for output files (default: ".").
         spec_version: Expected spec version or None to allow any.
         filename_stem: Filename prefix (default: "wireframe").
-        substitute: If True, return early after step 2 with a
-            substitution_request dict. The caller processes the request
-            and calls wf_apply_substitutions to complete.
-        compose: If True, skip template selection and return a
+        escalate: Escalate off-catalog briefs to decomposition instead of
+            falling back to the dashboard pattern.
+        layout_id: Explicit layout pattern override (bypasses the keyword
+            heuristic). Used with routing_request responses.
+        request_routing: If True, skip heuristic selection and return a
+            routing_request inventory (available patterns + components) for
+            the calling agent to choose from. The agent calls again with
+            layout_id=<pattern_id>, or runs the decomposition flow.
+        substitute: If True, return early after pattern selection with a
+            substitution_request for that pattern. The caller fills it and
+            applies it with apply_substitutions.
+        compose: If True, skip pattern selection and return a
             decomposition_request for blueprint-based assembly.
-        layout_id: Explicit layout pattern override (bypasses keyword
-            heuristic). Used with wf_select_layout responses.
 
     Returns:
         GenerationResult with ok, svg_path, spec_path, errors, warnings.
@@ -177,27 +200,26 @@ def wireframe(
             f"'{spec['_meta']['spec_version']}'. Using loaded version."
         )
 
-    # Step 2: brief → layout pattern.
-    selection: LayoutSelection | None = None
+    # Composition mode: return the decomposition request (two-turn flow).
     if compose:
-        selection = None
-    elif layout_id is not None:
-        from .placement import apply_layout_selection
-        selection = apply_layout_selection(
-            {"selected_pattern_id": layout_id, "rationale": "explicit layout_id override"},
-            spec, platform,
+        try:
+            decomp_request = build_decomposition_request(brief, spec, platform=platform)
+        except ValueError as e:
+            return GenerationResult(ok=False, errors=[str(e)], system_id=effective_system)
+        return GenerationResult(
+            ok=True,
+            decomposition_request=decomp_request,
+            system_id=effective_system,
+            warnings=warnings,
         )
-        if selection is None:
-            return GenerationResult(
-                ok=False,
-                errors=[f"layout_id '{layout_id}' not found in system '{effective_system}'"],
-                system_id=effective_system,
-            )
-    else:
-        selection = None
 
-    if selection is None and not compose:
+    # Step 2 (agent-driven variant): the caller wants the routing inventory
+    # instead of heuristic selection. Return the available patterns and
+    # components so the agent can choose; it calls again with layout_id or
+    # runs the decomposition flow.
+    if request_routing and layout_id is None:
         from .placement import build_layout_selection_request
+
         library_root = Path(spec["_meta"]["library_root"])
         layouts_dir = library_root / "layouts"
         components_dir = library_root / "components"
@@ -209,7 +231,6 @@ def wireframe(
             "system_id": effective_system,
             "platform": platform,
         }
-
         if layouts_dir.exists():
             layout_req = build_layout_selection_request(brief, spec, platform)
             inventory["available_patterns"] = layout_req["available_patterns"]
@@ -219,19 +240,16 @@ def wireframe(
                 "response_format_example", {}
             )
         else:
+            canvas_w, canvas_h = PLATFORM_DIMENSIONS[platform]
             inventory["available_patterns"] = []
-            canvas_w, canvas_h = (
-                (375, 812) if platform == "mobile" else (1280, 800)
-            )
             inventory["canvas"] = {"width": canvas_w, "height": canvas_h}
             inventory["grammar_caveats"] = {}
 
         if components_dir.exists():
             try:
-                from .decomposition import build_decomposition_request as _build_decomp
-                decomp_req = _build_decomp(brief, spec, platform=platform)
+                decomp_req = build_decomposition_request(brief, spec, platform=platform)
                 inventory["available_components"] = decomp_req["components"]
-            except (ValueError, ImportError):
+            except ValueError:
                 inventory["available_components"] = []
         else:
             inventory["available_components"] = []
@@ -240,7 +258,7 @@ def wireframe(
             "No layout was auto-selected. Review the available patterns and "
             "components, then choose one of: "
             "(a) call again with layout_id=<pattern_id> to use a pattern, "
-            "(b) call again with compose=True to assemble from components, "
+            "(b) run the decomposition flow to assemble from components, "
             "(c) author SVG directly for truly novel layouts."
         )
 
@@ -251,34 +269,71 @@ def wireframe(
             warnings=warnings,
         )
 
-    # Composition mode: return decomposition request (two-turn flow)
-    if compose or selection is None:
-        from .decomposition import build_decomposition_request
-        try:
-            decomp_request = build_decomposition_request(brief, spec, platform=platform)
-        except ValueError as e:
+    # Step 2 (explicit override): the agent already chose a pattern.
+    if layout_id is not None:
+        from .placement import apply_layout_selection
+
+        selection = apply_layout_selection(
+            {"selected_pattern_id": layout_id,
+             "rationale": "explicit layout_id override"},
+            spec, platform,
+        )
+        if selection is None:
             return GenerationResult(
-                ok=False, errors=[str(e)], system_id=effective_system,
+                ok=False,
+                errors=[f"layout_id '{layout_id}' not found in system "
+                        f"'{effective_system}'"],
+                system_id=effective_system,
+            )
+    else:
+        # Step 2 (default): brief → layout pattern (or escalation sentinel).
+        selection = select_layout_pattern(
+            brief, spec, platform=platform, escalate=escalate,
+        )
+    if selection is None:
+        return GenerationResult(
+            ok=False,
+            errors=[
+                f"System '{effective_system}' has no patterns in its layouts/ "
+                f"directory. Cannot derive a wireframe from the brief."
+            ],
+            system_id=effective_system,
+        )
+    if isinstance(selection, EscalateToDecomposition):
+        # Brief is off-catalog. Build the decomposition request for the
+        # orchestrator and return early. The skill stays deterministic.
+        try:
+            request = build_decomposition_request(brief, spec, platform=platform)
+        except Exception as e:
+            return GenerationResult(
+                ok=False,
+                errors=[
+                    f"escalation triggered but decomposition request failed: {e}"
+                ],
+                system_id=effective_system,
+                requires_orchestrator_pass=True,
+                escalation_reason=selection.reason,
             )
         return GenerationResult(
-            ok=True,
-            decomposition_request=decomp_request,
+            ok=False,
+            errors=[],
+            warnings=warnings + [selection.reason],
             system_id=effective_system,
-            warnings=warnings,
+            requires_orchestrator_pass=True,
+            pass_request=request,
+            escalation_reason=selection.reason,
         )
-
     if selection.fallback:
         warnings.append(selection.rationale)
 
-    # Substitution mode: return substitution request (two-turn flow)
+    # Substitution mode: return the substitution request (two-turn flow).
     if substitute:
         from .substitution import build_substitution_request
         try:
             sub_request = build_substitution_request(brief, spec, selection.svg_path)
         except FileNotFoundError as e:
             return GenerationResult(
-                ok=False, errors=[str(e)], system_id=effective_system,
-                selection=selection,
+                ok=False, errors=[str(e)], system_id=effective_system, selection=selection,
             )
         return GenerationResult(
             ok=True,

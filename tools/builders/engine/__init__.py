@@ -17,7 +17,13 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-_DSS = Path(__file__).resolve().parents[2] / "design-system-skill"
+# The design-system-skill package: ``tools/design-system-skill`` in the
+# repository layout, ``<skill>/scripts`` in the skill-bundle layout (where
+# this engine sits under ``<skill>/tooling/``).
+_ROOT = Path(__file__).resolve().parents[2]
+_DSS = next((d for d in (_ROOT / "design-system-skill", _ROOT / "scripts")
+             if (d / "design_system_skill" / "__init__.py").is_file()),
+            _ROOT / "design-system-skill")
 if str(_DSS) not in sys.path:
     sys.path.insert(0, str(_DSS))
 

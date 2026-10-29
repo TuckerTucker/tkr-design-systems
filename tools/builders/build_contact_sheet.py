@@ -57,7 +57,10 @@ COMPOSITES = [
     ("nav-item", ["top-level", "sub-item", "breadcrumb"]),
     ("tab-item", ["default", "active", "disabled"]),
     ("breadcrumb-trail", ["default", "truncated"]),
-    ("pagination", ["numbered", "simple", "infinite-scroll-indicator"]),
+    # The variant string is the SVG filename suffix: the file is
+    # pagination-infinite.svg, not pagination-infinite-scroll-indicator.svg.
+    # Named by its file so a regeneration renders it instead of MISSING.
+    ("pagination", ["numbered", "simple", "infinite"]),
     ("toast", ["info", "success", "warning", "error"]),
     ("stat", ["default", "with-trend", "with-sparkline"]),
     ("key-value", ["default", "inline", "tabular"]),
@@ -79,7 +82,10 @@ PATTERNS = [
     ("header",           ["header-mobile", "header-default", "header-with-search", "header-with-actions"]),
     ("form",             ["form-mobile", "form-single-column", "form-two-column", "form-inline", "form-wizard"]),
     ("data-table",       ["data-table-mobile", "data-table-default", "data-table-with-actions", "data-table-with-pagination", "data-table-with-filters"]),
-    ("modal",            ["modal-mobile", "modal-default", "modal-confirmation", "modal-form", "modal-wide"]),
+    ("modal",            ["modal-mobile", "modal-default", "modal-form", "modal-wide"]),
+    # No modal-confirmation: an "Are you sure?" dialog is forbidden by
+    # claude.md § UX Philosophy and the library ships the undo row instead.
+    ("undo-row",         ["undo-row-default"]),
     ("drawer",           ["drawer-mobile", "drawer-right", "drawer-left", "drawer-bottom"]),
     ("empty-state",      ["empty-state-mobile", "empty-state-no-data", "empty-state-no-results", "empty-state-first-use", "empty-state-error"]),
     ("command-palette",  ["command-palette-mobile", "command-palette-default", "command-palette-with-groups", "command-palette-with-recent"]),
@@ -139,10 +145,18 @@ def build_contact_sheet(components_dir: Path, layouts_dir: Path = None) -> str:
     pattern_count = sum(len(variants) for _, variants in (PATTERNS or []))
     composite_count = sum(len(variants) for _, variants in COMPOSITES)
     primitive_count = sum(len(variants) for _, variants in PRIMITIVES)
+    # Declared exemption, read by the UX placement clauses in
+    # rulebook_check.py. A catalog shows every primitive the library
+    # authors, including the ones the UX philosophy forbids PLACING in a
+    # screen; without this marker the sheet reports findings whose only
+    # remedy would be deleting a catalogued component.
+    parts.append('  <!-- CATALOG-SHEET: every authored primitive, not a screen. '
+                 'Exempt from ux-no-toast-notifications and '
+                 'ux-no-confirm-dialog-without-undo. -->')
     parts.append(f'  <text x="{PAGE_PAD}" y="{y + 24}" class="tier-label" font-size="28">Wireframe Library — Contact Sheet</text>')
     parts.append(
         f'  <text x="{PAGE_PAD}" y="{y + 52}" class="text-secondary" font-size="14">'
-        f'Greyscale neutral library · {primitive_count + composite_count + pattern_count} variants across 42 components · grammar_family: wireframe'
+        f'Greyscale neutral library · {primitive_count + composite_count + pattern_count} variants across {12 + 18 + len(PATTERNS or [])} components · grammar_family: wireframe'
         '</text>'
     )
     y += 96
@@ -180,7 +194,7 @@ def build_contact_sheet(components_dir: Path, layouts_dir: Path = None) -> str:
     if layouts_dir is not None and PATTERNS:
         parts.append(f'  <line x1="{PAGE_PAD}" y1="{y}" x2="{SHEET_WIDTH - PAGE_PAD}" y2="{y}" stroke="#757575" stroke-width="1.5"/>')
         y += 32
-        parts.append(f'  <text x="{PAGE_PAD}" y="{y}" class="tier-label">PATTERNS (12)</text>')
+        parts.append(f'  <text x="{PAGE_PAD}" y="{y}" class="tier-label">PATTERNS ({len(PATTERNS)})</text>')
         y += 8
         parts.append(f'  <text x="{PAGE_PAD}" y="{y + 14}" class="text-secondary" font-size="12">Layouts downscaled to fit; mobile (375px) variants appear first.</text>')
         y += 32
@@ -234,8 +248,12 @@ def build_contact_sheet(components_dir: Path, layouts_dir: Path = None) -> str:
 
 
 if __name__ == "__main__":
-    # Script lives in tools/builders/; the library lives at <repo>/systems/wireframe.
-    wireframe_dir = Path(__file__).resolve().parents[2] / "systems" / "wireframe"
+    # The library is <repo>/systems/wireframe (repository layout) or
+    # <skill>/libraries/wireframe-library (skill bundle); rulebook_check knows both.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from rulebook_check import system_dir
+
+    wireframe_dir = system_dir("wireframe")
     components_dir = wireframe_dir / "components"
     layouts_dir = wireframe_dir / "layouts"
     sheet = build_contact_sheet(components_dir, layouts_dir)

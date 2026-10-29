@@ -493,7 +493,7 @@ PATTERNS = {
   <line x1="0" y1="260" x2="960" y2="260" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 """),
 
-    # ═══════════════════ MODAL (4 variants) ═══════════════════
+    # ═══════════════════ MODAL (3 variants) ═══════════════════
 
     "modal-default": (1280, 800, """
   <!-- Page background dimmed -->
@@ -522,21 +522,52 @@ PATTERNS = {
   <text x="814" y="538" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Confirm</text>
 """),
 
-    "modal-confirmation": (1280, 800, """
-  <rect width="1280" height="800" fill="{color.text_primary}" opacity="0.4"/>
+    # ═══════════════════ UNDO ROW (1 variant) ═══════════════════
+    #
+    # This slot used to hold "modal-confirmation" — an "Are you sure?"
+    # dialog with Cancel/Delete. claude.md § UX Philosophy forbids that
+    # pattern ("Confirm destructive actions with undo, not dialogs"), and
+    # the rulebook clause ux-no-confirm-dialog-without-undo reported the
+    # shipped layout. The library ships the alternative the rule names
+    # instead: the destructive action runs immediately and the row it
+    # vacated holds an undo affordance until it settles.
 
-  <rect x="460" y="304" width="360" height="200" rx="{radius.chrome}" fill="{color.surface}"/>
+    "undo-row-default": (1280, 800, """
+  <rect width="1280" height="800" fill="{color.page_bg}"/>
 
-  <!-- No title bar; just title + body + actions -->
-  <text x="484" y="344" class="text-primary" font-size="16" font-weight="700">Delete this item?</text>
+  <rect x="320" y="200" width="640" height="380" rx="{radius.default}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
-  <text x="484" y="384" class="text-secondary" font-size="13">This action cannot be undone. The item</text>
-  <text x="484" y="402" class="text-secondary" font-size="13">will be permanently removed.</text>
+  <!-- Card header -->
+  <text x="352" y="244" class="text-primary" font-size="18" font-weight="700">Saved views</text>
+  <text x="352" y="268" class="text-secondary" font-size="13">Deleting a view applies right away and stays reversible.</text>
+  <line x1="320" y1="292" x2="960" y2="292" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
 
-  <rect x="612" y="448" width="84" height="40" rx="{radius.input}" fill="{color.surface}" stroke="{color.border_default}" stroke-width="1.5"/>
-  <text x="654" y="474" text-anchor="middle" class="text-secondary" font-size="14" font-weight="500">Cancel</text>
-  <rect x="712" y="448" width="84" height="40" rx="{radius.input}" fill="{color.danger}"/>
-  <text x="754" y="474" text-anchor="middle" class="text-inverse" font-size="14" font-weight="500">Delete</text>
+  <!-- Row 1 (untouched) -->
+  <text x="352" y="326" class="text-primary" font-size="14" font-weight="500">Q2 retrospective</text>
+  <text x="352" y="346" class="text-secondary" font-size="12">Updated 3 days ago</text>
+  <text x="928" y="332" text-anchor="end" class="text-danger" font-size="13">Delete</text>
+  <line x1="320" y1="364" x2="960" y2="364" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+
+  <!-- Undo row: the deleted item's place, held open by the undo affordance -->
+  <rect x="321" y="365" width="638" height="70" fill="{color.surface_selected}"/>
+  <text x="352" y="396" class="text-secondary" font-size="13">Deleted Q3 pipeline</text>
+  <text x="352" y="416" class="text-disabled" font-size="12">Removes for good in 8s</text>
+  <text x="928" y="404" text-anchor="end" class="text-primary" font-size="13" font-weight="600">Undo</text>
+  <line x1="320" y1="436" x2="960" y2="436" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+
+  <!-- Row 3 (untouched) -->
+  <text x="352" y="470" class="text-primary" font-size="14" font-weight="500">Weekly active accounts</text>
+  <text x="352" y="490" class="text-secondary" font-size="12">Updated 6 days ago</text>
+  <text x="928" y="476" text-anchor="end" class="text-danger" font-size="13">Delete</text>
+  <line x1="320" y1="508" x2="960" y2="508" stroke="{color.border_default}" stroke-width="{border_width.default}"/>
+
+  <!-- Row 4 (untouched) -->
+  <text x="352" y="542" class="text-primary" font-size="14" font-weight="500">Churn by cohort</text>
+  <text x="352" y="562" class="text-secondary" font-size="12">Updated 2 weeks ago</text>
+  <text x="928" y="548" text-anchor="end" class="text-danger" font-size="13">Delete</text>
+
+  <!-- Pattern note -->
+  <text x="320" y="616" class="text-secondary" font-size="13">No confirmation dialog: the action runs, and the undo row holds it open until it settles.</text>
 """),
 
     "modal-form": (1280, 800, """

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== ICON-ARROW ==================== -->
+
+  <text x="12" y="18" text-anchor="middle" class="text-primary" font-size="16" font-weight="600">→</text>
+
+</svg>

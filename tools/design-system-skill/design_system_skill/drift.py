@@ -20,6 +20,11 @@ Checks, per spec:
 
 Prose fields (``PROSE_KEYS``) are not scanned: they quote colours in
 sentences such as "never above #0F140F" and are reviewed by humans.
+
+``tokens.common`` is not scanned either: it is generated from the token
+file (``common_tokens``), and ``common-tokens --check`` compares it with a
+fresh derivation exactly. Scanning it here would only re-read the
+derivation lossily (``rgba()`` alpha rounds to an 8-bit hex channel).
 """
 
 from __future__ import annotations
@@ -34,6 +39,7 @@ import yaml
 
 from .contract import normalize_color
 from .errors import Error, Result
+from .paths import is_library_of
 from .token_file import (
     LEGACY_PROJECTION,
     color_values,
@@ -50,6 +56,9 @@ logger = structlog.get_logger(__name__)
 
 DRIFT_SCAN_ROOTS: tuple[str, ...] = ("tokens", "press_presets")
 """Top-level spec blocks whose colour literals must come from the token file."""
+
+GENERATED_LOCATIONS: tuple[str, ...] = ("tokens.common",)
+"""Locations under the scan roots that ``common-tokens --check`` owns."""
 
 PROSE_KEYS = frozenset({
     "role", "usage_constraint", "note", "description", "character", "detail",
@@ -195,7 +204,8 @@ def _check_literals(spec: dict[str, Any], doc: dict[str, Any]) -> Iterator[Drift
         if root not in spec:
             continue
         for loc, text, key in _walk_strings(spec[root], root):
-            if loc in covered:
+            if loc in covered or any(
+                    loc == g or loc.startswith(g + ".") for g in GENERATED_LOCATIONS):
                 continue
             if key == "stack" and "{" not in text:
                 if text not in known_fonts:
@@ -285,7 +295,8 @@ def check_drift_all(
 
     Args:
         entries: Optional ``(system_id, spec_path)`` pairs; defaults to the
-            registry. Injected by tests.
+            built-in registry layer (a user-overlay system belongs to another
+            project, whose own gate owns it). Injected by tests.
         checker: Per-spec check; injectable for tests.
 
     Returns:
@@ -293,20 +304,18 @@ def check_drift_all(
         if any system drifts.
     """
     if entries is None:
-        from .paths import project_root
         from .registry import Registry
         reg = Registry.load()
         if not reg.ok:
             return reg
-        root = project_root()
-        entries = [(e.id, (root / e.spec).resolve()) for e in reg.data.all()]
+        entries = [(e.id, e.spec_path()) for e in reg.data.builtin_entries()]
 
     systems: dict[str, Any] = {}
     errors: list[Error] = []
     seen: dict[Path, str] = {}
     # Check each spec once, under the id that owns its directory
     # (`wireframe`, not its registry alias `neutral`).
-    ordered = sorted(entries, key=lambda e: Path(e[1]).parent.name != e[0])
+    ordered = sorted(entries, key=lambda e: not is_library_of(e[0], Path(e[1])))
     for sys_id, spec_path in ordered:
         if spec_path in seen:
             systems[sys_id] = {"alias_of": seen[spec_path]}

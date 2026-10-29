@@ -39,6 +39,15 @@ from .drift import check_drift, check_drift_all
 from .contrast import check_color_gates_all, check_color_gates_for_spec
 from .token_file import read_spec_with_tokens
 from .jsx_drift import check_jsx_drift
+from .tokens import (
+    Contract,
+    load_contract,
+    validate_common_tokens,
+    resolve_token,
+    UnknownTokenError,
+    CrossSystemTokenError,
+    MalformedTokenRefError,
+)
 
 __all__ = [
     "Result",
@@ -56,4 +65,12 @@ __all__ = [
     "check_color_gates_all",
     "read_spec_with_tokens",
     "check_jsx_drift",
+    # Common token contract (v1.0+)
+    "Contract",
+    "load_contract",
+    "validate_common_tokens",
+    "resolve_token",
+    "UnknownTokenError",
+    "CrossSystemTokenError",
+    "MalformedTokenRefError",
 ]

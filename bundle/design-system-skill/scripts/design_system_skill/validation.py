@@ -1,0 +1,584 @@
+"""Schema validation for design system specs.
+
+This module is the source of truth for which spec shapes are accepted.
+It accepts v0.1, v0.2 and v0.3 specs (v0.2 is fully backwards-compatible
+with v0.1 per docs/specs/SCHEMA-V0.2.md; v0.3 adds the semantic token
+contract per docs/specs/SCHEMA-V0.3.md).
+
+The validator's job:
+  - Required top-level fields are present (`spec_version`, `system`, `tokens`).
+  - v0.3 specs declare `system.tokens_file`, and that file supplies every
+    contract token in a valid shape (see contract.py / token_file.py).
+  - Motion declarations name a contract motion tier and a reduced-motion
+    behaviour the system's policy allows.
+  - Enum values are within their allowed range (`grammar_family`,
+    `severity`, `check_method`, `check_scope`, `selection_signal`).
+  - Referenced SVG paths actually exist on disk.
+  - No obviously-broken cross-references (a rule referencing a
+    non-existent component, an anatomy yields_to entry naming an
+    absent sibling part).
+
+Validation produces structured errors (blocking) and warnings (advisory).
+The caller decides what to do with warnings.
+
+Implementation note: we do NOT use jsonschema here. Hand-rolled checks
+are easier to keep in sync with SCHEMA-V0.2.md (the human-readable
+spec) and they produce better error messages targeted at design
+system authors.
+"""
+
+from __future__ import annotations
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from .errors import Error, Result
+from .contrast import check_color_gates
+from .drift import find_drift
+from .token_file import (
+    load_token_file,
+    token_file_path,
+    validate_motion_declarations,
+    validate_token_document,
+)
+from .tokens import validate_common_tokens
+
+import structlog
+
+logger = structlog.get_logger(__name__)
+
+
+# ─── Enum vocabularies ──────────────────────────────────────────────
+#
+# Two tiers:
+#   KNOWN_* — open enums describing system vocabulary (grammar families,
+#             elevation strategies, selection signals). Unknown values are
+#             advisory warnings, not errors: new systems may legitimately
+#             introduce conventions this validator hasn't catalogued yet.
+#   VALID_* — closed enums that the skill's machinery depends on
+#             (severities, check methods/scopes, spec versions). Unknown
+#             values are blocking errors.
+
+KNOWN_GRAMMAR_FAMILIES = {
+    "wireframe",
+    "contemporary_clean",
+    "character_grid",
+    "print_texture",
+    # Future: spatial, brutalist_extended, etc.
+}
+
+KNOWN_ELEVATION_STRATEGIES = {
+    "typographic",      # Swiss
+    "paper_tiers",      # Editorial
+    "borders_only",     # Sketch, Terminal, Wireframe
+    "glass_blur",       # Prism
+    "hard_offset",      # Revolt
+    "duotone_filter",   # Riso (and other print_texture systems with a 2-ink filter pipeline)
+    "filter_pipeline",  # generic fallback for filter-driven elevation
+}
+
+VALID_SEVERITIES = {"required", "recommended", "advisory"}
+VALID_CHECK_METHODS = {"mechanical", "semantic", "both"}
+VALID_CHECK_SCOPES = {"artifact", "component", "both"}
+
+KNOWN_SELECTION_SIGNALS = {
+    "accent_bar",
+    "prompt_character",
+    "surface_fill",
+    "border_treatment",
+    "hard_offset",
+    "text_treatment",
+}
+
+VALID_SPEC_VERSIONS = {"0.1", "0.2", "0.3"}
+
+# Spec versions that must declare a canonical token file supplying every
+# contract token (docs/specs/SCHEMA-V0.3.md). Earlier versions may opt in.
+TOKEN_CONTRACT_REQUIRED_VERSIONS = {"0.3"}
+
+
+# ─── Public entry point ─────────────────────────────────────────────
+
+def validate_spec(spec_path: str | Path, library_root: str | Path | None = None) -> Result:
+    """Validate a design system spec.yaml file.
+
+    Checks required top-level fields, enum values, referenced SVG existence,
+    and cross-references (anatomy yields_to, etc).
+
+    Args:
+        spec_path: Path to spec.yaml file.
+        library_root: Optional override for SVG reference resolution.
+            Defaults to spec file's directory. The loader passes the
+            registry's library_root for accurate path warnings.
+
+    Returns:
+        Result with data={valid, system_id, spec_version, errors, warnings}
+        plus, when the spec has a contract-valid token file, ``contrast``
+        and ``hue_gate`` (``contrast.GateReport.summary()``: counts, the
+        worst result per pair with ratio / minimum / pass / mode, and the
+        gate's errors). Gate failures are also in ``errors``
+        (``CONTRAST_FAIL``, ``HUE_GATE_FAIL`` ...).
+    """
+    spec_path = Path(spec_path).resolve()
+    if not spec_path.exists():
+        return Result.failure(Error(
+            "SPEC_FILE_MISSING",
+            f"Spec file not found: {spec_path}",
+            {"path": str(spec_path)},
+        ))
+    try:
+        data = yaml.safe_load(spec_path.read_text())
+    except yaml.YAMLError as e:
+        return Result.failure(Error(
+            "SPEC_PARSE_FAILED",
+            f"YAML parse error: {e}",
+            {"path": str(spec_path)},
+        ))
+    if not isinstance(data, dict):
+        return Result.failure(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            "Top-level must be a mapping.",
+            {"path": str(spec_path)},
+        ))
+
+    errors: list[Error] = []
+    warnings: list[Error] = []
+    spec_dir = spec_path.parent
+    lib_root = Path(library_root).resolve() if library_root else None
+
+    _check_top_level_shape(data, errors)
+    _check_spec_version(data, errors)
+    _check_system_block(data, errors, warnings)
+    _check_tokens(data, errors, warnings)
+    color_gates: dict[str, Any] = {}
+    _check_token_contract(data, spec_path, errors, warnings, color_gates)
+    _check_common_tokens(data, errors)
+    _check_components(data, spec_dir, errors, warnings, lib_root)
+    _check_layout_templates(data, spec_dir, errors, warnings, lib_root)
+    _check_rulebook(data, errors, warnings)
+    _check_artifact_treatments(data, errors, warnings)
+
+    sys_id = (data.get("system") or {}).get("id")
+    if errors:
+        # Fail with all collected errors (not just the first one) so
+        # authors see the whole picture in one pass.
+        result = Result.failure(errors)
+        result.data = {
+            "valid": False,
+            "system_id": sys_id,
+            "spec_version": data.get("spec_version"),
+            "errors": [{"code": e.code, "message": e.message, "detail": e.detail} for e in errors],
+            "warnings": [{"code": w.code, "message": w.message, "detail": w.detail} for w in warnings],
+            **color_gates,
+        }
+        return result
+
+    return Result.success(
+        data={
+            "valid": True,
+            "system_id": sys_id,
+            "spec_version": data.get("spec_version"),
+            "errors": [],
+            "warnings": [{"code": w.code, "message": w.message, "detail": w.detail} for w in warnings],
+            **color_gates,
+        },
+        warnings=warnings or None,
+    )
+
+
+# ─── Per-block checks ───────────────────────────────────────────────
+
+def _check_top_level_shape(data: dict, errors: list[Error]) -> None:
+    """Verify required top-level fields are present."""
+    for required in ("spec_version", "system", "tokens"):
+        if required not in data:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"Missing required top-level field: '{required}'",
+                {"missing": required},
+            ))
+
+
+def _check_spec_version(data: dict, errors: list[Error]) -> None:
+    """Verify spec_version is valid."""
+    sv = data.get("spec_version")
+    if sv is None:
+        return
+    if not isinstance(sv, str):
+        errors.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            f"spec_version must be a string, got {type(sv).__name__}",
+        ))
+        return
+    if sv not in VALID_SPEC_VERSIONS:
+        errors.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            f"Unknown spec_version '{sv}'. Supported: {sorted(VALID_SPEC_VERSIONS)}",
+            {"spec_version": sv},
+        ))
+
+
+def _check_system_block(data: dict, errors: list[Error], warnings: list[Error]) -> None:
+    """Verify system block has required fields and a known grammar_family."""
+    sys_block = data.get("system")
+    if not isinstance(sys_block, dict):
+        # Already reported as missing top-level if absent.
+        return
+    for required in ("id", "name"):
+        if required not in sys_block:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"system.{required} is required",
+                {"missing": f"system.{required}"},
+            ))
+    gf = sys_block.get("grammar_family")
+    if gf is not None and gf not in KNOWN_GRAMMAR_FAMILIES:
+        warnings.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            f"grammar_family '{gf}' is not a known convention. "
+            f"Known values: {sorted(KNOWN_GRAMMAR_FAMILIES)}",
+            {"system_id": sys_block.get("id"), "grammar_family": gf},
+        ))
+
+    extends_id = sys_block.get("extends")
+    if extends_id is not None:
+        if not isinstance(extends_id, str) or not extends_id.strip():
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                "system.extends must be a non-empty string (a system id)",
+                {"extends": extends_id},
+            ))
+        else:
+            # Advisory only: validate_spec may run on a draft that isn't
+            # registered yet, and the parent may land later.
+            try:
+                from .registry import Registry
+                reg_result = Registry.load()
+                if reg_result.ok and extends_id not in reg_result.data:
+                    warnings.append(Error(
+                        "SCHEMA_VALIDATION_FAILED",
+                        f"system.extends '{extends_id}' is not in the registry. "
+                        f"Register it first, or this system will fail to load.",
+                        {"extends": extends_id,
+                         "available": [e.id for e in reg_result.data.all()]},
+                    ))
+            except Exception:
+                logger.warning("extends registry lookup failed",
+                               extends=extends_id, exc_info=True)
+
+
+def _check_tokens(data: dict, errors: list[Error], warnings: list[Error]) -> None:
+    """Verify elevation strategy is a known convention."""
+    tokens = data.get("tokens")
+    if not isinstance(tokens, dict):
+        return
+    elev = tokens.get("elevation")
+    if isinstance(elev, dict):
+        strategy = elev.get("strategy")
+        if strategy is not None and strategy not in KNOWN_ELEVATION_STRATEGIES:
+            warnings.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"elevation.strategy '{strategy}' is not a known convention. "
+                f"Known values: {sorted(KNOWN_ELEVATION_STRATEGIES)}",
+                {"strategy": strategy},
+            ))
+
+
+def _check_token_contract(
+    data: dict, spec_path: Path, errors: list[Error], warnings: list[Error],
+    color_gates: dict[str, Any] | None = None,
+) -> None:
+    """Validate the spec's canonical token file against the contract.
+
+    v0.3 specs must declare ``system.tokens_file``; earlier versions may.
+    When declared, the file must exist, parse, name the same system, and
+    supply every contract token (``token_file.validate_token_document``),
+    and spec.yaml must not drift from it (``drift.find_drift``). Motion
+    declarations (``components.<id>.motion``, ``motion.elements``) are
+    checked against the contract tiers and the file's reduced-motion
+    policy (``token_file.validate_motion_declarations``). When the token
+    document is contract-valid, the colour gates run over every mode
+    (``contrast.check_color_gates``: WCAG contrast, accent/danger hue).
+
+    Args:
+        data: Parsed spec mapping.
+        spec_path: Absolute path of the spec file (token file resolves
+            relative to its directory).
+        errors: Blocking errors accumulator.
+        warnings: Advisory warnings accumulator.
+        color_gates: Filled with ``{gate_key: summary}`` (``contrast``,
+            ``hue_gate``) when the gates ran.
+    """
+    sys_block = data.get("system") if isinstance(data.get("system"), dict) else {}
+    version = data.get("spec_version")
+    tok_path = token_file_path(spec_path, data)
+    if tok_path is None:
+        if version in TOKEN_CONTRACT_REQUIRED_VERSIONS:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"spec_version {version} requires system.tokens_file "
+                f"(the canonical token file, conventionally 'tokens.json')",
+                {"missing": "system.tokens_file"},
+            ))
+        errors.extend(validate_motion_declarations(data))
+        return
+
+    loaded = load_token_file(tok_path)
+    if not loaded.ok:
+        errors.extend(loaded.errors)
+        return
+    doc = loaded.data
+    errors.extend(validate_motion_declarations(data, doc))
+
+    tok_errors, tok_warnings = validate_token_document(doc, str(tok_path))
+    errors.extend(tok_errors)
+    warnings.extend(tok_warnings)
+
+    # Colour gates need every contract colour present and parseable.
+    if not tok_errors:
+        for key, report in check_color_gates(doc).items():
+            errors.extend(
+                Error(e.code, e.message, {**e.detail, "tokens_path": str(tok_path)})
+                for e in report.errors
+            )
+            if color_gates is not None:
+                color_gates[key] = report.summary()
+
+    if isinstance(doc.get("system"), str) and sys_block.get("id") and doc["system"] != sys_block["id"]:
+        errors.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            f"token file system '{doc['system']}' does not match spec system.id "
+            f"'{sys_block['id']}'",
+            {"tokens_path": str(tok_path)},
+        ))
+
+    strategy = (doc.get("elevation") or {}).get("strategy")
+    if isinstance(strategy, str) and strategy not in KNOWN_ELEVATION_STRATEGIES:
+        warnings.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            f"elevation.strategy '{strategy}' (token file) is not a known convention. "
+            f"Known values: {sorted(KNOWN_ELEVATION_STRATEGIES)}",
+            {"strategy": strategy, "tokens_path": str(tok_path)},
+        ))
+
+    # spec.yaml must not disagree with its own source of truth.
+    for item in find_drift(data, doc):
+        errors.append(Error(
+            "TOKEN_DRIFT",
+            item.message,
+            {"kind": item.kind, "location": item.location, "tokens_path": str(tok_path)},
+        ))
+
+
+def _resolve_svg_for_check(svg_rel: str, spec_dir: Path, library_root: Path | None) -> Path:
+    """Resolve an SVG reference path (mirrors loader._resolve_svg).
+
+    Args:
+        svg_rel: Relative SVG path from spec.
+        spec_dir: Directory containing the spec file.
+        library_root: System library root for fallback resolution.
+
+    Returns:
+        The resolved SVG path (caller checks existence).
+    """
+    rel = Path(svg_rel)
+    candidate = (spec_dir / rel).resolve()
+    if candidate.exists():
+        return candidate
+    if library_root is not None:
+        return (library_root / rel).resolve()
+    return candidate
+
+
+def _check_components(
+    data: dict, spec_dir: Path, errors: list[Error], warnings: list[Error],
+    library_root: Path | None = None,
+) -> None:
+    """Validate component definitions, anatomy, variants, and SVG paths."""
+    components = data.get("components")
+    if not isinstance(components, dict):
+        return
+    for comp_id, comp_def in components.items():
+        if not isinstance(comp_def, dict):
+            continue
+        # Anatomy may be either flat strings (v0.1) or structured dicts (v0.2).
+        # When structured, validate yields_to references resolve.
+        anatomy = comp_def.get("anatomy") or []
+        if anatomy and isinstance(anatomy[0], dict):
+            part_ids = {p.get("id") for p in anatomy if isinstance(p, dict)}
+            for part in anatomy:
+                if not isinstance(part, dict):
+                    continue
+                yields = part.get("yields_to") or []
+                for target in yields:
+                    if target not in part_ids:
+                        errors.append(Error(
+                            "SCHEMA_VALIDATION_FAILED",
+                            f"components.{comp_id}.anatomy: '{part.get('id')}.yields_to' references unknown sibling '{target}'",
+                            {"component": comp_id, "yielding_part": part.get("id"), "missing_target": target},
+                        ))
+
+        for variant in comp_def.get("variants") or []:
+            if not isinstance(variant, dict):
+                continue
+            svg_rel = variant.get("svg")
+            if not svg_rel:
+                # Some component variants legitimately have no SVG (e.g. badge in
+                # Swiss is an empty placeholder). Warn rather than fail.
+                warnings.append(Error(
+                    "SCHEMA_VALIDATION_FAILED",
+                    f"components.{comp_id}.variants[{variant.get('id')}] has no svg path",
+                    {"component": comp_id, "variant_id": variant.get("id")},
+                ))
+                continue
+            svg_path = _resolve_svg_for_check(svg_rel, spec_dir, library_root)
+            if not svg_path.exists():
+                warnings.append(Error(
+                    "REFERENCED_FILE_MISSING",
+                    f"components.{comp_id}.variants[{variant.get('id')}].svg not found at {svg_path}",
+                    {"component": comp_id, "variant_id": variant.get("id"), "svg_path": str(svg_path)},
+                ))
+
+            sig = variant.get("selection_signal")
+            if sig is not None and sig not in KNOWN_SELECTION_SIGNALS:
+                warnings.append(Error(
+                    "SCHEMA_VALIDATION_FAILED",
+                    f"components.{comp_id}.variants[{variant.get('id')}].selection_signal "
+                    f"'{sig}' is not a known convention. "
+                    f"Known values: {sorted(KNOWN_SELECTION_SIGNALS)}",
+                    {"component": comp_id, "variant_id": variant.get("id"), "selection_signal": sig},
+                ))
+
+
+def _check_layout_templates(
+    data: dict, spec_dir: Path, errors: list[Error], warnings: list[Error],
+    library_root: Path | None = None,
+) -> None:
+    """Validate layout template definitions and SVG paths."""
+    layouts = data.get("layout_templates")
+    if not isinstance(layouts, dict):
+        return
+    for layout_id, layout_def in layouts.items():
+        if not isinstance(layout_def, dict):
+            continue
+        svg_rel = layout_def.get("svg")
+        if svg_rel:
+            svg_path = _resolve_svg_for_check(svg_rel, spec_dir, library_root)
+            if not svg_path.exists():
+                warnings.append(Error(
+                    "REFERENCED_FILE_MISSING",
+                    f"layout_templates.{layout_id}.svg not found at {svg_path}",
+                    {"layout_id": layout_id, "svg_path": str(svg_path)},
+                ))
+
+
+def _check_rulebook(data: dict, errors: list[Error], warnings: list[Error]) -> None:
+    """Validate rulebook entries for required fields and valid enums."""
+    rulebook = data.get("rulebook") or []
+    if not isinstance(rulebook, list):
+        return
+    seen_ids: set[str] = set()
+    has_required = False
+    for rule in rulebook:
+        if not isinstance(rule, dict):
+            continue
+        rid = rule.get("id")
+        if not rid:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                "rulebook entry missing 'id'",
+                {"rule": rule},
+            ))
+            continue
+        if rid in seen_ids:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"Duplicate rulebook id '{rid}'",
+                {"rule_id": rid},
+            ))
+            continue
+        seen_ids.add(rid)
+
+        sev = rule.get("severity")
+        if sev is not None and sev not in VALID_SEVERITIES:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"rulebook[{rid}].severity '{sev}' not in {sorted(VALID_SEVERITIES)}",
+                {"rule_id": rid, "severity": sev},
+            ))
+        if sev == "required":
+            has_required = True
+
+        method = rule.get("check_method")
+        if method is not None and method not in VALID_CHECK_METHODS:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"rulebook[{rid}].check_method '{method}' not in {sorted(VALID_CHECK_METHODS)}",
+                {"rule_id": rid, "check_method": method},
+            ))
+
+        scope = rule.get("check_scope")
+        if scope is not None and scope not in VALID_CHECK_SCOPES:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"rulebook[{rid}].check_scope '{scope}' not in {sorted(VALID_CHECK_SCOPES)}",
+                {"rule_id": rid, "check_scope": scope},
+            ))
+
+    if rulebook and not has_required:
+        warnings.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            "Rulebook has no entries with severity: required. The system may not enforce its own constraints.",
+            {},
+        ))
+
+
+def _check_artifact_treatments(
+    data: dict, errors: list[Error], warnings: list[Error]
+) -> None:
+    """Validate artifact_treatments layer values."""
+    treatments = data.get("artifact_treatments")
+    if treatments is None:
+        return
+    if not isinstance(treatments, list):
+        errors.append(Error(
+            "SCHEMA_VALIDATION_FAILED",
+            "artifact_treatments must be a list",
+            {"got_type": type(treatments).__name__},
+        ))
+        return
+    valid_layers = {"bottom", "per_component", "top"}
+    for t in treatments:
+        if not isinstance(t, dict):
+            continue
+        layer = t.get("layer")
+        if layer is not None and layer not in valid_layers:
+            errors.append(Error(
+                "SCHEMA_VALIDATION_FAILED",
+                f"artifact_treatments.layer '{layer}' not in {sorted(valid_layers)}",
+                {"treatment_id": t.get("id"), "layer": layer},
+            ))
+
+
+def _check_common_tokens(data: dict, errors: list[Error]) -> None:
+    """Validate `tokens.common` against the v1 contract, if present.
+
+    Absence of `tokens.common` is not flagged: the contract is additive
+    and a draft spec may predate it. Every system in this repository
+    carries the block (generated from its tokens.json by
+    `common_tokens`), so a present but malformed block is an error.
+    """
+    tokens = data.get("tokens") or {}
+    if "common" not in tokens:
+        return
+    try:
+        problems = validate_common_tokens(data)
+    except FileNotFoundError as e:
+        errors.append(Error(
+            "COMMON_TOKENS_CONTRACT_MISSING",
+            f"common-tokens contract could not be loaded: {e}",
+            {},
+        ))
+        return
+    errors.extend(problems)

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 30" width="320" height="30">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== PROGRESS-BAR-LABELED ==================== -->
+
+  <rect x="0" y="0" width="320" height="6" fill="#F0EDE8"/>
+  <rect x="0" y="0" width="134" height="6" fill="#7C6E8B"/>
+  <text x="0" y="26" class="text-muted" font-size="10" letter-spacing="-0.02em">42% of context · compacts around 80%</text>
+
+</svg>

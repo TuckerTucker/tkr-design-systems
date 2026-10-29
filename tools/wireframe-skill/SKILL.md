@@ -18,7 +18,7 @@ version: 3.0.0
 | L2 Agent | `wireframe-agent` (production v2.0 lives at `.claude/agents/wireframe-agent.md`) | wraps this skill with isolation + structured reporting |
 | **L1 Skill** | **`wireframe` (this file, v3.0)** | **generates one wireframe SVG + spec.yaml; system-aware** |
 
-This v3.0 lives in `design-system-skill-draft/wireframe-skill/` for review. The production v2.0 is at `.claude/skills/wireframe-skill/`. When v3.0 merges into production, it replaces v2.0 in place; the agent + command above continue to work because the skill's invocation interface is additive (the new `system` parameter is optional).
+This skill is authored in the tkr-design-systems repository and vendored by tkr-kit at `.claude/skills/wireframe-skill/`. The agent and command above keep working across versions because the skill's invocation interface is additive (the `system` parameter is optional).
 
 Generates wireframe SVGs from a brief, optionally rendered in a specific design system. This is the skill end users invoke when they want a wireframe; it is NOT the skill that defines design systems (that's design-system-skill).
 
@@ -54,6 +54,12 @@ wireframe(
   system: str | None = None,           # optional: design system id
   output_dir: path = ".",              # where to write SVG + spec.yaml
   spec_version: str | None = None,     # optional: pin a specific spec version
+  filename_stem: str = "wireframe",
+  escalate: bool = True,               # off-catalog brief → decomposition request (see Layer 1)
+  layout_id: str | None = None,        # explicit pattern; bypasses keyword routing
+  request_routing: bool = False,       # return the routing inventory instead of routing
+  substitute: bool = False,            # return the substitution request for the chosen pattern
+  compose: bool = False,               # return the decomposition request; skip pattern selection
 )
 ```
 
@@ -128,10 +134,123 @@ Validation rejects: unknown component_ids, components placed outside their regio
 | Brief matches a system pattern (`dashboard`, `auth`, `settings-layout`, etc.) | Legacy `--brief` flow (deterministic, fast) |
 | Same as above, but you want brief-specific content | `substitution-prompt` + `apply-substitutions` |
 | Brief implies a layout the system hasn't authored | `decompose-prompt` + `apply-decomposition` |
+| Brief is genuinely off-catalog (carousel, slider, filter chip strip, etc.) | Skill auto-escalates to decomposition; see Layer 1 below |
+| You authored a layout *tree* (containers + token-named spacing, no coordinates) | `solve-layout`, then `apply-decomposition` |
+
+### `solve-layout` (layout tree → blueprint)
+
+Pass 1 of the compose flow may author a layout TREE instead of literal x/y integers. `solve-layout` hands the tree to tkr-kit's `design.solve_layout` operation, which reads the spacing scale of the REGISTERED system (`tokens.common.spacing`) and returns positioned regions in exactly the blueprint shape `apply-decomposition` consumes:
+
+```bash
+python3 wireframe-skill solve-layout --tree tree.json --system swiss --out blueprint.json \
+  [--platform desktop | --canvas-width W --canvas-height H] [--scope swiss] [--project DIR] [--allow-overflow]
+python3 wireframe-skill apply-decomposition --blueprint blueprint.json --system swiss --out out.svg
+```
+
+It needs a tkr-kit CLI: `$TKR_CLI` (the command that runs it), else `tkr` on `PATH`, else a checkout at `$TKR_KIT_HOME` run with `bun`. It refuses (exit 1, blueprint not written) when the solved layout does not fit its artboard; `--allow-overflow` writes it with the overflows as warnings.
+
+
+## Layer 1 — Router escalation (Phase B)
+
+By default, when the keyword router doesn't match AND none of the brief's nouns name one of the system's **authored layout patterns**, `select_layout_pattern` returns an `EscalateToDecomposition` sentinel instead of silently degrading to the dashboard fallback. `wireframe()` surfaces this as:
+
+```python
+result.requires_orchestrator_pass = True
+result.pass_request = { ... a complete decomposition request payload ... }
+result.escalation_reason = "no keyword pattern matched and brief nouns ..."
+result.ok = False  # by convention — the skill didn't produce an SVG
+```
+
+The orchestrator (`/wireframe-compose`) is expected to detect this branch and run the two-pass decomposition flow. `/wireframe-batch` handles it too, reporting the pair as `🔀` and saving the pass request. The single-shot CLI exits with code 2 and a stderr message in this case.
+
+To preserve the legacy "dashboard fallback on miss" behavior on a specific call, pass `escalate=False` (Python API) or `--no-escalate` (CLI).
+
+**The overlap test considers layout-pattern names only — never the component catalog.** Components are the raw material of every screen, so a brief mentioning "card" or "filter" says nothing about whether the system has authored that *screen*. Testing against them (by bidirectional substring, against 190+ names) made escalation effectively unreachable: `"board"` matched `dashboard`, so `"kanban board with three columns"` silently rendered as a dashboard. Variant suffixes and generic structural words (`single`, `column`, `narrow`, `default`) are stripped, so what remains is the set of terms naming a screen genre the system actually authored.
+
+A corollary: when a brief *does* name an authored pattern that no keyword rule covers (revolt's `banner-promotional`), the router selects that pattern rather than falling through to `DEFAULT_PATTERN_FALLBACK`.
+
+## Agent-driven layout routing
+
+The keyword heuristic is a deterministic default, not the only router. When the brief is ambiguous — or when the calling agent wants to own the routing decision — use the two-call agent-driven flow instead:
+
+```python
+# Pass 1 — ask for the inventory instead of a heuristic guess.
+result = wireframe(brief, system="swiss", request_routing=True)
+result.routing_request  # {available_patterns, available_components,
+                        #  canvas, grammar_caveats, instructions, ...}
+
+# The agent reviews the inventory and decides, then:
+# Pass 2a — a pattern fits: call again with the explicit choice.
+result = wireframe(brief, system="swiss", layout_id="data-table")
+
+# Pass 2b — nothing fits: run the decomposition flow (item 9.2 / atoms),
+# or ask for the decomposition request directly:
+result = wireframe(brief, system="swiss", compose=True)
+result.decomposition_request
+```
+
+The MCP server's `wf_generate` is agent-driven by default: without `layout_id` or `compose` it returns the routing inventory (it passes `request_routing=True`). The Python API and CLI default to the keyword router above.
+
+`substitute=True` stops after pattern selection and returns `substitution_request` (the `substitution-prompt` payload) for the chosen pattern instead of emitting files.
+
+Module-level pieces (also exported from `wireframe_skill`):
+
+- `build_layout_selection_request(brief, spec, platform)` — pattern inventory with descriptions, canvas, and grammar caveats for the agent.
+- `apply_layout_selection({selected_pattern_id, rationale}, spec, platform)` — turns the agent's choice into a `LayoutSelection`; returns `None` if the pattern doesn't exist.
+- `select_layout_pattern(..., select_mode=...)` — `"heuristic"` (default), `"exact"` (match only patterns explicitly named in the brief), `"auto"`/`"request"` (always return `None`, deferring to the agent).
+
+`layout_id` always wins over the heuristic, and an unknown `layout_id` fails cleanly with `ok=False` rather than silently re-routing.
+
+## Atom regions in blueprints (Phase C, v3.1)
+
+When the decomposition flow needs to express a component the system catalog doesn't contain (e.g. a carousel in a system that hasn't authored one), regions may declare an `atoms` array instead of `components`. Each atom is rendered directly to SVG with all paint, type, spacing, stroke, and radius values resolved from the system's `tokens.common.*` subtree via the common-tokens.v1 contract.
+
+**Atom types (v1):** `rect`, `text`, `line`, `circle`, `image_placeholder`, `group`.
+
+**Reference syntax:**
+
+| form               | resolves through                          | scope            |
+|--------------------|-------------------------------------------|------------------|
+| `$ink`             | `tokens.common.color.ink`                 | portable         |
+| `$color.ink`       | same, explicit form                       | portable         |
+| `$type.headline`   | `tokens.common.typography.headline`       | portable         |
+| `$space.md`        | `tokens.common.spacing.md`                | portable         |
+| `$stroke.regular`  | `tokens.common.stroke.regular`            | portable         |
+| `$radius.full`     | `tokens.common.radius.full`               | portable         |
+| `swiss:grid.columns` | `tokens.system.grid.columns`            | system-locked, requires `blueprint.scope == "swiss"` |
+
+**Example region:**
+
+```yaml
+- id: hero
+  x: 0
+  y: 0
+  w: 1280
+  h: 480
+  atoms:
+    - { type: rect, x: 0, y: 0, w: 1280, h: 480, fill: $surface-inset }
+    - { type: image_placeholder, x: 48, y: 48, w: 1184, h: 320 }
+    - { type: text, x: 48, y: 410, value: "Featured trips", style: $type.headline, fill: $ink }
+    - { type: group, x: 48, y: 460,
+        atoms: [{ type: circle, cx: 0, cy: 0, r: 4, fill: $ink-muted }],
+        repeat: 5, gap: 16, direction: horizontal }
+```
+
+**Rules enforced by `validate_blueprint`:**
+
+- Atom types must be in the whitelist.
+- Required fields per type must be present (see `_ATOM_FIELDS` in `decomposition.py`).
+- Paint references must be `$tokens` — raw hex `#fff` is rejected.
+- Text styles must reference `$type.<role>` and resolve to a text-style dict.
+- A region declares EITHER `atoms` or `components`, not both.
+- In portable scope (no `blueprint.scope`), `<system_id>:<...>` refs are rejected.
+- Group atoms support `repeat` + `gap` for chip strips / slide indicators.
+
+The decomposition request emitted by `build_decomposition_request` now includes an `atom_vocabulary` block alongside the existing `components` catalog. The LLM authoring a blueprint can choose component placements where they exist OR fall back to atoms for novel composition.
 
 ## Decision Guide
 
-> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `uv run python tools/docs/generate.py`. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
+> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `tools/docs/generate.py` in the tkr-design-systems repository. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
 
 ### Which system
 
@@ -144,7 +263,7 @@ The user picks the system; the skill applies it. The table says what each regist
 | `swiss` Swiss | Grid + Grotesk + Single Saturated Accent (showcase: Grid-strict + Rams Heritage) | `contemporary_clean` | General-purpose product UI: dashboards, settings, forms, data tables, sign-in. Dense information where hierarchy comes from type and grid, with one accent. | 71 / 12 | 14 |
 | `terminal` Terminal | CLI + Phosphor Heritage | `character_grid` | Developer tools, logs, monitoring and command palettes; keyboard-first surfaces. Not long-form reading or consumer sign-in. | 53 / 4 | 8 |
 | `editorial` Editorial | Long-form Serif + Newsprint Masthead | `contemporary_clean` | Long-form reading: articles, briefings, newsletters, transcripts. The article pattern is its strength. | 73 / 5 | 9 |
-| `sketch` Sketch | Linear + Hand-Drawn | `contemporary_clean` | Early product UI that carries an annotation layer: design reviews, onboarding, explained flows. | 65 / 4 | 6 |
+| `sketch` Sketch | Linear + Hand-Drawn | `contemporary_clean` | Early product UI that carries an annotation layer: design reviews, onboarding, explained flows. | 91 / 4 | 6 |
 | `prism` Prism | Liquid Glass + Bento | `contemporary_clean` | Atmospheric, short compositions: dashboards, modals, drawers. Built for HTML/CSS; its SVG glass is an approximation for layout review only. | 56 / 4 | 6 |
 | `revolt` Revolt | Neobrutalist + Y2K | `contemporary_clean` | Expressive, loud moments: launches, campaigns, banners, playful sign-in. | 57 / 3 | 9 |
 | `riso` Riso | Duotone Print + Tweakable Press | `print_texture` | Content-heavy, print-flavoured surfaces: zines, features, articles, with parametric ink and paper presets. | 2 / 0 | 20 |
@@ -160,7 +279,7 @@ Pick by the job, not by habit. Component ids and variants are the LIBRARY-SPEC v
 |-----|-----|-----|-----|
 | Status that persists (sync failed, offline, plan expiring) | `banner` | `toast` | NO toast notifications: a toast forces a context switch and is gone before it is read. A banner stays in place until the condition clears. |
 | Result of one action (saved, sent, failed to send) | `badge` (`status`) | `toast`, `modal` | Status and errors appear contextual to the action: mark the item that was acted on, in place. |
-| Destructive action (delete, archive, remove) | `button` (`destructive`), `banner` | `modal` (`confirmation`) | NO "Are you sure?" dialogs: act immediately and offer undo (a banner with an undo action), so responsibility is not shifted to the user. |
+| Destructive action (delete, archive, remove) | `button` (`destructive`), `undo_row`, `banner` | `modal` | NO "Are you sure?" dialogs: act immediately and offer undo (the undo_row pattern holds the vacated row open with an Undo action until it settles), so responsibility is not shifted to the user. The ux-no-confirm-dialog-without-undo rulebook check reports a confirmation dialog with no undo. |
 | List or table under 100 items | `list_item`, `data_table` (`default`), `search_bar` | `pagination`, `data_table` (`with_pagination`) | NO pagination for small datasets: show every row; filter with search instead of making the user page. |
 | Required and optional form fields | `label` (`required`), `label` (`optional`) | `label` (`default`) | NO required fields without indication: an unmarked required field is an error discovered after the fact. |
 | Invalid input | `form_field` (`with_error`) | `modal`, `toast` | Validate inline as they type and show how to fix it, in place; constrain inputs so invalid states are impossible where you can. |
@@ -194,7 +313,7 @@ The violations that recur, each with the rule or decision behind it.
 | Status shown twice (a red border and a red badge on one card) | One status, one visual channel; doubling it adds noise, not meaning. | `wireframe-one-channel-per-message` |
 | Selection shown with a background fill in Terminal | Terminal selects by changing characters (' ' to '>') and colour, never by fill. | `terminal-selection-via-character` |
 | A third ink in Riso | Exactly two inks per artifact from one press preset; neutrals come from the paper. | `riso-two-inks-only`, `riso-paper-is-the-neutral` |
-| A toast for status, or an "Are you sure?" dialog before deleting | Use a banner or inline status, and undo. See the Which component table. | [claude.md](../../claude.md) |
+| A toast for status, an "Are you sure?" dialog before deleting, or a required field with no marker | Use a banner or inline status, and undo (the undo_row pattern). Mark every required field. The rulebook reports a placed toast, a confirmation dialog without undo, and an unmarked required label in every system. See the Which component table. | [claude.md](../../claude.md), `ux-no-toast-notifications`, `ux-no-confirm-dialog-without-undo`, `ux-required-fields-indicated` |
 <!-- /generated:rules-agents-get-wrong -->
 
 ### Rules per system
@@ -204,7 +323,7 @@ The first sentence of every rulebook entry, with its severity and check method. 
 <!-- generated:system-rules -->
 #### Wireframe (`wireframe`, alias `neutral`)
 
-Tokens: spacing 4, 8, 12, 16, 20, 24, 32, 40, 48, 64; type sizes 11, 12, 13, 14, 16, 18, 24; radius 6; accent `#424242`; reduced motion `fade`.
+Tokens: spacing 4, 8, 12, 16, 20, 24, 32, 40, 48, 64; type sizes 11, 12, 13, 14, 16, 18, 24; radius 6; accent `#424242`; reduced motion `fade`; default mode.
 
 - `wireframe-mobile-first` (required, semantic): Every wireframe is authored at mobile (375px) first, then desktop (1280px) is created as an EXPANSION of mobile.
 - `wireframe-cards-universal-container` (recommended, semantic): Distinct content (anything with a boundary, title, and related data) is presented in a card.
@@ -267,13 +386,13 @@ Tokens: spacing 4, 8, 10, 12, 16, 18, 20, 24, 32, 40, 48, 64; type sizes 8.5, 9,
 
 #### Sketch (`sketch`)
 
-Tokens: spacing 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32; type sizes 10, 11, 13, 13.5, 17, 18; radius 10; accent `#7C6E8B`; reduced motion `fade`.
+Tokens: spacing 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32; type sizes 10, 11, 13, 13.5, 17, 18; radius 10; accent `#7C6E8B`; reduced motion `fade`; default mode.
 
 - `sketch-purple-on-annotations-only` (required, both): Purple (#7F718E) is used on Caveat annotation elements and unread badges.
 - `sketch-no-shadows` (required, mechanical): box-shadow is never used.
 - `sketch-typeface-roles` (required, both): IBM Plex Sans for all structural text.
 - `sketch-rounded-not-pilled` (required, mechanical): Rounded corners use 8–14px radius.
-- `sketch-warm-paper-bg` (required, mechanical): Page background is #FAFAF8 (warm beige), not pure white.
+- `sketch-warm-paper-bg` (required, mechanical): Page background is the theme's warm paper: #FAFAF8 (light, default) or #211F1C (dark).
 - `sketch-no-emoji-imagery` (required, mechanical): No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations, category labels).
 
 #### Prism (`prism`)
@@ -357,6 +476,39 @@ Token references in component SVGs (e.g. fill="ref:colors.accent") are resolved 
 
 For typography, em-based tracking values are converted to SVG letter-spacing using the `tracking_conversion.py` module. The conversion factor is per-typeface; the skill checks `tracking_conversion.report_calibration_status()` before generation and warns if any typeface used in the wireframe has not been verified for the target renderer.
 
+#### Text fitting (REQUIRED for every text element)
+
+SVG `<text>` does not auto-wrap. Every string emitted must fit within the horizontal space available to its container. Before writing any `<text>` element:
+
+1. **Identify the available width.** This is the parent container's width (card, sidebar, region) minus the text's left offset minus the right padding. For a 343px-wide mobile card with 16px inner padding and text starting at x=16, available width is `343 - 16 - 16 = 311px`.
+
+2. **Compute the character budget.** Use the per-typeface glyph-width ratio (mirrors `_GLYPH_WIDTH_RATIO` in `rulebook_check.py`):
+
+   | Typeface family | Ratio (× font-size = avg glyph width) |
+   |-----------------|---------------------------------------|
+   | Inter, Outfit   | 0.52 |
+   | IBM Plex Sans, Space Grotesk, default proportional | 0.55 |
+   | Fraunces (serif) | 0.50 |
+   | JetBrains Mono, monospace | 0.60 |
+   | Space Mono | 0.62 |
+   | Caveat | 0.45 |
+
+   `max_chars = floor(available_width / (font_size * ratio))`
+
+   Example: 311px available, 12px Inter → `floor(311 / (12 × 0.52)) = floor(49.8) = 49 chars`.
+
+3. **Constrain the content.** Author the string to fit the budget. If the natural content is longer:
+   - Prefer rewriting (shorter labels, fewer modifiers, abbreviated nouns)
+   - Truncate with a trailing `…` (single character) only when the content is genuinely user-data — count the ellipsis against the budget
+   - Split into multiple `<text>` elements with stacked `y` offsets when the layout permits a second line
+   - Never let text run past its container — even if the run-off is hidden by clipping in some renderers, others (and the rulebook check) will flag it
+
+4. **`text-anchor="middle"` and `text-anchor="end"`** position differently. For middle-anchored text, the budget is the smaller of `(x - container_left)` and `(container_right - x)`, doubled. For end-anchored text, the budget is `x - container_left`.
+
+5. **Mobile (375px viewport) is the tightest constraint.** Card descriptions, list-item previews, and metadata strings are the most frequent overflow sources. Author them first, then let desktop versions inherit or expand.
+
+This budget calculation is also what the `text-overflow` rulebook check enforces in step 6 — if you respect the budget here, the check passes.
+
 ### 5. Apply artifact-level treatments (NEW in v3.0, important for filter-based systems)
 
 Some systems (notably print_texture systems like Riso, future spatial systems) require treatments that apply to the WHOLE artifact, not per-component. Examples:
@@ -437,7 +589,13 @@ The skill returns a `GenerationResult` (Python dataclass; CLI shim emits JSON) a
     "fallback": <bool>,
     "rationale": "<why this pattern matched>"
   } | null,
-  "system_id": "<system actually used>" | null
+  "system_id": "<system actually used>" | null,
+  "requires_orchestrator_pass": <bool>,          // true on escalation (see Layer 1)
+  "pass_request": { ... } | null,                // decomposition request when escalated
+  "escalation_reason": "<why the brief is off-catalog>" | null,
+  "routing_request": { ... } | null,             // request_routing=True
+  "substitution_request": { ... } | null,        // substitute=True
+  "decomposition_request": { ... } | null        // compose=True
 }
 ```
 
@@ -488,7 +646,7 @@ notes:
 
 ### CLI exit codes
 
-The CLI shim emits the returned object as JSON to stdout. Exit code is 0 when `ok` is true, 1 otherwise. Files are written regardless of exit code (when applicable per the cases above).
+The CLI shim emits the returned object as JSON to stdout. Exit code is 0 when `ok` is true, 1 otherwise, and 2 on escalation (`requires_orchestrator_pass`; the JSON is still on stdout and the reason on stderr). Files are written regardless of exit code (when applicable per the cases above).
 
 ## Composition Pattern with design-system-skill
 
@@ -619,12 +777,15 @@ The Python implementation lives at `wireframe_skill/` (package) with these modul
 
 | Module | Responsibility |
 |--------|----------------|
-| `generator.py` | `wireframe()`; orchestrates the 7-step flow; entry point |
-| `placement.py` | `select_layout_pattern()` — keyword-heuristic brief→pattern routing; `derive_content_substitutions()` — LLM seam (currently no-op) |
+| `generator.py` | `wireframe()`; orchestrates the 7-step flow; entry point. Supports `layout_id`, `request_routing`, `substitute`, `compose` and escalation |
+| `placement.py` | `select_layout_pattern()` — brief→pattern routing (`heuristic` default with escalation, `exact`, `auto`/`request` deferral); `build_layout_selection_request()` / `apply_layout_selection()` — agent-driven routing pair; `derive_content_substitutions()` — LLM seam (currently no-op) |
+| `atoms.py` | `render_atom_region()` — renders portable atomic SVG fragments with common-token resolution (Phase C) |
+| `solve.py` | `solve_layout()` — layout tree → blueprint through tkr-kit's `design.solve_layout` operation (`solve-layout` subcommand) |
+| `_design_system_path.py` | Puts the `design_system_skill` package on `sys.path` (repository layout, skill-bundle layout, or `$DESIGN_SYSTEM_SKILL_DIR`) |
 | `compose.py` | `compose_svg()` — reads pattern SVG, applies substitutions, extracts viewBox; `apply_artifact_treatments()` — assembles the Riso filter pipeline (filter_library injection, layer=bottom page-bg rect, layer=top filter overlay) for systems that declare `artifact_treatments`; no-op for systems that declare none |
 | `substitution.py` | `extract_text_nodes()`, `build_substitution_request()`, `validate_substitutions()`, `apply_substitutions()` — backs the `substitution-prompt` / `apply-substitutions` two-pass subcommands (item 9.1) |
-| `decomposition.py` | `build_decomposition_request()`, `validate_blueprint()` — backs the `decompose-prompt` subcommand (item 9.2) |
-| `assembler.py` | `assemble_blueprint()` — composes a blueprint into a single SVG with `<defs>` id deduplication and per-component transforms (item 9.2) |
+| `decomposition.py` | `build_decomposition_request()`, `validate_blueprint()` — backs the `decompose-prompt` subcommand (item 9.2). Blueprint regions hold library components, `{"type": "custom", "svg": ...}` inline SVG, or `atoms` |
+| `assembler.py` | `assemble_blueprint()` — composes a blueprint into a single SVG with `<defs>` id deduplication and per-component transforms (item 9.2); renders atom regions and inline custom SVG |
 | `emit.py` | `emit_artifact()` — writes wireframe.svg + spec.yaml; builds the `design_system` block per the Output Contract |
 
-CLI shim at `__main__.py` exposes the operation as `python3 wireframe-skill --brief "..." [--system X] [--platform Y] [--out dir]`. End-to-end tests at `test_wireframe_skill.py` cover Swiss + wireframe library at desktop and mobile, all keyword routing cases, unknown-system + invalid-platform failures, mobile-variant routing, advisory-warning emit, custom filename stem.
+CLI shim at `__main__.py` exposes the operation as `python3 wireframe-skill --brief "..." [--system X] [--platform Y] [--out dir] [--no-escalate] [--layout-id ID] [--request-routing] [--compose]`, plus the `substitution-prompt`, `apply-substitutions`, `decompose-prompt`, `apply-decomposition` and `solve-layout` subcommands. `mcp_bridge.py` is a subprocess entry point for hosts in other languages (one JSON envelope on stdout per call; `python3 mcp_bridge.py <action> '<json-args>'`). Tests: `test_wireframe_skill.py` (routing — keyword, agent-driven, escalation — atoms, custom SVG, token export, component reading, substitution, decomposition, composition, failures), `test_solve.py`, `test_design_system_path.py`, `test_wireframe_mcp_bridge.py`.

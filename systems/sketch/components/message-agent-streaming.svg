@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 72" width="480" height="72">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== MESSAGE-AGENT-STREAMING ==================== -->
+
+  <rect x="0" y="0" width="360" height="72" fill="#F0EDE8" stroke="#E5E3DE" stroke-width="1" rx="12" ry="12"/>
+  <text x="16" y="30" class="text-primary" font-size="13" letter-spacing="-0.02em">looking at your calendar now —</text>
+  <text x="16" y="50" class="text-primary" font-size="13" letter-spacing="-0.02em">tomorrow you have</text>
+  <rect x="142" y="40" width="7" height="13" fill="#7C6E8B"/>
+
+</svg>

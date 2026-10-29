@@ -84,13 +84,13 @@ This is the operation the design system authoring workflow uses. Does not modify
 
 ### register_system
 
-Takes a directory containing a complete system library (spec.yaml + components/ + layouts/ + references/). Validates, then adds the system to the registry. Returns `{ registered: bool, system_id, errors: [...] }`.
+Registrations write to the **user registry overlay** (`~/.claude/design-systems/registry.yaml`), never to the built-in `systems/registry.yaml` — see [Registry layers](#registry-layers). Takes a directory containing a complete system library (spec.yaml + components/ + layouts/ + references/). Validates, then adds the system to the registry. Returns `{ registered: bool, system_id, errors: [...] }`.
 
 If the system id already exists in the registry, the operation fails unless an explicit `replace: true` flag is passed. This prevents accidentally overwriting a system. When replacing, the prior version is recorded so rollback is possible (see `unregister_system`).
 
 ### unregister_system
 
-Takes a system id. Removes it from the registry. Does NOT delete the spec or library files — those remain on disk. The system simply becomes unavailable to consumers.
+Takes a system id. Removes it from the user registry overlay; a built-in system cannot be unregistered (`BUILTIN_SYSTEM_IMMUTABLE` — edit `systems/registry.yaml` instead), and removing a user entry that shadowed a built-in reveals the built-in again. Does NOT delete the spec or library files — those remain on disk. The system simply becomes unavailable to consumers.
 
 This is intentionally conservative. Unregistering should be reversible by re-registering the same path; no destructive operation should be a single skill call.
 
@@ -120,9 +120,100 @@ Runs the WCAG 2.x contrast gate (issue #7: every contract and token-file pair, `
 
 Scans each showcase page (`apps/showcase/src/systems/design-system-{id}.jsx`) for colour literals (hex, rgb[a], hsl[a]) and fails on any literal that equals a token value in any mode (it should reference `tokens.json`) or that is not on the allow-list. The allow-list, `apps/showcase/jsx-color-allowlist.yaml`, covers documentation chrome around the preview; every entry needs a reason, entries that collide with a token value must be scoped to a region or line context, and stale entries fail. `python3 design-system-skill jsx-drift` (every page), `--id swiss` (repeatable), `--allowlist path`; exit 1 on drift. See `docs/specs/TOKENS.md` § 4.5.
 
+### common_tokens (generate / check)
+
+Each spec's portable `tokens.common` block, and a `themes:` block for systems whose `tokens.json` has a `theme` mode axis, are **derived from `tokens.json`**, written between `# generated:common-tokens` / `# generated:themes` markers. `python3 design-system-skill common-tokens [--check]` (checking is the default) exits 1 when a block is stale; `--write` regenerates; `--id swiss` / `--spec path` narrow it. CI runs `--check`. See [Common token contract](#common-token-contract-v10).
+
+## Common token contract (v1.0)
+
+The portable token layer. Every system that wants to be a target for atomic component synthesis (the wireframe skill's atom regions) declares `tokens.common.*` in its spec.yaml satisfying the contract at `tools/design-system-skill/schemas/common-tokens.v1.yaml`, and `common_tokens_version: "1.0"` at the top level.
+
+**Why it exists.** System vocabularies differ (Swiss `text_primary`, Riso's ink presses, Prism's opacities). The common layer names ROLES — `$ink`, `$accent`, `$type.headline` — that resolve to each system's value, so one atom blueprint targets Swiss, Riso or Editorial unchanged.
+
+**Where the values come from.** `tokens.json` is the only home of token values, so the block is generated, never hand-edited (`design_system_skill/common_tokens.py`):
+
+| Common token | Derived from |
+|---|---|
+| `color.ink` / `ink-muted` | `color.text_primary` / `color.text_muted` |
+| `color.surface` / `surface-inset` | `color.surface` / `color.surface_elevated` |
+| `color.accent` / `accent-on` | `color.accent` / `color.accent_foreground` |
+| `color.outline` / `outline-strong` | `color.border_default` / `color.border_strong` |
+| `color.image-placeholder` | first of `surface_elevated`, `page_bg`, `border_default` that differs from `color.surface` (a placeholder in the surface colour would be invisible) |
+| `color.success` / `warning` / `danger` | `color.success` / `warning` / `danger` |
+| `typography.display` / `title` / `body` | `type.display` / `type.title` / `type.body` |
+| `typography.headline` | `type.title` (no tier between display and title exists); Swiss: `extras.type.display_medium` |
+| `typography.caption` | `type.label` |
+| `typography.code` | `type.body` in `font.mono`, only when `font.mono` is a `monospace` stack |
+| `spacing.xs`…`xl` | `space.xs`…`xl` |
+| `stroke.hairline` / `regular` / `bold` | min of `border_width.*` / `border_width.default` / `border_width.focus` |
+| `radius.sm` / `md` | `radius.input` / `radius.default` |
+| `radius.none` / `full` | authored: `0` (fixed by the contract) / `9999` (fully-rounded sentinel; no token-file equivalent) |
+
+Colours are written as hex (`rgba()` becomes `#RRGGBBAA`), font stacks as plain unquoted family lists, `case: none` as `mixed`, `line_height` as `leading`.
+
+A spec may also carry `tokens.system.*` — system-extension tokens referenced as `<system_id>:<dotted.path>` from atoms scoped to that system (`swiss:grid.columns`). Values the token file holds are written as `{group.token}` aliases there, so drift checks them.
+
+### Resolver API
+
+```python
+from design_system_skill import (
+    load_contract,           # parse the versioned contract file
+    validate_common_tokens,  # validate a spec's tokens.common against the contract
+    resolve_token,           # resolve $ink, $type.headline, swiss:grid.columns
+    UnknownTokenError, CrossSystemTokenError, MalformedTokenRefError,
+)
+
+spec = load_system("swiss").data
+resolve_token(spec, "$ink")                # → "#000000"
+resolve_token(spec, "$type.headline")      # → {family: "Inter, system-ui, sans-serif", size: 32, ...}
+resolve_token(spec, "$space.md")           # → 24
+resolve_token(spec, "swiss:grid.columns", scope="swiss")  # → 12
+resolve_token(spec, "swiss:grid.columns")  # → CrossSystemTokenError (portable scope)
+resolve_token(spec, "$nonexistent")        # → UnknownTokenError
+```
+
+| form | resolves through | scope |
+|---|---|---|
+| `$ink` | `tokens.common.color.ink` | portable |
+| `$color.ink` | same, explicit form | portable |
+| `$type.headline` | `tokens.common.typography.headline` | portable |
+| `$space.md` | `tokens.common.spacing.md` | portable |
+| `$stroke.regular` | `tokens.common.stroke.regular` | portable |
+| `$radius.full` | `tokens.common.radius.full` | portable |
+| `<system>:<dotted.path>` | `tokens.system.<dotted.path>` | system-locked (only when `scope == system`) |
+
+### Validation behaviour
+
+`validate_spec` runs `validate_common_tokens` whenever `tokens.common` is present and reports problems as errors: `COMMON_TOKENS_MISSING_CATEGORY`, `COMMON_TOKENS_MISSING_TOKEN`, `COMMON_TOKENS_BAD_COLOR` (not hex), `COMMON_TOKENS_BAD_LENGTH`, `COMMON_TOKENS_TEXT_STYLE_MISSING_FIELD`, `COMMON_TOKENS_TEXT_STYLE_BAD_WEIGHT` (outside 100..900), `COMMON_TOKENS_TEXT_STYLE_BAD_CASE`, `COMMON_TOKENS_UNKNOWN_TOKEN` (typo guard). A draft spec with no `tokens.common` is allowed. The generator adds `COMMON_TOKENS_STALE` and `COMMON_TOKENS_UNDERIVABLE`. Migration notes: `docs/specs/COMMON-TOKENS-MIGRATION.md`.
+
+## Themes
+
+A theme is a mode of the token file: an axis with id `theme` in `tokens.json` `modes` (`light` = default = the base values, `dark` = overrides). Because it is a mode, `contrast --all` checks every dark pair and `drift` accepts its colours. The spec's `themes:` block (`default`, and per theme a `common:` colour set) is generated from it. Wireframe and Sketch ship `light` + `dark`; Sketch's dark palette comes from the tkr-agent Console UI, Wireframe's is the greyscale scale inverted. Riso's `paper` / `ink` axes are print variants, not themes, and produce no `themes:` block.
+
+## Registry layers
+
+Two registry files combine at load time:
+
+- **Built-in** — the `registry.yaml` that ships beside the system libraries. Read-only to the skill's operations.
+- **User overlay** — `~/.claude/design-systems/registry.yaml` (relocate with `$DESIGN_SYSTEM_SKILL_USER_REGISTRY`). Per-user registrations, e.g. a system living in another project. User entries shadow built-ins by id; `register_system` / `unregister_system` write here only. A user-layer system may `extends:` a built-in; each side's SVG paths resolve against its own library before the merge.
+
+`$DESIGN_SYSTEM_SKILL_REGISTRY` names a single file that is the whole registry (no overlay, fully mutable) — the hermetic mode tests use. The repository gates (`drift --all`, `contrast --all`, `common-tokens`) check the built-in layer only; a user-layer system belongs to another project, whose own gates own it. The test suite points the overlay at an empty temp path (`conftest.py`), so a developer's own overlay cannot leak in.
+
+## UX-philosophy clauses
+
+`tools/builders/rulebook_check.py` implements the measurable rows of tkr-kit's UX philosophy. They are policy rather than per-system taste, so `_with_ux()` appends them to every ruleset at registration — a ruleset cannot be registered without them.
+
+| rule_id | scope | Decides |
+|---|---|---|
+| `ux-no-toast-notifications` | artifact | no toast/snackbar component is placed in a composed screen |
+| `ux-no-confirm-dialog-without-undo` | artifact | no confirmation-dialog component without an undo affordance |
+| `ux-required-fields-indicated` | both | every part the artifact declares `-required` renders its indicator, inside its own subtree |
+
+All three answer from the artifact's **component inventory** — the assembler's `<g id="{region}__{component-id}_{index}">` groups and `<!-- COMPONENT-NAME -->` banner comments. An artifact naming neither is not silently green: each result carries `component_ids` and `inventory_source`, so a vacuous pass is visibly vacuous. A catalog sheet that legitimately places every primitive declares `<!-- CATALOG-SHEET: ... -->` and is exempt from the placement clauses, with the reason in the artifact. Each clause has a violating fixture and a clean twin under `tools/builders/fixtures/ux/`, driven from both sides by `tools/builders/test_ux_clauses.py` — a clause with no failing fixture is not enforced, it is decorative.
+
 ## Decision Guide
 
-> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `uv run python tools/docs/generate.py`. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
+> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `tools/docs/generate.py` in the tkr-design-systems repository. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
 
 ### Which system
 
@@ -135,7 +226,7 @@ The user picks the system; this skill does not decide for them. The table says w
 | `swiss` Swiss | Grid + Grotesk + Single Saturated Accent (showcase: Grid-strict + Rams Heritage) | `contemporary_clean` | General-purpose product UI: dashboards, settings, forms, data tables, sign-in. Dense information where hierarchy comes from type and grid, with one accent. | 71 / 12 | 14 |
 | `terminal` Terminal | CLI + Phosphor Heritage | `character_grid` | Developer tools, logs, monitoring and command palettes; keyboard-first surfaces. Not long-form reading or consumer sign-in. | 53 / 4 | 8 |
 | `editorial` Editorial | Long-form Serif + Newsprint Masthead | `contemporary_clean` | Long-form reading: articles, briefings, newsletters, transcripts. The article pattern is its strength. | 73 / 5 | 9 |
-| `sketch` Sketch | Linear + Hand-Drawn | `contemporary_clean` | Early product UI that carries an annotation layer: design reviews, onboarding, explained flows. | 65 / 4 | 6 |
+| `sketch` Sketch | Linear + Hand-Drawn | `contemporary_clean` | Early product UI that carries an annotation layer: design reviews, onboarding, explained flows. | 91 / 4 | 6 |
 | `prism` Prism | Liquid Glass + Bento | `contemporary_clean` | Atmospheric, short compositions: dashboards, modals, drawers. Built for HTML/CSS; its SVG glass is an approximation for layout review only. | 56 / 4 | 6 |
 | `revolt` Revolt | Neobrutalist + Y2K | `contemporary_clean` | Expressive, loud moments: launches, campaigns, banners, playful sign-in. | 57 / 3 | 9 |
 | `riso` Riso | Duotone Print + Tweakable Press | `print_texture` | Content-heavy, print-flavoured surfaces: zines, features, articles, with parametric ink and paper presets. | 2 / 0 | 20 |
@@ -151,7 +242,7 @@ Pick by the job, not by habit. Component ids and variants are the LIBRARY-SPEC v
 |-----|-----|-----|-----|
 | Status that persists (sync failed, offline, plan expiring) | `banner` | `toast` | NO toast notifications: a toast forces a context switch and is gone before it is read. A banner stays in place until the condition clears. |
 | Result of one action (saved, sent, failed to send) | `badge` (`status`) | `toast`, `modal` | Status and errors appear contextual to the action: mark the item that was acted on, in place. |
-| Destructive action (delete, archive, remove) | `button` (`destructive`), `banner` | `modal` (`confirmation`) | NO "Are you sure?" dialogs: act immediately and offer undo (a banner with an undo action), so responsibility is not shifted to the user. |
+| Destructive action (delete, archive, remove) | `button` (`destructive`), `undo_row`, `banner` | `modal` | NO "Are you sure?" dialogs: act immediately and offer undo (the undo_row pattern holds the vacated row open with an Undo action until it settles), so responsibility is not shifted to the user. The ux-no-confirm-dialog-without-undo rulebook check reports a confirmation dialog with no undo. |
 | List or table under 100 items | `list_item`, `data_table` (`default`), `search_bar` | `pagination`, `data_table` (`with_pagination`) | NO pagination for small datasets: show every row; filter with search instead of making the user page. |
 | Required and optional form fields | `label` (`required`), `label` (`optional`) | `label` (`default`) | NO required fields without indication: an unmarked required field is an error discovered after the fact. |
 | Invalid input | `form_field` (`with_error`) | `modal`, `toast` | Validate inline as they type and show how to fix it, in place; constrain inputs so invalid states are impossible where you can. |
@@ -185,7 +276,7 @@ The violations that recur, each with the rule or decision behind it.
 | Status shown twice (a red border and a red badge on one card) | One status, one visual channel; doubling it adds noise, not meaning. | `wireframe-one-channel-per-message` |
 | Selection shown with a background fill in Terminal | Terminal selects by changing characters (' ' to '>') and colour, never by fill. | `terminal-selection-via-character` |
 | A third ink in Riso | Exactly two inks per artifact from one press preset; neutrals come from the paper. | `riso-two-inks-only`, `riso-paper-is-the-neutral` |
-| A toast for status, or an "Are you sure?" dialog before deleting | Use a banner or inline status, and undo. See the Which component table. | [claude.md](../../claude.md) |
+| A toast for status, an "Are you sure?" dialog before deleting, or a required field with no marker | Use a banner or inline status, and undo (the undo_row pattern). Mark every required field. The rulebook reports a placed toast, a confirmation dialog without undo, and an unmarked required label in every system. See the Which component table. | [claude.md](../../claude.md), `ux-no-toast-notifications`, `ux-no-confirm-dialog-without-undo`, `ux-required-fields-indicated` |
 <!-- /generated:rules-agents-get-wrong -->
 
 ### Rules per system
@@ -195,7 +286,7 @@ The first sentence of every rulebook entry, with its severity and check method. 
 <!-- generated:system-rules -->
 #### Wireframe (`wireframe`, alias `neutral`)
 
-Tokens: spacing 4, 8, 12, 16, 20, 24, 32, 40, 48, 64; type sizes 11, 12, 13, 14, 16, 18, 24; radius 6; accent `#424242`; reduced motion `fade`.
+Tokens: spacing 4, 8, 12, 16, 20, 24, 32, 40, 48, 64; type sizes 11, 12, 13, 14, 16, 18, 24; radius 6; accent `#424242`; reduced motion `fade`; default mode.
 
 - `wireframe-mobile-first` (required, semantic): Every wireframe is authored at mobile (375px) first, then desktop (1280px) is created as an EXPANSION of mobile.
 - `wireframe-cards-universal-container` (recommended, semantic): Distinct content (anything with a boundary, title, and related data) is presented in a card.
@@ -258,13 +349,13 @@ Tokens: spacing 4, 8, 10, 12, 16, 18, 20, 24, 32, 40, 48, 64; type sizes 8.5, 9,
 
 #### Sketch (`sketch`)
 
-Tokens: spacing 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32; type sizes 10, 11, 13, 13.5, 17, 18; radius 10; accent `#7C6E8B`; reduced motion `fade`.
+Tokens: spacing 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 32; type sizes 10, 11, 13, 13.5, 17, 18; radius 10; accent `#7C6E8B`; reduced motion `fade`; default mode.
 
 - `sketch-purple-on-annotations-only` (required, both): Purple (#7F718E) is used on Caveat annotation elements and unread badges.
 - `sketch-no-shadows` (required, mechanical): box-shadow is never used.
 - `sketch-typeface-roles` (required, both): IBM Plex Sans for all structural text.
 - `sketch-rounded-not-pilled` (required, mechanical): Rounded corners use 8–14px radius.
-- `sketch-warm-paper-bg` (required, mechanical): Page background is #FAFAF8 (warm beige), not pure white.
+- `sketch-warm-paper-bg` (required, mechanical): Page background is the theme's warm paper: #FAFAF8 (light, default) or #211F1C (dark).
 - `sketch-no-emoji-imagery` (required, mechanical): No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations, category labels).
 
 #### Prism (`prism`)
@@ -342,6 +433,9 @@ tkr-design-systems/
         jsx_extract.md          # human-readable distillation of source
   tools/
     design-system-skill/        # this skill
+      design_system_skill/      # the Python package
+      schemas/
+        common-tokens.v1.yaml   # the portable common-token contract
 ```
 
 This skill's `register_system` operation handles the workflow of authoring the spec extract for an existing .jsx file, including scaffolding the directory structure.
@@ -444,7 +538,7 @@ The expected flow when adding a new design system to the registry:
 
 First, the design team authors the React implementation in `apps/showcase/src/systems/design-system-{newid}.jsx`. This is the design intent.
 
-Second, a designer or engineer runs the spec extraction workflow (this is a sub-workflow this skill exposes, currently invoked by humans rather than automated): the workflow reads the .jsx, generates a draft spec.yaml plus skeleton component SVGs and layout templates, and places them in `specs/{newid}/`. The draft is opinionated — it makes its best guesses about tokens, component anatomy, rulebook entries — and is meant to be edited.
+Second, a designer or engineer runs the spec extraction workflow (this is a sub-workflow this skill exposes, currently invoked by humans rather than automated): the workflow reads the .jsx, generates a draft spec.yaml plus skeleton component SVGs and layout templates, and places them in `systems/{newid}/`. The draft is opinionated — it makes its best guesses about tokens, component anatomy, rulebook entries — and is meant to be edited.
 
 Third, the designer reviews the draft, fills in rulebook entries that the automated extraction couldn't infer, hand-authors or refines component SVGs, and authors the layout templates. This is the meaningful design work; the extraction just removes the busywork.
 
@@ -522,6 +616,8 @@ The Python implementation lives at `design_system_skill/` (package) with these m
 | `jsx_drift.py` | Showcase JSX colour literals vs tokens.json, with a reasoned allow-list (`jsx-drift` CLI subcommand) |
 | `rulebook.py` | `get_rulebook()`, `check_compliance()`; delegates mechanical checks to `tools/builders/rulebook_check.py` |
 | `errors.py` | `Result` + `Error` dataclasses; `ERROR_CODES` enumeration |
-| `paths.py` | Project-root + registry-path resolution; honors `$DESIGN_SYSTEM_SKILL_REGISTRY` for tests |
+| `paths.py` | Skill root, built-in registry, user overlay and override resolution (`$DESIGN_SYSTEM_SKILL_REGISTRY`, `$DESIGN_SYSTEM_SKILL_USER_REGISTRY`) |
+| `tokens.py` | Common token contract: `load_contract()`, `validate_common_tokens()`, `resolve_token()` |
+| `common_tokens.py` | Derives `tokens.common` / `themes` from tokens.json (`common-tokens` CLI subcommand) |
 
-CLI shim at `__main__.py` exposes every operation as a subcommand. Smoke tests at `test_design_system_skill.py` cover all public operations including a register/unregister round-trip via a temp registry.
+CLI shim at `__main__.py` exposes every operation as a subcommand. `mcp_bridge.py` is a subprocess entry point for hosts in other languages (`python3 mcp_bridge.py <list|validate|rulebook|compliance> '<json-args>'`, or `@/path.json`): exactly one JSON envelope on stdout, logging on stderr, exit 0 whenever an envelope was printed. Tests: `test_design_system_skill.py` (all public operations, the registry overlay and a register/unregister round-trip), `test_tokens.py` (contract + resolver), `test_common_tokens.py` (the generator, themes, the committed blocks), `test_design_system_mcp_bridge.py`, `test_jsx_drift.py`.

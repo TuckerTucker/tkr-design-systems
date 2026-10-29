@@ -1,4 +1,5 @@
 spec_version: "0.3"
+common_tokens_version: "1.0"
 
 system:
   id: revolt
@@ -32,6 +33,53 @@ system:
     rendering_notes: "Two-letter uppercase abbreviation (e.g. TT, RI, BC), Space Mono weight 700, centered in a 30×30 white square with 2px black border. On selection, background swaps to pink (#FF3366) and the abbreviation stays black (#111111, accent_foreground; white on pink is 3.5:1)."
 
 tokens:
+  # generated:common-tokens — derived from tokens.json by `design-system-skill common-tokens --write`; do not edit by hand
+  common:
+    color:
+      ink: "#111111"
+      ink-muted: "#757575"
+      surface: "#FFFFFF"
+      surface-inset: "#FFFFFF"
+      accent: "#FF3366"
+      accent-on: "#111111"
+      outline: "#111111"
+      outline-strong: "#111111"
+      image-placeholder: "#FFFEF5"
+      success: "#C8FF00"
+      warning: "#111111"
+      danger: "#FF3366"
+    typography:
+      display: { family: "Space Mono, monospace", size: 14, weight: 700, leading: 1.2, case: "uppercase", tracking: 0.08 }
+      headline: { family: "Space Mono, monospace", size: 12, weight: 700, leading: 1.2, case: "uppercase", tracking: 0.06 }
+      title: { family: "Space Mono, monospace", size: 12, weight: 700, leading: 1.2, case: "uppercase", tracking: 0.06 }
+      body: { family: "Space Mono, monospace", size: 11.5, weight: 400, leading: 1.5, case: "mixed", tracking: 0 }
+      caption: { family: "Space Mono, monospace", size: 9, weight: 700, leading: 1.2, case: "uppercase", tracking: 0.1 }
+      code: { family: "Space Mono, monospace", size: 11.5, weight: 400, leading: 1.5, case: "mixed", tracking: 0 }
+    spacing:
+      xs: 4
+      sm: 8
+      md: 12
+      lg: 16
+      xl: 24
+    stroke:
+      hairline: 2
+      regular: 2
+      bold: 3
+    radius:
+      none: 0
+      sm: 0
+      md: 0
+      full: 9999
+  # /generated:common-tokens
+  # System-extension tokens (referenced as `revolt:<path>` from atoms scoped
+  # to revolt). Values the token file holds are aliases.
+  system:
+    palette:
+      lime: "{color.success}"
+    shadow:
+      offset: { x: 4, y: 4 }
+      color: "{extras.color.shadow}"
+      blur: 0
   colors:
     # Contract colour values (page_bg, surface, text_*, accent, ...) live in
     # tokens.json; the loader projects them here. Palette entries below

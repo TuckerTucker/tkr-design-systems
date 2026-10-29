@@ -42,6 +42,7 @@ from .token_file import (
     validate_motion_declarations,
     validate_token_document,
 )
+from .tokens import validate_common_tokens
 
 import structlog
 
@@ -49,22 +50,32 @@ logger = structlog.get_logger(__name__)
 
 
 # ─── Enum vocabularies ──────────────────────────────────────────────
+#
+# Two tiers:
+#   KNOWN_* — open enums describing system vocabulary (grammar families,
+#             elevation strategies, selection signals). Unknown values are
+#             advisory warnings, not errors: new systems may legitimately
+#             introduce conventions this validator hasn't catalogued yet.
+#   VALID_* — closed enums that the skill's machinery depends on
+#             (severities, check methods/scopes, spec versions). Unknown
+#             values are blocking errors.
 
 KNOWN_GRAMMAR_FAMILIES = {
     "wireframe",
     "contemporary_clean",
     "character_grid",
     "print_texture",
+    # Future: spatial, brutalist_extended, etc.
 }
 
 KNOWN_ELEVATION_STRATEGIES = {
-    "typographic",
-    "paper_tiers",
-    "borders_only",
-    "glass_blur",
-    "hard_offset",
-    "duotone_filter",
-    "filter_pipeline",
+    "typographic",      # Swiss
+    "paper_tiers",      # Editorial
+    "borders_only",     # Sketch, Terminal, Wireframe
+    "glass_blur",       # Prism
+    "hard_offset",      # Revolt
+    "duotone_filter",   # Riso (and other print_texture systems with a 2-ink filter pipeline)
+    "filter_pipeline",  # generic fallback for filter-driven elevation
 }
 
 VALID_SEVERITIES = {"required", "recommended", "advisory"}
@@ -142,6 +153,7 @@ def validate_spec(spec_path: str | Path, library_root: str | Path | None = None)
     _check_tokens(data, errors, warnings)
     color_gates: dict[str, Any] = {}
     _check_token_contract(data, spec_path, errors, warnings, color_gates)
+    _check_common_tokens(data, errors)
     _check_components(data, spec_dir, errors, warnings, lib_root)
     _check_layout_templates(data, spec_dir, errors, warnings, lib_root)
     _check_rulebook(data, errors, warnings)
@@ -208,9 +220,10 @@ def _check_spec_version(data: dict, errors: list[Error]) -> None:
 
 
 def _check_system_block(data: dict, errors: list[Error], warnings: list[Error]) -> None:
-    """Verify system block has required fields and valid grammar_family."""
+    """Verify system block has required fields and a known grammar_family."""
     sys_block = data.get("system")
     if not isinstance(sys_block, dict):
+        # Already reported as missing top-level if absent.
         return
     for required in ("id", "name"):
         if required not in sys_block:
@@ -237,6 +250,8 @@ def _check_system_block(data: dict, errors: list[Error], warnings: list[Error]) 
                 {"extends": extends_id},
             ))
         else:
+            # Advisory only: validate_spec may run on a draft that isn't
+            # registered yet, and the parent may land later.
             try:
                 from .registry import Registry
                 reg_result = Registry.load()
@@ -249,11 +264,12 @@ def _check_system_block(data: dict, errors: list[Error], warnings: list[Error]) 
                          "available": [e.id for e in reg_result.data.all()]},
                     ))
             except Exception:
-                pass
+                logger.warning("extends registry lookup failed",
+                               extends=extends_id, exc_info=True)
 
 
 def _check_tokens(data: dict, errors: list[Error], warnings: list[Error]) -> None:
-    """Verify elevation strategy is valid."""
+    """Verify elevation strategy is a known convention."""
     tokens = data.get("tokens")
     if not isinstance(tokens, dict):
         return
@@ -543,3 +559,26 @@ def _check_artifact_treatments(
                 f"artifact_treatments.layer '{layer}' not in {sorted(valid_layers)}",
                 {"treatment_id": t.get("id"), "layer": layer},
             ))
+
+
+def _check_common_tokens(data: dict, errors: list[Error]) -> None:
+    """Validate `tokens.common` against the v1 contract, if present.
+
+    Absence of `tokens.common` is not flagged: the contract is additive
+    and a draft spec may predate it. Every system in this repository
+    carries the block (generated from its tokens.json by
+    `common_tokens`), so a present but malformed block is an error.
+    """
+    tokens = data.get("tokens") or {}
+    if "common" not in tokens:
+        return
+    try:
+        problems = validate_common_tokens(data)
+    except FileNotFoundError as e:
+        errors.append(Error(
+            "COMMON_TOKENS_CONTRACT_MISSING",
+            f"common-tokens contract could not be loaded: {e}",
+            {},
+        ))
+        return
+    errors.extend(problems)

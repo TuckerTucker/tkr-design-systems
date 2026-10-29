@@ -80,6 +80,7 @@ from .contract import (
     parse_color,
 )
 from .errors import Error, Result
+from .paths import is_library_of
 from .token_file import (
     get_token,
     iter_mode_selections,
@@ -1017,7 +1018,8 @@ def check_color_gates_all(
 
     Args:
         entries: Optional ``(system_id, spec_path)`` pairs; defaults to the
-            registry.
+            built-in registry layer (a user-overlay system belongs to another
+            project, whose own gate owns it).
         checker: Per-spec check; injectable for tests.
 
     Returns:
@@ -1025,17 +1027,15 @@ def check_color_gates_all(
         any system fails a gate.
     """
     if entries is None:
-        from .paths import project_root
         from .registry import Registry
         reg = Registry.load()
         if not reg.ok:
             return reg
-        root = project_root()
-        entries = [(e.id, (root / e.spec).resolve()) for e in reg.data.all()]
+        entries = [(e.id, e.spec_path()) for e in reg.data.builtin_entries()]
     systems: dict[str, Any] = {}
     errors: list[Error] = []
     seen: dict[Path, str] = {}
-    ordered = sorted(entries, key=lambda e: Path(e[1]).parent.name != e[0])
+    ordered = sorted(entries, key=lambda e: not is_library_of(e[0], Path(e[1])))
     for sys_id, spec_path in ordered:
         if spec_path in seen:
             systems[sys_id] = {"alias_of": seen[spec_path]}

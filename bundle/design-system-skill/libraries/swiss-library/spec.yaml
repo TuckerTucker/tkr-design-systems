@@ -1,0 +1,572 @@
+spec_version: "0.3"
+common_tokens_version: "1.0"
+
+system:
+  id: swiss
+  name: Swiss
+  tagline: "Grid + Grotesk + Single Saturated Accent"
+  grammar_family: contemporary_clean
+  version: "1.0.0"
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
+  source_jsx: ../design-system-swiss.jsx
+
+# ────────────────────────────────────────────────────────────────────
+# TOKENS
+# ────────────────────────────────────────────────────────────────────
+
+tokens:
+  # generated:common-tokens — derived from tokens.json by `design-system-skill common-tokens --write`; do not edit by hand
+  common:
+    color:
+      ink: "#000000"
+      ink-muted: "#707070"
+      surface: "#FFFFFF"
+      surface-inset: "#F5F5F5"
+      accent: "#E3000B"
+      accent-on: "#FFFFFF"
+      outline: "#E0E0E0"
+      outline-strong: "#000000"
+      image-placeholder: "#F5F5F5"
+      success: "#000000"
+      warning: "#000000"
+      danger: "#E3000B"
+    typography:
+      display: { family: "Inter, system-ui, sans-serif", size: 40, weight: 700, leading: 1.0, case: "mixed", tracking: -0.04 }
+      headline: { family: "Inter, system-ui, sans-serif", size: 32, weight: 700, leading: 1.0, case: "mixed", tracking: -0.04 }
+      title: { family: "Inter, system-ui, sans-serif", size: 22, weight: 700, leading: 1.0, case: "mixed", tracking: -0.025 }
+      body: { family: "Inter, system-ui, sans-serif", size: 14, weight: 400, leading: 1.55, case: "mixed", tracking: -0.005 }
+      caption: { family: "Inter, system-ui, sans-serif", size: 9, weight: 600, leading: 1.3, case: "uppercase", tracking: 0.16 }
+    spacing:
+      xs: 8
+      sm: 16
+      md: 24
+      lg: 32
+      xl: 48
+    stroke:
+      hairline: 1
+      regular: 1
+      bold: 2
+    radius:
+      none: 0
+      sm: 0
+      md: 0
+      full: 9999
+  # /generated:common-tokens
+  # System-extension tokens (Swiss-only; referenced as `swiss:<path>` from
+  # atoms scoped to swiss). Values the token file holds are aliases.
+  system:
+    grid:
+      columns: 12
+      gutter: "{space.md}"
+      margin: "{space.xl}"
+    headline-stroke-overlay: true   # large headline + 1px rule overlay
+  colors:
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
+
+    palette:
+      - name: ink
+        token: color.text_primary
+        role: all body and structural type
+        usage_constraint: "the only color for body type; never substituted with grays"
+
+      - name: paper
+        token: color.page_bg
+        role: page and primary surface
+        usage_constraint: "no off-whites or warm whites; pure paper"
+
+      - name: gray_surface
+        token: color.surface_elevated
+        role: secondary surface (selection background, message blocks)
+        usage_constraint: "the only gray surface; no intermediate tiers"
+
+      - name: gray_metadata
+        token: color.text_muted
+        role: 9px uppercase metadata only
+        usage_constraint: "never used for body type or anything above 11px"
+
+      - name: rule_hairline
+        token: extras.color.rule_hairline
+        role: 1px dividers between subtle sections
+
+      - name: rule_default
+        token: color.border_default
+        role: 1px dividers between distinct sections
+
+      - name: gray_secondary
+        token: color.text_secondary
+        role: preview and secondary text
+
+      - name: gray_placeholder
+        token: color.text_placeholder
+        role: input placeholders only
+
+      - name: red
+        token: color.accent
+        role: the system's only accent
+        usage_constraint: "exactly 4 uses per screen — see rulebook"
+
+  typography:
+    families:
+      - id: structural
+        stack: "{font.body}"
+        role: every piece of type in the system
+        mixing_rule: "no other family permitted; this is a single-typeface system"
+
+    scale:
+      - { size: 9,  role: metadata }
+      - { size: 11, role: small_label }
+      - { size: 13, role: secondary_body }
+      - { size: 14, role: body }
+      - { size: 22, role: display_small }
+      - { size: 32, role: display_medium }
+      - { size: 40, role: display_large }
+
+    case:
+      metadata: uppercase
+      body: mixed
+      headers: mixed
+
+    tracking:
+      metadata: 0.16
+      body: 0
+      headers: 0
+
+  spacing:
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
+    enforcement: strict          # no off-grid spacing values permitted
+
+  borders:
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
+    no_radius_anywhere: true
+
+  elevation:
+    # strategy: projected from tokens.json elevation.strategy
+    config:
+      rule_weight_hairline:
+        width: "{border_width.default}"
+        color: "{extras.color.rule_hairline}"
+      rule_weight_default:
+        width: "{border_width.default}"
+        color: "{color.border_default}"
+      rule_weight_strong:
+        width: "{border_width.strong}"
+        color: "{color.border_strong}"
+      accent_bar:
+        width: 2
+        color: "{color.accent}"
+        position: left
+        usage: "selected list items only"
+      spacing_units: "{space.steps}"
+      no_shadow: true
+      no_radius: true
+
+# ────────────────────────────────────────────────────────────────────
+# COMPONENTS
+# ────────────────────────────────────────────────────────────────────
+
+components:
+  button:
+    anatomy:
+      - label
+    variants:
+      - id: primary
+        svg: components/button-primary.svg
+        rendering_notes: "Text label only. No border, no background. Red color (accent). Optional `→` after label."
+        states: [default, hover, active]
+      - id: text
+        svg: components/button-text.svg
+        rendering_notes: "Black text label. Used for secondary actions."
+        states: [default, hover]
+    constraints:
+      - "Never wrap button labels in pill or rounded backgrounds"
+      - "Send/submit buttons always use red (accent); other actions use black"
+    motion:
+      - trigger: hover
+        tier: fast
+        properties: [opacity]
+        reduced: none
+        note: "JSX .snd 'Send →': opacity 0.75 on hover, 0.12s."
+
+  card:
+    anatomy:
+      - label
+      - body
+    variants:
+      - id: default
+        svg: components/card-default.svg
+        rendering_notes: "No border, no background by default. Just a 9px uppercase label above the content with 8px gap. Body content is 13px or 14px, left-aligned."
+        states: [default]
+      - id: gray_surface
+        svg: components/card-gray-surface.svg
+        rendering_notes: "Used when card needs visual containment. Background #F5F5F5, no border, no radius. Padding 16px or 24px (grid-aligned)."
+        states: [default]
+    constraints:
+      - "Never apply border-radius"
+      - "Never apply box-shadow"
+      - "Use gray surface only when the layout demands containment; default to no surface"
+
+  input:
+    anatomy:
+      - placeholder
+      - submit_affordance
+    variants:
+      - id: text
+        svg: components/input-text.svg
+        rendering_notes: "White background with 1px solid black top rule. No bottom border, no side borders. Placeholder is a single word, lowercase (e.g. 'type'). Send affordance (e.g. 'Send →') in red, right-aligned."
+        states: [default, focus]
+    constraints:
+      - "Never use placeholder phrases — single words only"
+      - "Top rule must be 1px black, never a pill or full border"
+
+  list_item:
+    anatomy:
+      - index
+      - title
+      - preview
+      - timestamp
+      - unread_count
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Index number top-left, zero-padded (01, 02, ..). Time top-right in 9px uppercase. Title 13px medium-weight black. Preview 11px gray (#666). If unread, count rendered as 32px red numeral below the preview, not as a badge."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        rendering_notes: "Same as default plus 2px red accent bar on left edge and #F5F5F5 background fill. Transition is instant (no animation in static wireframe)."
+        states: [selected]
+    constraints:
+      - "Index numbers always zero-padded to 2 digits"
+      - "Unread counts are display type (32px red), never a circular badge"
+      - "Selection bar is exactly 2px red, exactly on the left edge"
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 40
+        note: "JSX .ci fadeSlideUp 0.2s ease, 6px travel. Selection is instant."
+
+  error_message:
+    # Swiss's error treatment (ADR-0002, issue #8). Swiss has one chromatic
+    # colour and color.danger reuses the accent red (hue waiver in
+    # tokens.json), so an error is carried by copy and type, never by hue.
+    # Grounded in the JSX voice table: Error -> "Error: send failed."
+    # ("Lowercase 'Error:' + what failed"). The JSX gives red exactly four
+    # contexts (CTA labels, selection bar, user-message tag, status dot +
+    # unread count) and lists "Use red for ... warning messages" as a Don't;
+    # error copy is not one of the four, so it is set in ink.
+    anatomy:
+      - prefix
+      - message
+    variants:
+      - id: inline
+        svg: components/form-field-with-error.svg
+        rendering_notes: "Below the field, one line of 11px ink (color.text_primary): 'Error: invalid email address.' The input keeps its ordinary 1px black top rule (border_input); the rule does not turn red, thicken or gain an icon."
+        states: [default]
+      - id: toast
+        svg: components/toast-error.svg
+        rendering_notes: "Toast grammar unchanged (1px black top rule, 9px tracked uppercase grey subject label, × dismiss). The body is 13px ink: 'Error: could not connect to the server.' The label names the subject, not the severity; it is grey, not red."
+        states: [default]
+    constraints:
+      - "Error copy begins with the prefix 'Error:' (capital E, colon), then the failure as a lowercase sentence ending with a period: 'Error: send failed.' Never 'ERROR', 'error:', 'Error -' or 'Error!' (swiss-error-prefix)"
+      - "Errors are typographic only: no icon, glyph, shape, badge, pill, fill, border change or second colour (swiss-error-typographic)"
+      - "Error copy is ink (color.text_primary), never red; red is not one of its four contexts (swiss-error-not-red, swiss-red-finite-resource)"
+      - "A recovery action inside an error surface (e.g. 'Retry →') is a CTA and may be red as a CTA label; it counts toward the 4-use red budget"
+      - "Never use ● for errors: the red ● is the active-status dot and would read as 'live'"
+
+  warning_message:
+    # Swiss's warning treatment (#8 follow-up). The JSX lists "Use red for
+    # hover states, warning messages, or decorative underlines" as a Don't,
+    # and its voice table defines no warning copy form, so no prefix is
+    # invented: a warning is the error_message treatment without the
+    # 'Error:' prefix. The grey 9px tracked label carries the word, the copy
+    # is ink, and nothing is red except an optional CTA label.
+    anatomy:
+      - label
+      - message
+      - action
+    variants:
+      - id: banner
+        svg: components/banner-warning.svg
+        rendering_notes: "Banner grammar unchanged (1px black top rule, hairline below). Left: 9px tracked uppercase label 'ATTENTION' in grey (color.text_secondary), like every banner label. Middle: 13px ink message (color.text_primary) as a declarative sentence with a period: 'Your trial ends in 3 days.' Right: the action 'Upgrade →' in ink at weight 500."
+        states: [default]
+    constraints:
+      - "The label and message are never red: a red severity label or warning line is a JSX Don't and is not one of red's four contexts (swiss-warning-not-red, swiss-red-finite-resource)"
+      - "Typographic only, as error_message: no icon, glyph, shape, fill, tint or border change"
+      - "Copy follows the voice table: declarative sentence ending with a period, never an exclamation point"
+      - "An action may be a red CTA label ('Upgrade →'); it counts toward the 4-use red budget"
+
+  badge:
+    anatomy: []
+    variants: []
+    rendering_notes: "Swiss does not use badges. Counts are rendered as display type, statuses as small dots."
+    constraints:
+      - "Do not render badges; use numerical display type or status dots instead"
+
+  avatar:
+    anatomy:
+      - identifier
+    variants:
+      - id: index_only
+        svg: components/avatar-index.svg
+        rendering_notes: "No avatar imagery. Identity is communicated by the zero-padded index number in the list item."
+        states: [default]
+    constraints:
+      - "Never use emoji avatars or image avatars"
+      - "Identity through numerical index, optionally a single-letter monogram for chat headers"
+
+  nav:
+    anatomy:
+      - brand
+      - search
+      - list
+      - footer
+    variants:
+      - id: sidebar
+        # Sidebar lives at the pattern tier (layouts/sidebar-default.svg) since
+        # it composes brand + search + nav-item list + footer block. Resolved
+        # there for full-screen consumers; design intent below.
+        svg: layouts/sidebar-default.svg
+        rendering_notes: "Fixed 280px width. Brand at top in 14px medium. 1px black rule below brand. Search input below rule. Thread list fills remainder. Account block at bottom, separated by 1px hairline rule."
+        states: [default]
+    constraints:
+      - "Sidebar width is fixed at 280px, no responsive collapse in wireframe"
+      - "Section divisions use 1px rules at strong/default/hairline weights, never spacing alone"
+
+  section_header:
+    anatomy:
+      - label
+    variants:
+      - id: metadata
+        # 9px tracked uppercase metadata is the `label-metadata` primitive in
+        # this library; section_header is just its semantic role at section level.
+        svg: components/label-metadata.svg
+        rendering_notes: "9px uppercase Inter, tracked 0.16em, color #666. Rendered above a section with 8px gap."
+        states: [default]
+    constraints:
+      - "Section headers are metadata-style only (9px uppercase tracked)"
+      - "Never use larger headers within sections; hierarchy is signaled by spacing and rule weight"
+
+  separator:
+    # The `divider` primitive carries the same role (1px rules at three weights);
+    # `separator` is preserved here as a semantic alias mapping to those SVGs.
+    anatomy: []
+    variants:
+      - id: hairline
+        svg: components/divider-hairline.svg
+        rendering_notes: "1px solid #F0F0F0, full width, 16px or 24px vertical margin"
+      - id: default
+        svg: components/divider-default.svg
+        rendering_notes: "1px solid #E0E0E0, full width, 24px or 32px vertical margin"
+      - id: strong
+        svg: components/divider-strong.svg
+        rendering_notes: "1px solid #000000, full width, 32px or 48px vertical margin. Used to separate major regions (sidebar from main, brand from content)."
+
+# ────────────────────────────────────────────────────────────────────
+# LAYOUT TEMPLATES
+# ────────────────────────────────────────────────────────────────────
+
+layout_templates:
+  # Templates are aligned with the SVGs actually authored under
+  # swiss-library/layouts/. Phase 2 added the full pattern set:
+  # auth-sign-in, dashboard, data-table-default, drawer-right,
+  # empty-state-default, empty-state-no-results, form-single-column,
+  # header-default, header-with-actions, modal-default,
+  # settings-layout-default, sidebar-default. Specs that reference
+  # generic genres (login, settings, empty_state) point at the
+  # canonical authored variant.
+
+  auth:
+    svg: layouts/auth-sign-in.svg
+    description: "Centered single-column form. 280px max width. Brand at top, 32px gap, then form fields stacked with 24px gap. Submit button below, red text label. No card surface around the form."
+
+  dashboard:
+    svg: layouts/dashboard.svg
+    description: "Sidebar + main split. Sidebar 280px (per nav.sidebar). Main content uses display type (32px or 40px) for primary metrics, 13px body for supporting text. Numerical hierarchy throughout."
+
+  settings_layout:
+    svg: layouts/settings-layout-default.svg
+    description: "Sidebar + main. Main content is a vertical list of setting groups separated by 1px default rules. Each group has 9px uppercase metadata header, then key-value pairs with 16px gap."
+
+  data_table:
+    svg: layouts/data-table-default.svg
+    description: "Tabular data with zero-padded indices, 9px tracked uppercase column headers, 9px tracked uppercase status text (ACTIVE/PENDING/INACTIVE) — text-only, no pill badges. Hairline rules between rows."
+
+  form:
+    svg: layouts/form-single-column.svg
+    description: "Single-column form with stacked fields. Each field uses the input-text grammar: 9px tracked uppercase label, 1px black top rule, 14px primary value. Save → in red as the right-aligned CTA."
+
+  empty_state:
+    svg: layouts/empty-state-default.svg
+    description: "Centered single line of 13px text in #666. No illustration. Optional 11px hint below in #666. Maximum restraint."
+
+  modal:
+    svg: layouts/modal-default.svg
+    description: "Centered 480-wide panel on a #F5F5F5 wash. 1px black top/bottom rules frame the panel. CONFIRM tracked metadata + 22px display title + body + Cancel/Delete actions. No drop shadow, no rounded corners."
+
+  drawer:
+    svg: layouts/drawer-right.svg
+    description: "Right-anchored 480-wide panel, full height. 1px black left rule frames it against the dimmed page. Header strip with EDIT PROFILE metadata + close ×. Form-style content below."
+
+  header:
+    svg: layouts/header-default.svg
+    description: "64-tall top horizontal bar with 1px black rule below. Brand left, primary nav middle, search + account on the right. No shadow."
+
+  sidebar:
+    svg: layouts/sidebar-default.svg
+    description: "280px-wide vertical navigation column. Brand at top, 1px black rule below, search input, then nav items as zero-padded list, then account block at bottom separated by 1px hairline rule. Same shape as nav.sidebar component variant."
+
+# ────────────────────────────────────────────────────────────────────
+# RULEBOOK
+# ────────────────────────────────────────────────────────────────────
+
+rulebook:
+  - id: swiss-red-finite-resource
+    rule: "Red (#E3000B) is bounded above by 4 usages per screen. Red appears only in these contexts: (1) primary CTAs, (2) selection bars on list items, (3) user/identity tags, (4) status dots. A 5th red usage on a screen is a violation. Not every screen must use all four — a sign-in form may use only 1 (the CTA), an empty data table may use 0."
+    rationale: "Red is the system's only accent. Inflation degrades its semantic load — when everything is red, nothing is. The four contexts are the *exhaustive* set, not a checklist."
+    severity: required
+    check_method: mechanical
+    check_scope: artifact          # screen-level count; vacuous on component fragments
+
+  - id: swiss-grid-alignment
+    rule: "All spacing values are multiples of 8 (8, 16, 24, 32, 40, 48, 64). Off-grid spacing (e.g. 12px, 20px) is not permitted."
+    rationale: "The 8-point grid is the system's structural backbone. Off-grid breaks visual rhythm and signals carelessness."
+    severity: required
+    check_method: both             # mechanical first-pass + semantic for text baseline judgment
+    check_scope: both
+
+  - id: swiss-zero-radius
+    rule: "border-radius is 0 on every element. No rounded corners, ever."
+    rationale: "Radius is a softening device. Swiss is not soft."
+    severity: required
+    check_method: mechanical
+    check_scope: both              # never a rounded corner anywhere, period
+
+  - id: swiss-no-shadows
+    rule: "box-shadow is never used. Depth is communicated through typography (size, weight, tracking) and 1px rules at three weights (hairline #F0F0F0, default #E0E0E0, strong #000000)."
+    rationale: "Shadows are an elevation strategy from a different vocabulary. Swiss uses typographic and structural elevation."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: swiss-numerical-display
+    rule: "Numerical values (counts, indices, metrics) are rendered as display type (22px–40px) when they're meaningful information. Never as small badges or pills."
+    rationale: "Numbers are content. Treating them as decoration (in badges) hides the information."
+    severity: required
+    check_method: semantic
+    check_scope: both
+
+  - id: swiss-zero-padded-indices
+    rule: "List item indices are zero-padded to 2 digits (01, 02, ..., 99). 3-digit lists pad to 3 (001, 002)."
+    rationale: "Consistent column width. Numerical indices read as a typographic texture."
+    severity: required
+    check_method: semantic
+    check_scope: component
+    applies_when: "component is list_item"
+
+  - id: swiss-fixed-type-scale
+    rule: "Only 7 type sizes are permitted: 9, 11, 13, 14, 22, 32, 40. Sizes between (10, 12, 15, etc.) are not allowed."
+    rationale: "If 13 vs 14 feels right, pick one. The scale is prescriptive about elimination, not expansion."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: swiss-single-typeface
+    rule: "Inter is the only typeface. No serifs, no monospace, no decorative families."
+    rationale: "Single typeface enforces hierarchy through size, weight, tracking, and case alone."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+
+  - id: swiss-metadata-uppercase
+    rule: "All metadata (timestamps, labels, captions) is rendered uppercase, 9px Inter, tracked 0.16em, color #666."
+    rationale: "Metadata is structurally distinct from content. Uppercase + tracking + small size + muted color = consistent metadata signature."
+    severity: required
+    check_method: mechanical
+    check_scope: component
+    applies_when: "element font-size == 9"   # vacuous on fragments without 9px text
+
+  - id: swiss-no-emoji-imagery
+    rule: "No emoji avatars, no decorative imagery, no illustrations. Identity is numerical or monogram-based."
+    rationale: "Emoji and illustration are warmth devices. Swiss is functional, not warm."
+    severity: required
+    check_method: semantic
+    check_scope: both
+
+  - id: swiss-error-prefix
+    rule: "Error copy reads 'Error: <what failed>.' — the prefix 'Error:' with a capital E and a colon, a space, the failure, and a closing period (JSX voice table: 'Error: send failed.'). Any text starting with the word 'error' in another form ('ERROR', 'error: x', 'Error - x', 'Error: x' without a period) fails, and an error component carries at least one text in this form."
+    rationale: "Swiss's danger reuses the accent red (hue-gate waiver, ADR-0002), so colour cannot say 'this is broken'. The fixed verbal prefix is the error signal; one spelling keeps it recognisable."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "tools/builders/rulebook_check.py check_error_prefix: every <text> whose content starts with 'error' (any case) must match 'Error: \\S.*\\.'; an SVG whose builder banner comment names it an error component (*-ERROR, *-WITH-ERROR) must contain such a text."
+
+  - id: swiss-error-not-red
+    rule: "Text beginning 'Error:' is set in ink (color.text_primary), never in the accent red."
+    rationale: "Red's four contexts (swiss-red-finite-resource) do not include errors, and the JSX lists red warning messages as a Don't. A red error line would also spend the red budget on a state, not an action or mark."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "tools/builders/rulebook_check.py check_error_not_red: the inline or CSS-class fill of each 'Error:' <text> must not resolve to color.accent."
+
+  - id: swiss-warning-not-red
+    rule: "Warnings are typographic, like errors: the severity label is grey and the message ink; neither is red. A red text whose first word is a severity word (ATTENTION, WARNING, CAUTION, ALERT, NOTICE) fails anywhere, and inside a warning component red is allowed only on a CTA label ending in →."
+    rationale: "The JSX lists 'Use red for hover states, warning messages, or decorative underlines' as a Don't, and red's four contexts (swiss-red-finite-resource) do not include warnings. With danger sharing the accent red, a red warning label would also read as the brand signal."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "tools/builders/rulebook_check.py check_warning_not_red: a <text> whose fill resolves to color.accent fails when its first word is a severity word; in an SVG whose builder banner names it a warning component (*-WARNING) any red <text> not ending in → fails."
+
+  - id: swiss-error-typographic
+    rule: "Error states are carried by copy and type alone: no icon, glyph, shape, badge, pill, fill, coloured or thickened border, and no ● (the red ● is the active-status dot). After the 'Error:' prefix the message is a lowercase sentence (proper nouns excepted) naming what failed. A recovery action in an error surface is an ordinary CTA label and counts toward the 4-use red budget."
+    rationale: "Swiss has one chromatic colour and no icons (ADR-0001: Swiss renders nothing; typography carries the meaning). With danger sharing the accent red, only the words can distinguish an error from the brand signal."
+    severity: required
+    check_method: semantic
+    check_scope: both
+    applies_when: "artifact or component shows an error or failure state"
+
+# ────────────────────────────────────────────────────────────────────
+# GRAMMAR EXTENSIONS
+# ────────────────────────────────────────────────────────────────────
+
+grammar_extensions:
+  family: contemporary_clean
+
+  per_system_signature:
+    # Swiss is mostly tokens + rulebook; minimal extensions needed.
+    # Where Editorial uses drop_caps and Sketch uses annotations,
+    # Swiss uses numerical display as its signature treatment.
+
+    numerical_display:
+      enabled: true
+      sizes: [22, 32, 40]
+      role: "treat counts and metrics as primary content, not metadata"
+      examples:
+        - "Unread count below preview, 32px red"
+        - "Active session count in main header, 40px black"
+        - "Item index in lists, 14px black zero-padded"
+
+    accent_bar_selection:
+      enabled: true
+      width: 2
+      color: ref:tokens.colors.accent
+      position: left
+      role: "the only selection treatment; no checkmarks, no fills, no shadows"
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 70
+        note: "JSX .mi fadeSlideUp 0.2s ease, 6px travel."

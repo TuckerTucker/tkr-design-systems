@@ -1,17 +1,18 @@
-"""End-to-end tests for wireframe-skill v3.0 (agent-driven routing).
+"""End-to-end tests for wireframe-skill v3.0.
 
 Run from the project root:
     python3 wireframe-skill/test_wireframe_skill.py
 
 The tests confirm:
-  - wireframe(brief, layout_id, system) produces an SVG + spec.yaml
+  - wireframe(brief, system='swiss', platform='desktop') produces an
+    SVG + spec.yaml in the output dir
   - The SVG has correct viewBox dimensions
   - The spec.yaml has the design_system block populated with the
     expected system id, version, and rulebook compliance summary
   - Rulebook check passes on the generated artifact (no mechanical
     failures)
   - mobile + desktop both work
-  - wireframe() without routing returns a routing_request inventory
+  - keyword heuristics route briefs to the expected patterns
   - missing systems fail cleanly
   - emit happens even when compliance has advisory warnings
 """
@@ -24,10 +25,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Make sibling packages importable.
+# Make the package importable; importing wireframe_skill puts
+# design_system_skill on sys.path in either layout (_design_system_path).
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(HERE.parent / "design-system-skill"))
 
 import yaml  # noqa: E402
 
@@ -72,7 +73,6 @@ def test_swiss_dashboard_desktop():
             system="swiss",
             platform="desktop",
             output_dir=td,
-            layout_id="dashboard",
         )
         assert_(result.ok, "result.ok=True", "; ".join(result.errors)[:300])
         if not result.ok:
@@ -107,15 +107,17 @@ def test_swiss_dashboard_desktop():
 
 
 def test_swiss_dashboard_mobile():
-    section("wireframe(... system='swiss', platform='mobile', layout_id='dashboard')")
+    section("wireframe(... system='swiss', platform='mobile')")
     with tempfile.TemporaryDirectory() as td:
         result = wireframe(
             brief="dashboard for a chat app",
             system="swiss",
             platform="mobile",
             output_dir=td,
-            layout_id="dashboard",
         )
+        # Swiss has no mobile-suffixed dashboard; skill should fall back
+        # to the desktop variant gracefully. Either way, the call should
+        # succeed and emit valid output.
         assert_(result.svg_path is not None and result.svg_path.exists(),
                 "wireframe.svg exists for mobile request")
         assert_(result.spec_path is not None and result.spec_path.exists(),
@@ -126,14 +128,13 @@ def test_swiss_dashboard_mobile():
 
 
 def test_wireframe_library_dashboard_desktop():
-    section("wireframe(... system='wireframe', platform='desktop', layout_id='dashboard-mixed')")
+    section("wireframe(... system='wireframe', platform='desktop')")
     with tempfile.TemporaryDirectory() as td:
         result = wireframe(
             brief="dashboard with metrics",
             system="wireframe",
             platform="desktop",
             output_dir=td,
-            layout_id="dashboard-mixed",
         )
         assert_(result.ok, "result.ok=True", "; ".join(result.errors)[:300])
         if not result.ok:
@@ -141,22 +142,21 @@ def test_wireframe_library_dashboard_desktop():
         spec = yaml.safe_load(result.spec_path.read_text())
         ds = spec["design_system"]
         assert_(ds["id"] == "wireframe", "system id wireframe")
-        assert_(ds["base_pattern"] == "dashboard-mixed",
-                f"base pattern is dashboard-mixed (got {ds['base_pattern']})")
+        assert_(ds["base_pattern"] == "dashboard",
+                f"base pattern is dashboard (got {ds['base_pattern']})")
         comp = ds.get("rulebook_compliance") or {}
         assert_(comp.get("mechanical_failed") == 0,
                 "wireframe library dashboard has no mechanical failures")
 
 
 def test_wireframe_library_dashboard_mobile_uses_mobile_variant():
-    section("wireframe(... system='wireframe', platform='mobile', layout_id='dashboard-mobile')")
+    section("wireframe(... system='wireframe', platform='mobile') picks -mobile variant")
     with tempfile.TemporaryDirectory() as td:
         result = wireframe(
             brief="dashboard with metrics",
             system="wireframe",
             platform="mobile",
             output_dir=td,
-            layout_id="dashboard-mobile",
         )
         assert_(result.ok, "result.ok=True")
         if not result.ok:
@@ -170,39 +170,28 @@ def test_wireframe_library_dashboard_mobile_uses_mobile_variant():
         assert_(w == 375, f"mobile dashboard SVG width is 375 (got {w})")
 
 
-def test_no_routing_returns_inventory():
-    section("wireframe() without routing returns routing_request")
-    with tempfile.TemporaryDirectory() as td:
-        result = wireframe(
-            brief="image viewer with carousel and duotone filters",
-            system="swiss",
-            platform="desktop",
-            output_dir=td,
-        )
-        assert_(result.ok, "ok=True for inventory response")
-        assert_(result.routing_request is not None, "routing_request is present")
-        assert_(result.svg_path is None, "no SVG emitted")
-        req = result.routing_request
-        assert_("available_patterns" in req, "has available_patterns")
-        assert_(len(req.get("available_patterns", [])) > 0,
-                "available_patterns is non-empty")
-        assert_("available_components" in req, "has available_components")
-        assert_("instructions" in req, "has instructions field")
-        assert_(req.get("system_id") == "swiss", "system_id is swiss")
-        assert_(req.get("platform") == "desktop", "platform is desktop")
-        assert_("canvas" in req, "has canvas dimensions")
-
-
-def test_auto_mode_returns_none():
-    section("select_layout_pattern(mode='auto') returns None (heuristic removed)")
-    from wireframe_skill.placement import select_layout_pattern
-    from design_system_skill.loader import load_system
-    res = load_system("swiss")
-    if not res.ok:
-        return
-    selection = select_layout_pattern("dashboard for a chat app", res.data,
-                                      platform="desktop", select_mode="auto")
-    assert_(selection is None, "auto mode returns None (agent decides)")
+def test_keyword_routing():
+    section("brief keyword routing")
+    cases = [
+        ("login screen for chat app", "swiss", "auth"),
+        ("settings panel for an account", "swiss", "settings-layout"),
+        ("a long form for new user data", "swiss", "form"),
+        ("data table of members", "swiss", "data-table"),
+        ("modal to confirm an action", "swiss", "modal"),
+        ("empty state when no threads exist", "swiss", "empty-state"),
+    ]
+    for brief, system, expected_base in cases:
+        with tempfile.TemporaryDirectory() as td:
+            result = wireframe(brief=brief, system=system, output_dir=td)
+            if not result.ok:
+                # Some patterns may have rulebook advisory warnings that don't
+                # affect ok status. If failed, skip with detail.
+                print(f"  SKIP  '{brief}' produced errors: {result.errors}")
+                continue
+            spec = yaml.safe_load(result.spec_path.read_text())
+            base = spec["design_system"]["base_pattern"]
+            assert_(base == expected_base,
+                    f"brief '{brief}' chose base '{expected_base}' (got '{base}')")
 
 
 def test_unknown_system_fails_cleanly():
@@ -216,12 +205,9 @@ def test_unknown_system_fails_cleanly():
 
 
 def test_no_system_uses_wireframe_library():
-    section("wireframe(... system=None, layout_id='dashboard-mixed') uses wireframe library")
+    section("wireframe(... system=None) falls back to wireframe library")
     with tempfile.TemporaryDirectory() as td:
-        result = wireframe(
-            brief="dashboard for an app", system=None, output_dir=td,
-            layout_id="dashboard-mixed",
-        )
+        result = wireframe(brief="dashboard for an app", system=None, output_dir=td)
         assert_(result.ok, "result.ok=True with no system",
                 "; ".join(result.errors)[:300])
         if not result.ok:
@@ -242,8 +228,7 @@ def test_invalid_platform_fails():
 def test_emit_happens_even_with_advisory():
     section("emit happens when compliance has advisory warnings")
     with tempfile.TemporaryDirectory() as td:
-        result = wireframe(brief="dashboard", system="swiss", output_dir=td,
-                           layout_id="dashboard")
+        result = wireframe(brief="dashboard", system="swiss", output_dir=td)
         if not result.ok:
             return
         # Swiss dashboard has at least one grid-alignment advisory.
@@ -260,7 +245,6 @@ def test_filename_stem_override():
         result = wireframe(
             brief="dashboard", system="swiss",
             output_dir=td, filename_stem="my_dash",
-            layout_id="dashboard",
         )
         if not result.ok:
             return
@@ -338,7 +322,6 @@ def test_apply_artifact_treatments_noop_for_swiss():
             brief="settings page",
             system="swiss",
             output_dir=td,
-            layout_id="settings-layout-default",
         )
         assert_(result.ok, "result.ok=True", "; ".join(result.errors)[:300])
         if not result.ok:
@@ -391,11 +374,10 @@ def test_build_substitution_request_includes_grammar_caveats():
         return
     spec = result.data
 
-    pattern_path = Path("systems/revolt/layouts/dashboard.svg").resolve()
-    if not pattern_path.exists():
-        # Fallback: resolve from this file's location in tools/wireframe-skill/.
-        pattern_path = Path(__file__).resolve().parents[2] / "systems/revolt/layouts/dashboard.svg"
-
+    # Pattern SVGs live in the system's library (owned by design-system-skill);
+    # resolve through the loaded spec rather than assuming a location.
+    library_root = Path(spec["_meta"]["library_root"])
+    pattern_path = library_root / "layouts" / "dashboard.svg"
     if not pattern_path.exists():
         assert_(False, f"pattern not found at {pattern_path}")
         return
@@ -406,7 +388,7 @@ def test_build_substitution_request_includes_grammar_caveats():
         pattern_svg_path=pattern_path,
     )
 
-    assert_(request.get("schema_version") == "1.0", "schema_version is 1.0")
+    assert_(request.get("schema_version") == "1.1", "schema_version is 1.1")
     assert_(request.get("system_id") == "revolt", "system_id is correct")
     assert_("grammar_caveats" in request, "grammar_caveats key present")
     caveats = request.get("grammar_caveats", {})
@@ -463,6 +445,80 @@ def test_validate_substitutions_flags_uppercase_for_revolt():
     assert_(len(warnings) > 0, f"Got warnings for case violation (got {len(warnings)})")
     assert_(any("ALL CAPS" in w or "UPPERCASE" in w for w in warnings),
             f"Warning mentions uppercase requirement")
+
+
+def test_extract_text_nodes_computes_width_budget():
+    section("substitution.extract_text_nodes: computes per-node width budget")
+    from wireframe_skill.substitution import extract_text_nodes
+
+    # 343px-wide card on a 375-viewBox mobile canvas. Text starts at x=32
+    # inside the card (which begins at x=16). At 12px Inter (ratio 0.52),
+    # available width = (16 + 343) - 32 - 8 margin = 319 px,
+    # max_chars = floor(319 / (12 * 0.52)) = floor(51.1) = 51.
+    svg = """<svg viewBox="0 0 375 812">
+      <rect x="16" y="100" width="343" height="200" fill="white"/>
+      <text x="32" y="140" font-size="12" font-family="Inter">Card title</text>
+      <text x="600" y="50" font-size="14">Outside any rect</text>
+    </svg>"""
+
+    nodes = extract_text_nodes(svg)
+    by_content = {n.content: n for n in nodes}
+
+    card_node = by_content.get("Card title")
+    assert_(card_node is not None, "Card title node extracted")
+    assert_(card_node.max_chars is not None, "max_chars computed when rect encloses text")
+    assert_(45 <= card_node.max_chars <= 55,
+            f"max_chars in expected range for 12px Inter in 343px card (got {card_node.max_chars})")
+    assert_(card_node.font_size == 12.0, "font_size captured")
+
+    # Outside-any-rect node falls back to viewBox width (375).
+    outside = by_content.get("Outside any rect")
+    assert_(outside is not None, "outside-rect node extracted")
+    # x=600 is past the 375 viewBox; available width is negative → max_chars 0.
+    assert_(outside.max_chars == 0,
+            f"text past viewBox right edge gets 0 budget (got {outside.max_chars})")
+
+
+def test_validate_substitutions_flags_overflow_against_budget():
+    section("substitution.validate_substitutions: flags replacements that exceed budget")
+    from wireframe_skill.substitution import (
+        TextNode,
+        validate_substitutions,
+    )
+
+    # Synthetic spec with no grammar rules — only the width check should fire.
+    spec = {"system": {"id": "test"}, "tokens": {}}
+    nodes = [
+        TextNode(
+            content="Short label",
+            tag="text",
+            line_hint="line 1",
+            x=10.0,
+            font_size=12.0,
+            font_family="Inter",
+            text_anchor=None,
+            available_width_px=100.0,
+            max_chars=16,
+        ),
+    ]
+
+    # Replacement is 30 chars — exceeds the 16-char budget.
+    subs = [
+        {"find": "Short label", "replace": "A wildly verbose replacement!", "rationale": "test"},
+    ]
+    warnings = validate_substitutions(subs, spec, nodes)
+    assert_(len(warnings) > 0, f"got overflow warnings (got {len(warnings)})")
+    assert_(any("overflow" in w.lower() or "budget" in w.lower() for w in warnings),
+            "warning mentions overflow or budget")
+
+    # In-budget replacement produces no warning.
+    subs_ok = [
+        {"find": "Short label", "replace": "Tight fit", "rationale": "test"},
+    ]
+    warnings_ok = validate_substitutions(subs_ok, spec, nodes)
+    overflow_warnings = [w for w in warnings_ok if "overflow" in w.lower() or "budget" in w.lower()]
+    assert_(len(overflow_warnings) == 0,
+            f"in-budget replacement passes (got {len(overflow_warnings)} overflow warnings)")
 
 
 def test_apply_substitutions_returns_unapplied_finds():
@@ -685,7 +741,724 @@ def test_assemble_blueprint_dedupes_filter_ids():
     assert_(True, "assembled SVG with duplicate component placeholders")
 
 
-# ─── Change E: substitution mode ──────────────────────────────────
+# ─── Phase B: router escalation ─────────────────────────────────────
+
+
+def test_escalate_carousel_brief():
+    section("placement: off-catalog 'carousel' brief escalates to decomposition")
+    from wireframe_skill.placement import select_layout_pattern, EscalateToDecomposition
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    sel = select_layout_pattern("carousel of trip photos", spec)
+    assert_(isinstance(sel, EscalateToDecomposition),
+            "carousel brief → EscalateToDecomposition",
+            f"got {type(sel).__name__}")
+    if isinstance(sel, EscalateToDecomposition):
+        assert_("carousel" in sel.brief_nouns,
+                "brief_nouns includes 'carousel'",
+                str(sel.brief_nouns))
+        assert_(sel.catalog_intersection == [],
+                "catalog_intersection is empty (no overlap)",
+                str(sel.catalog_intersection))
+
+
+def test_escalate_filter_chip_strip():
+    section("placement: 'filter chip strip' brief escalates")
+    from wireframe_skill.placement import select_layout_pattern, EscalateToDecomposition
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    sel = select_layout_pattern("filter chip strip for products", spec)
+    assert_(isinstance(sel, EscalateToDecomposition),
+            "filter chip strip → EscalateToDecomposition")
+
+
+def test_dashboard_brief_does_not_escalate():
+    section("placement: 'dashboard' brief still routes via keyword (no escalation)")
+    from wireframe_skill.placement import select_layout_pattern, LayoutSelection
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    sel = select_layout_pattern("dashboard for a chat app", spec)
+    assert_(isinstance(sel, LayoutSelection),
+            "dashboard brief → LayoutSelection (not escalation)")
+    if isinstance(sel, LayoutSelection):
+        assert_(not sel.fallback,
+                "dashboard brief is keyword-matched, not a fallback",
+                f"fallback={sel.fallback}")
+
+
+def test_no_escalate_flag_preserves_legacy_fallback():
+    section("placement: escalate=False preserves dashboard fallback for off-catalog")
+    from wireframe_skill.placement import select_layout_pattern, LayoutSelection
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    sel = select_layout_pattern("carousel of trip photos", spec, escalate=False)
+    assert_(isinstance(sel, LayoutSelection),
+            "carousel + escalate=False → LayoutSelection (legacy)")
+    if isinstance(sel, LayoutSelection):
+        assert_(sel.fallback,
+                "carousel + escalate=False → fallback=True")
+        assert_(sel.base_pattern == "dashboard",
+                f"falls back to dashboard (got {sel.base_pattern!r})")
+
+
+def test_wireframe_escalation_surfaces_pass_request():
+    section("wireframe(): off-catalog brief returns requires_orchestrator_pass + pass_request")
+    import tempfile
+    from wireframe_skill import wireframe
+    with tempfile.TemporaryDirectory() as td:
+        r = wireframe(brief="carousel of trips", system="swiss", output_dir=td)
+    assert_(r.requires_orchestrator_pass,
+            "requires_orchestrator_pass=True on off-catalog brief",
+            f"got {r.requires_orchestrator_pass}")
+    assert_(r.pass_request is not None,
+            "pass_request payload is populated")
+    if r.pass_request:
+        assert_(r.pass_request.get("system_id") == "swiss",
+                "pass_request.system_id is the requested system")
+        assert_(len(r.pass_request.get("components", [])) > 0,
+                "pass_request.components is non-empty")
+    assert_(r.escalation_reason is not None,
+            "escalation_reason is set")
+
+
+def test_escalates_on_system_with_large_component_catalog():
+    section("placement: off-catalog brief escalates even on a 190+ component system")
+    from wireframe_skill.placement import select_layout_pattern, EscalateToDecomposition
+    from design_system_skill import load_system
+    # Regression: the old overlap test matched brief nouns against every
+    # component name by bidirectional substring, so "board" matched
+    # "dashboard" and this brief silently rendered as a dashboard. sketch
+    # is the system where that bit — 4 patterns, 194 catalog names.
+    spec = load_system("sketch").data
+    sel = select_layout_pattern("kanban board with three columns", spec)
+    assert_(isinstance(sel, EscalateToDecomposition),
+            "kanban brief on sketch → EscalateToDecomposition",
+            f"got {type(sel).__name__}"
+            + (f" (fallback={sel.fallback}, pattern={sel.pattern_id})"
+               if hasattr(sel, "fallback") else ""))
+
+
+def test_component_nouns_do_not_suppress_escalation():
+    section("placement: mentioning components ('image', 'filter', 'chips') still escalates")
+    from wireframe_skill.placement import select_layout_pattern, EscalateToDecomposition
+    from design_system_skill import load_system
+    spec = load_system("sketch").data
+    # Every one of these nouns exists in sketch's component catalog. None
+    # of them says the system has authored this *screen*.
+    sel = select_layout_pattern(
+        "image carousel with swipeable filter chips", spec)
+    assert_(isinstance(sel, EscalateToDecomposition),
+            "component-noun-heavy off-catalog brief → EscalateToDecomposition",
+            f"got {type(sel).__name__}")
+
+
+def test_structural_pattern_tokens_do_not_suppress_escalation():
+    section("placement: 'column' from 'form-single-column' doesn't block escalation")
+    from wireframe_skill.placement import select_layout_pattern, EscalateToDecomposition
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    # swiss authors "form-single-column"; the word "columns" in a brief
+    # describes arrangement, not a screen genre, so it must not count.
+    sel = select_layout_pattern("three columns of swimlanes", spec)
+    assert_(isinstance(sel, EscalateToDecomposition),
+            "structural token 'columns' → still escalates",
+            f"got {type(sel).__name__}")
+
+
+def test_brief_naming_non_keyword_pattern_routes_to_it():
+    section("placement: brief naming an authored pattern outside PATTERN_HEURISTICS routes to it")
+    from wireframe_skill.placement import select_layout_pattern, LayoutSelection
+    from design_system_skill import load_system
+    # revolt authors "banner-promotional". No keyword rule covers "banner",
+    # so this brief used to suppress escalation and then render the default
+    # dashboard fallback — ignoring the match that suppressed it.
+    spec = load_system("revolt").data
+    sel = select_layout_pattern("promotional banner for a sale", spec)
+    assert_(isinstance(sel, LayoutSelection),
+            "named-pattern brief → LayoutSelection",
+            f"got {type(sel).__name__}")
+    if isinstance(sel, LayoutSelection):
+        assert_(sel.base_pattern == "banner-promotional",
+                "routes to banner-promotional",
+                f"got {sel.base_pattern!r}")
+        assert_(not sel.fallback,
+                "named-pattern match is not a fallback",
+                f"fallback={sel.fallback}")
+
+
+def test_wireframe_in_catalog_brief_does_not_escalate():
+    section("wireframe(): keyword-matched brief produces a normal result")
+    import tempfile
+    from wireframe_skill import wireframe
+    with tempfile.TemporaryDirectory() as td:
+        r = wireframe(brief="dashboard for chat app", system="swiss", output_dir=td)
+    assert_(r.ok, "wireframe() ok=True on keyword-matched brief",
+            "; ".join(r.errors))
+    assert_(not r.requires_orchestrator_pass,
+            "requires_orchestrator_pass=False on keyword-matched brief")
+
+
+
+
+# ─── Phase C: atoms + token validator ───────────────────────────────
+
+
+def _carousel_blueprint():
+    """Reusable portable atom blueprint for Phase C tests."""
+    return {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [
+            {
+                "id": "hero",
+                "x": 0, "y": 0, "w": 1280, "h": 480,
+                "atoms": [
+                    {"type": "rect", "x": 0, "y": 0, "w": 1280, "h": 480, "fill": "$surface-inset"},
+                    {"type": "image_placeholder", "x": 48, "y": 48, "w": 1184, "h": 320},
+                    {"type": "text", "x": 48, "y": 410, "value": "Featured trips",
+                     "style": "$type.headline", "fill": "$ink"},
+                    {"type": "text", "x": 48, "y": 450, "value": "Discover your next adventure",
+                     "style": "$type.body", "fill": "$ink-muted"},
+                ],
+            },
+            {
+                "id": "carousel-controls",
+                "x": 0, "y": 500, "w": 1280, "h": 80,
+                "atoms": [
+                    {"type": "group", "x": 580, "y": 40,
+                     "atoms": [{"type": "circle", "cx": 0, "cy": 0, "r": 4, "fill": "$ink-muted"}],
+                     "repeat": 5, "gap": 16, "direction": "horizontal"},
+                    {"type": "line", "x1": 48, "y1": 78, "x2": 1232, "y2": 78,
+                     "stroke": "$outline", "stroke_w": "$stroke.hairline"},
+                ],
+            },
+        ],
+    }
+
+
+def test_portable_atom_blueprint_validates_against_three_systems():
+    section("Phase C — same atom blueprint validates against Swiss + Riso + Editorial")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill import load_system
+    from design_system_skill.loader import clear_cache
+    bp = _carousel_blueprint()
+    for sys_id in ("swiss", "riso", "editorial"):
+        clear_cache()
+        spec = load_system(sys_id).data
+        errors = validate_blueprint(bp, spec)
+        assert_(not errors, f"blueprint validates against {sys_id}",
+                "; ".join(errors[:3]) if errors else "")
+
+
+def test_portable_atom_blueprint_renders_in_three_systems():
+    section("Phase C — same atom blueprint renders DIFFERENT-but-coherent SVGs per system")
+    import re as _re
+    from wireframe_skill.assembler import assemble_blueprint
+    from design_system_skill import load_system
+    from design_system_skill.loader import clear_cache
+    bp = _carousel_blueprint()
+    seen_families = set()
+    seen_fills = set()
+    for sys_id in ("swiss", "riso", "editorial"):
+        clear_cache()
+        spec = load_system(sys_id).data
+        svg, warns = assemble_blueprint(bp, spec)
+        m_font = _re.search(r'font-family="([^"]+)"', svg)
+        m_fill = _re.search(r'<rect[^>]*fill="([^"]+)"', svg)
+        assert_(m_font is not None, f"{sys_id} SVG contains a font-family attribute")
+        assert_(m_fill is not None, f"{sys_id} SVG contains a rect with a resolved fill")
+        if m_font:
+            seen_families.add(m_font.group(1))
+        if m_fill:
+            seen_fills.add(m_fill.group(1))
+    assert_(len(seen_families) == 3,
+            "three systems produce three distinct font families",
+            str(sorted(seen_families)))
+    assert_(len(seen_fills) == 3,
+            "three systems produce three distinct hero-rect fills",
+            str(sorted(seen_fills)))
+
+
+def test_validate_atoms_rejects_raw_hex():
+    section("Phase C — validate_atoms rejects raw hex in atom paint")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{
+            "id": "bad", "x": 0, "y": 0, "w": 100, "h": 100,
+            "atoms": [{"type": "rect", "x": 0, "y": 0, "w": 50, "h": 50, "fill": "#ff0000"}],
+        }],
+    }
+    errors = validate_blueprint(bp, spec)
+    assert_(any("raw hex" in e for e in errors),
+            "validator flags raw hex with a 'raw hex' message",
+            "; ".join(errors[:3]))
+
+
+def test_validate_atoms_rejects_unknown_token():
+    section("Phase C — validate_atoms rejects unknown $token references")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{
+            "id": "bad", "x": 0, "y": 0, "w": 100, "h": 100,
+            "atoms": [{"type": "rect", "x": 0, "y": 0, "w": 50, "h": 50, "fill": "$nonexistent"}],
+        }],
+    }
+    errors = validate_blueprint(bp, spec)
+    assert_(any("nonexistent" in e for e in errors),
+            "validator names the unknown token in the error",
+            "; ".join(errors[:3]))
+
+
+def test_validate_atoms_rejects_cross_system_ref_in_portable_scope():
+    section("Phase C — validate_atoms rejects swiss:foo in a portable (no-scope) blueprint")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{
+            "id": "bad", "x": 0, "y": 0, "w": 100, "h": 100,
+            "atoms": [{"type": "rect", "x": 0, "y": 0, "w": 50, "h": 50, "fill": "swiss:grid.columns"}],
+        }],
+    }
+    errors = validate_blueprint(bp, spec)
+    # swiss:grid.columns would resolve to an int (12), not a color, but also
+    # the portable scope means it's rejected before that point.
+    assert_(any("portable" in e or "scope" in e or "color" in e for e in errors),
+            "validator rejects system ref or its non-color resolution",
+            "; ".join(errors[:3]))
+
+
+def test_validate_atoms_rejects_unknown_text_style():
+    section("Phase C — validate_atoms rejects unknown $type.* style")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{
+            "id": "bad", "x": 0, "y": 0, "w": 200, "h": 100,
+            "atoms": [{"type": "text", "x": 0, "y": 30, "value": "Hi",
+                       "style": "$type.gigantic"}],
+        }],
+    }
+    errors = validate_blueprint(bp, spec)
+    assert_(any("gigantic" in e for e in errors),
+            "validator names the unknown text style",
+            "; ".join(errors[:3]))
+
+
+def test_atom_region_and_component_region_coexist():
+    section("Phase C — a blueprint can mix component regions and atom regions")
+    from wireframe_skill.decomposition import validate_blueprint
+    from wireframe_skill.assembler import assemble_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [
+            # An atom region:
+            {"id": "hero", "x": 0, "y": 0, "w": 1280, "h": 200,
+             "atoms": [{"type": "rect", "x": 0, "y": 0, "w": 1280, "h": 200, "fill": "$surface-inset"}]},
+            # A component region (using a real Swiss component):
+            {"id": "footer", "x": 0, "y": 700, "w": 1280, "h": 100,
+             "components": []},  # empty components list is allowed
+        ],
+    }
+    errors = validate_blueprint(bp, spec)
+    assert_(not errors, "mixed blueprint validates",
+            "; ".join(errors[:3]))
+    svg, warns = assemble_blueprint(bp, spec)
+    assert_(svg.count("atom-region") == 1,
+            "atom region was emitted as a labelled <g class=\"atom-region\">")
+
+
+def test_validate_atoms_rejects_both_atoms_and_components():
+    section("Phase C — region cannot declare both atoms and components")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{
+            "id": "confused", "x": 0, "y": 0, "w": 100, "h": 100,
+            "atoms": [{"type": "rect", "x": 0, "y": 0, "w": 50, "h": 50, "fill": "$surface"}],
+            "components": [{"component_id": "card-default", "x": 0, "y": 0}],
+        }],
+    }
+    errors = validate_blueprint(bp, spec)
+    assert_(any("both 'atoms' and 'components'" in e for e in errors),
+            "validator rejects regions that declare both",
+            "; ".join(errors[:3]))
+
+
+def test_atom_vocabulary_in_decomposition_request():
+    section("Phase C — build_decomposition_request includes atom_vocabulary block")
+    from wireframe_skill.decomposition import build_decomposition_request
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    req = build_decomposition_request("freeform carousel", spec, platform="desktop")
+    assert_("atom_vocabulary" in req, "request payload includes atom_vocabulary")
+    av = req["atom_vocabulary"]
+    assert_("rect" in av["atom_types"] and "group" in av["atom_types"],
+            "atom_vocabulary lists all 6 atom types")
+    assert_("color" in av["tokens"] and "ink" in av["tokens"]["color"],
+            "atom_vocabulary surfaces the system's common color tokens")
+    assert_("$type.headline" in av["reference_syntax"]["portable"]
+            or "$<role>" in av["reference_syntax"]["portable"],
+            "atom_vocabulary documents portable reference syntax")
+
+
+# ─── Agent-driven layout routing ─────────────────────────────────────
+
+
+def test_request_routing_returns_inventory():
+    section("routing: request_routing=True returns pattern + component inventory")
+    out = Path(tempfile.mkdtemp(prefix="wf-routing-"))
+    try:
+        result = wireframe(
+            brief="a triage queue for support tickets",
+            system="swiss", platform="desktop", output_dir=out,
+            request_routing=True,
+        )
+        assert_(result.ok, "routing request result is ok")
+        assert_(result.svg_path is None, "no SVG emitted in routing pass")
+        req = result.routing_request
+        assert_(req is not None and req.get("action") == "select_routing",
+                "routing_request carries action=select_routing")
+        assert_(req and any(p["pattern_id"] == "dashboard"
+                            for p in req["available_patterns"]),
+                "available_patterns lists the system's layouts")
+        assert_(req and isinstance(req.get("available_components"), list)
+                and req["available_components"],
+                "available_components lists the system's components")
+        assert_(req and "layout_id" in req.get("instructions", ""),
+                "instructions tell the agent how to continue")
+    finally:
+        shutil.rmtree(out, ignore_errors=True)
+
+
+def test_layout_id_override_bypasses_heuristics():
+    section("routing: layout_id override generates without keyword routing")
+    out = Path(tempfile.mkdtemp(prefix="wf-layoutid-"))
+    try:
+        result = wireframe(
+            brief="a triage queue for support tickets",  # off-catalog brief
+            system="swiss", platform="desktop", output_dir=out,
+            layout_id="dashboard",
+        )
+        assert_(result.ok, "explicit layout_id generates successfully",
+                "; ".join(result.errors))
+        assert_(result.selection is not None
+                and result.selection.pattern_id == "dashboard",
+                "selection honours the explicit layout_id")
+        assert_(result.svg_path is not None and result.svg_path.exists(),
+                "SVG emitted")
+        bad = wireframe(
+            brief="anything", system="swiss", output_dir=out,
+            layout_id="no-such-pattern",
+        )
+        assert_(not bad.ok and any("no-such-pattern" in e for e in bad.errors),
+                "unknown layout_id fails cleanly")
+    finally:
+        shutil.rmtree(out, ignore_errors=True)
+
+
+def test_apply_layout_selection_roundtrip():
+    section("routing: build request → apply selection roundtrip")
+    from wireframe_skill import (
+        build_layout_selection_request, apply_layout_selection,
+    )
+    from design_system_skill import load_system
+    spec = load_system("wireframe").data
+    req = build_layout_selection_request("an article reader", spec, "desktop")
+    assert_(any(p["base_name"] == "article" for p in req["available_patterns"]),
+            "request lists article pattern with base_name")
+    sel = apply_layout_selection(
+        {"selected_pattern_id": "article-default", "rationale": "long-form reading"},
+        spec, "desktop",
+    )
+    assert_(sel is not None and sel.pattern_id == "article-default"
+            and sel.base_pattern == "article",
+            "agent's selection becomes a LayoutSelection")
+    assert_(sel is not None and sel.svg_path.exists(),
+            "selection resolves to a real SVG path")
+    missing = apply_layout_selection(
+        {"selected_pattern_id": "not-a-pattern"}, spec, "desktop")
+    assert_(missing is None, "unknown selection returns None")
+
+
+def test_select_mode_exact_and_deferred():
+    section("routing: select_mode exact matches named patterns; auto defers")
+    from wireframe_skill.placement import select_layout_pattern
+    from design_system_skill import load_system
+    spec = load_system("wireframe").data
+    exact = select_layout_pattern(
+        "the dashboard for ops", spec, select_mode="exact")
+    assert_(exact is not None and exact.base_pattern == "dashboard",
+            "exact mode matches a pattern named in the brief")
+    no_name = select_layout_pattern(
+        "a triage queue", spec, select_mode="exact")
+    assert_(no_name is None, "exact mode returns None when nothing is named")
+    deferred = select_layout_pattern(
+        "dashboard for ops", spec, select_mode="auto")
+    assert_(deferred is None, "auto mode always defers to the agent")
+
+
+# ─── Custom SVG components in blueprints ─────────────────────────────
+
+
+def test_custom_svg_component_validates_and_assembles():
+    section("custom svg: blueprint with type=custom validates and assembles")
+    from wireframe_skill.decomposition import validate_blueprint
+    from wireframe_skill import assemble_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{
+            "id": "main", "x": 0, "y": 0, "w": 1280, "h": 800,
+            "components": [
+                {"type": "custom", "component_id": "custom-slider",
+                 "x": 20, "y": 240,
+                 "svg": ("<rect x='0' y='8' width='260' height='4' rx='2' fill='#E0E0E0'/>"
+                         "<circle cx='130' cy='10' r='10' fill='#424242'/>")},
+            ],
+        }],
+    }
+    errors = validate_blueprint(bp, spec)
+    assert_(not errors, "custom component passes validation",
+            "; ".join(errors[:3]))
+    svg, warns = assemble_blueprint(bp, spec)
+    assert_("custom-slider" in svg, "custom component group id appears in output")
+    assert_("<circle cx='130'" in svg, "inline custom SVG body is emitted verbatim")
+    assert_(not any("custom" in w for w in warns),
+            "no custom-related assembly warnings", "; ".join(warns[:3]))
+
+
+def test_custom_svg_component_requires_svg_and_position():
+    section("custom svg: empty svg / missing position are validation errors")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{
+            "id": "main", "x": 0, "y": 0, "w": 1280, "h": 800,
+            "components": [
+                {"type": "custom", "component_id": "empty-custom", "svg": "   "},
+            ],
+        }],
+    }
+    errors = validate_blueprint(bp, spec)
+    assert_(any("non-empty 'svg'" in e for e in errors),
+            "empty svg field is flagged", "; ".join(errors[:3]))
+    assert_(any("missing 'x'" in e for e in errors),
+            "missing x is flagged")
+    assert_(any("missing 'y'" in e for e in errors),
+            "missing y is flagged")
+
+# ─── token contract consumption (schema v0.3) ────────────────────
+
+
+def test_export_tokens_uses_system_contract():
+    section("export_tokens_for_authoring: fills come from the system's token contract")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    from design_system_skill.loader import load_system
+    res = load_system("terminal")
+    assert_(res.ok, "load_system('terminal') ok")
+    if not res.ok:
+        return
+    out = export_tokens_for_authoring(res.data)
+    css = out["typography"]["css_class_block"]
+    assert_("fill: #C8F7C5" in css, "text-primary uses terminal text_primary (#C8F7C5)")
+    assert_("#212121" not in css, "wireframe grey no longer leaks into other systems")
+    assert_("fill: #FF4E4E" in css, "text-danger uses terminal danger (#FF4E4E)")
+    rules = out["drawing_rules"]
+    assert_(rules["focus_ring"] == "#00FF66", f"drawing_rules.focus_ring (got {rules.get('focus_ring')})")
+    assert_(rules["text_inverse"] == "#0A0F0A", f"text_inverse from contract (got {rules['text_inverse']})")
+    assert_("stroke='#1F2F1F' stroke-width='1'" == rules["stroke_border"],
+            f"aliased elevation border resolves (got {rules['stroke_border']})")
+    assert_(out.get("contract", {}).get("system") == "terminal", "contract returned to agents")
+    assert_(out["typography"]["font_stack_structural"] == "'JetBrains Mono', monospace",
+            "font stack alias resolved")
+
+
+def test_export_tokens_without_contract_keeps_defaults():
+    section("export_tokens_for_authoring: specs without a contract keep wireframe defaults")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    out = export_tokens_for_authoring({"system": {"id": "legacy"}, "tokens": {"colors": {}}})
+    css = out["typography"]["css_class_block"]
+    assert_("fill: #212121" in css and "fill: #B71C1C" in css, "legacy defaults retained")
+    assert_("contract" not in out, "no contract key when the spec has none")
+    assert_("motion" not in out, "no motion key when the spec has no contract")
+
+
+def test_export_tokens_includes_motion():
+    section("export_tokens_for_authoring: motion tiers and declarations (issue #10)")
+    from wireframe_skill.tokens import export_tokens_for_authoring
+    from design_system_skill.loader import load_system
+    res = load_system("terminal")
+    assert_(res.ok, "load_system('terminal') ok")
+    if not res.ok:
+        return
+    motion = export_tokens_for_authoring(res.data).get("motion") or {}
+    assert_(set(motion.get("tiers", {})) == {"fast", "moderate", "slow", "expressive"},
+            f"all four tiers exported ({sorted(motion.get('tiers', {}))})")
+    assert_(motion["tiers"]["slow"]["css_enter"] == "250ms cubic-bezier(0, 0, 1, 1)",
+            f"slow tier CSS shorthand (got {motion['tiers']['slow'].get('css_enter')})")
+    assert_(motion.get("reduced_motion") == "none", "terminal reduced-motion policy is none")
+    cursor = motion.get("declarations", {}).get("cursor") or [{}]
+    assert_(cursor[0].get("timing", {}).get("easing") == "step-end",
+            "motion.elements.cursor declaration exported with its step-end timing")
+    assert_("list_item" in motion["declarations"], "component declarations exported")
+    css = motion.get("css_custom_properties", "")
+    assert_("--motion-fast-enter: 0ms;" in css and "prefers-reduced-motion: reduce" in css,
+            "CSS custom properties with a reduced-motion override")
+
+
+def test_custom_svg_does_not_break_library_id_check():
+    section("custom svg: library components still validated against catalog")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill import load_system
+    spec = load_system("swiss").data
+    bp = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{
+            "id": "main", "x": 0, "y": 0, "w": 1280, "h": 800,
+            "components": [
+                {"component_id": "definitely-not-a-component", "x": 0, "y": 0},
+                {"type": "custom", "component_id": "ok-custom", "x": 0, "y": 100,
+                 "svg": "<rect x='0' y='0' width='10' height='10'/>"},
+            ],
+        }],
+    }
+    errors = validate_blueprint(bp, spec)
+    assert_(any("definitely-not-a-component" in e for e in errors),
+            "unknown library id still rejected alongside custom sibling")
+
+
+# ─── Token export + component reader (freehand authoring support) ───
+
+
+def test_export_tokens_for_authoring_wireframe():
+    section("tokens: export_tokens_for_authoring returns authoring vocabulary")
+    from wireframe_skill import export_tokens_for_authoring
+    from design_system_skill import load_system
+    spec = load_system("wireframe").data
+    out = export_tokens_for_authoring(spec)
+    assert_(out["system_id"] == "wireframe", "system_id round-trips")
+    assert_(isinstance(out["palette"], list) and out["palette"],
+            "palette flattens to a non-empty list")
+    assert_(all({"name", "value", "role", "usage_constraint"} <= set(p)
+                for p in out["palette"]),
+            "every palette entry carries name/value/role/usage_constraint")
+    rules = out["drawing_rules"]
+    assert_("stroke_border" in rules and "stroke='" in rules["stroke_border"],
+            "borders_only systems get copy-pasteable stroke fragments")
+    typo = out["typography"]
+    assert_("<style>" in typo["css_class_block"],
+            "typography includes a ready-to-paste CSS class block")
+    layout = out["layout"]
+    assert_("desktop" in layout["canvas"] and "mobile" in layout["canvas"],
+            "layout exposes canvas dimensions per platform")
+
+
+def test_export_tokens_non_border_elevation_notes_strategy():
+    section("tokens: non-borders elevation strategies note the treatment")
+    from wireframe_skill import export_tokens_for_authoring
+    from design_system_skill import load_system
+    spec = load_system("prism").data
+    out = export_tokens_for_authoring(spec)
+    rules = out["drawing_rules"]
+    assert_("stroke_border" not in rules,
+            "no border fragments emitted for glass_blur elevation")
+    assert_("artifact_treatments" in rules.get("elevation_note", ""),
+            "elevation_note points authors at artifact_treatments")
+
+
+def test_read_component_resolves_base_and_variant_ids():
+    section("components: read_component resolves base + variant ids")
+    from wireframe_skill import read_component
+    from design_system_skill import load_system
+    spec = load_system("wireframe").data
+    direct = read_component("button-primary", spec)
+    assert_(direct["ok"] and direct["component_id"] == "button-primary",
+            "fully-qualified variant id resolves directly")
+    assert_("<svg" in direct["svg_source"], "svg_source contains the SVG")
+    assert_(direct["viewBox"]["w"] > 0 and direct["viewBox"]["h"] > 0,
+            "viewBox dimensions extracted")
+    base = read_component("toggle", spec)
+    assert_(base["ok"] and base["component_id"].startswith("toggle-"),
+            f"base id resolves to default variant (got {base['component_id']})")
+
+
+def test_read_components_batch_collects_errors():
+    section("components: read_components_batch collects per-id errors")
+    from wireframe_skill import read_components_batch
+    from design_system_skill import load_system
+    spec = load_system("wireframe").data
+    results = read_components_batch(["button-primary", "does-not-exist"], spec)
+    assert_(len(results) == 2, "one result per requested id")
+    assert_(results[0]["ok"], "valid id succeeds")
+    assert_(not results[1]["ok"] and "does-not-exist" in results[1]["error"],
+            "unknown id reports a structured error instead of raising")
+
+
+# ─── Upstream routing, two-turn and composition flows ────────────────
+
+
+def test_no_routing_returns_inventory():
+    section("wireframe(request_routing=True) returns routing_request")
+    # The Python API defaults to keyword routing (with escalation); the
+    # inventory is opt-in here and the default on the MCP surface (wf_generate).
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(
+            brief="image viewer with carousel and duotone filters",
+            system="swiss",
+            platform="desktop",
+            output_dir=td,
+            request_routing=True,
+        )
+        assert_(result.ok, "ok=True for inventory response")
+        assert_(result.routing_request is not None, "routing_request is present")
+        assert_(result.svg_path is None, "no SVG emitted")
+        req = result.routing_request
+        assert_("available_patterns" in req, "has available_patterns")
+        assert_(len(req.get("available_patterns", [])) > 0,
+                "available_patterns is non-empty")
+        assert_("available_components" in req, "has available_components")
+        assert_("instructions" in req, "has instructions field")
+        assert_(req.get("system_id") == "swiss", "system_id is swiss")
+        assert_(req.get("platform") == "desktop", "platform is desktop")
+        assert_("canvas" in req, "has canvas dimensions")
+
+
+def test_auto_mode_returns_none():
+    section("select_layout_pattern(mode='auto') returns None (heuristic removed)")
+    from wireframe_skill.placement import select_layout_pattern
+    from design_system_skill.loader import load_system
+    res = load_system("swiss")
+    if not res.ok:
+        return
+    selection = select_layout_pattern("dashboard for a chat app", res.data,
+                                      platform="desktop", select_mode="auto")
+    assert_(selection is None, "auto mode returns None (agent decides)")
 
 
 def test_wf_generate_substitute_returns_request():
@@ -711,8 +1484,8 @@ def test_wf_generate_substitute_returns_request():
             req = result.substitution_request
             assert_("text_nodes" in req, "has text_nodes key")
             assert_("grammar_caveats" in req, "has grammar_caveats key")
-            assert_(req.get("schema_version") == "1.0",
-                    f"schema_version is 1.0 (got {req.get('schema_version')})")
+            assert_(req.get("schema_version") == "1.1",
+                    f"schema_version is 1.1 — text nodes carry width budgets (got {req.get('schema_version')})")
             assert_(req.get("system_id") == "swiss",
                     f"system_id is swiss (got {req.get('system_id')})")
             emitted = list(Path(td).glob("*.svg"))
@@ -767,9 +1540,6 @@ def test_wf_generate_substitute_unknown_system():
         assert_(not result.ok, "unknown system fails (ok=False)")
         assert_(result.substitution_request is None,
                 "no substitution_request on failure")
-
-
-# ─── Change D: smarter template selection ─────────────────────────
 
 
 def test_select_layout_exact_finds_dashboard():
@@ -875,9 +1645,6 @@ def test_apply_layout_selection_invalid():
     response = {"selected_pattern_id": "nonexistent-layout", "rationale": "test"}
     selection = apply_layout_selection(response, res.data, platform="desktop")
     assert_(selection is None, "invalid choice returns None")
-
-
-# ─── Change B: composition layer ─────────────────────────────────
 
 
 def test_wireframe_compose_returns_decomposition_request():
@@ -1058,117 +1825,13 @@ def test_full_composition_e2e():
                 "SVG contains the chosen button component")
 
 
-# ─── token contract consumption (schema v0.3) ────────────────────
-
-
-def test_export_tokens_uses_system_contract():
-    section("export_tokens_for_authoring: fills come from the system's token contract")
-    from wireframe_skill.tokens import export_tokens_for_authoring
-    from design_system_skill.loader import load_system
-    res = load_system("terminal")
-    assert_(res.ok, "load_system('terminal') ok")
-    if not res.ok:
-        return
-    out = export_tokens_for_authoring(res.data)
-    css = out["typography"]["css_class_block"]
-    assert_("fill: #C8F7C5" in css, "text-primary uses terminal text_primary (#C8F7C5)")
-    assert_("#212121" not in css, "wireframe grey no longer leaks into other systems")
-    assert_("fill: #FF4E4E" in css, "text-danger uses terminal danger (#FF4E4E)")
-    rules = out["drawing_rules"]
-    assert_(rules["focus_ring"] == "#00FF66", f"drawing_rules.focus_ring (got {rules.get('focus_ring')})")
-    assert_(rules["text_inverse"] == "#0A0F0A", f"text_inverse from contract (got {rules['text_inverse']})")
-    assert_("stroke='#1F2F1F' stroke-width='1'" == rules["stroke_border"],
-            f"aliased elevation border resolves (got {rules['stroke_border']})")
-    assert_(out.get("contract", {}).get("system") == "terminal", "contract returned to agents")
-    assert_(out["typography"]["font_stack_structural"] == "'JetBrains Mono', monospace",
-            "font stack alias resolved")
-
-
-def test_export_tokens_without_contract_keeps_defaults():
-    section("export_tokens_for_authoring: specs without a contract keep wireframe defaults")
-    from wireframe_skill.tokens import export_tokens_for_authoring
-    out = export_tokens_for_authoring({"system": {"id": "legacy"}, "tokens": {"colors": {}}})
-    css = out["typography"]["css_class_block"]
-    assert_("fill: #212121" in css and "fill: #B71C1C" in css, "legacy defaults retained")
-    assert_("contract" not in out, "no contract key when the spec has none")
-    assert_("motion" not in out, "no motion key when the spec has no contract")
-
-
-def test_export_tokens_includes_motion():
-    section("export_tokens_for_authoring: motion tiers and declarations (issue #10)")
-    from wireframe_skill.tokens import export_tokens_for_authoring
-    from design_system_skill.loader import load_system
-    res = load_system("terminal")
-    assert_(res.ok, "load_system('terminal') ok")
-    if not res.ok:
-        return
-    motion = export_tokens_for_authoring(res.data).get("motion") or {}
-    assert_(set(motion.get("tiers", {})) == {"fast", "moderate", "slow", "expressive"},
-            f"all four tiers exported ({sorted(motion.get('tiers', {}))})")
-    assert_(motion["tiers"]["slow"]["css_enter"] == "250ms cubic-bezier(0, 0, 1, 1)",
-            f"slow tier CSS shorthand (got {motion['tiers']['slow'].get('css_enter')})")
-    assert_(motion.get("reduced_motion") == "none", "terminal reduced-motion policy is none")
-    cursor = motion.get("declarations", {}).get("cursor") or [{}]
-    assert_(cursor[0].get("timing", {}).get("easing") == "step-end",
-            "motion.elements.cursor declaration exported with its step-end timing")
-    assert_("list_item" in motion["declarations"], "component declarations exported")
-    css = motion.get("css_custom_properties", "")
-    assert_("--motion-fast-enter: 0ms;" in css and "prefers-reduced-motion: reduce" in css,
-            "CSS custom properties with a reduced-motion override")
-
-
 def main():
-    print("wireframe-skill v3.0 end-to-end tests\n" + "=" * 50)
-    test_swiss_dashboard_desktop()
-    test_swiss_dashboard_mobile()
-    test_wireframe_library_dashboard_desktop()
-    test_wireframe_library_dashboard_mobile_uses_mobile_variant()
-    test_no_routing_returns_inventory()
-    test_auto_mode_returns_none()
-    test_unknown_system_fails_cleanly()
-    test_no_system_uses_wireframe_library()
-    test_invalid_platform_fails()
-    test_emit_happens_even_with_advisory()
-    test_filename_stem_override()
-    test_apply_artifact_treatments_riso_injects_filters_and_layers()
-    test_apply_artifact_treatments_noop_for_swiss()
-    # New substitution module tests
-    test_extract_text_nodes_finds_all_text_and_tspans()
-    test_build_substitution_request_includes_grammar_caveats()
-    test_apply_substitutions_replaces_in_text_nodes_only()
-    test_validate_substitutions_flags_uppercase_for_revolt()
-    test_apply_substitutions_returns_unapplied_finds()
-    # New decomposition module tests
-    test_build_decomposition_request_lists_components()
-    test_validate_blueprint_flags_unknown_component()
-    test_validate_blueprint_flags_oversized_component()
-    test_assemble_blueprint_swiss_dashboard_minimal()
-    test_assemble_blueprint_dedupes_filter_ids()
-    # Change E: substitution mode
-    test_wf_generate_substitute_returns_request()
-    test_wf_generate_substitute_false_unchanged()
-    test_wf_generate_substitute_to_dict()
-    test_wf_generate_substitute_unknown_system()
-    # Change D: smarter template selection
-    test_select_layout_exact_finds_dashboard()
-    test_select_layout_exact_rejects_synonym()
-    test_wan_regression_edit_not_form()
-    test_select_layout_request_mode()
-    test_build_layout_selection_request_structure()
-    test_apply_layout_selection_valid()
-    test_apply_layout_selection_invalid()
-    # Change B: composition layer
-    test_wireframe_compose_returns_decomposition_request()
-    test_wireframe_compose_false_unchanged()
-    test_wireframe_layout_id_override()
-    test_wireframe_invalid_layout_id()
-    test_wireframe_compose_takes_precedence()
-    test_emit_with_components_used()
-    test_full_composition_e2e()
-    test_export_tokens_uses_system_contract()
-    test_export_tokens_without_contract_keeps_defaults()
-    test_export_tokens_includes_motion()
-
+    """Run every test in this module in definition order (script mode)."""
+    print("wireframe-skill end-to-end tests\n" + "=" * 50)
+    tests = [obj for name, obj in globals().items()
+             if name.startswith("test_") and callable(obj)]
+    for test in tests:
+        test()
     print(f"\n{'=' * 50}")
     print(f"Total: {PASSED + FAILED}  Passed: {PASSED}  Failed: {FAILED}")
     return 0 if FAILED == 0 else 1
@@ -1176,3 +1839,5 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+

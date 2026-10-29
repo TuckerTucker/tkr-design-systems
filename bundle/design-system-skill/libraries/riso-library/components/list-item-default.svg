@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 96" width="280" height="96">
+  <defs>
+    <style>
+      .text-primary { fill: #1A1614; font-family: 'Space Grotesk', system-ui, sans-serif; }
+      .text-ink-1 { fill: #234492; font-family: 'Space Grotesk', system-ui, sans-serif; }
+      .text-ink-2 { fill: #960061; font-family: 'Space Grotesk', system-ui, sans-serif; }
+      .text-label { fill: #234492; font-family: 'JetBrains Mono', monospace; }
+    </style>
+    <!-- Grain filter: feTurbulence overlay with multiply blend -->
+    <filter id="grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="42"/>
+      <feColorMatrix values="0 0 0 0 0
+                             0 0 0 0 0
+                             0 0 0 0 0
+                             0 0 0 0.12 0"/>
+      <feComposite in="SourceGraphic" in2="" operator="over"/>
+    </filter>
+  </defs>
+  <!-- ==================== LIST-ITEM-DEFAULT ==================== -->
+
+  <!-- Riso list item — default state
+       grammar_family: print_texture
+       Active paper: cream (color.page_bg)
+       Active ink: classic (ink_1=extras.color.ink_1 blue, ink_2=extras.color.ink_2 pink)
+
+       Layered rendering:
+         1. Paper background (cream)
+         2. Ghost ink_2 layer (text duplicated, offset, in pink)
+         3. Primary ink_1 layer (text in blue, on top)
+         4. Grain overlay (feTurbulence multiply, applied last)
+
+       Schema observation: per-component grain overlay is awkward at the
+       component level — the grain should really apply to the WHOLE artifact,
+       not per-component. Standalone component preview includes its own grain
+       so the preview reads as Riso, but in real composition the grain is at
+       the artifact level. Schema v0.2 should clarify this.
+  -->
+
+  <!-- Paper background -->
+  <rect x="0" y="0" width="280" height="96" fill="#F4EFE4"/>
+
+  <!-- ─── GHOST INK LAYER (ink_2 pink, offset) ───
+       Text duplicated, shifted +0.4px x and +0.4px y, in ink_2.
+       This is what creates the duotone "registration" feel.
+  -->
+  <g opacity="0.65">
+    <!-- Index ghost -->
+    <text x="16.4" y="28.4"
+          font-family="'JetBrains Mono', monospace"
+          font-size="14"
+          font-weight="500"
+          fill="#FF48B0"
+          letter-spacing="1.4">01</text>
+    <!-- Title ghost -->
+    <text x="46.4" y="28.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="14"
+          font-weight="500"
+          fill="#FF48B0">Tokyo Trip</text>
+    <!-- Preview ghost -->
+    <text x="46.4" y="48.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="12"
+          font-weight="400"
+          fill="#FF48B0">Build day-by-day itinerary?</text>
+    <!-- Unread count ghost -->
+    <text x="46.4" y="84.4"
+          font-family="'Space Grotesk', system-ui, sans-serif"
+          font-size="30"
+          font-weight="700"
+          fill="#FF48B0">02</text>
+  </g>
+
+  <!-- ─── PRIMARY INK LAYER (ink_1 blue, on top) ───
+       Same text in primary ink color, no offset.
+  -->
+  <!-- Index — Space Mono per riso-monospace-metadata rulebook entry -->
+  <text x="16" y="28"
+        font-family="'JetBrains Mono', monospace"
+        font-size="14"
+        font-weight="500"
+        fill="#234492"
+        letter-spacing="1.4">01</text>
+
+  <!-- Title — Space Grotesk -->
+  <text x="46" y="28"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="14"
+        font-weight="500"
+        fill="#234492">Tokyo Trip</text>
+
+  <!-- Timestamp top-right — Space Mono uppercase. Full density: a 60%
+       screen of the drum was 2.3:1 on cream; ink_1_text is the legible
+       shade of the ink-1 drum (#7). -->
+  <text x="264" y="28"
+        font-family="'JetBrains Mono', monospace"
+        font-size="12"
+        font-weight="500"
+        fill="#234492"
+        text-anchor="end">2M</text>
+
+  <!-- Preview — Space Grotesk, lighter weight (full density, see above) -->
+  <text x="46" y="48"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="12"
+        font-weight="400"
+        fill="#234492">Build day-by-day itinerary?</text>
+
+  <!-- Unread count — large duotone numeral -->
+  <text x="46" y="84"
+        font-family="'Space Grotesk', system-ui, sans-serif"
+        font-size="30"
+        font-weight="700"
+        fill="#234492">02</text>
+
+  <!-- ─── GRAIN OVERLAY ───
+       feTurbulence noise applied as a multiply layer over everything.
+       Without this, the artifact reads as flat vector — with it, it
+       reads as printed.
+  -->
+  <rect x="0" y="0" width="280" height="96" fill="#3255A4" opacity="0.06"
+        filter="url(#grain)"/>
+
+</svg>

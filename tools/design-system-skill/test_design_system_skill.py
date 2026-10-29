@@ -18,6 +18,7 @@ They confirm:
 
 from __future__ import annotations
 import json
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -26,8 +27,27 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-# Canonical layout: libraries + registry.yaml live at <repo>/systems.
-SYSTEMS_DIR = HERE.parents[1] / "systems"
+from design_system_skill.paths import (  # noqa: E402
+    builtin_library_dir as _lib,
+    builtin_registry_path as _builtin_registry_path,
+    reference_doc_path,
+    tooling_dir,
+)
+
+# The built-in registry's directory: <repo>/systems in the repository layout,
+# <skill>/libraries in the skill bundle. A system's own directory comes from
+# that registry (_lib), so these tests run unchanged in either layout.
+SYSTEMS_DIR = _builtin_registry_path().parent
+
+# Hermetic isolation: pin the user-registry overlay to a path that does not
+# exist so the developer's real ~/.claude/design-systems/registry.yaml cannot
+# leak entries into these tests (conftest.py does the same under pytest;
+# this covers running the file as a script). The overlay tests below
+# mutate this sandbox and clean it up.
+import os  # noqa: E402
+if "pytest" not in sys.modules:
+    _USER_REG_SANDBOX = Path(tempfile.mkdtemp(prefix="dss-test-user-reg-")) / "registry.yaml"
+    os.environ["DESIGN_SYSTEM_SKILL_USER_REGISTRY"] = str(_USER_REG_SANDBOX)
 
 from design_system_skill import (  # noqa: E402
     load_system,
@@ -141,8 +161,8 @@ def test_validate_existing_specs():
         ("revolt", "revolt/spec.yaml"),
         ("riso", "riso/spec.yaml"),
     ]
-    for sys_id, spec_rel in spec_paths:
-        path = project / spec_rel
+    for sys_id, _ in spec_paths:
+        path = _lib(sys_id) / "spec.yaml"
         if not path.exists():
             print(f"  SKIP  spec not found: {path}")
             continue
@@ -275,7 +295,7 @@ def test_get_rulebook():
 def test_check_compliance_swiss_component():
     section("check_compliance against swiss component")
     project = SYSTEMS_DIR
-    artifact = project / "swiss" / "components" / "list-item-default.svg"
+    artifact = _lib("swiss") / "components" / "list-item-default.svg"
     if not artifact.exists():
         print(f"  SKIP  artifact not found: {artifact}")
         return
@@ -372,7 +392,7 @@ def test_swiss_library_follows_error_treatment():
     assert_({"swiss-error-prefix", "swiss-error-not-red", "swiss-error-typographic"} <= rule_ids,
             "spec.yaml rulebook declares the three error rules")
     for name in ("form-field-with-error", "toast-error"):
-        svg = (SYSTEMS_DIR / "swiss" / "components" / f"{name}.svg").read_text()
+        svg = (_lib("swiss") / "components" / f"{name}.svg").read_text()
         prefix = rb.check_error_prefix(svg)
         assert_(prefix["passed"] and prefix["error_component"],
                 f"{name} carries 'Error:' copy (got {prefix['violations']})")
@@ -405,12 +425,12 @@ def test_swiss_warning_not_red_rule():
     assert_("check_warning_not_red" in ids, "the swiss ruleset runs the warning check")
     rule_ids = {r["id"] for r in get_rulebook("swiss").data}
     assert_("swiss-warning-not-red" in rule_ids, "spec.yaml rulebook declares the warning rule")
-    svg = (SYSTEMS_DIR / "swiss" / "components" / "banner-warning.svg").read_text()
+    svg = (_lib("swiss") / "components" / "banner-warning.svg").read_text()
     res = rb.check_warning_not_red(svg)
     assert_(res["passed"] and res["warning_component"],
             f"the library banner-warning follows the rule (got {res['violations']})")
     for name in ("dropdown-default", "dropdown-with-groups"):
-        svg = (SYSTEMS_DIR / "swiss" / "components" / f"{name}.svg").read_text()
+        svg = (_lib("swiss") / "components" / f"{name}.svg").read_text()
         assert_("Sign out" in svg and 'class="text-accent" font-size="13">Sign out' not in svg,
                 f"{name}: Sign out is ink, not red")
 
@@ -486,7 +506,7 @@ def test_revolt_library_follows_error_treatment():
             "spec.yaml rulebook declares both rules")
     for name in ("banner-error", "toast-error", "form-field-with-error", "label-required",
                  "button-danger"):
-        svg = (SYSTEMS_DIR / "revolt" / "components" / f"{name}.svg").read_text()
+        svg = (_lib("revolt") / "components" / f"{name}.svg").read_text()
         assert_(rb.check_revolt_pink_not_text(svg)["passed"], f"{name} has no pink text")
         pill = rb.check_revolt_error_pill(svg)
         assert_(pill["passed"], f"{name} follows revolt-error-status (got {pill['violations']})")
@@ -497,7 +517,7 @@ def test_revolt_library_follows_error_treatment():
 def test_check_compliance_wireframe_pattern():
     section("check_compliance against wireframe pattern")
     project = SYSTEMS_DIR
-    artifact = project / "wireframe" / "layouts" / "dashboard-mobile.svg"
+    artifact = _lib("wireframe") / "layouts" / "dashboard-mobile.svg"
     if not artifact.exists():
         print(f"  SKIP  artifact not found: {artifact}")
         return
@@ -507,6 +527,40 @@ def test_check_compliance_wireframe_pattern():
             f"no failures (got {res.data['failed']})")
     assert_(res.data["scope"] == "artifact",
             "scope auto-detected as artifact")
+
+
+def test_check_compliance_ux_clauses():
+    """The UX-philosophy clauses are reachable through the package API.
+
+    The clause LOGIC is proved from both sides in
+    tools/builders/test_ux_clauses.py. What this case adds is the wiring: a
+    caller going through check_compliance() receives the clause verdicts,
+    rather than them existing only inside tools/builders/rulebook_check.py.
+    """
+    section("check_compliance surfaces the UX-philosophy clauses")
+    fixtures = tooling_dir() / "fixtures" / "ux"
+    assert_(fixtures.is_dir(), f"ux fixtures exist at {fixtures}")
+    if not fixtures.is_dir():
+        return
+
+    res = check_compliance("wireframe", fixtures / "toast-placed.svg", scope="artifact")
+    assert_(res.ok, "check_compliance returns ok=True")
+    if not res.ok:
+        return
+    by_id = {r["rule_id"]: r for r in res.data["results"]}
+    assert_("ux-no-toast-notifications" in by_id,
+            "the toast clause reaches the package result",
+            f"got {sorted(by_id)}")
+    assert_(by_id.get("ux-no-toast-notifications", {}).get("status") == "fail",
+            "a placed toast is reported as fail (not advisory, not absent)",
+            f"got {by_id.get('ux-no-toast-notifications')}")
+    assert_(res.data["failed"] == 1,
+            f"exactly one failure, so it is attributable to the toast (got {res.data['failed']})")
+
+    clean = check_compliance("wireframe", fixtures / "toast-absent.svg", scope="artifact")
+    assert_(clean.ok and clean.data["failed"] == 0,
+            "the clean twin passes through the same path",
+            f"got {clean.data if clean.ok else clean}")
 
 
 def test_check_compliance_unknown_artifact():
@@ -708,8 +762,8 @@ def test_register_unregister_roundtrip():
         temp_registry = td_path / "registry.yaml"
         shutil.copy2(real_registry, temp_registry)
         # Copy the swiss library (contains spec.yaml + components/ + layouts/)
-        src = project / "swiss"
-        dst = td_path / "swiss"
+        src = _lib("swiss")
+        dst = td_path / _lib("swiss").name
         try:
             shutil.copytree(src, dst)
         except Exception:
@@ -725,7 +779,7 @@ def test_register_unregister_roundtrip():
             assert_(ls2.ok and "swiss" not in [d["id"] for d in ls2.data],
                     "swiss removed from listing after unregister")
             # Re-register from the library directory (contains spec.yaml)
-            reg = register_system(td_path / "swiss")
+            reg = register_system(td_path / _lib("swiss").name)
             assert_(reg.ok, "re-register swiss succeeds",
                     json.dumps(reg.to_dict(), default=str)[:300] if not reg.ok else "")
             ls3 = list_systems()
@@ -749,7 +803,7 @@ def test_extends_loads_merged_spec():
         temp_registry = td_path / "registry.yaml"
         shutil.copy2(real_registry, temp_registry)
         # Copy terminal library so parent loads.
-        shutil.copytree(project / "terminal", td_path / "terminal")
+        shutil.copytree(_lib("terminal"), td_path / _lib("terminal").name)
         # Create extension spec.
         ext_dir = td_path / "my-ext-library"
         ext_dir.mkdir()
@@ -904,7 +958,7 @@ def test_extends_multi_level():
         td_path = Path(td)
         temp_registry = td_path / "registry.yaml"
         shutil.copy2(real_registry, temp_registry)
-        shutil.copytree(project / "terminal", td_path / "terminal")
+        shutil.copytree(_lib("terminal"), td_path / _lib("terminal").name)
         # B extends terminal
         dir_b = td_path / "mid-library"
         dir_b.mkdir()
@@ -1030,7 +1084,7 @@ def test_contract_doc_matches_module():
     from design_system_skill.contract import (
         render_contract_table, render_motion_table, render_pairs_table,
     )
-    doc = (HERE.parents[1] / "docs" / "specs" / "SCHEMA-V0.3.md").read_text()
+    doc = reference_doc_path("SCHEMA-V0.3.md").read_text()
     assert_(render_contract_table() in doc,
             "contract table in SCHEMA-V0.3.md equals render_contract_table()")
     assert_(render_pairs_table() in doc,
@@ -1215,7 +1269,7 @@ def test_neutral_alias_shares_wireframe_tokens():
 def test_riso_modes_cover_every_press():
     section("riso tokens: paper x ink modes resolve every press combination")
     from design_system_skill.token_file import iter_mode_selections, resolve_mode
-    doc = json.loads((SYSTEMS_DIR / "riso" / "tokens.json").read_text())
+    doc = json.loads((_lib("riso") / "tokens.json").read_text())
     selections = list(iter_mode_selections(doc))
     assert_(len(selections) == 30, f"5 papers x 6 inks = 30 selections (got {len(selections)})")
     kraft_sunset = resolve_mode(doc, {"paper": "kraft", "ink": "sunset"})
@@ -1236,14 +1290,14 @@ def test_token_file_edit_invalidates_cache():
         td_path = Path(td)
         temp_registry = td_path / "registry.yaml"
         shutil.copy2(SYSTEMS_DIR / "registry.yaml", temp_registry)
-        shutil.copytree(SYSTEMS_DIR / "swiss", td_path / "swiss")
+        shutil.copytree(_lib("swiss"), td_path / _lib("swiss").name)
         os.environ["DESIGN_SYSTEM_SKILL_REGISTRY"] = str(temp_registry)
         try:
             clear_cache()
             first = load_system("swiss")
             assert_(first.ok and first.data["tokens"]["colors"]["accent"] == "#E3000B",
                     "swiss accent loads from tokens.json")
-            tok = td_path / "swiss" / "tokens.json"
+            tok = td_path / _lib("swiss").name / "tokens.json"
             doc = json.loads(tok.read_text())
             doc["color"]["accent"] = "#D0000A"   # still red: the hue waiver keeps matching
             tok.write_text(json.dumps(doc))
@@ -1295,6 +1349,17 @@ def test_find_drift_kinds():
     assert_(len(items) == 6, f"exactly 6 drift items ({len(items)}: {sorted(kinds)})")
 
 
+def test_alias_owner_is_found_in_either_layout():
+    section("is_library_of: the id that owns a spec's directory, in either layout")
+    from design_system_skill.paths import is_library_of
+    assert_(is_library_of("wireframe", Path("systems/wireframe/spec.yaml")),
+            "repository layout: systems/wireframe belongs to wireframe")
+    assert_(is_library_of("wireframe", Path("libraries/wireframe-library/spec.yaml")),
+            "bundle layout: libraries/wireframe-library belongs to wireframe")
+    assert_(not is_library_of("neutral", Path("libraries/wireframe-library/spec.yaml")),
+            "the neutral alias does not own the wireframe library")
+
+
 def test_drift_clean_for_all_registered_systems():
     section("check_drift_all: every registered spec agrees with its tokens.json")
     from design_system_skill import check_drift_all
@@ -1308,8 +1373,8 @@ def test_drift_clean_for_all_registered_systems():
 
 def _copy_swiss(td_path: Path) -> Path:
     import shutil
-    dst = td_path / "swiss"
-    shutil.copytree(SYSTEMS_DIR / "swiss", dst)
+    dst = td_path / _lib("swiss").name
+    shutil.copytree(_lib("swiss"), dst)
     return dst / "spec.yaml"
 
 
@@ -1795,7 +1860,7 @@ def test_every_system_passes_color_gates():
 def test_contrast_docs_match_module():
     section("contrast: SCHEMA-V0.3.md thresholds table matches contrast.py")
     from design_system_skill.contrast import render_thresholds_table
-    doc = (HERE.parents[1] / "docs" / "specs" / "SCHEMA-V0.3.md").read_text()
+    doc = reference_doc_path("SCHEMA-V0.3.md").read_text()
     assert_(render_thresholds_table() in doc, "thresholds table equals render_thresholds_table()")
 
 
@@ -1842,14 +1907,245 @@ def test_hue_gate_registered_systems():
     section("hue gate: registered systems (ADR-0002)")
     from design_system_skill.contrast import check_hue_gate
     for sys_id, waived in (("swiss", 2), ("revolt", 1), ("editorial", 0), ("terminal", 0)):
-        doc = json.loads((SYSTEMS_DIR / sys_id / "tokens.json").read_text())
+        doc = json.loads((_lib(sys_id) / "tokens.json").read_text())
         rep = check_hue_gate(doc)
         n = sum(1 for r in rep.results if r["waived"])
         assert_(rep.ok and n == waived, f"{sys_id}: passes with {waived} waived result(s) ({n})")
-    riso = json.loads((SYSTEMS_DIR / "riso" / "tokens.json").read_text())
+    riso = json.loads((_lib("riso") / "tokens.json").read_text())
     rep = check_hue_gate(riso)
     assert_(rep.modes == 30 and all(r["exempt"] for r in rep.results),
             "riso's danger is the paper's text ink (grey): exempt in all 30 modes")
+
+
+
+# ─── test: user-registry overlay ────────────────────────────────────
+
+def test_user_registry_overlay():
+    section("user-registry overlay")
+    import os
+    # The preamble already points DESIGN_SYSTEM_SKILL_USER_REGISTRY at a
+    # sandbox path that does not exist yet. Mutations in merged mode must
+    # create it and never touch the built-in registry.
+    from design_system_skill.paths import builtin_registry_path, user_registry_path
+    builtin_reg = builtin_registry_path()
+    user_reg = user_registry_path()
+    builtin_before = builtin_reg.read_text()
+
+    clear_cache()
+    assert_(not user_reg.exists(), "user registry absent before mutations")
+
+    # Built-ins cannot be unregistered in merged mode.
+    res = unregister_system("swiss")
+    assert_(not res.ok and "BUILTIN_SYSTEM_IMMUTABLE" in [e.code for e in res.errors],
+            "unregister(builtin) fails with BUILTIN_SYSTEM_IMMUTABLE")
+
+    # replace=True shadows the built-in via a user-layer entry.
+    swiss_spec = _lib("swiss") / "spec.yaml"
+    assert_(swiss_spec.exists(), "swiss spec found for overlay test")
+    if not swiss_spec.exists():
+        return
+    reg = register_system(swiss_spec, replace=True)
+    assert_(reg.ok, "register(swiss, replace=True) writes a user override",
+            json.dumps(reg.to_dict(), default=str)[:300] if not reg.ok else "")
+    assert_(user_reg.exists(), "user registry file created by mutation")
+    assert_(builtin_reg.read_text() == builtin_before,
+            "built-in registry untouched by user-layer mutation")
+    ls = list_systems()
+    ids = [d["id"] for d in ls.data] if ls.ok else []
+    assert_(ls.ok and ids.count("swiss") == 1,
+            "overlay shadows built-in (swiss listed exactly once)")
+    loaded = load_system("swiss")
+    assert_(loaded.ok, "load_system resolves through the user override",
+            json.dumps(loaded.to_dict(), default=str)[:300] if not loaded.ok else "")
+
+    # The repository gates check the built-in layer only: a user-layer
+    # system belongs to another project.
+    from design_system_skill.registry import Registry
+    reg_all = Registry.load().data
+    builtin_ids = [e.id for e in reg_all.builtin_entries()]
+    assert_(sorted(builtin_ids) == sorted(e.id for e in reg_all.all()),
+            "a shadowing user entry does not add ids to the built-in layer")
+
+    # Removing the override reveals the built-in again.
+    unreg = unregister_system("swiss")
+    assert_(unreg.ok, "unregister removes the user override")
+    clear_cache()
+    ls2 = list_systems()
+    assert_(ls2.ok and "swiss" in [d["id"] for d in ls2.data],
+            "built-in swiss visible again after override removal")
+
+    # Cleanup: leave the sandbox registry empty for any later tests.
+    if user_reg.exists():
+        user_reg.unlink()
+    clear_cache()
+
+
+
+def test_repository_gates_skip_user_layer_systems():
+    section("drift/contrast --all check the built-in layer only")
+    from design_system_skill.paths import user_registry_path
+    from design_system_skill.drift import check_drift_all
+    from design_system_skill.contrast import check_color_gates_all
+    user_reg = user_registry_path()
+    foreign = Path(tempfile.mkdtemp(prefix="dss-foreign-"))
+    try:
+        # A user-layer system with no tokens.json: drift/contrast on it
+        # would fail, so a green --all proves it was not checked.
+        spec = foreign / "spec.yaml"
+        spec.write_text('''spec_version: "0.2"
+system:
+  id: foreign-sys
+  name: Foreign
+tokens: {}
+''')
+        reg = register_system(spec)
+        assert_(reg.ok, "foreign system registers into the user layer")
+        ids = [d["id"] for d in list_systems().data]
+        assert_("foreign-sys" in ids, "list_systems shows the user-layer system")
+        seen: list[str] = []
+
+        def record(path, _seen=seen):
+            _seen.append(str(path))
+            from design_system_skill.errors import Result
+            return Result.success({})
+        check_drift_all(checker=record)
+        assert_(seen and not any(str(foreign) in p for p in seen),
+                f"drift --all never visits the user-layer spec ({len(seen)} specs checked)")
+        seen.clear()
+        check_color_gates_all(checker=record)
+        assert_(seen and not any(str(foreign) in p for p in seen),
+                "contrast --all never visits the user-layer spec")
+    finally:
+        unregister_system("foreign-sys")
+        shutil.rmtree(foreign, ignore_errors=True)
+        if user_reg.exists():
+            user_reg.unlink()
+        clear_cache()
+
+
+def _write_child_spec(dir_path: Path, system_id: str, extends: str,
+                      extra: str = "") -> Path:
+    """Author a minimal child spec that extends another system."""
+    spec_path = dir_path / "spec.yaml"
+    spec_path.write_text(f"""\
+spec_version: "0.2"
+system:
+  id: {system_id}
+  name: {system_id.title()} (extends {extends})
+  extends: {extends}
+tokens:
+  colors:
+    accent: "#FF00AA"
+rulebook:
+  - id: child-only-rule
+    severity: required
+    statement: child systems keep their own rules
+    check_method: semantic
+    check_scope: artifact
+{extra}""")
+    return spec_path
+
+
+
+
+def test_extends_cross_layer_inheritance():
+    section("system.extends — user-layer child inherits built-in parent")
+    import os
+    from design_system_skill.paths import user_registry_path
+    user_reg = user_registry_path()
+
+    child_dir = Path(tempfile.mkdtemp(prefix="dss-extends-child-"))
+    try:
+        spec_path = _write_child_spec(child_dir, "swiss-child", "swiss")
+        reg = register_system(spec_path)
+        assert_(reg.ok, "child registers into the user layer",
+                json.dumps(reg.to_dict(), default=str)[:300] if not reg.ok else "")
+        clear_cache()
+
+        res = load_system("swiss-child")
+        assert_(res.ok, "load_system('swiss-child') resolves",
+                json.dumps(res.to_dict(), default=str)[:300] if not res.ok else "")
+        if not res.ok:
+            return
+        spec = res.data
+        assert_(spec["_meta"]["extends"] == "swiss",
+                "_meta.extends records the parent")
+        assert_(spec["_meta"]["resolved_chain"] == ["swiss-child", "swiss"],
+                f"_meta.resolved_chain is child→parent "
+                f"(got {spec['_meta']['resolved_chain']})")
+        assert_(spec["system"]["id"] == "swiss-child",
+                "system block is the child's (child wins entirely)")
+
+        # tokens: child override wins, parent siblings inherited.
+        assert_(spec["tokens"]["colors"]["accent"] == "#FF00AA",
+                "child token override wins")
+        assert_("common" in spec["tokens"],
+                "parent's tokens.common block is inherited")
+
+        # components: inherited from parent, svg paths resolved against the
+        # parent's own library (cross-layer path correctness).
+        comps = spec.get("components") or {}
+        assert_(len(comps) > 0, "parent components are inherited")
+        some_variant = next(
+            (v for c in comps.values() if isinstance(c, dict)
+             for v in (c.get("variants") or []) if v.get("svg_path")),
+            None,
+        )
+        assert_(some_variant is not None
+                and Path(some_variant["svg_path"]).resolve().is_relative_to(_lib("swiss"))
+                and Path(some_variant["svg_path"]).exists(),
+                "inherited variant svg_path resolves into the parent library")
+
+        # rulebook: concatenated, parent first.
+        rule_ids = [r.get("id") for r in spec.get("rulebook") or []]
+        assert_(rule_ids and rule_ids[-1] == "child-only-rule"
+                and len(rule_ids) > 1,
+                f"rulebook concatenates parent rules + child rule "
+                f"(got {len(rule_ids)} rules)")
+    finally:
+        unregister_system("swiss-child")
+        shutil.rmtree(child_dir, ignore_errors=True)
+        if user_reg.exists():
+            user_reg.unlink()
+        clear_cache()
+
+
+
+
+def test_extends_validation_warnings():
+    section("system.extends — validation flags bad extends values")
+    with tempfile.NamedTemporaryFile(suffix="-spec.yaml", mode="w", delete=False) as f:
+        f.write("""\
+spec_version: "0.2"
+system:
+  id: orphan
+  name: Orphan
+  extends: not-a-registered-system
+tokens: {}
+""")
+        orphan_path = f.name
+    res = validate_spec(orphan_path)
+    assert_(res.ok, "spec with unregistered parent still validates (advisory)")
+    warn_msgs = " | ".join(w["message"] for w in (res.data or {}).get("warnings", []))
+    assert_("not-a-registered-system" in warn_msgs,
+            f"warning names the missing parent (got: {warn_msgs[:160]})")
+    Path(orphan_path).unlink(missing_ok=True)
+
+    with tempfile.NamedTemporaryFile(suffix="-spec.yaml", mode="w", delete=False) as f:
+        f.write("""\
+spec_version: "0.2"
+system:
+  id: bad-extends
+  name: Bad Extends
+  extends: ""
+tokens: {}
+""")
+        bad_path = f.name
+    res2 = validate_spec(bad_path)
+    assert_(not res2.ok and any("system.extends" in e.message for e in res2.errors),
+            "empty extends string is a blocking error")
+    Path(bad_path).unlink(missing_ok=True)
+
 
 
 # ─── runner ─────────────────────────────────────────────────────────
@@ -1868,6 +2164,7 @@ def main():
     test_get_rulebook()
     test_check_compliance_swiss_component()
     test_check_compliance_wireframe_pattern()
+    test_check_compliance_ux_clauses()
     test_check_compliance_unknown_artifact()
     test_exception_waives_violation()
     test_exception_match_does_not_cover_new_violation()
@@ -1878,6 +2175,10 @@ def main():
     test_swiss_library_follows_error_treatment()
     test_exception_outside_scope_not_stale()
     test_register_unregister_roundtrip()
+    test_user_registry_overlay()
+    test_repository_gates_skip_user_layer_systems()
+    test_extends_cross_layer_inheritance()
+    test_extends_validation_warnings()
     test_extends_loads_merged_spec()
     test_extends_cycle_detection()
     test_extends_parent_not_found()
@@ -1895,6 +2196,7 @@ def main():
     test_riso_modes_cover_every_press()
     test_token_file_edit_invalidates_cache()
     test_find_drift_kinds()
+    test_alias_owner_is_found_in_either_layout()
     test_drift_clean_for_all_registered_systems()
     test_drift_fails_validation_and_cli()
     test_motion_tokens_valid_with_spring()

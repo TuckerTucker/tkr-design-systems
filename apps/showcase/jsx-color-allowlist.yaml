@@ -18,7 +18,13 @@ entries:
   - literal: "#0A0A0A"
     reason: Spec viewer page background (App shell), not a system colour.
   - literal: "#2A2A2A"
+    systems: [editorial, prism, revolt, riso, sketch, swiss, terminal]
     reason: Breadcrumb separator in the spec viewer top bar.
+  - literal: "#2A2A2A"
+    systems: [neutral]
+    regions: [App]
+    context: 'fontSize: 9, color: "#2A2A2A" \}\}>›'
+    reason: Same breadcrumb separator; equals the wireframe dark theme's surface_elevated (#2A2A2A) by coincidence, so it is scoped to the top bar.
   - literal: "#333"
     reason: Spec viewer version tag; Revolt's black swatch outline on the dark doc panel.
   - literal: "#555"

@@ -401,9 +401,9 @@ function neutralSpec(a) { return {
 
     <CBox title="Modal" parts={["overlay", "container", "title", "body", "actions"]} accent={a}
       contract="Centered card on semi-transparent overlay. 480px wide on desktop, full-width minus margins on mobile. 8px radius. Title at top, body content, button row at bottom-right."
-      specs={[["overlay", X.overlay_scrim], ["width.default", "480px"], ["width.confirm", "360px"], ["width.form", "560-640px"], ["radius", "8px"], ["title.font", `16px, 600, ${C.text_primary}`], ["close.position", "top-right"]]}
-      dos={["Use the confirmation variant (360px) for simple yes/no decisions"]}
-      donts={["Stack modals on top of modals — use a single modal at a time"]} />
+      specs={[["overlay", X.overlay_scrim], ["width.default", "480px"], ["width.form", "560-640px"], ["radius", "8px"], ["title.font", `16px, 600, ${C.text_primary}`], ["close.position", "top-right"]]}
+      dos={["Confirm a destructive action with the undo row, not a modal: act immediately, keep it reversible"]}
+      donts={["Stack modals on top of modals — use a single modal at a time", "Ask \"Are you sure?\" in a confirmation modal — there is no confirmation variant"]} />
 
     <CBox title="Dashboard" parts={["sidebar", "header", "stats", "cards"]} accent={a}
       contract="Full-page layout combining sidebar, header, and content area. Four variants: metrics-heavy (stat grid), conversation (chat), list-focus (scrollable list), and mixed (overview)."

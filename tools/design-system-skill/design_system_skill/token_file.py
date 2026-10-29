@@ -591,7 +591,6 @@ def load_tokens_for_system(system_id: str) -> Result:
         Result with ``data`` = the token document.
     """
     # Local imports: registry -> validation -> token_file would otherwise cycle.
-    from .paths import project_root
     from .registry import Registry
 
     reg = Registry.load()
@@ -603,7 +602,7 @@ def load_tokens_for_system(system_id: str) -> Result:
             "SYSTEM_NOT_FOUND", f"System '{system_id}' is not in the registry",
             {"system_id": system_id},
         ))
-    spec_path = (project_root() / entry.spec).resolve()
+    spec_path = entry.spec_path()
     try:
         spec = yaml.safe_load(spec_path.read_text()) or {}
     except (FileNotFoundError, yaml.YAMLError) as exc:

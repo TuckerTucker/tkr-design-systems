@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 28" width="200" height="28">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== ANNOTATION-SECTION ==================== -->
+
+  <g transform="rotate(-1.5, 0, 20)">
+    <text x="0" y="20" class="text-annotation" font-size="15" font-weight="700">↓ your agent</text>
+  </g>
+
+</svg>

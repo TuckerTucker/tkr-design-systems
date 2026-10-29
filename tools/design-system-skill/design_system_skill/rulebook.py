@@ -19,7 +19,7 @@ from typing import Any, Callable
 
 from .errors import Error, Result
 from .loader import load_system
-from .paths import project_root
+from .paths import project_root, tooling_dir
 
 import structlog
 
@@ -154,7 +154,7 @@ def check_compliance(
     if rb_module is None:
         return Result.failure(Error(
             "INTERNAL",
-            "Could not import tools/builders/rulebook_check.py. Ensure the repository layout is intact.",
+            f"Could not import rulebook_check.py from {tooling_dir()}. Ensure the repository or skill-bundle layout is intact.",
             {"project_root": str(project_root())},
         ))
 
@@ -267,10 +267,9 @@ def _import_rulebook_check_module():
     global _RB_MODULE_CACHE
     if _RB_MODULE_CACHE is not None:
         return _RB_MODULE_CACHE
-    # Resolve relative to this file so the env-override registry location
-    # cannot break builder discovery.
-    # parents = [design_system_skill, design-system-skill, tools, ...]
-    rb_path = Path(__file__).resolve().parents[2] / "builders" / "rulebook_check.py"
+    # Resolved relative to this package (repository or skill-bundle layout),
+    # so the env-override registry location cannot break builder discovery.
+    rb_path = tooling_dir() / "rulebook_check.py"
     if not rb_path.exists():
         return None
     spec = importlib.util.spec_from_file_location("rulebook_check_internal", rb_path)

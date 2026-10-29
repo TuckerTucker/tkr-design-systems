@@ -1,4 +1,5 @@
 spec_version: "0.3"
+common_tokens_version: "1.0"
 
 system:
   id: editorial
@@ -27,6 +28,50 @@ system:
 # ────────────────────────────────────────────────────────────────────
 
 tokens:
+  # generated:common-tokens — derived from tokens.json by `design-system-skill common-tokens --write`; do not edit by hand
+  common:
+    color:
+      ink: "#1A1614"
+      ink-muted: "#77695B"
+      surface: "#F8F4EC"
+      surface-inset: "#FFFFFF"
+      accent: "#8B1E2D"
+      accent-on: "#F8F4EC"
+      outline: "#D8CEB9"
+      outline-strong: "#1A1614"
+      image-placeholder: "#FFFFFF"
+      success: "#2F5D3A"
+      warning: "#8A5A12"
+      danger: "#5F1B4F"
+    typography:
+      display: { family: "Fraunces, Georgia, serif", size: 24, weight: 700, leading: 1.0, case: "mixed", tracking: -0.02 }
+      headline: { family: "Fraunces, Georgia, serif", size: 18, weight: 700, leading: 1.1, case: "mixed", tracking: -0.02 }
+      title: { family: "Fraunces, Georgia, serif", size: 18, weight: 700, leading: 1.1, case: "mixed", tracking: -0.02 }
+      body: { family: "Fraunces, Georgia, serif", size: 15, weight: 400, leading: 1.55, case: "mixed", tracking: -0.005 }
+      caption: { family: "Inter, sans-serif", size: 9, weight: 700, leading: 1.3, case: "uppercase", tracking: 0.18 }
+    spacing:
+      xs: 4
+      sm: 8
+      md: 16
+      lg: 24
+      xl: 32
+    stroke:
+      hairline: 1
+      regular: 1
+      bold: 2
+    radius:
+      none: 0
+      sm: 2
+      md: 0
+      full: 9999
+  # /generated:common-tokens
+  # System-extension tokens (referenced as `editorial:<path>` from atoms
+  # scoped to editorial). Values the token file holds are aliases.
+  system:
+    typography:
+      italic-preview: { family: "{font.body}", size: 11, weight: 400, case: mixed, italic: true }
+    palette:
+      paper-white: "{color.surface_elevated}"
   colors:
     # Contract colour values (page_bg, surface, text_*, accent, ...) live in
     # tokens.json; the loader projects them here. Palette entries below

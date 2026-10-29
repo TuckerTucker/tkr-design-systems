@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- FIXTURE: an are-you-sure dialog with no undo — must FAIL ux-no-confirm-dialog-without-undo -->
+  <rect width="600" height="400" fill="#F5F5F5"/>
+  <g id="overlay__modal-confirmation_0" transform="translate(120, 100)">
+    <rect x="0" y="0" width="360" height="200" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="24" y="40" class="text-primary" font-size="16" font-weight="700">Delete this item?</text>
+    <text x="24" y="80" class="text-secondary" font-size="13">This action cannot be reversed.</text>
+    <rect x="152" y="144" width="84" height="40" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="194" y="170" text-anchor="middle" class="text-secondary" font-size="14">Cancel</text>
+    <rect x="252" y="144" width="84" height="40" fill="#B71C1C"/>
+    <text x="294" y="170" text-anchor="middle" class="text-inverse" font-size="14">Delete</text>
+  </g>
+</svg>

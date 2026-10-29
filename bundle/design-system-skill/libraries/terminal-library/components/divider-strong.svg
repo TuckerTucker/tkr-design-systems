@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 8" width="200" height="8">
+  <defs>
+    <style>
+      .text-primary { fill: #C8F7C5; font-family: 'JetBrains Mono', monospace; }
+      .text-secondary { fill: #5EAA66; font-family: 'JetBrains Mono', monospace; }
+      .text-muted { fill: #578B5D; font-family: 'JetBrains Mono', monospace; }
+      .text-accent { fill: #00FF66; font-family: 'JetBrains Mono', monospace; }
+      .text-error { fill: #FF4E4E; font-family: 'JetBrains Mono', monospace; }
+      .text-amber { fill: #FFB000; font-family: 'JetBrains Mono', monospace; }
+    </style>
+  </defs>
+  <!-- ==================== DIVIDER-STRONG ==================== -->
+
+  <text x="0" y="7" class="text-secondary" font-size="9" font-weight="700">═════════════════════</text>
+
+</svg>
