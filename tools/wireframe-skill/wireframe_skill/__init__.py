@@ -15,7 +15,11 @@ Example:
     ...     print(result.svg_path)
 """
 
-from .generator import wireframe, GenerationResult
+from ._design_system_path import ensure_importable
+
+ensure_importable()
+
+from .generator import wireframe, GenerationResult  # noqa: E402
 from .substitution import (
     extract_text_nodes,
     build_substitution_request,
@@ -28,12 +32,12 @@ from .decomposition import (
     validate_blueprint,
 )
 from .assembler import assemble_blueprint
+from .tokens import export_tokens_for_authoring
+from .components import read_component, read_components_batch
 from .placement import (
     build_layout_selection_request,
     apply_layout_selection,
 )
-from .tokens import export_tokens_for_authoring
-from .components import read_component, read_components_batch
 
 __all__ = [
     "wireframe",
@@ -46,9 +50,9 @@ __all__ = [
     "build_decomposition_request",
     "validate_blueprint",
     "assemble_blueprint",
-    "build_layout_selection_request",
-    "apply_layout_selection",
     "export_tokens_for_authoring",
     "read_component",
     "read_components_batch",
+    "build_layout_selection_request",
+    "apply_layout_selection",
 ]

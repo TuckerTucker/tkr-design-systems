@@ -30,6 +30,25 @@ logger = structlog.get_logger(__name__)
 # resolved here must exist in the loaded system spec (we verify before
 # committing).
 
+PATTERN_HEURISTICS: list[tuple[str, list[str]]] = [
+    # (brief-keyword pattern, ordered list of pattern-ids to try)
+    ("dashboard|overview|home|metrics|kpi|analytics", ["dashboard"]),
+    ("login|sign in|sign-in|signin|auth|password|create account|sign up|sign-up", ["auth"]),
+    ("settings|preferences|profile|account", ["settings-layout", "settings_layout"]),
+    ("form|registration|new \\w+|create \\w+|edit", ["form"]),
+    ("table|list of \\w+|members|users|directory", ["data-table", "data_table"]),
+    ("modal|confirm|dialog|alert", ["modal"]),
+    ("drawer|side panel|side-panel|panel", ["drawer"]),
+    ("empty|no results|nothing|first use|onboarding", ["empty-state", "empty_state"]),
+    ("article|read|story|long-form|long form|post", ["article"]),
+    ("sidebar|nav|navigation", ["sidebar"]),
+    ("header|top bar|top-bar|toolbar", ["header"]),
+    ("command palette|command-palette|cmdk|search overlay", ["command-palette", "command_palette"]),
+]
+
+# Default fallback when no keyword matches.
+DEFAULT_PATTERN_FALLBACK = ["dashboard", "settings-layout", "auth", "empty-state"]
+
 # Mobile keywords trigger a `-mobile` suffix preference if the system
 # has a mobile variant authored.
 MOBILE_HINT_KEYWORDS = re.compile(
@@ -49,31 +68,74 @@ class LayoutSelection:
     requested_system: str = ""
     available_patterns: list[str] = field(default_factory=list)
 
+@dataclass
+class EscalateToDecomposition:
+    """Signal that the brief should be handled by the two-pass component
+    decomposition flow instead of a pre-authored pattern.
+
+    Returned by `select_layout_pattern` when (a) no keyword rule matched
+    AND (b) none of the brief's nouns name one of the system's authored
+    layout patterns. This is Layer 1 of the freeform-elements
+    architecture: never silently degrade to the dashboard fallback when
+    the brief is genuinely off-catalog.
+
+    The (b) test deliberately ignores the component catalog. Components are
+    the raw material of every screen, so a brief mentioning "card" or
+    "filter" tells you nothing about whether the system has authored that
+    *screen*; including them made escalation effectively unreachable.
+
+    Attributes:
+        reason: Human-readable why this escalated.
+        brief_nouns: The set of brief tokens that were checked.
+        catalog_intersection: The (empty) intersection — for logging.
+        available_patterns: For diagnostics.
+        requested_system: The system the brief targeted.
+    """
+    reason: str
+    brief_nouns: list[str] = field(default_factory=list)
+    catalog_intersection: list[str] = field(default_factory=list)
+    available_patterns: list[str] = field(default_factory=list)
+    requested_system: str = ""
+
 
 def select_layout_pattern(
     brief: str,
     spec: dict,
     platform: str = "desktop",
-    select_mode: str = "auto",
-) -> LayoutSelection | None:
+    escalate: bool = True,
+    select_mode: str = "heuristic",
+) -> "LayoutSelection | EscalateToDecomposition | None":
     """Select a layout pattern from the system library matching the brief.
 
-    Agent-driven routing: ``auto`` and ``request`` modes both return None,
-    deferring the routing decision to the calling agent.  Use ``exact``
-    when the agent has already identified a pattern name in the brief.
+    Strategy (select_mode="heuristic", the default):
+        1. Scan system's library_root/layouts/ for available patterns.
+        2. For each keyword rule, match against brief (prefer mobile variant
+           when platform=='mobile' and brief mentions mobile).
+        3. If no match, escalate to decomposition (or fall back to
+           DEFAULT_PATTERN_FALLBACK when escalate=False).
+        4. Return None if system has no patterns.
+
+    Agent-driven routing (upstream-aligned modes):
+        "auto" / "request" — return None, deferring the routing decision to
+            the calling agent. Pair with `build_layout_selection_request`
+            (inventory for the agent) and `apply_layout_selection`
+            (turn the agent's choice into a LayoutSelection).
+        "exact" — match only when the brief explicitly names a pattern base
+            (e.g. "dashboard" in the brief, "dashboard" in layouts/).
+            Returns None when nothing is named.
 
     Args:
         brief: Free-text brief (e.g. "dashboard for a chat app").
         spec: Loaded system spec dict.
         platform: "desktop" or "mobile" (default: "desktop").
-        select_mode: Selection strategy:
-            "auto"    — returns None (agent decides via inventory)
-            "exact"   — match only if brief explicitly names a pattern base
-            "request" — returns None (same as auto)
+        escalate: In heuristic mode, return EscalateToDecomposition instead
+            of the dashboard fallback when the brief is off-catalog.
+        select_mode: "heuristic" (default), "auto", "request", or "exact".
 
     Returns:
-        LayoutSelection with chosen pattern, or None when routing is
-        deferred to the agent.
+        LayoutSelection with chosen pattern, EscalateToDecomposition when
+        the brief is off-catalog (heuristic mode), or None when routing is
+        deferred to the agent / no patterns are available.
     """
     if select_mode in ("auto", "request"):
         return None
@@ -90,11 +152,9 @@ def select_layout_pattern(
         platform == "mobile" or bool(MOBILE_HINT_KEYWORDS.search(brief))
     )
 
-    base_names = _extract_base_names(available)
-
     if select_mode == "exact":
         brief_lc = brief.lower()
-        for base in base_names:
+        for base in _extract_base_names(available):
             if re.search(r'\b' + re.escape(base) + r'\b', brief_lc):
                 chosen = _pick_variant(available, base, prefer_mobile)
                 if chosen is not None:
@@ -109,7 +169,94 @@ def select_layout_pattern(
                     )
         return None
 
-    return None
+    brief_lc = brief.lower()
+    for kw_pattern, base_candidates in PATTERN_HEURISTICS:
+        if not re.search(kw_pattern, brief_lc):
+            continue
+        for base in base_candidates:
+            chosen = _pick_variant(available, base, prefer_mobile)
+            if chosen is not None:
+                return LayoutSelection(
+                    pattern_id=chosen,
+                    base_pattern=base,
+                    svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
+                    width=0, height=0,  # filled by compose step
+                    rationale=f"keyword '{kw_pattern}' matched brief; chose {chosen}",
+                    requested_system=spec["_meta"]["system_id"],
+                    available_patterns=available,
+                )
+
+    # No keyword matched. Decide between escalation and last-ditch fallback.
+    if escalate:
+        brief_nouns = _extract_brief_nouns(brief)
+        pattern_tokens = _enumerate_pattern_tokens(available)
+        intersection = sorted(
+            n for n in brief_nouns
+            if _normalize_token(n) in pattern_tokens
+        )
+        if not intersection:
+            return EscalateToDecomposition(
+                reason=(
+                    f"no keyword pattern matched and brief nouns "
+                    f"{brief_nouns[:6]} do not name any of the "
+                    f"{len(pattern_tokens)} authored layout-pattern terms in "
+                    f"system '{spec['_meta']['system_id']}'"
+                ),
+                brief_nouns=brief_nouns,
+                catalog_intersection=intersection,
+                available_patterns=available,
+                requested_system=spec["_meta"]["system_id"],
+            )
+
+        # The brief names an authored pattern that no keyword rule covers
+        # (e.g. revolt's "banner-promotional"). Suppressing escalation and
+        # then rendering the *default* fallback would silently ignore the
+        # very match that suppressed it — route to the named pattern.
+        named = _match_named_pattern(brief_nouns, available, prefer_mobile)
+        if named is not None:
+            base, chosen = named
+            return LayoutSelection(
+                pattern_id=chosen,
+                base_pattern=base,
+                svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
+                width=0, height=0,
+                rationale=(
+                    f"no keyword rule matched, but the brief names the "
+                    f"authored pattern '{base}' (via {intersection}); "
+                    f"chose {chosen}"
+                ),
+                requested_system=spec["_meta"]["system_id"],
+                available_patterns=available,
+            )
+
+    # Fallback path (reached either when escalation is disabled, or when
+    # brief nouns do partially overlap the catalog).
+    for base in DEFAULT_PATTERN_FALLBACK:
+        chosen = _pick_variant(available, base, prefer_mobile)
+        if chosen is not None:
+            return LayoutSelection(
+                pattern_id=chosen,
+                base_pattern=base,
+                svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
+                width=0, height=0,
+                rationale=f"no keyword matched; fell back to {chosen}",
+                fallback=True,
+                requested_system=spec["_meta"]["system_id"],
+                available_patterns=available,
+            )
+
+    # Last-ditch: any pattern at all.
+    chosen = available[0]
+    return LayoutSelection(
+        pattern_id=chosen,
+        base_pattern=chosen,
+        svg_path=(layouts_dir / f"{chosen}.svg").resolve(),
+        width=0, height=0,
+        rationale=f"system has only ad-hoc patterns; chose first available ({chosen})",
+        fallback=True,
+        requested_system=spec["_meta"]["system_id"],
+        available_patterns=available,
+    )
 
 
 def _pick_variant(available: list[str], base: str, prefer_mobile: bool) -> str | None:
@@ -163,6 +310,38 @@ class ContentSubstitution:
     rationale: str = ""
 
 
+def derive_content_substitutions(
+    brief: str,
+    spec: dict,
+    selection: LayoutSelection,
+) -> list[ContentSubstitution]:
+    """Derive content substitutions from brief to replace placeholder text.
+
+    This is an LLM integration seam. The current deterministic implementation
+    returns an empty list (no-op). Future versions will parse the brief and
+    return substitutions to replace generic placeholder content with
+    brief-specific values.
+
+    Args:
+        brief: Free-text brief.
+        spec: Loaded system spec dict.
+        selection: LayoutSelection from select_layout_pattern.
+
+    Returns:
+        List of ContentSubstitution objects (currently empty).
+    """
+    return []
+
+
+
+# ─── Agent-driven routing (upstream-aligned) ─────────────────────────
+#
+# The complement to select_mode="auto"/"request": the skill emits a
+# structured inventory of available patterns, the calling agent chooses,
+# and the choice is applied deterministically. Routing judgment lives in
+# the agent layer; this module only enumerates and applies.
+
+
 _VARIANT_SUFFIXES = re.compile(
     r'-(mobile|default|no-[\w]+|with-[\w-]+|error|first-use|narrow|conversation)$'
 )
@@ -175,12 +354,6 @@ def _extract_base_names(available: list[str]) -> list[str]:
         base = _VARIANT_SUFFIXES.sub('', pattern_id)
         bases[base] = None
     return list(bases.keys())
-
-
-PLATFORM_DIMENSIONS = {
-    "mobile": (375, 812),
-    "desktop": (1280, 800),
-}
 
 
 def build_layout_selection_request(
@@ -202,6 +375,8 @@ def build_layout_selection_request(
         Dict with schema_version, brief, system_id, platform, canvas,
         available_patterns, grammar_caveats, response_format_example.
     """
+    from .compose import PLATFORM_DIMENSIONS
+
     system_id = spec.get("_meta", {}).get("system_id", "unknown")
     library_root = Path(spec["_meta"]["library_root"])
     layouts_dir = library_root / "layouts"
@@ -212,7 +387,6 @@ def build_layout_selection_request(
         for svg_path in sorted(layouts_dir.glob("*.svg")):
             pattern_id = svg_path.stem
             base_name = _VARIANT_SUFFIXES.sub('', pattern_id)
-            # Try to find description from spec
             description = None
             for spec_key, spec_val in layout_specs.items():
                 if isinstance(spec_val, dict):
@@ -229,15 +403,13 @@ def build_layout_selection_request(
 
     canvas_w, canvas_h = PLATFORM_DIMENSIONS.get(platform, (1280, 800))
 
-    caveats = _extract_grammar_caveats_for_placement(spec)
-
     return {
         "schema_version": "1.0",
         "brief": brief,
         "system_id": system_id,
         "platform": platform,
         "canvas": {"width": canvas_w, "height": canvas_h},
-        "grammar_caveats": caveats,
+        "grammar_caveats": _extract_grammar_caveats_for_placement(spec),
         "available_patterns": available_patterns,
         "response_format_example": {
             "selected_pattern_id": "dashboard",
@@ -289,7 +461,6 @@ def apply_layout_selection(
         return None
 
     base_name = _VARIANT_SUFFIXES.sub('', pattern_id)
-
     available = sorted(p.stem for p in layouts_dir.glob("*.svg"))
 
     return LayoutSelection(
@@ -304,24 +475,146 @@ def apply_layout_selection(
     )
 
 
-def derive_content_substitutions(
-    brief: str,
-    spec: dict,
-    selection: LayoutSelection,
-) -> list[ContentSubstitution]:
-    """Derive content substitutions from brief to replace placeholder text.
+# ─── Escalation helpers (Layer 1 — Phase B) ─────────────────────────
 
-    This is an LLM integration seam. The current deterministic implementation
-    returns an empty list (no-op). Future versions will parse the brief and
-    return substitutions to replace generic placeholder content with
-    brief-specific values.
+
+# Light stopword list. Goal: drop words that are universal across briefs
+# and therefore not informative for catalog matching. We intentionally
+# keep this small so domain words ("trip", "kanban", "carousel") stay.
+_STOPWORDS = frozenset({
+    "a", "an", "the", "this", "that", "these", "those", "my", "our", "your",
+    "for", "with", "of", "to", "in", "on", "at", "by", "from", "as", "into",
+    "and", "or", "but", "if", "is", "are", "be", "page", "screen", "view",
+    "app", "ui", "interface", "section", "layout", "main", "user", "users",
+    "show", "display", "shows", "displays", "showing", "displaying",
+})
+
+# Generic structural words that appear inside authored pattern ids
+# ("form-single-column", "dashboard-narrow") but describe arrangement
+# rather than naming a screen genre. A brief mentioning "three columns"
+# says nothing about whether the system authored that screen, so these
+# must not suppress escalation.
+_STRUCTURAL_TOKENS = frozenset({
+    "single", "double", "column", "columns", "row", "rows", "grid",
+    "left", "right", "top", "bottom", "wide", "narrow", "compact",
+    "default", "alt", "variant", "state", "mobile", "desktop",
+    "large", "small", "medium",
+})
+
+# Tokens shorter than this aren't worth checking.
+_MIN_TOKEN_LEN = 3
+
+# Token splitter — alphanumeric runs, no punctuation.
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
+def _extract_brief_nouns(brief: str) -> list[str]:
+    """Tokenize brief, lowercase, drop stopwords, return distinct nouns.
 
     Args:
         brief: Free-text brief.
-        spec: Loaded system spec dict.
-        selection: LayoutSelection from select_layout_pattern.
 
     Returns:
-        List of ContentSubstitution objects (currently empty).
+        Sorted list of distinct content tokens.
     """
-    return []
+    tokens = _TOKEN_RE.findall(brief.lower())
+    return sorted({
+        t for t in tokens
+        if len(t) >= _MIN_TOKEN_LEN and t not in _STOPWORDS
+    })
+
+
+def _normalize_token(token: str) -> str:
+    """Fold a token to a comparison form (naive singularization).
+
+    Lets "columns" in a brief match a "column" pattern term without
+    resorting to substring matching, which is what made the old overlap
+    test fire on unrelated words.
+
+    Args:
+        token: A lowercased token.
+
+    Returns:
+        The token with a trailing plural "s" removed when that is safe.
+    """
+    if len(token) > 3 and token.endswith("s") and not token.endswith("ss"):
+        return token[:-1]
+    return token
+
+
+def _pattern_base_tokens(base: str) -> set[str]:
+    """Return the distinctive normalized tokens of one base pattern name.
+
+    Args:
+        base: A base pattern name, variant suffix already stripped.
+
+    Returns:
+        Set of normalized tokens, structural and stopwords removed.
+    """
+    return {
+        _normalize_token(part)
+        for part in re.split(r"[-_]+", base.lower())
+        if len(part) >= _MIN_TOKEN_LEN
+        and part not in _STOPWORDS
+        and part not in _STRUCTURAL_TOKENS
+    }
+
+
+def _match_named_pattern(
+    brief_nouns: list[str],
+    available_patterns: list[str],
+    prefer_mobile: bool,
+) -> tuple[str, str] | None:
+    """Find the authored pattern whose name the brief actually mentions.
+
+    Reached only when no keyword rule matched but the brief did name a
+    pattern term — which happens for system-specific patterns outside
+    PATTERN_HEURISTICS (revolt's "banner-promotional"). Picks the base
+    with the most matching tokens; ties break on the earlier base.
+
+    Args:
+        brief_nouns: Distinct content tokens from the brief.
+        available_patterns: Pattern IDs enumerated from the layouts dir.
+        prefer_mobile: Whether to prefer a -mobile variant.
+
+    Returns:
+        A (base_pattern, pattern_id) pair, or None when nothing matched.
+    """
+    normalized = {_normalize_token(n) for n in brief_nouns}
+    best: tuple[int, str, str] | None = None
+    for base in _extract_base_names(available_patterns):
+        overlap = len(_pattern_base_tokens(base) & normalized)
+        if overlap == 0:
+            continue
+        chosen = _pick_variant(available_patterns, base, prefer_mobile)
+        if chosen is None:
+            continue
+        if best is None or overlap > best[0]:
+            best = (overlap, base, chosen)
+    return None if best is None else (best[1], best[2])
+
+
+def _enumerate_pattern_tokens(available_patterns: list[str]) -> set[str]:
+    """Return the distinctive terms naming the system's authored layouts.
+
+    Only *layout pattern* names are considered — deliberately not the
+    component catalog. Every real UI brief mentions components ("card",
+    "button", "filter", "image"), so intersecting against components made
+    the escalation test unable to discriminate: with a 194-name catalog and
+    bidirectional substring matching, "board" matched "dashboard" and
+    virtually no brief could ever escalate.
+
+    Variant suffixes are stripped and generic structural words are dropped,
+    so what remains is the set of terms that actually name a screen genre
+    the system has authored (e.g. "banner", "promotional").
+
+    Args:
+        available_patterns: Pattern IDs enumerated from the layouts dir.
+
+    Returns:
+        Set of normalized tokens to test brief nouns against.
+    """
+    tokens: set[str] = set()
+    for base in _extract_base_names(available_patterns):
+        tokens |= _pattern_base_tokens(base)
+    return tokens

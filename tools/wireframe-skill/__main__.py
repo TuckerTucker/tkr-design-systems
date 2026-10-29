@@ -30,17 +30,13 @@ def _setup_path() -> None:
 
 
 def _main_legacy(argv: list[str]) -> int:
-    """Generate a wireframe SVG, or return a routing inventory.
-
-    Without --layout-id or --compose, prints an inventory of available
-    patterns and components (exit code 2). With explicit routing, generates
-    the wireframe (exit code 0 on success, 1 on error).
+    """Legacy flat-arg interface (wireframe --brief ... --system ...).
 
     Args:
         argv: Command-line args (without prog name).
 
     Returns:
-        0 on success, 1 on failure, 2 when routing decision is needed.
+        0 on success, 1 on failure.
     """
     from wireframe_skill import wireframe  # noqa: E402
 
@@ -57,10 +53,19 @@ def _main_legacy(argv: list[str]) -> int:
                         help="Filename stem for outputs (default: wireframe).")
     parser.add_argument("--spec-version", default=None,
                         help="Pin to a specific spec_version (currently informational).")
+    parser.add_argument("--no-escalate", action="store_true",
+                        help="Disable Layer 1 escalation; preserve legacy dashboard-fallback "
+                             "behavior when no keyword pattern matches.")
     parser.add_argument("--layout-id", default=None,
-                        help="Explicit layout pattern id (from wf_select_layout).")
+                        help="Explicit layout pattern id (bypasses keyword routing). "
+                             "Pair with --request-routing responses.")
+    parser.add_argument("--request-routing", action="store_true",
+                        help="Skip heuristic routing and emit a routing_request "
+                             "inventory (available patterns + components) for the "
+                             "calling agent to choose from.")
     parser.add_argument("--compose", action="store_true",
-                        help="Use component decomposition path instead of a pattern.")
+                        help="Skip pattern selection and emit a decomposition_request "
+                             "for blueprint-based assembly (see apply-decomposition).")
     args = parser.parse_args(argv)
 
     result = wireframe(
@@ -70,20 +75,24 @@ def _main_legacy(argv: list[str]) -> int:
         output_dir=args.out,
         spec_version=args.spec_version,
         filename_stem=args.filename,
+        escalate=not args.no_escalate,
         layout_id=args.layout_id,
+        request_routing=args.request_routing,
         compose=args.compose,
     )
 
-    if result.routing_request is not None:
-        print(json.dumps({
-            "ok": True,
-            "routing_required": True,
-            "routing_request": result.routing_request,
-            "hint": (
-                "Rerun with --layout-id <pattern_id> or --compose to proceed. "
-                "Available patterns are listed in routing_request.available_patterns."
-            ),
-        }, indent=2))
+    if result.requires_orchestrator_pass:
+        import sys as _sys
+        msg = (
+            "wireframe-skill: brief requires component decomposition "
+            "(no pattern matched and brief nouns are off-catalog).\n"
+            f"  reason: {result.escalation_reason}\n"
+            "  next step: run `/wireframe-compose` (the L3 orchestrator command) "
+            "which handles the two-pass decomposition flow.\n"
+            "  to preserve legacy behavior on this brief, re-run with --no-escalate."
+        )
+        print(msg, file=_sys.stderr)
+        print(json.dumps(result.to_dict(), indent=2))
         return 2
 
     print(json.dumps(result.to_dict(), indent=2))
@@ -95,7 +104,6 @@ def _main_substitution_prompt(argv: list[str]) -> int:
 
     Extracts text nodes from pattern SVG + grammar caveats from spec,
     writes JSON request to --out file for the calling Claude to process.
-    Requires either --pattern (explicit SVG path) or --layout-id.
 
     Args:
         argv: Subcommand args (without 'substitution-prompt').
@@ -105,7 +113,10 @@ def _main_substitution_prompt(argv: list[str]) -> int:
     """
     from wireframe_skill.substitution import build_substitution_request  # noqa: E402
     from design_system_skill.loader import load_system  # noqa: E402
-    from wireframe_skill.placement import apply_layout_selection  # noqa: E402
+    from wireframe_skill.placement import (  # noqa: E402
+        apply_layout_selection,
+        select_layout_pattern,
+    )
 
     parser = argparse.ArgumentParser(
         prog="wireframe-skill substitution-prompt",
@@ -114,25 +125,29 @@ def _main_substitution_prompt(argv: list[str]) -> int:
     parser.add_argument("--brief", required=True, help="Brief to process.")
     parser.add_argument("--system", required=True, help="Design system id (e.g. swiss).")
     parser.add_argument("--pattern", default=None,
-                        help="Override: explicit pattern SVG path.")
+                        help="Override: explicit pattern SVG path. If omitted, inferred from brief + system.")
     parser.add_argument("--layout-id", default=None,
-                        help="Layout pattern id (use wf_select_layout to browse).")
+                        help="Layout pattern id (from --request-routing / wf_select_layout); "
+                             "wins over keyword inference.")
+    parser.add_argument("--platform", choices=["mobile", "desktop"], default="desktop")
     parser.add_argument("--out", required=True, help="Output JSON file path.")
     args = parser.parse_args(argv)
 
     try:
+        # Load spec.
         result = load_system(args.system)
         if not result.ok:
-            print(json.dumps({"ok": False, "errors": result.errors}))
+            print(json.dumps({"ok": False, "errors": [str(e) for e in (result.errors or [])]}))
             return 1
         spec = result.data
 
+        # Determine pattern path.
         if args.pattern:
             pattern_path = Path(args.pattern).resolve()
         elif args.layout_id:
             selection = apply_layout_selection(
                 {"selected_pattern_id": args.layout_id, "rationale": "CLI --layout-id"},
-                spec, "desktop",
+                spec, args.platform,
             )
             if selection is None:
                 print(json.dumps({
@@ -142,12 +157,16 @@ def _main_substitution_prompt(argv: list[str]) -> int:
                 return 1
             pattern_path = selection.svg_path
         else:
-            print(json.dumps({
-                "ok": False,
-                "errors": ["Provide --pattern or --layout-id. Use wf_select_layout to browse available patterns."],
-            }))
-            return 1
+            # Substitution needs a pattern to rewrite, so an off-catalog brief
+            # falls back to the stock pattern here instead of escalating.
+            selection = select_layout_pattern(args.brief, spec, platform=args.platform,
+                                              escalate=False)
+            if selection is None:
+                print(json.dumps({"ok": False, "errors": [f"No pattern found for brief in system {args.system}"]}))
+                return 1
+            pattern_path = selection.svg_path
 
+        # Build request.
         request = build_substitution_request(args.brief, spec, pattern_path)
         out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -175,6 +194,7 @@ def _main_apply_substitutions(argv: list[str]) -> int:
     """
     from wireframe_skill.substitution import (  # noqa: E402
         apply_substitutions,
+        extract_text_nodes,
         validate_substitutions,
     )
     from design_system_skill.loader import load_system  # noqa: E402
@@ -209,12 +229,16 @@ def _main_apply_substitutions(argv: list[str]) -> int:
         # Load SVG.
         svg_text = pattern_path.read_text()
 
-        # Validate if system provided.
+        # Extract text nodes once (carries width budgets for overflow check).
+        text_nodes = extract_text_nodes(svg_text)
+
+        # Validate if system provided. Pass text_nodes so overflow warnings
+        # surface alongside grammar warnings.
         warnings = []
         if args.system:
             result = load_system(args.system)
             if result.ok:
-                warnings = validate_substitutions(subs, result.data)
+                warnings = validate_substitutions(subs, result.data, text_nodes)
 
         # Apply substitutions.
         modified_svg, unapplied = apply_substitutions(svg_text, subs)
@@ -273,7 +297,7 @@ def _main_decompose_prompt(argv: list[str]) -> int:
         # Load spec.
         result = load_system(args.system)
         if not result.ok:
-            print(json.dumps({"ok": False, "errors": result.errors}))
+            print(json.dumps({"ok": False, "errors": [str(e) for e in (result.errors or [])]}))
             return 1
         spec = result.data
 
@@ -329,7 +353,7 @@ def _main_apply_decomposition(argv: list[str]) -> int:
         # Load system spec.
         result = load_system(args.system)
         if not result.ok:
-            print(json.dumps({"ok": False, "errors": result.errors}))
+            print(json.dumps({"ok": False, "errors": [str(e) for e in (result.errors or [])]}))
             return 1
         spec = result.data
 
@@ -364,11 +388,104 @@ def _main_apply_decomposition(argv: list[str]) -> int:
         return 1
 
 
+def _main_solve_layout(argv: list[str]) -> int:
+    """Pass 1.5: solve a layout tree into a blueprint.
+
+    Takes the layout TREE authored in pass 1 — containers, components, and
+    token-named spacing, with no coordinates — and resolves it into positioned
+    regions through `design.solve_layout`. The blueprint it writes is the same
+    shape `apply-decomposition` already consumes, so the two compose without
+    either knowing about the other.
+
+    Refuses by default when the solved layout does not fit its artboard: a
+    blueprint that renders off-canvas is exactly the silent wrongness the
+    solver exists to remove. `--allow-overflow` writes it anyway.
+
+    Args:
+        argv: Subcommand args (without 'solve-layout').
+
+    Returns:
+        0 on success, 1 on failure.
+    """
+    from wireframe_skill.compose import PLATFORM_DIMENSIONS  # noqa: E402
+    from wireframe_skill.solve import (  # noqa: E402
+        describe_overflows,
+        solve_layout,
+        LayoutSolveFailed,
+        LayoutSolveUnavailable,
+    )
+
+    parser = argparse.ArgumentParser(
+        prog="wireframe-skill solve-layout",
+        description="Solve a layout tree into an assembler-ready blueprint.",
+    )
+    parser.add_argument("--tree", required=True, help="JSON file with the layout tree (from pass 1).")
+    parser.add_argument("--system", required=True, help="Registered design system id.")
+    parser.add_argument("--out", required=True, help="Output blueprint JSON path.")
+    parser.add_argument("--platform", default="desktop", choices=sorted(PLATFORM_DIMENSIONS),
+                        help="Artboard preset. Overridden by --canvas-width/--canvas-height.")
+    parser.add_argument("--canvas-width", type=int, default=None, help="Explicit artboard width.")
+    parser.add_argument("--canvas-height", type=int, default=None, help="Explicit artboard height.")
+    parser.add_argument("--scope", default=None, help="Token scope carried into the blueprint.")
+    parser.add_argument("--project", default=None, help="Project directory the operation resolves against.")
+    parser.add_argument("--allow-overflow", action="store_true",
+                        help="Write the blueprint even when the layout does not fit.")
+    args = parser.parse_args(argv)
+
+    try:
+        tree_path = Path(args.tree).resolve()
+        if not tree_path.exists():
+            print(json.dumps({"ok": False, "errors": [f"Tree not found: {args.tree}"]}))
+            return 1
+        tree = json.loads(tree_path.read_text())
+
+        # Artboard dimensions live in compose.PLATFORM_DIMENSIONS, which is
+        # their one home; the operation takes an explicit canvas so it never
+        # restates them.
+        width, height = PLATFORM_DIMENSIONS[args.platform]
+        canvas = {
+            "width": args.canvas_width if args.canvas_width is not None else width,
+            "height": args.canvas_height if args.canvas_height is not None else height,
+        }
+
+        solution = solve_layout(tree, args.system, canvas, scope=args.scope, cwd=args.project)
+        overflows = solution.get("overflows", [])
+        if overflows and not args.allow_overflow:
+            print(json.dumps({
+                "ok": False,
+                "errors": describe_overflows(overflows),
+                "remedy": "adjust the tree for this artboard, or pass --allow-overflow to write it anyway.",
+            }))
+            return 1
+
+        out_path = Path(args.out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(solution["blueprint"], indent=2))
+
+        result: dict = {
+            "ok": True,
+            "output_path": str(out_path),
+            "canvas": canvas,
+            "regions": len(solution["blueprint"].get("regions", [])),
+            "spacing": solution.get("spacing", {}),
+        }
+        if overflows:
+            result["warnings"] = describe_overflows(overflows)
+        print(json.dumps(result))
+        return 0
+    except (LayoutSolveUnavailable, LayoutSolveFailed) as e:
+        print(json.dumps({"ok": False, "errors": [str(e)]}))
+        return 1
+    except Exception as e:
+        print(json.dumps({"ok": False, "errors": [str(e)]}))
+        return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     """Route to subcommand or legacy interface based on first arg.
 
     If argv[1] is a subcommand name (substitution-prompt, apply-substitutions,
-    decompose-prompt, apply-decomposition), route to that handler.
+    decompose-prompt, apply-decomposition, solve-layout), route to that handler.
     Otherwise, assume legacy flat-arg format and route to _main_legacy.
 
     Args:
@@ -384,13 +501,16 @@ def main(argv: list[str] | None = None) -> int:
 
     # Check for subcommand.
     if argv and argv[0] in ["substitution-prompt", "apply-substitutions",
-                             "decompose-prompt", "apply-decomposition"]:
+                             "decompose-prompt", "apply-decomposition",
+                             "solve-layout"]:
         if argv[0] == "substitution-prompt":
             return _main_substitution_prompt(argv[1:])
         elif argv[0] == "apply-substitutions":
             return _main_apply_substitutions(argv[1:])
         elif argv[0] == "decompose-prompt":
             return _main_decompose_prompt(argv[1:])
+        elif argv[0] == "solve-layout":
+            return _main_solve_layout(argv[1:])
         else:  # apply-decomposition
             return _main_apply_decomposition(argv[1:])
 

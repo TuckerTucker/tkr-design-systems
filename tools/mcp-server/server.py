@@ -54,7 +54,6 @@ from design_system_skill import (  # noqa: E402
     check_color_gates_all,
     check_color_gates_for_spec,
 )
-from design_system_skill.paths import project_root  # noqa: E402
 from design_system_skill.registry import Registry  # noqa: E402
 from wireframe_skill import (  # noqa: E402
     wireframe,
@@ -229,7 +228,7 @@ def ds_check_contrast(system_id: str | None = None, verbose: bool = False) -> di
         if entry is None:
             return {"ok": False, "errors": [{"code": "SYSTEM_NOT_FOUND",
                                              "message": f"System '{system_id}' is not registered"}]}
-        return check_color_gates_for_spec(project_root() / entry.spec, verbose=verbose).to_dict()
+        return check_color_gates_for_spec(entry.spec_path(), verbose=verbose).to_dict()
     except Exception as exc:
         return _error_result(exc)
 
@@ -282,6 +281,10 @@ def wf_generate(
             substitute=substitute,
             compose=compose,
             layout_id=layout_id,
+            # The MCP surface is agent-driven: without an explicit layout or
+            # compose request the agent gets the routing inventory, not the
+            # skill's keyword heuristic.
+            request_routing=layout_id is None and not compose,
         )
         return result.to_dict()
     except Exception as exc:

@@ -16,6 +16,8 @@ from pathlib import Path
 
 import structlog
 
+from .atoms import render_atom_region, AtomRenderError
+
 logger = structlog.get_logger(__name__)
 
 
@@ -56,10 +58,23 @@ def assemble_blueprint(blueprint: dict, spec: dict) -> tuple[str, list[str]]:
 
     # Process each region.
     regions = blueprint.get("regions", [])
+    scope = blueprint.get("scope", "portable")
     for region in regions:
         region_id = region.get("id", "unnamed")
         region_x = region.get("x", 0)
         region_y = region.get("y", 0)
+
+        # Phase C — atom regions render through the atoms module, not components.
+        if "atoms" in region:
+            try:
+                atom_body, atom_defs = render_atom_region(region, spec, scope=scope)
+            except AtomRenderError as e:
+                warnings.append(f"Region '{region_id}' atom render failed: {e}")
+                continue
+            if atom_defs:
+                defs_blocks.append((f"atom-region:{region_id}", atom_defs))
+            body_elements.append(atom_body)
+            continue
 
         # Process each component in this region.
         components = region.get("components", [])
@@ -70,6 +85,8 @@ def assemble_blueprint(blueprint: dict, spec: dict) -> tuple[str, list[str]]:
             comp_y = comp.get("y", 0)
 
             if comp_type == "custom":
+                # Custom components carry inline SVG authored against the
+                # system's exported tokens — no library file to load.
                 comp_svg = comp.get("svg", "")
                 if not comp_svg.strip():
                     warnings.append(
@@ -79,16 +96,13 @@ def assemble_blueprint(blueprint: dict, spec: dict) -> tuple[str, list[str]]:
                 comp_id = comp_id or f"custom-{comp_idx}"
             else:
                 if not comp_id:
-                    warnings.append(
-                        f"Region '{region_id}': component missing component_id"
-                    )
+                    warnings.append(f"Region '{region_id}': component missing component_id")
                     continue
 
+                # Load component SVG.
                 comp_path = components_dir / f"{comp_id}.svg"
                 if not comp_path.exists():
-                    warnings.append(
-                        f"Component not found: {comp_id} at {comp_path}"
-                    )
+                    warnings.append(f"Component not found: {comp_id} at {comp_path}")
                     continue
 
                 try:
