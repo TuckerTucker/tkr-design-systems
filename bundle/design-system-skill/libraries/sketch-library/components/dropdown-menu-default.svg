@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 176" width="280" height="176">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== DROPDOWN-MENU-DEFAULT ==================== -->
+
+  <rect x="0" y="0" width="280" height="176" fill="#FFFFFF" stroke="#E5E3DE" stroke-width="1" rx="14" ry="14"/>
+  <g transform="rotate(-1.5, 16, 30)">
+    <text x="16" y="30" class="text-annotation" font-size="14" font-weight="700">↓ earlier conversations</text>
+  </g>
+  <text x="16" y="62" class="text-primary" font-size="12" font-weight="600" letter-spacing="-0.02em">Recipe ideas</text>
+  <text x="16" y="80" class="text-muted" font-size="10" letter-spacing="-0.02em">webchat · 2 days ago</text>
+  <text x="264" y="62" text-anchor="end" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">open</text>
+  <line x1="16" y1="96" x2="264" y2="96" stroke="#E5E3DE" stroke-width="1"/>
+  <text x="16" y="122" class="text-primary" font-size="12" font-weight="600" letter-spacing="-0.02em">Trip planning</text>
+  <text x="16" y="140" class="text-muted" font-size="10" letter-spacing="-0.02em">sms · last week</text>
+  <text x="264" y="122" text-anchor="end" class="text-primary" font-size="11" font-weight="700" letter-spacing="-0.02em">resume →</text>
+
+</svg>

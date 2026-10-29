@@ -1,0 +1,374 @@
+spec_version: "0.3"
+common_tokens_version: "1.0"
+
+system:
+  id: terminal
+  name: Terminal
+  tagline: "CLI + Phosphor Heritage"
+  grammar_family: character_grid
+  version: "1.1.0"   # bumped: v0.2 migration adds requires_unicode_blocks
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
+  source_jsx: ../design-system-terminal.jsx
+  requires_emoji: false   # Terminal uses ASCII glyphs and Unicode box-drawing, not emoji
+
+# ────────────────────────────────────────────────────────────────────
+# TOKENS
+# ────────────────────────────────────────────────────────────────────
+
+tokens:
+  # generated:common-tokens — derived from tokens.json by `design-system-skill common-tokens --write`; do not edit by hand
+  common:
+    color:
+      ink: "#C8F7C5"
+      ink-muted: "#578B5D"
+      surface: "#111811"
+      surface-inset: "#151D15"
+      accent: "#00FF66"
+      accent-on: "#0A0F0A"
+      outline: "#1F2F1F"
+      outline-strong: "#1F2F1F"
+      image-placeholder: "#151D15"
+      success: "#00FF66"
+      warning: "#FFB000"
+      danger: "#FF4E4E"
+    typography:
+      display: { family: "JetBrains Mono, monospace", size: 14, weight: 700, leading: 1.3, case: "mixed", tracking: 0 }
+      headline: { family: "JetBrains Mono, monospace", size: 14, weight: 700, leading: 1.3, case: "mixed", tracking: 0 }
+      title: { family: "JetBrains Mono, monospace", size: 14, weight: 700, leading: 1.3, case: "mixed", tracking: 0 }
+      body: { family: "JetBrains Mono, monospace", size: 12, weight: 400, leading: 1.55, case: "mixed", tracking: 0 }
+      caption: { family: "JetBrains Mono, monospace", size: 9, weight: 600, leading: 1.4, case: "uppercase", tracking: 0.08 }
+      code: { family: "JetBrains Mono, monospace", size: 12, weight: 400, leading: 1.55, case: "mixed", tracking: 0 }
+    spacing:
+      xs: 4
+      sm: 8
+      md: 14
+      lg: 16
+      xl: 24
+    stroke:
+      hairline: 1
+      regular: 1
+      bold: 2
+    radius:
+      none: 0
+      sm: 0
+      md: 0
+      full: 9999
+  # /generated:common-tokens
+  # System-extension tokens (referenced as `terminal:<path>` from atoms
+  # scoped to terminal).
+  system:
+    glyphs:
+      cursor: "█"
+      selection-arrow: ">"
+      box-drawing: "┌─┐│└─┘"
+  colors:
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
+
+    palette:
+      - name: page_dark
+        token: color.page_bg
+        role: page and primary surface
+        usage_constraint: "near-black; never pure black, never above #0F140F"
+
+      - name: surface_dim
+        token: color.surface_elevated
+        role: very subtle elevation differentiation
+        usage_constraint: "use sparingly; Terminal prefers no elevation at all"
+
+      - name: text_bright
+        token: color.text_primary
+        role: primary readable text
+        usage_constraint: "default body text color"
+
+      - name: text_muted_2
+        token: color.text_secondary
+        role: secondary text, hover states
+
+      - name: text_muted_3
+        token: color.text_muted
+        role: metadata, comments, deemphasized text
+
+      - name: phosphor
+        token: color.accent
+        role: active state, prompts, primary signal
+        usage_constraint: "the system's hero color; reserved for active/important signal"
+
+      - name: amber_count
+        token: color.warning
+        role: counts, attention markers
+        usage_constraint: "never decorative; always indicates a numeric or count value"
+
+      - name: error_red
+        token: color.danger
+        role: errors, destructive states
+        usage_constraint: "exclusively for error or destructive action"
+
+      - name: surface_panel
+        token: color.surface
+        role: panel surface one step above the page
+
+      - name: text_ai_output
+        token: extras.color.text_ai_output
+        role: AI output text, a touch brighter than text_bright
+
+      - name: accent_alt
+        token: extras.color.accent_alt
+        role: user prompt tag (user@local>)
+
+      - name: link_blue
+        token: color.info
+        role: links and informational signal
+
+      - name: border_dim
+        token: color.border_default
+        role: dashed/solid borders
+        usage_constraint: "the only border color; always 1px"
+
+  typography:
+    families:
+      - id: structural
+        stack: "{font.body}"
+        role: every piece of text in the system
+        mixing_rule: "monospace only; no proportional fonts permitted anywhere"
+        # NEW IN v0.2 (Change 6): typeface character-set requirements.
+        # Terminal's grammar depends on Unicode box-drawing characters and
+        # the cursor block. Without these glyphs the system reads as broken.
+        requires_unicode_blocks:
+          - { name: "Box Drawing", range: "U+2500-U+257F", reason: "session frames ┌─┐│└─┘ and dividers" }
+          - { name: "Block Elements", range: "U+2580-U+259F", reason: "cursor block █" }
+          - { name: "Geometric Shapes", range: "U+25A0-U+25FF", reason: "status indicators ●" }
+          - { name: "Arrows", range: "U+2190-U+21FF", reason: "selection indicator > and prompt-style arrows" }
+        fallback_strategy: substitute   # ASCII fallback: + - | for box drawing, _ for cursor
+
+    scale:
+      - { size: 9,  role: tiny_metadata }
+      - { size: 10, role: metadata }
+      - { size: 11, role: secondary_body }
+      - { size: 12, role: body }
+      - { size: 13, role: emphasized_body }
+
+    case:
+      metadata: uppercase
+      body: lowercase  # Terminal favors lowercase for body — feels typed
+      headers: lowercase
+
+    tracking:
+      metadata: 0.06  # tighter than Swiss; mono needs less
+      body: 0
+      headers: 0
+
+  spacing:
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
+    enforcement: relaxed  # character widths sometimes require half-step
+
+  borders:
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
+    no_radius_anywhere: true
+
+  elevation:
+    # strategy: projected from tokens.json elevation.strategy
+    config:
+      # v0.2 (Change 5): border style is a first-class property.
+      # The dash_pattern follows SVG stroke-dasharray syntax (px values).
+      border_light:
+        width: "{border_width.default}"
+        color: "{color.border_default}"
+        style: dashed
+        dash_pattern: "3,2"   # 3px dash + 2px gap; characteristic Terminal frame texture
+      border_strong:
+        width: "{border_width.strong}"
+        color: "{color.border_strong}"
+        style: solid
+      no_shadow: true
+
+# ────────────────────────────────────────────────────────────────────
+# COMPONENTS — list_item only for this pass
+# ────────────────────────────────────────────────────────────────────
+
+components:
+  list_item:
+    anatomy:
+      - prompt_indicator    # > for selected, space for unselected
+      - name                # session name (lowercase, no spaces — terminal-style)
+      - unread_count        # rendered as [N] in amber
+      - timestamp
+      - preview             # // comment-styled
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Indented by 14px (one mono char + space). Empty space where prompt indicator would be. Name in #5EAA66 (text_muted_2). Time top-right in #578B5D (text_muted). If unread, [N] in amber inline with name. Preview on next line, prefixed with `// ` in #578B5D."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        # NEW IN v0.2 (Change 10): structured selection_signal annotation.
+        # Terminal is the canonical example of prompt_character selection —
+        # the > glyph in phosphor green is the signal, not a surface change.
+        selection_signal: prompt_character
+        selection_signal_detail:
+          glyph: ">"
+          color_ref: tokens.colors.accent          # phosphor green #00FF66
+          position: left_edge
+          additional_treatment: "name color shifts from #5EAA66 to #C8F7C5; weight bumps to 700"
+        rendering_notes: "Same anatomy but: prompt indicator (>) in phosphor green at left edge, name in #C8F7C5 (text_bright) weight 700, no background change. Selection signaled by character + color shift, not surface."
+        states: [selected]
+    constraints:
+      - "Selection is signaled by the > prompt character and color shift, never by background fill"
+      - "Names are lowercase_snake_case to feel terminal-native (e.g. tokyo_trip, recipe_ideas)"
+      - "Preview text is prefixed with `// ` to read as a code comment"
+      - "Unread counts are rendered as [N] in amber, inline — never as a circular badge"
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 40
+        note: "JSX .ci fadeSlideUp 0.2s linear. Hover and selection are instant."
+
+# ────────────────────────────────────────────────────────────────────
+# RULEBOOK
+# ────────────────────────────────────────────────────────────────────
+
+rulebook:
+  # NEW IN v0.2 (Change 9): every rule annotates check_method
+  # so consumers (rulebook_check.py, design-system-skill.check_compliance)
+  # know which rules can be verified mechanically vs. require model judgment.
+  # NEW IN v0.2 (Change 12): every rule annotates check_scope
+  # so batch component checks skip artifact-only rules and component-only
+  # rules pass vacuously when their target element class is absent.
+
+  - id: terminal-monospace-only
+    rule: "Every text element uses JetBrains Mono (or another monospace fallback). No proportional fonts anywhere."
+    rationale: "Monospace is the system's structural backbone — column alignment replaces grid systems."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Verify every <text> element's font-family contains 'Mono' or 'monospace'."
+
+  - id: terminal-no-radius
+    rule: "border-radius is 0 on every element."
+    rationale: "Rounded corners are antithetical to terminal aesthetic."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Verify no rx/ry attributes exist (or all are 0)."
+
+  - id: terminal-no-shadows
+    rule: "box-shadow is never used. Depth and elevation come from border presence/absence and dashed-vs-solid distinction."
+    rationale: "Shadows are a screen vocabulary; Terminal is a character-grid vocabulary."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Verify no <filter> elements with feDropShadow and no filter= references."
+
+  - id: terminal-prompt-style-labels
+    rule: "Section headers use prompt-style or comment-style prefixes: `$ command`, `// comment`, `> path`, or `[n]` for enumerated items. Never plain text."
+    rationale: "Every label should look like something you could type into a shell."
+    severity: required
+    check_method: semantic
+    check_scope: artifact          # judged at composed-screen level
+    check_implementation: "Verify by reading text content of header elements; flag labels that don't begin with $/`//`/> or contain [n] enumeration."
+
+  - id: terminal-color-as-signal
+    rule: "Color usage is diagnostic, never decorative. Phosphor green = active/important. Amber = count/attention. Red = error. Muted greens = metadata."
+    rationale: "In a CLI-heritage system, color carries information. Decorative color breaks the signal."
+    severity: required
+    check_method: both
+    check_scope: both              # palette mechanical at both; semantic at artifact level
+    check_implementation: |
+      Mechanical: verify all fill/stroke values are in the Terminal palette.
+      Semantic: verify each colored element's role matches the color's signal
+      (e.g. an element in phosphor green should be active/important).
+
+  - id: terminal-box-drawing-borders
+    rule: "Structural borders should use ASCII/Unicode box-drawing characters (┌─┐│└─┘) where possible, falling back to 1px dashed #1F2F1F lines. Solid borders are reserved for the strongest separation."
+    rationale: "Box-drawing is the single strongest identity moment of the Terminal grammar."
+    severity: required
+    check_method: semantic
+    check_scope: artifact
+    check_implementation: "Verify by reading text content for box-drawing chars in section headers; flag sections lacking either box-drawing or dashed borders."
+
+  - id: terminal-selection-via-character
+    rule: "Selection is signaled by changing characters (e.g. ' ' → '>') and color shifts, NEVER by adding a background fill or accent bar."
+    rationale: "Background fills are a GUI metaphor; Terminal expresses selection through cursor and prompt characters."
+    severity: required
+    check_method: mechanical
+    check_scope: component
+    applies_when: "component is list_item AND variant is selected"
+    check_implementation: |
+      Verify components.list_item.variants[id=selected].selection_signal is
+      'prompt_character' (not 'surface_fill' or 'accent_bar'). Verify the
+      selected SVG does not introduce a fill rect that wasn't in the default.
+
+  - id: terminal-snake-case-names
+    rule: "Object names (sessions, files, identifiers) are lowercase_snake_case to feel terminal-native."
+    rationale: "Terminal grammar treats every name as if it were a filename or command."
+    severity: recommended
+    check_method: semantic
+    check_scope: both
+    check_implementation: "Verify by reading text content; flag labels containing spaces or capitalization that should be snake_case."
+
+# ────────────────────────────────────────────────────────────────────
+# GRAMMAR EXTENSIONS — character_grid family
+# ────────────────────────────────────────────────────────────────────
+
+grammar_extensions:
+  family: character_grid
+
+  monospace_required: true
+
+  box_drawing:
+    enabled: true
+    style: unicode_light  # ┌─┐ │ └─┘ characters
+    fallback_style: ascii  # +---+ | +---+ when unicode unavailable
+    use_for:
+      - section_headers
+      - card_borders
+      - emphasis_frames
+
+  prompt_labels:
+    enabled: true
+    formats:
+      - "$ {command}"        # shell prompt
+      - "// {comment}"       # code comment
+      - "> {selected}"       # selected item indicator
+      - "[{count}]"          # enumerated/count
+      - "{user}@{host}:~$"   # full prompt
+      - "─── {section} ───"  # section divider with rules
+
+  comment_styling:
+    prefix: "// "
+    color_ref: tokens.colors.text_muted
+
+  character_density:
+    chars_per_line_target: 80   # traditional terminal width
+    max_chars_per_line: 120     # before wrapping
+
+  cursor:
+    enabled: true
+    glyph: "█"
+    blink_rate_ms: 1000  # for live previews; static SVG renders as solid
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 60
+        note: "JSX .mi fadeSlideUp 0.25s linear."
+    cursor:
+      - trigger: loop
+        tier: fast
+        properties: [opacity]
+        reduced: none
+        timing: { duration_ms: 1000, easing: step-end }
+        note: "JSX .term-cursor 'blink 1s step-end infinite' (grammar_extensions.cursor.blink_rate_ms). The JSX blinks even when the input is unfocused and under reduced motion; the spec says focused only."

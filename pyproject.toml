@@ -1,6 +1,6 @@
 [project]
 name = "tkr-design-systems"
-version = "0.1.0"
+version = "0.2.0"
 description = "Design system specs, component libraries, and the skills + MCP server that operate on them."
 requires-python = ">=3.12"
 dependencies = [

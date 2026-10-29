@@ -1,0 +1,319 @@
+spec_version: "0.3"
+common_tokens_version: "1.0"
+
+system:
+  id: revolt
+  name: Revolt
+  tagline: "Neobrutalist + Y2K"
+  grammar_family: contemporary_clean
+  version: "1.2.0"   # bumped: project-wide no-emoji policy — two-letter abbreviation avatars
+  tokens_file: tokens.json   # canonical token values (schema v0.3)
+  source_jsx: ../design-system-integrated.jsx
+
+  # tkr-kit project policy: no emoji glyphs anywhere (mechanically enforced
+  # by the revolt-no-emoji-imagery rulebook entry). Identity in Revolt uses
+  # two-letter abbreviations in 30×30 white squares with 2px black borders,
+  # uppercase Space Mono weight 700 — matches the neobrutalist code-comment
+  # affect. The pink-swap on selection still applies (background swaps to
+  # #FF3366; the abbreviation flips to black #111111 = color.accent_foreground,
+  # since white on pink is 3.5:1, issue #7).
+  requires_emoji: false
+  avatar_strategy:
+    mode: abbreviation
+    abbreviation_length: 2
+    placeholder_size_px: 30
+    placeholder_surface: "#FFFFFF"
+    placeholder_border: "2px solid #111111"
+    placeholder_letter_typeface_ref: typography.families.structural
+    placeholder_letter_weight: 700
+    placeholder_letter_color: "#111111"
+    selected_swap:
+      surface: "#FF3366"
+      letter_color: "{color.accent_foreground}"
+    rendering_notes: "Two-letter uppercase abbreviation (e.g. TT, RI, BC), Space Mono weight 700, centered in a 30×30 white square with 2px black border. On selection, background swaps to pink (#FF3366) and the abbreviation stays black (#111111, accent_foreground; white on pink is 3.5:1)."
+
+tokens:
+  # generated:common-tokens — derived from tokens.json by `design-system-skill common-tokens --write`; do not edit by hand
+  common:
+    color:
+      ink: "#111111"
+      ink-muted: "#757575"
+      surface: "#FFFFFF"
+      surface-inset: "#FFFFFF"
+      accent: "#FF3366"
+      accent-on: "#111111"
+      outline: "#111111"
+      outline-strong: "#111111"
+      image-placeholder: "#FFFEF5"
+      success: "#C8FF00"
+      warning: "#111111"
+      danger: "#FF3366"
+    typography:
+      display: { family: "Space Mono, monospace", size: 14, weight: 700, leading: 1.2, case: "uppercase", tracking: 0.08 }
+      headline: { family: "Space Mono, monospace", size: 12, weight: 700, leading: 1.2, case: "uppercase", tracking: 0.06 }
+      title: { family: "Space Mono, monospace", size: 12, weight: 700, leading: 1.2, case: "uppercase", tracking: 0.06 }
+      body: { family: "Space Mono, monospace", size: 11.5, weight: 400, leading: 1.5, case: "mixed", tracking: 0 }
+      caption: { family: "Space Mono, monospace", size: 9, weight: 700, leading: 1.2, case: "uppercase", tracking: 0.1 }
+      code: { family: "Space Mono, monospace", size: 11.5, weight: 400, leading: 1.5, case: "mixed", tracking: 0 }
+    spacing:
+      xs: 4
+      sm: 8
+      md: 12
+      lg: 16
+      xl: 24
+    stroke:
+      hairline: 2
+      regular: 2
+      bold: 3
+    radius:
+      none: 0
+      sm: 0
+      md: 0
+      full: 9999
+  # /generated:common-tokens
+  # System-extension tokens (referenced as `revolt:<path>` from atoms scoped
+  # to revolt). Values the token file holds are aliases.
+  system:
+    palette:
+      lime: "{color.success}"
+    shadow:
+      offset: { x: 4, y: 4 }
+      color: "{extras.color.shadow}"
+      blur: 0
+  colors:
+    # Contract colour values (page_bg, surface, text_*, accent, ...) live in
+    # tokens.json; the loader projects them here. Palette entries below
+    # reference tokens by path instead of repeating hex values.
+
+    palette:
+      - { name: paper_offwhite, token: color.page_bg, role: page background }
+      - { name: paper_white, token: color.surface, role: surface fills }
+      - { name: ink_hard, token: color.text_primary, role: borders, body, headlines }
+      - { name: pink_revolt, token: color.accent, role: header bar, user message fill, selection bar fill, unread badges }
+      - { name: lime_revolt, token: color.action, role: brand bar, selected state, send button }
+      - { name: text_secondary_grey, token: color.text_secondary, role: preview text }
+      - { name: text_muted_grey, token: color.text_muted, role: timestamps and footnotes }
+
+  typography:
+    families:
+      - id: structural
+        stack: "{font.body}"
+        role: every piece of text
+        mixing_rule: "single typeface — monospace only"
+    scale:
+      - { size: 8,  role: tiny_metadata }
+      - { size: 9,  role: pill_label }
+      - { size: 10, role: timestamp_label }
+      - { size: 11, role: secondary_body }
+      - { size: 11.5, role: body }
+      - { size: 12, role: header }
+      - { size: 14, role: brand }
+    case:
+      metadata: uppercase
+      body: mixed
+      headers: uppercase
+    tracking:
+      metadata: 0.10  # em — generous tracking for uppercase
+      body: 0.04
+      headers: 0.08
+
+  spacing:
+    # grid_unit / allowed_steps: projected from tokens.json space.unit / space.steps
+    enforcement: relaxed
+
+  borders:
+    # radius_default / radius_inputs / radius_chrome: projected from tokens.json radius.*
+    no_radius_anywhere: true
+
+  elevation:
+    # strategy: projected from tokens.json elevation.strategy
+    config:
+      shadow_offset: { x: 4, y: 4 }
+      shadow_color: "{extras.color.shadow}"
+      shadow_blur: 0   # always 0 for Revolt — hard offset only
+      border_width: 2  # default; brand and section dividers use 3
+
+components:
+  list_item:
+    # Structured anatomy (Schema v0.2 Change 11) — formalizes preview yielding
+    # space to unread_badge. Space Mono's wider glyphs make the truncation
+    # point come earlier than for proportional-font systems.
+    anatomy:
+      - { id: avatar,       position: left,         fixed_width: 30 }
+      - { id: title,        position: top_main,     yields_to: [timestamp] }
+      - { id: timestamp,    position: top_right,    fixed_width: 48 }
+      - { id: preview,      position: bottom_main,  yields_to: [unread_badge], min_gap: 6 }
+      - { id: unread_badge, position: middle_right, fixed_width: 22, optional: true }
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Avatar 30x30 white square with 2px black border. Title in Space Mono uppercase 11px weight 700. Timestamp top-right in 9px grey weight 700. Preview in 10px grey. Unread badge: bordered pink rectangle with white digit. Preview text MUST end at least 6px before the unread_badge x-position when badge is present; truncate with ellipsis (…). Space Mono is wider per character than proportional fonts, so the truncation point comes earlier than it would in Sketch or Prism — about 22 characters max for a 280px sidebar item with badge present."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        # Selection signal (Schema v0.2 Change 10) — Revolt's hard-offset
+        # signature: lime fill + black border + 4px hard shadow + pink avatar.
+        selection_signal: hard_offset
+        selection_signal_detail:
+          fill: "#C8FF00"
+          border: "2px solid #111"
+          shadow: { offset_x: 4, offset_y: 4, color: "#111", blur: 0 }
+          additional_treatment: "avatar bg swap to #FF3366"
+        rendering_notes: "Lime fill (#C8FF00), 2px black border, 4px hard offset shadow. Avatar background swaps to pink (#FF3366) with the black (#111111) abbreviation. Same preview-yields-to-badge rule as default variant."
+        states: [selected]
+    constraints:
+      - "Selection: lime fill + 2px black border + 4px hard shadow + pink avatar swap. NEVER use a soft shadow or rounded selection."
+      - "All shadows are 4px 4px 0 #111 — zero blur. Never use blur."
+      - "All borders are 2px solid #111 (or 3px for major dividers). Never thin or colored borders."
+      - "Preview text yields horizontal space to unread_badge: minimum 6px gap before the badge's left edge. Truncate the preview content (do not let SVG text overflow). See SCHEMA v0.2 finding 11.5 for the formal yields_to constraint this rule encodes."
+    motion:
+      - trigger: enter
+        tier: moderate
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 50
+        note: "JSX .ci fadeSlideUp 0.2s linear."
+      - trigger: hover
+        tier: fast
+        properties: [transform]
+        reduced: none
+        note: "JSX Hover Rotation: rotate(-0.5deg), 120ms linear (grammar_extensions.per_system_signature.rotation_interaction)."
+
+rulebook:
+  # NEW IN v0.2: every rule annotates check_method (Change 9) and
+  # check_scope (Change 12).
+
+  - id: revolt-no-radius
+    rule: "border-radius is 0 on every element. Rectangles and right angles only."
+    rationale: "The hard-edged geometry IS the system; rounding breaks the neobrutalist grammar."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Verify no rx/ry attributes exist (or all are 0)."
+
+  - id: revolt-hard-shadows-only
+    rule: "All box-shadows are 4px 4px 0 #111 — zero blur, exact offset. Never soft or blurred shadows."
+    rationale: "Hard offset is the system's depth signature; soft shadows belong to a different vocabulary entirely."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "If <filter> with feDropShadow is present, verify stdDeviation=0 and offset matches the canonical (4,4) hard-offset signature."
+
+  - id: revolt-2px-borders
+    rule: "Default borders are 2px solid #111. Major dividers (sidebar/main split, brand bar, header bar) are 3px."
+    rationale: "Heavy borders are structural — they're the system's frames, not decorative."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "For each <rect>/<line> with stroke=#111, verify stroke-width is 2 (default) or 3 (major dividers)."
+
+  - id: revolt-monospace-uppercase
+    rule: "All metadata, names, and labels are uppercase Space Mono with letter-spacing 0.04–0.08em."
+    rationale: "Uppercase mono is the Y2K interface aesthetic; mixed case feels modern in the wrong way."
+    severity: required
+    check_method: both
+    check_scope: both
+    check_implementation: |
+      Mechanical: every <text> uses Space Mono family. Letter-spacing within
+      0.04-0.08em range. Semantic: text content for metadata/labels (not body)
+      should be uppercase.
+
+  - id: revolt-color-pairing
+    rule: "Pink (#FF3366) and lime (#C8FF00) are paired accent colors. Pink for: header bar, user messages, unread badges, selected avatar swap. Lime for: brand bar, selected list bg, send button."
+    rationale: "The pink/lime pairing IS the Revolt palette; substitution breaks the visual identity."
+    severity: required
+    check_method: both
+    check_scope: artifact
+    check_implementation: "Mechanical: count pink and lime usages; flag any other saturated color outside the palette. Semantic: each pink/lime element should match one of the listed contexts."
+
+  - id: revolt-code-style-timestamps
+    rule: "Message timestamps follow the format `{SENDER} // 00:N` (e.g. YOU // 00:1, BOT // 00:2). Always uppercase, always with the // separator."
+    rationale: "Code-comment timestamp format reinforces the neobrutalist 'this is a machine' affect."
+    severity: required
+    check_method: semantic
+    check_scope: artifact
+    check_implementation: "Read text content of timestamp elements; verify the `SENDER // 00:N` format (uppercase, // separator, zero-padded counter)."
+
+  - id: revolt-no-emoji-imagery
+    rule: "No emoji glyphs anywhere in any artifact (avatar slots, decorative annotations). Identity uses two-letter uppercase abbreviations in 30×30 white squares with 2px black borders."
+    rationale: "Project policy forbids emoji as an identifier strategy. Revolt's neobrutalist code-comment affect is more authentic with mono-typeface abbreviations than colored emoji."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "Scan SVG text for codepoints in the Unicode emoji blocks (U+1F300-U+1F5FF, U+1F600-U+1F64F, U+1F680-U+1F6FF, U+1F900-U+1F9FF, U+2600-U+26FF, U+2700-U+27BF, U+1FA70-U+1FAFF). Any match is a violation."
+
+  - id: revolt-error-status
+    rule: "An error is labelled, not recoloured: it carries the uppercase status label ERROR (JSX Status Pills variants LIVE / TYPING / OFFLINE / ERROR) in a rectangular bordered pill: 2px solid border, padding 2px 8px, 9px/700 Space Mono uppercase, radius 0. On white or cream the pill is black border + black text. When danger is painted as a fill it is pink (color.danger = color.accent) with black text (color.danger_foreground #111111, 5.3:1), never white text on a pink error fill (3.5:1). Error copy follows the voice table: uppercase, code-like (e.g. ERROR // INVALID), never warm. No sixth colour."
+    rationale: "Owner decision (ADR-0002, 2026-10-26): the five-colour palette is inviolable, so danger reuses pink and the hue gate is waived. Pink alone also means header, user message and unread badge, so the word ERROR in the status-pill grammar is what tells an error apart."
+    severity: required
+    check_method: both
+    check_scope: both
+    applies_when: "artifact or component shows an error or failure state"
+    check_implementation: "Mechanical (tools/builders/rulebook_check.py, revolt ruleset, check_revolt_error_pill): a builder component named *-ERROR / *-WITH-ERROR must contain a rect filled with color.danger, stroked 2px in color.text_primary with no radius, and an ERROR text at 9px/700 in color.danger_foreground. Judgment: find other error or failure states (layouts, hand-authored artifacts); verify each carries the uppercase ERROR label in the bordered-pill grammar, that error copy is code-like, and that an error is not signalled by a pink border or pink text alone."
+
+  - id: revolt-pink-not-text
+    rule: "Pink (#FF3366, color.accent, reused as color.danger) is a fill, never a text colour. Revolt's backgrounds are cream, white, lime and pink (black is never a background), and pink type measures under 4.5:1 on every one of them (3.5:1 on cream and white). Text on a pink fill is black (color.accent_foreground / color.danger_foreground); a required-field asterisk is ink."
+    rationale: "Owner decision (ADR-0002, #7 follow-up): the five-colour palette is inviolable, so a failing pink text is fixed by role (pill, ink), never by darkening the pink into a sixth colour."
+    severity: required
+    check_method: mechanical
+    check_scope: both
+    check_implementation: "tools/builders/rulebook_check.py (revolt ruleset, check_revolt_pink_not_text): any <text> or <tspan> whose fill, inline or via a <defs><style> class, resolves to color.accent or color.danger fails."
+
+grammar_extensions:
+  family: contemporary_clean
+  per_system_signature:
+    hard_offset_shadow:
+      enabled: true
+      offset_x_px: 4
+      offset_y_px: 4
+      color_ref: tokens.colors.text_primary
+      blur: 0
+      usage: "applied to all elevated elements: cards, message bubbles, selected items, send buttons"
+    rotation_interaction:
+      enabled: true
+      hover_rotation_deg: -0.5
+      transition_ms: "{motion.fast.enter_ms}"
+      usage: "sidebar items rotate -0.5deg on hover; static SVG renders without rotation"
+    error_status:
+      # Revolt's error treatment (ADR-0002), rule revolt-error-status.
+      # Grounded in the JSX Status Pills extension (border 2px solid context
+      # colour, padding 2px 8px, micro 9px/700, radius 0, variants LIVE /
+      # TYPING / OFFLINE / ERROR; black border + black text on white/cream)
+      # and the voice table ("UPPERCASE all labels and status"). White on
+      # pink is 3.5:1, so text on a pink pill is black (accent_foreground =
+      # danger_foreground = #111111); the JSX Status Pills advice says so.
+      # The builder's error components (banner-error, toast-error,
+      # form-field-with-error) use the pink-filled pill on their white
+      # cards; a pink border or pink text alone is never the error signal
+      # (rule revolt-pink-not-text).
+      label: ERROR
+      pill: { border_px: 2, padding: "2px 8px", font_size: 9, font_weight: 700, case: uppercase, radius: 0 }
+      on_light: { border: "{color.text_primary}", text: "{color.text_primary}" }
+      on_danger_fill: { fill: "{color.danger}", border: "{color.border_default}", text: "{color.danger_foreground}" }
+    pink_lime_pairing:
+      pink: "#FF3366"
+      lime: "#C8FF00"
+      pink_uses: [header_bar, user_message_fill, unread_badge, selected_avatar_bg]
+      lime_uses: [brand_bar, selected_list_item_bg, send_button_fill]
+
+# ────────────────────────────────────────────────────────────────────
+# MOTION (issue #10) — animated elements not modelled as components.
+# Components declare their motion on their own entry (components.<id>.motion).
+# Tiers and the reduced-motion policy live in tokens.json (motion group).
+# ────────────────────────────────────────────────────────────────────
+
+motion:
+  elements:
+    message:
+      - trigger: enter
+        tier: slow
+        properties: [opacity, transform]
+        reduced: none
+        stagger_ms: 60
+        note: "JSX .mi fadeSlideUp 0.25s linear (doc row: 300ms)."
+    send_button:
+      - trigger: hover
+        tier: fast
+        properties: [transform]
+        reduced: none
+        note: "JSX .snd scale(1.05), transform 0.1s."

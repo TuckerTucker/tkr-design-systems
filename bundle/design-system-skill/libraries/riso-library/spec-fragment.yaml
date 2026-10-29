@@ -1,0 +1,280 @@
+spec_version: "0.1"
+
+system:
+  id: riso
+  name: Riso
+  tagline: "Duotone Halftone + Print Texture"
+  grammar_family: print_texture
+  version: "1.0.0"
+  source_jsx: ../design-system-riso.jsx
+
+# ────────────────────────────────────────────────────────────────────
+# TOKENS
+# ────────────────────────────────────────────────────────────────────
+#
+# Riso's tokens are RICHER than a typical contemporary system because the
+# system itself is parameterized — paper preset, ink preset, halftone angle,
+# grain, and bleed are all first-class design controls that the user can
+# adjust to get different "prints" of the same design.
+#
+# Schema observation: the v0.1 schema's `tokens.colors` block can't fully
+# express this — Riso doesn't have ONE accent color, it has a SELECTED
+# ink preset that determines the active two colors. The `palette` array
+# accommodates listing all available inks but doesn't capture the
+# "currently selected" state. This is moved into grammar_extensions where
+# the `parametric_state` block lives.
+
+tokens:
+  colors:
+    page_bg: "#F4EDD9"  # Default paper: cream
+    surface: "#F4EDD9"
+    surface_elevated: "#FFFFFF"
+    text_primary: "#1B3A8A"  # Default ink_1: classic blue
+    text_secondary: "#1B3A8A"
+    text_muted: "#7E8AAE"  # Desaturated ink_1 mix
+    accent: "#E5347A"  # Default ink_2: classic pink
+
+    palette:
+      - name: paper_cream
+        value: "#F4EDD9"
+        role: default paper preset
+      - name: paper_kraft
+        value: "#C9B895"
+        role: alternative paper, warmer
+      - name: paper_white
+        value: "#FFFFFF"
+        role: alternative paper, neutral
+      - name: paper_gray
+        value: "#D8D6D1"
+        role: alternative paper, cool
+      - name: paper_newsprint
+        value: "#EAE6D4"
+        role: alternative paper, recycled feel
+
+      - name: ink_blue
+        value: "#1B3A8A"
+        role: classic ink_1
+      - name: ink_pink
+        value: "#E5347A"
+        role: classic ink_2
+      - name: ink_red
+        value: "#D72D2A"
+        role: alternative ink, bold
+      - name: ink_green
+        value: "#2E8B57"
+        role: alternative ink, organic
+
+  typography:
+    families:
+      - id: structural
+        stack: "'Space Grotesk', system-ui, sans-serif"
+        role: body and titles
+        mixing_rule: "primary face for content"
+      - id: metadata
+        stack: "'Space Mono', ui-monospace, monospace"
+        role: timestamps, indices, technical labels
+        mixing_rule: "always for metadata; never for body"
+
+    scale:
+      - { size: 12, role: small }
+      - { size: 14, role: body }
+      - { size: 18, role: title }
+      - { size: 24, role: display_small }
+      - { size: 30, role: display_medium }
+
+    case:
+      metadata: uppercase
+      body: mixed
+      headers: mixed
+
+    tracking:
+      metadata: 0.10  # em
+      body: 0
+      headers: -0.01  # slight tightening on titles
+
+  spacing:
+    grid_unit: 8
+    allowed_steps: [8, 16, 24, 32, 40, 48, 64]
+    enforcement: relaxed  # Riso allows minor off-grid for organic feel
+
+  borders:
+    radius_default: 0
+    radius_inputs: 0
+    radius_chrome: 0
+
+  elevation:
+    strategy: duotone_filter
+    config:
+      paper_presets:
+        - id: cream
+          bg: "#F4EDD9"
+          blend_mode: multiply
+          density: 0.85
+        - id: kraft
+          bg: "#C9B895"
+          blend_mode: multiply
+          density: 0.80
+        - id: white
+          bg: "#FFFFFF"
+          blend_mode: multiply
+          density: 1.00
+        - id: gray
+          bg: "#D8D6D1"
+          blend_mode: darken
+          density: 0.85
+        - id: newsprint
+          bg: "#EAE6D4"
+          blend_mode: multiply
+          density: 0.75
+
+      ink_presets:
+        - id: classic
+          ink_1: "#1B3A8A"  # blue
+          ink_2: "#E5347A"  # pink
+        - id: bold
+          ink_1: "#D72D2A"  # red
+          ink_2: "#1B3A8A"  # blue
+        - id: organic
+          ink_1: "#2E8B57"  # green
+          ink_2: "#E5347A"  # pink
+
+      filter_pipeline:
+        - filter_type: duotone_matrix
+          params:
+            strategy: rec709_luminance
+            ghost_alpha_curve: "1 - luminance"
+        - filter_type: halftone
+          params:
+            dot_size_range: [0.5, 2.5]
+            angle_default: 15
+            angle_jitter: 5
+            softness: 0.3
+        - filter_type: grain
+          params:
+            feturbulence_frequency: 0.85
+            overlay_mode: multiply
+            opacity: 0.12
+        - filter_type: bleed
+          params:
+            blur_radius: 0.4
+            registration_offset_range: [0, 1.5]
+
+# ────────────────────────────────────────────────────────────────────
+# COMPONENTS — list_item only, for stress-test scope
+# ────────────────────────────────────────────────────────────────────
+
+components:
+  list_item:
+    anatomy:
+      - index
+      - title
+      - preview
+      - timestamp
+      - unread_count
+    variants:
+      - id: default
+        svg: components/list-item-default.svg
+        rendering_notes: "Index in Space Mono uppercase ink_1. Title in Space Grotesk ink_1 with ghost ink_2 offset 0.4px x, 0.4px y. Preview in desaturated ink_1. Timestamp in Space Mono uppercase, 12px, ink_1 at 60% density. Unread count: large numeral, duotone — primary stroke ink_1, ghost layer ink_2."
+        states: [default, hover, selected]
+      - id: selected
+        svg: components/list-item-selected.svg
+        rendering_notes: "Same as default but: ink density bumps to 1.0, halftone strip (height 8px) above the item in ink_2, title weight bump 500→700. No solid background — selection signaled by ink density and halftone."
+        states: [selected]
+    constraints:
+      - "Never use a solid color block as a selection background — Riso signals selection via density change and halftone strips, not surfaces"
+      - "All text must use the duotone filter or be marked as exempt (ASCII / monospace metadata exempt by convention)"
+
+# ────────────────────────────────────────────────────────────────────
+# RULEBOOK
+# ────────────────────────────────────────────────────────────────────
+
+rulebook:
+  - id: riso-duotone-required
+    rule: "All body and display text rendered through duotone filter pipeline (primary ink + ghost offset)."
+    rationale: "The duotone treatment IS the system's identity. Plain text breaks the print metaphor."
+    severity: required
+
+  - id: riso-paper-bg-required
+    rule: "Page background uses an active paper preset color, not pure white (unless 'white' paper is the active preset)."
+    rationale: "Paper is a substrate, not a default. Even white paper is a chosen treatment."
+    severity: required
+
+  - id: riso-ink-pair-discipline
+    rule: "Exactly two inks are active per artifact. A third ink color requires a new ink preset, not ad-hoc addition."
+    rationale: "Riso printing physically uses two passes; the visual constraint is the system's structural truth."
+    severity: required
+
+  - id: riso-grain-overlay
+    rule: "A grain layer (feTurbulence overlay) is applied over the entire artifact at the configured opacity."
+    rationale: "Grain unifies the artifact as a single 'print' rather than discrete vector elements."
+    severity: required
+
+  - id: riso-no-shadows
+    rule: "Drop-shadows or box-shadows are not used. Depth/elevation is communicated via density change, halftone density, and registration offset."
+    rationale: "Shadows are a screen-light vocabulary; Riso is a print-ink vocabulary."
+    severity: required
+
+  - id: riso-monospace-metadata
+    rule: "Metadata text (timestamps, indices, technical labels) uses Space Mono and is exempt from the duotone filter."
+    rationale: "Metadata in Riso is the 'colophon' layer — it's *about* the print, not part of it. Plain rendering signals that distinction."
+    severity: required
+
+# ────────────────────────────────────────────────────────────────────
+# GRAMMAR EXTENSIONS — print_texture family
+# ────────────────────────────────────────────────────────────────────
+
+grammar_extensions:
+  family: print_texture
+
+  parametric_state:
+    # Schema gap surfaced by Riso: the system has runtime-adjustable state
+    # (which paper, which ink, halftone angle, grain amount) that determines
+    # how ALL components render. This isn't a token — it's a configuration.
+    # v0.2 schema should formalize this as a top-level `system_state` block
+    # since other parametric systems (Spatial, future Prism evolutions) may
+    # share the pattern.
+    active_paper: cream
+    active_ink: classic
+    halftone_angle: 15  # degrees
+    grain_opacity: 0.12
+    registration_offset: 0  # px; non-zero simulates print misalignment
+
+  duotone:
+    # The math: SVG feColorMatrix mapping luminance → between paper.bg and
+    # ink_1. Ghost layer is a second feColorMatrix where alpha = 1 - luminance,
+    # filled with ink_2.
+    matrix_strategy: rec709_luminance
+    ghost_layer:
+      enabled: true
+      alpha_curve: "1 - luminance"
+      offset_x_px: 0.4
+      offset_y_px: 0.4
+
+  halftone:
+    # Used for separators, accent strips, and some emphasis treatments.
+    # Different from the duotone filter — this is a discrete graphic primitive.
+    available_as_component: true  # Use components.halftone_strip, not implicit
+    dot_grid:
+      base_dot_size: 1.5  # px at default density
+      angle: 15  # degrees
+      density_responds_to_paper: true
+
+  grain:
+    # The grain layer that overlays everything — schema-level concern because
+    # it applies to ALL artifacts in this system, not per-component.
+    apply_to: artifact  # not per-component
+    feturbulence:
+      type: fractalNoise
+      base_frequency: 0.85
+      num_octaves: 2
+      seed: 42  # fixed for reproducibility; could be random per-render
+    composite_mode: multiply
+    opacity: 0.12
+
+  registration_offset:
+    # Optional simulation of print misalignment. Default 0 (perfectly registered).
+    # Non-zero values shift the ghost ink layer relative to primary, mimicking
+    # imperfect physical alignment of two ink passes.
+    enabled_by_default: false
+    range_px: [0, 2]
+    direction_jitter_deg: 360  # any direction

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400">
+  <defs>
+    <style>
+      .text-primary { fill: #212121; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-secondary { fill: #757575; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-inverse { fill: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      .text-danger { fill: #B71C1C; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+  <!-- FIXTURE: the deferred-commit undo row the rule names as the alternative — must PASS -->
+  <rect width="600" height="400" fill="#F5F5F5"/>
+  <g id="content__list-item-default_0" transform="translate(24, 24)">
+    <rect x="0" y="0" width="360" height="56" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="16" y="32" class="text-primary" font-size="14">Recipe ideas</text>
+  </g>
+  <g id="status__undo-row-default_0" transform="translate(24, 120)">
+    <rect x="0" y="0" width="360" height="40" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+    <text x="16" y="26" class="text-secondary" font-size="12">Deleted Recipe ideas</text>
+    <text x="344" y="26" text-anchor="end" class="text-primary" font-size="13">Undo</text>
+  </g>
+</svg>

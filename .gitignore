@@ -12,3 +12,5 @@ apps/studio/
 
 # tkr-kit runtime state (contains service credentials)
 .tkr-kit/
+.pytest_cache/
+pytest-cache-files-*/

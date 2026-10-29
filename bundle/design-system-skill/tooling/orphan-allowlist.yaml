@@ -1,0 +1,14 @@
+# SVGs in a system's components/ or layouts/ that no builder template
+# produces. Such files are hand-authored: token changes never reach them and
+# `build.py --check` cannot tell when they drift. Prefer adding a template
+# under tools/builders/engine/systems/<id>/ instead of an entry here.
+#
+# `build.py --check` fails on any orphan not listed here, and on entries that
+# are missing or that a template now produces (so the list cannot go stale).
+#
+# Paths are relative to the registry's directory (systems/).
+#
+# allow:
+#   - path: <system>/layouts/<file>.svg
+#     reason: why this file cannot come from a template yet
+allow: []
