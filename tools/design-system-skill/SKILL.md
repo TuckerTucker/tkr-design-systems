@@ -185,7 +185,7 @@ The violations that recur, each with the rule or decision behind it.
 | Status shown twice (a red border and a red badge on one card) | One status, one visual channel; doubling it adds noise, not meaning. | `wireframe-one-channel-per-message` |
 | Selection shown with a background fill in Terminal | Terminal selects by changing characters (' ' to '>') and colour, never by fill. | `terminal-selection-via-character` |
 | A third ink in Riso | Exactly two inks per artifact from one press preset; neutrals come from the paper. | `riso-two-inks-only`, `riso-paper-is-the-neutral` |
-| A toast for status, or an "Are you sure?" dialog before deleting | Use a banner or inline status, and undo. See the Which component table. | [claude.md](../../claude.md) |
+| A toast for status, an "Are you sure?" dialog before deleting, or a required field with no marker | Use a banner or inline status, and undo (the undo_row pattern). Mark every required field. The rulebook reports a placed toast, a confirmation dialog without undo, and an unmarked required label in every system. See the Which component table. | [claude.md](../../claude.md), `ux-no-toast-notifications`, `ux-no-confirm-dialog-without-undo`, `ux-required-fields-indicated` |
 <!-- /generated:rules-agents-get-wrong -->
 
 ### Rules per system

@@ -189,6 +189,10 @@ rules_agents_get_wrong:
   - wrong: A third ink in Riso
     why: Exactly two inks per artifact from one press preset; neutrals come from the paper.
     refs: [rule:riso/riso-two-inks-only, rule:riso/riso-paper-is-the-neutral]
-  - wrong: A toast for status, or an "Are you sure?" dialog before deleting
-    why: Use a banner or inline status, and undo. See the Which component table.
-    refs: [doc:claude.md]
+  - wrong: A toast for status, an "Are you sure?" dialog before deleting, or a required field with no marker
+    why: >-
+      Use a banner or inline status, and undo (the undo_row pattern). Mark
+      every required field. The rulebook reports a placed toast, a
+      confirmation dialog without undo, and an unmarked required label in
+      every system. See the Which component table.
+    refs: [doc:claude.md, check:ux-no-toast-notifications, check:ux-no-confirm-dialog-without-undo, check:ux-required-fields-indicated]

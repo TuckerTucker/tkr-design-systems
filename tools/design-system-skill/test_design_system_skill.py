@@ -509,6 +509,40 @@ def test_check_compliance_wireframe_pattern():
             "scope auto-detected as artifact")
 
 
+def test_check_compliance_ux_clauses():
+    """The UX-philosophy clauses are reachable through the package API.
+
+    The clause LOGIC is proved from both sides in
+    tools/builders/test_ux_clauses.py. What this case adds is the wiring: a
+    caller going through check_compliance() receives the clause verdicts,
+    rather than them existing only inside tools/builders/rulebook_check.py.
+    """
+    section("check_compliance surfaces the UX-philosophy clauses")
+    fixtures = HERE.parent / "builders" / "fixtures" / "ux"
+    assert_(fixtures.is_dir(), f"ux fixtures exist at {fixtures}")
+    if not fixtures.is_dir():
+        return
+
+    res = check_compliance("wireframe", fixtures / "toast-placed.svg", scope="artifact")
+    assert_(res.ok, "check_compliance returns ok=True")
+    if not res.ok:
+        return
+    by_id = {r["rule_id"]: r for r in res.data["results"]}
+    assert_("ux-no-toast-notifications" in by_id,
+            "the toast clause reaches the package result",
+            f"got {sorted(by_id)}")
+    assert_(by_id.get("ux-no-toast-notifications", {}).get("status") == "fail",
+            "a placed toast is reported as fail (not advisory, not absent)",
+            f"got {by_id.get('ux-no-toast-notifications')}")
+    assert_(res.data["failed"] == 1,
+            f"exactly one failure, so it is attributable to the toast (got {res.data['failed']})")
+
+    clean = check_compliance("wireframe", fixtures / "toast-absent.svg", scope="artifact")
+    assert_(clean.ok and clean.data["failed"] == 0,
+            "the clean twin passes through the same path",
+            f"got {clean.data if clean.ok else clean}")
+
+
 def test_check_compliance_unknown_artifact():
     section("check_compliance with missing artifact")
     res = check_compliance("swiss", "/tmp/this_definitely_does_not_exist.svg")
@@ -1868,6 +1902,7 @@ def main():
     test_get_rulebook()
     test_check_compliance_swiss_component()
     test_check_compliance_wireframe_pattern()
+    test_check_compliance_ux_clauses()
     test_check_compliance_unknown_artifact()
     test_exception_waives_violation()
     test_exception_match_does_not_cover_new_violation()
