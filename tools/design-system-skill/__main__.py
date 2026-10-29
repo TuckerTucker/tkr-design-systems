@@ -12,6 +12,7 @@ Usage from the project root:
     python3 design-system-skill drift [--all | --id swiss | --spec systems/swiss/spec.yaml]
     python3 design-system-skill contrast [--all | --id swiss | --spec systems/swiss/spec.yaml] [--verbose]
     python3 design-system-skill jsx-drift [--id swiss ...] [--allowlist PATH]
+    python3 design-system-skill common-tokens [--check | --write] [--id swiss | --spec PATH]
 
 All commands print a JSON Result to stdout. Exit code 0 if ok, 1 otherwise.
 """
@@ -54,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
         check_color_gates_for_spec,
         check_jsx_drift,
     )
-    from design_system_skill.paths import project_root  # noqa: E402
+    from design_system_skill.common_tokens import sync_all, sync_common_tokens  # noqa: E402
     from design_system_skill.registry import Registry  # noqa: E402
 
     parser = argparse.ArgumentParser(
@@ -119,6 +120,19 @@ def main(argv: list[str] | None = None) -> int:
                        help="Showcase system id (repeatable), e.g. neutral, swiss.")
     p_jsx.add_argument("--allowlist", help="Allow-list YAML (default: apps/showcase/jsx-color-allowlist.yaml).")
 
+    p_common = sub.add_parser(
+        "common-tokens",
+        help="Check (default) or rewrite each spec's tokens.common and themes blocks, "
+             "derived from its tokens.json (default: every built-in system).",
+    )
+    mode = p_common.add_mutually_exclusive_group()
+    mode.add_argument("--check", action="store_true",
+                      help="Report stale blocks without writing (the default).")
+    mode.add_argument("--write", action="store_true", help="Rewrite stale blocks in place.")
+    t_common = p_common.add_mutually_exclusive_group()
+    t_common.add_argument("--id", help="One registered system.")
+    t_common.add_argument("--spec", help="One spec.yaml by path.")
+
     args = parser.parse_args(argv)
 
     if args.cmd == "list":
@@ -157,8 +171,23 @@ def main(argv: list[str] | None = None) -> int:
                     {"code": "SYSTEM_NOT_FOUND", "message": f"System '{args.id}' is not registered"}]},
                     indent=2))
                 return 1
-            return _emit(one(project_root() / entry.spec))
+            return _emit(one(entry.spec_path()))
         return _emit(every())
+    if args.cmd == "common-tokens":
+        if args.spec:
+            return _emit(sync_common_tokens(args.spec, write=args.write))
+        if args.id:
+            reg = Registry.load()
+            if not reg.ok:
+                return _emit(reg)
+            entry = reg.data.get(args.id)
+            if entry is None:
+                print(json.dumps({"ok": False, "errors": [
+                    {"code": "SYSTEM_NOT_FOUND", "message": f"System '{args.id}' is not registered"}]},
+                    indent=2))
+                return 1
+            return _emit(sync_common_tokens(entry.spec_path(), write=args.write))
+        return _emit(sync_all(write=args.write))
     if args.cmd == "jsx-drift":
         allow = Path(args.allowlist).resolve() if args.allowlist else None
         return _emit(check_jsx_drift(args.ids, allowlist=allow))

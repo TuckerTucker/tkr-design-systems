@@ -1,0 +1,146 @@
+# common-tokens.v1.yaml
+# ────────────────────────────────────────────────────────────────────
+# The portable token contract every participating design system must
+# satisfy in order to be a target for atomic component synthesis.
+#
+# Conceptually: this is the interface between system authors and the
+# atom synthesizer in wireframe-skill. It names ROLES (intent), not
+# values (look). Each system maps these role names to its own values
+# under `tokens.common.*` in its spec.yaml.
+#
+# Atoms in a portable blueprint can only reference tokens in THIS
+# contract. System-specific tokens live under `tokens.system.*` and
+# are referenced with `<system_id>:<dotted.path>` — only valid when
+# the atom block is scoped to that system.
+#
+# The role descriptions are LLM-facing. They are what the decomposer
+# uses to choose between `$ink` and `$ink-muted` when synthesizing
+# an atom. Write them as clearly as you can.
+# ────────────────────────────────────────────────────────────────────
+
+version: "1.0"
+
+# ─── Required tokens — every participating system must declare these
+required:
+
+  color:
+    ink:
+      type: color
+      role: "primary text on the default surface — body copy, headlines, default icon"
+    ink-muted:
+      type: color
+      role: "secondary or metadata text — captions, timestamps, helper text, de-emphasized labels"
+    surface:
+      type: color
+      role: "default page or panel background — the canvas most content sits on"
+    surface-inset:
+      type: color
+      role: "alternate, inset, or raised surface — selection backgrounds, code blocks, secondary panels"
+    accent:
+      type: color
+      role: "interactive emphasis — primary action color, selected state, links"
+    accent-on:
+      type: color
+      role: "text or icon color placed on top of an accent-filled surface"
+    outline:
+      type: color
+      role: "default border or divider color — section rules, input borders, card edges"
+    outline-strong:
+      type: color
+      role: "high-contrast border — focus rings, emphasized dividers, error/required borders"
+    image-placeholder:
+      type: color
+      role: "fill color for image wells, media placeholders, and avatar fallbacks"
+
+  typography:
+    display:
+      type: text-style
+      role: "largest display text — hero-only, used once per screen at most"
+    headline:
+      type: text-style
+      role: "section headers — major content boundaries within a page"
+    title:
+      type: text-style
+      role: "card, component, and modal titles — local headers"
+    body:
+      type: text-style
+      role: "default body copy — paragraphs, list items, default text"
+    caption:
+      type: text-style
+      role: "metadata, fine print, labels under fields — smaller than body"
+
+  spacing:
+    xs:
+      type: length
+      role: "tightest gap — between icon and label inside a chip, between dense items"
+    sm:
+      type: length
+      role: "default inner padding — card padding, list-item gutters"
+    md:
+      type: length
+      role: "card-to-card spacing, inline element separation"
+    lg:
+      type: length
+      role: "section-internal spacing — between content blocks inside a section"
+    xl:
+      type: length
+      role: "between major sections of a page"
+
+  stroke:
+    hairline:
+      type: length
+      role: "minimum visible stroke — subtle dividers, faint rules"
+    regular:
+      type: length
+      role: "default stroke — input borders, card edges, standard dividers"
+    bold:
+      type: length
+      role: "emphasized stroke — focus rings, selected state borders"
+
+  radius:
+    none:
+      type: length
+      value: 0
+      role: "explicit no-radius — used by sharp/grid systems"
+    sm:
+      type: length
+      role: "subtle rounding — small components, inputs"
+    md:
+      type: length
+      role: "default rounding — cards, modals, larger surfaces"
+    full:
+      type: length
+      role: "fully rounded — pills, circular avatars, fully circular controls"
+
+# ─── Optional tokens — systems may declare these, atoms may reference
+# ─── them, but absence is not an error.
+optional:
+
+  color:
+    success:
+      type: color
+      role: "affirmative or success state — confirmations, valid inputs"
+    warning:
+      type: color
+      role: "caution state — needs attention but not destructive"
+    danger:
+      type: color
+      role: "destructive or error state — failures, deletions, blocking errors"
+
+  typography:
+    code:
+      type: text-style
+      role: "monospace UI text — inline code, terminal output, fixed-width labels"
+
+# ─── Type constraints ────────────────────────────────────────────────
+# Validators check declared values against these:
+#
+#   color       → string matching ^#[0-9a-fA-F]{3,8}$
+#   length      → number ≥ 0 (interpreted as px unless system declares unit)
+#   text-style  → object with required fields { family, size, weight }
+#                 and optional fields { leading, case, tracking, color }
+#
+# `case` must be one of: lowercase | uppercase | mixed
+# `weight` must be 100..900
+# `leading` is a multiplier (e.g. 1.4) OR an absolute number (treated as px if ≥ 8)
+# ────────────────────────────────────────────────────────────────────

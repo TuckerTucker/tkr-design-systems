@@ -1,15 +1,31 @@
-"""Locate the systems root and the registry file.
+"""Locate the skill root, the built-in registry, and the user registry.
 
-The registry lives at `<repo>/systems/registry.yaml`, alongside the
-system library directories its entries point to. This module
-centralizes path resolution so other modules don't recompute it
-inconsistently.
+Three distinct roots, kept separate:
 
-The systems root is detected by walking up from this file's location
-until a directory containing `registry.yaml` — directly or in a
-`systems/` child — is found, falling back to `<repo>/systems` derived
-from this file's location if the registry doesn't exist yet (initial
-bootstrap case).
+- **Skill root** — the directory holding the skill's own assets
+  (``schemas/``). Resolved by walking up from this module's location;
+  never affected by env overrides.
+- **Built-in registry** — the ``registry.yaml`` that ships with the
+  systems. Found by walking up from this module in one of three layouts:
+
+  - Repository layout: ``<repo>/systems/registry.yaml`` (this repo).
+  - Skill-bundle layout: ``<skill>/libraries/registry.yaml`` (the
+    Claude Code skill convention — the registry sits next to the system
+    libraries, both inside the skill folder).
+  - Flat layout: ``<dir>/registry.yaml`` directly in an ancestor.
+
+- **User registry** — ``~/.claude/design-systems/registry.yaml``. Holds
+  per-user registrations (systems living outside this tree, e.g. another
+  project's library). Overlaid on the built-in registry at load time;
+  mutations write here so the built-in registry stays read-only and the
+  skill directory can be installed as a symlink.
+
+``$DESIGN_SYSTEM_SKILL_REGISTRY`` is a *full* override: when set, that
+single file is the entire registry (no overlay, fully mutable). Tests use
+it for hermetic isolation.
+
+``$DESIGN_SYSTEM_SKILL_USER_REGISTRY`` relocates the user registry (tests
+point it at a temp path so a developer's own overlay cannot leak in).
 """
 
 from __future__ import annotations
@@ -22,49 +38,117 @@ logger = structlog.get_logger(__name__)
 
 
 _ENV_OVERRIDE = "DESIGN_SYSTEM_SKILL_REGISTRY"
+_ENV_USER_REGISTRY = "DESIGN_SYSTEM_SKILL_USER_REGISTRY"
+
+_DEFAULT_USER_REGISTRY = Path("~/.claude/design-systems/registry.yaml")
+
+# Where the built-in registry may sit relative to an ancestor directory,
+# in the order they are tried at each level of the walk.
+_REGISTRY_LAYOUTS: tuple[tuple[str, ...], ...] = (
+    ("registry.yaml",),
+    ("systems", "registry.yaml"),
+    ("libraries", "registry.yaml"),
+)
 
 
-def project_root() -> Path:
-    """Return the directory containing (or that should contain) registry.yaml.
+def skill_root() -> Path:
+    """Return the skill's own root directory.
 
-    Registry entries (spec, library_root) resolve relative to this
-    directory, so it must be the directory the registry file lives in —
-    `<repo>/systems` in the canonical layout.
-
-    Resolution order:
-        1. If $DESIGN_SYSTEM_SKILL_REGISTRY is set, use the directory of that file.
-        2. Walk up from this file's location looking for registry.yaml,
-           directly in an ancestor or in an ancestor's systems/ child.
-        3. Fall back to <repo>/systems derived from this file's location.
+    The nearest ancestor of this module that holds a ``schemas/``
+    directory: ``tools/design-system-skill`` in this repository,
+    ``<skill>`` in the skill-bundle layout (where the package sits under
+    ``<skill>/scripts/``). Env overrides do not affect it.
 
     Returns:
-        The systems root Path.
+        The skill root directory.
     """
-    env = os.environ.get(_ENV_OVERRIDE)
-    if env:
-        return Path(env).expanduser().resolve().parent
-
     here = Path(__file__).resolve()
-    # Walk up from <repo>/tools/design-system-skill/design_system_skill/paths.py
-    # looking for a directory containing registry.yaml, either directly
-    # (env-style custom layouts) or in a systems/ child (canonical layout).
     for parent in here.parents:
-        if (parent / "registry.yaml").exists():
+        if (parent / "schemas").is_dir():
             return parent
-        if (parent / "systems" / "registry.yaml").exists():
-            return parent / "systems"
-    # Bootstrap fallback: <repo>/systems, whether or not it exists yet.
-    # here.parents = [design_system_skill, design-system-skill, tools, <repo>, ...]
-    return here.parents[3] / "systems"
+    # Bootstrap fallback: the directory that contains the package.
+    return here.parents[1]
 
 
-def registry_path() -> Path:
-    """Return the absolute path to registry.yaml.
+def builtin_registry_path() -> Path:
+    """Return the path to the built-in registry.
+
+    Walks up from this module and returns the first match among
+    ``_REGISTRY_LAYOUTS``. Falls back to ``<repo>/systems/registry.yaml``
+    (whether or not it exists yet — the initial bootstrap case).
 
     Returns:
-        The Path to registry.yaml (whether or not it exists).
+        The Path to the built-in registry.yaml.
+    """
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        for layout in _REGISTRY_LAYOUTS:
+            candidate = parent.joinpath(*layout)
+            if candidate.exists():
+                return candidate
+    # here.parents = [design_system_skill, design-system-skill, tools, <repo>, ...]
+    return here.parents[3] / "systems" / "registry.yaml"
+
+
+def user_registry_path() -> Path:
+    """Return the path to the user-level registry overlay.
+
+    Resolution: ``$DESIGN_SYSTEM_SKILL_USER_REGISTRY`` if set, else
+    ``~/.claude/design-systems/registry.yaml``.
+
+    Returns:
+        The Path to the user registry.yaml (whether or not it exists).
+    """
+    env = os.environ.get(_ENV_USER_REGISTRY)
+    if env:
+        return Path(env).expanduser().resolve()
+    return _DEFAULT_USER_REGISTRY.expanduser()
+
+
+def override_registry_path() -> Path | None:
+    """Return the full-override registry path, if the env var is set.
+
+    Returns:
+        The Path from ``$DESIGN_SYSTEM_SKILL_REGISTRY``, or None.
     """
     env = os.environ.get(_ENV_OVERRIDE)
     if env:
         return Path(env).expanduser().resolve()
-    return project_root() / "registry.yaml"
+    return None
+
+
+def project_root() -> Path:
+    """Return the directory holding the primary registry.yaml.
+
+    Relative ``spec`` / ``library_root`` paths in that registry resolve
+    against this directory (``<repo>/systems`` in the repository layout).
+    Entries from the user overlay resolve against their own file's
+    directory instead — use ``RegistryEntry.spec_path()`` /
+    ``library_path()`` rather than joining onto this.
+
+    Resolution order:
+        1. If $DESIGN_SYSTEM_SKILL_REGISTRY is set, the directory of that file.
+        2. The built-in registry's directory.
+
+    Returns:
+        The systems root Path.
+    """
+    override = override_registry_path()
+    if override is not None:
+        return override.parent
+    return builtin_registry_path().parent
+
+
+def registry_path() -> Path:
+    """Return the absolute path to the primary registry.yaml.
+
+    The override file when ``$DESIGN_SYSTEM_SKILL_REGISTRY`` is set, else
+    the built-in registry.
+
+    Returns:
+        The Path to registry.yaml (whether or not it exists).
+    """
+    override = override_registry_path()
+    if override is not None:
+        return override
+    return builtin_registry_path()

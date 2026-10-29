@@ -34,6 +34,20 @@ ERROR_CODES = {
     "CONTRAST_INVALID",          # malformed contrast_waivers / contrast_backdrops / pair replacement
     "HUE_GATE_FAIL",             # accent/action within 40deg OKLCH hue of danger, or a hue waiver is stale
     "HUE_GATE_INVALID",          # malformed hue_waivers
+    "COMMON_TOKENS_STALE",       # spec's generated tokens.common / themes differ from tokens.json
+    "COMMON_TOKENS_UNDERIVABLE", # tokens.json lacks a value tokens.common is derived from
+    "COMMON_TOKENS_CONTRACT_MISSING",  # schemas/common-tokens.v<N>.yaml not found
+    # tokens.common fails the common-tokens contract (tokens.validate_common_tokens):
+    "COMMON_TOKENS_BAD_COLOR",
+    "COMMON_TOKENS_BAD_LENGTH",
+    "COMMON_TOKENS_BAD_TEXT_STYLE",
+    "COMMON_TOKENS_MALFORMED_CATEGORY",
+    "COMMON_TOKENS_MISSING_CATEGORY",
+    "COMMON_TOKENS_MISSING_TOKEN",
+    "COMMON_TOKENS_TEXT_STYLE_BAD_CASE",
+    "COMMON_TOKENS_TEXT_STYLE_BAD_WEIGHT",
+    "COMMON_TOKENS_TEXT_STYLE_MISSING_FIELD",
+    "COMMON_TOKENS_UNKNOWN_TOKEN",
     "INTERNAL",                  # catchall for unexpected exceptions
 }
 
