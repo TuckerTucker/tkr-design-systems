@@ -103,6 +103,12 @@ class ConsumerTools:
     it stands for; ``render`` matches ``render_preview.render``.
 
     Attributes:
+        builtin_ids: Ids in the repository's built-in registry
+            (``systems/registry.yaml``), in registry order — the population
+            the check examines. ``ds_list_systems`` alone cannot be the
+            population: it also lists the developer's user overlay
+            (``~/.claude/design-systems/registry.yaml``), whose systems
+            belong to other projects.
         list_systems: ``ds_list_systems()``.
         generate: ``wf_generate(brief, platform=, system=, compose=, ...)``.
         read_component: ``wf_read_component(system_id, component_id=)``.
@@ -113,6 +119,7 @@ class ConsumerTools:
         render: ``render(src, dst) -> Path``.
     """
 
+    builtin_ids: Callable[[], list[str]]
     list_systems: Callable[[], dict[str, Any]]
     generate: Callable[..., dict[str, Any]]
     read_component: Callable[..., dict[str, Any]]
@@ -143,6 +150,27 @@ def _import_from_path(name: str, path: Path) -> ModuleType:
     return module
 
 
+def read_registry_ids(registry: Path) -> list[str]:
+    """Return the ids a registry file declares, in file order.
+
+    Args:
+        registry: A ``registry.yaml``.
+
+    Returns:
+        Its entry ids (aliases such as ``neutral`` included).
+
+    Raises:
+        RuntimeError: If the file has no ``systems`` list.
+    """
+    import yaml
+
+    data = yaml.safe_load(registry.read_text()) or {}
+    entries = data.get("systems")
+    if not isinstance(entries, list):
+        raise RuntimeError(f"{registry} has no 'systems' list")
+    return [str(e["id"]) for e in entries]
+
+
 def default_tools(repo_root: Path = REPO_ROOT) -> ConsumerTools:
     """Bind the check to the real MCP tool functions and preview renderer.
 
@@ -158,7 +186,9 @@ def default_tools(repo_root: Path = REPO_ROOT) -> ConsumerTools:
         server = _import_from_path("server", repo_root / "tools" / "mcp-server" / "server.py")
     render_preview = _import_from_path(
         "render_preview", repo_root / "tools" / "builders" / "render_preview.py")
+    registry = repo_root / "systems" / "registry.yaml"
     return ConsumerTools(
+        builtin_ids=lambda: read_registry_ids(registry),
         list_systems=server.ds_list_systems,
         generate=server.wf_generate,
         read_component=server.wf_read_component,
@@ -585,15 +615,34 @@ def format_table(results: Sequence[SystemResult]) -> str:
 # ─── CLI ──────────────────────────────────────────────────────────────
 
 def _registered_ids(tools: ConsumerTools) -> list[str]:
-    """Registry ids in registry order, via ``ds_list_systems``.
+    """The built-in systems, in registry order — the population this check examines.
+
+    Only the repository's own registry is examined: a user-overlay system
+    (listed by ``ds_list_systems`` on a developer's machine) belongs to
+    another project and is reported as ignored, never checked. Every
+    built-in id must also be listed by the tools, or the run fails.
+
+    Narrowing, declared: an overlay entry that *shadows* a built-in id is
+    resolved by the tools to the overlay's files, and ``ds_list_systems``
+    does not say which layer an id came from, so that case is not detected
+    here. CI runs with no overlay.
 
     Raises:
-        RuntimeError: If the registry cannot be listed.
+        RuntimeError: If the registry cannot be listed or a built-in id is
+            missing from the listing.
     """
     listed = tools.list_systems()
     if not listed.get("ok"):
         raise RuntimeError(f"ds_list_systems failed: {_errors_of(listed)}")
-    return [s["id"] for s in listed["data"]]
+    listed_ids = [s["id"] for s in listed["data"]]
+    builtin = tools.builtin_ids()
+    missing = [i for i in builtin if i not in listed_ids]
+    if missing:
+        raise RuntimeError(f"built-in system(s) not listed by ds_list_systems: {missing}")
+    ignored = [i for i in listed_ids if i not in builtin]
+    if ignored:
+        logger.info("e2e_overlay_systems_ignored", ids=ignored)
+    return builtin
 
 
 def main(argv: Sequence[str] | None = None, tools: ConsumerTools | None = None) -> int:
