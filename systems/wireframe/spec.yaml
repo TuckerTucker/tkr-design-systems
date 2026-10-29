@@ -1,11 +1,12 @@
 spec_version: "0.3"
+common_tokens_version: "1.0"
 
 system:
   id: wireframe
   name: Wireframe
   tagline: "Neutral Greyscale Reference Library"
   grammar_family: wireframe
-  version: "1.1.0"   # bumped: v0.2 migration adds check_scope on all rules
+  version: "1.2.0"   # bumped: dark theme (tokens.json modes.theme); v1.1.0: v0.2 migration adds check_scope on all rules
   tokens_file: tokens.json   # canonical token values (schema v0.3)
   source_jsx: null  # The wireframe library has no React source; the existing
                     # template SVGs and UNIVERSAL-WIREFRAMING-PROCESS.md are
@@ -16,6 +17,52 @@ system:
 # ────────────────────────────────────────────────────────────────────
 
 tokens:
+  # generated:common-tokens — derived from tokens.json by `design-system-skill common-tokens --write`; do not edit by hand
+  common:
+    color:
+      ink: "#212121"
+      ink-muted: "#707070"
+      surface: "#FFFFFF"
+      surface-inset: "#FFFFFF"
+      accent: "#424242"
+      accent-on: "#FFFFFF"
+      outline: "#E0E0E0"
+      outline-strong: "#E0E0E0"
+      image-placeholder: "#F5F5F5"
+      success: "#2E7D32"
+      warning: "#D14900"
+      danger: "#B71C1C"
+    typography:
+      display: { family: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", size: 24, weight: 700, leading: 1.2, case: "mixed", tracking: 0 }
+      headline: { family: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", size: 18, weight: 600, leading: 1.3, case: "mixed", tracking: 0 }
+      title: { family: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", size: 18, weight: 600, leading: 1.3, case: "mixed", tracking: 0 }
+      body: { family: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", size: 14, weight: 400, leading: 1.55, case: "mixed", tracking: 0 }
+      caption: { family: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif", size: 12, weight: 600, leading: 1.3, case: "uppercase", tracking: 0.05 }
+      code: { family: "SF Mono, Monaco, Consolas, monospace", size: 14, weight: 400, leading: 1.55, case: "mixed", tracking: 0 }
+    spacing:
+      xs: 4
+      sm: 8
+      md: 16
+      lg: 24
+      xl: 32
+    stroke:
+      hairline: 1
+      regular: 1
+      bold: 2
+    radius:
+      none: 0
+      sm: 6
+      md: 6
+      full: 9999
+  # /generated:common-tokens
+  # System-extension tokens (referenced as `wireframe:<path>` from atoms
+  # scoped to wireframe). Values the token file holds are aliases.
+  system:
+    page-margin: { mobile: 12, desktop: 32 }
+    component-gap: 12
+    section-gap: 32
+    palette:
+      info: "{color.info}"
   colors:
     # Contract colour values (page_bg, surface, text_*, accent, ...) live in
     # tokens.json; the loader projects them here. Palette entries below
@@ -137,6 +184,39 @@ tokens:
 # Each component declares: tier, anatomy, variants (with svg path),
 # composed_of (composites and patterns only), and constraints.
 # ────────────────────────────────────────────────────────────────────
+
+# generated:themes — derived from tokens.json modes.theme by `design-system-skill common-tokens --write`; do not edit by hand
+themes:
+  default: "light"
+  light:
+    common:
+      ink: "#212121"
+      ink-muted: "#707070"
+      surface: "#FFFFFF"
+      surface-inset: "#FFFFFF"
+      accent: "#424242"
+      accent-on: "#FFFFFF"
+      outline: "#E0E0E0"
+      outline-strong: "#E0E0E0"
+      image-placeholder: "#F5F5F5"
+      success: "#2E7D32"
+      warning: "#D14900"
+      danger: "#B71C1C"
+  dark:
+    common:
+      ink: "#F5F5F5"
+      ink-muted: "#9E9E9E"
+      surface: "#1E1E1E"
+      surface-inset: "#2A2A2A"
+      accent: "#E0E0E0"
+      accent-on: "#212121"
+      outline: "#383838"
+      outline-strong: "#6E6E6E"
+      image-placeholder: "#2A2A2A"
+      success: "#66BB6A"
+      warning: "#FFA726"
+      danger: "#EF5350"
+# /generated:themes
 
 components:
 

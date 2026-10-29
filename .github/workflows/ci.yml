@@ -32,6 +32,12 @@ jobs:
           tools/e2e/test_check_systems.py
           tools/builders/test_build.py
           tools/design-system-skill/test_jsx_drift.py
+          tools/design-system-skill/test_tokens.py
+          tools/design-system-skill/test_common_tokens.py
+          tools/design-system-skill/test_design_system_mcp_bridge.py
+          tools/wireframe-skill/test_solve.py
+          tools/wireframe-skill/test_design_system_path.py
+          tools/wireframe-skill/test_wireframe_mcp_bridge.py
           tools/docs/test_generate.py
 
       - name: Check SVG libraries match their token files
@@ -39,6 +45,9 @@ jobs:
 
       - name: Check specs agree with their token files
         run: uv run python tools/design-system-skill drift --all
+
+      - name: Check each spec's tokens.common / themes match its tokens.json
+        run: uv run python tools/design-system-skill common-tokens --check
 
       - name: Check colour contrast and accent/danger hue gates
         run: uv run python tools/design-system-skill contrast --all
