@@ -194,7 +194,7 @@ A theme is a mode of the token file: an axis with id `theme` in `tokens.json` `m
 
 Two registry files combine at load time:
 
-- **Built-in** — `systems/registry.yaml` in this repository (or `libraries/registry.yaml` in the skill-bundle layout). Read-only to the skill's operations.
+- **Built-in** — the `registry.yaml` that ships beside the system libraries. Read-only to the skill's operations.
 - **User overlay** — `~/.claude/design-systems/registry.yaml` (relocate with `$DESIGN_SYSTEM_SKILL_USER_REGISTRY`). Per-user registrations, e.g. a system living in another project. User entries shadow built-ins by id; `register_system` / `unregister_system` write here only. A user-layer system may `extends:` a built-in; each side's SVG paths resolve against its own library before the merge.
 
 `$DESIGN_SYSTEM_SKILL_REGISTRY` names a single file that is the whole registry (no overlay, fully mutable) — the hermetic mode tests use. The repository gates (`drift --all`, `contrast --all`, `common-tokens`) check the built-in layer only; a user-layer system belongs to another project, whose own gates own it. The test suite points the overlay at an empty temp path (`conftest.py`), so a developer's own overlay cannot leak in.
@@ -213,7 +213,7 @@ All three answer from the artifact's **component inventory** — the assembler's
 
 ## Decision Guide
 
-> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `uv run python tools/docs/generate.py`. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
+> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `tools/docs/generate.py` in the tkr-design-systems repository. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
 
 ### Which system
 
@@ -538,7 +538,7 @@ The expected flow when adding a new design system to the registry:
 
 First, the design team authors the React implementation in `apps/showcase/src/systems/design-system-{newid}.jsx`. This is the design intent.
 
-Second, a designer or engineer runs the spec extraction workflow (this is a sub-workflow this skill exposes, currently invoked by humans rather than automated): the workflow reads the .jsx, generates a draft spec.yaml plus skeleton component SVGs and layout templates, and places them in `specs/{newid}/`. The draft is opinionated — it makes its best guesses about tokens, component anatomy, rulebook entries — and is meant to be edited.
+Second, a designer or engineer runs the spec extraction workflow (this is a sub-workflow this skill exposes, currently invoked by humans rather than automated): the workflow reads the .jsx, generates a draft spec.yaml plus skeleton component SVGs and layout templates, and places them in `systems/{newid}/`. The draft is opinionated — it makes its best guesses about tokens, component anatomy, rulebook entries — and is meant to be edited.
 
 Third, the designer reviews the draft, fills in rulebook entries that the automated extraction couldn't infer, hand-authors or refines component SVGs, and authors the layout templates. This is the meaningful design work; the extraction just removes the busywork.
 

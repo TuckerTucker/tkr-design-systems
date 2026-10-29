@@ -139,8 +139,8 @@ const enter = (tier, reduced) => {
    `contrast.suggest_lightness_fix` and record it in `notes` (§ 7).
 4. `python3 tools/design-system-skill validate --spec systems/<id>/spec.yaml`.
 5. Regenerate the SVG libraries: `uv run python tools/builders/build.py --system <id>`
-   (§ 5; CI runs `--check` and fails on stale SVGs) and, for Riso,
-   `python3 tools/builders/build_riso_reference.py`.
+   (§ 5; CI runs `--check` and fails on stale SVGs) and, for Riso, its
+   reference page with `tools/builders/build_riso_reference.py` (repository only).
 
 Never re-introduce a token value into spec.yaml; reference it instead
 (§ 3). To add a token every system needs, change `contract.py`, paste the
@@ -412,7 +412,7 @@ unknown token or malformed entry with the system, kind, item and key.
 - After changing a token value, run `build.py` and commit the regenerated
   SVGs with the token change; `build.py --check` in CI fails until you do.
   Previews (`*.png` next to an SVG) are refreshed with `--png`.
-- New system: add `engine/systems/<id>/` with a `BUILDER` and register the
+- New system: add `tools/builders/engine/systems/<id>/` with a `BUILDER` and register the
   system; `build.py --system <id>` writes `systems/<id>/components/` and
   `layouts/`.
 

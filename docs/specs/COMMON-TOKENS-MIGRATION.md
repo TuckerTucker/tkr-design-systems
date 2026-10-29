@@ -2,7 +2,7 @@
 
 How the design systems were brought under the portable token contract, and how to bring a new system in.
 
-Ported from tkr-kit's `design-system-skill/MIGRATION.md` (tkr-kit commit `75d94e2a`, 2026-05-26). In tkr-kit the `tokens.common` blocks were written by hand; here they are **generated from each system's `tokens.json`**, so the per-system mapping notes below describe the derivation, not hand-picked values.
+Ported from tkr-kit's `.claude/skills/design-system-skill/MIGRATION.md` (tkr-kit commit `75d94e2a`, 2026-05-26). In tkr-kit the `tokens.common` blocks were written by hand; here they are **generated from each system's `tokens.json`**, so the per-system mapping notes below describe the derivation, not hand-picked values.
 
 ## Overview
 

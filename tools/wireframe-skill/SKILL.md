@@ -18,7 +18,7 @@ version: 3.0.0
 | L2 Agent | `wireframe-agent` (production v2.0 lives at `.claude/agents/wireframe-agent.md`) | wraps this skill with isolation + structured reporting |
 | **L1 Skill** | **`wireframe` (this file, v3.0)** | **generates one wireframe SVG + spec.yaml; system-aware** |
 
-This v3.0 lives in `design-system-skill-draft/wireframe-skill/` for review. The production v2.0 is at `.claude/skills/wireframe-skill/`. When v3.0 merges into production, it replaces v2.0 in place; the agent + command above continue to work because the skill's invocation interface is additive (the new `system` parameter is optional).
+This skill is authored in the tkr-design-systems repository and vendored by tkr-kit at `.claude/skills/wireframe-skill/`. The agent and command above keep working across versions because the skill's invocation interface is additive (the `system` parameter is optional).
 
 Generates wireframe SVGs from a brief, optionally rendered in a specific design system. This is the skill end users invoke when they want a wireframe; it is NOT the skill that defines design systems (that's design-system-skill).
 
@@ -250,7 +250,7 @@ The decomposition request emitted by `build_decomposition_request` now includes 
 
 ## Decision Guide
 
-> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `uv run python tools/docs/generate.py`. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
+> The tables and lists in this section are generated from `systems/registry.yaml`, each system's `spec.yaml`, `tokens.json` and library, `docs/specs/LIBRARY-SPEC.md` and `tools/docs/guidance.yaml` by `tools/docs/generate.py` in the tkr-design-systems repository. CI fails when they are stale. Change the sources, then regenerate; don't edit between the markers.
 
 ### Which system
 
