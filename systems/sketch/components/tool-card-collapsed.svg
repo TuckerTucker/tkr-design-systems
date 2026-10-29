@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 44" width="480" height="44">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== TOOL-CARD-COLLAPSED ==================== -->
+
+  <rect x="0" y="0" width="480" height="44" fill="#F7F5F0" stroke="#E5E3DE" stroke-width="1" rx="10" ry="10"/>
+  <text x="16" y="27" font-family="'IBM Plex Mono', ui-monospace, monospace" font-size="12" font-weight="600" fill="#2C2C2C">read_file</text>
+  <text x="110" y="27" class="text-muted" font-size="11" letter-spacing="-0.02em">src/theme.css</text>
+  <text x="440" y="27" text-anchor="end" class="text-muted" font-size="10" letter-spacing="-0.02em">0.4s · done</text>
+  <text x="464" y="28" text-anchor="end" font-family="'Caveat', cursive" font-size="14" font-weight="700" fill="#6F6B66">▾</text>
+
+</svg>

@@ -33,7 +33,7 @@ from engine import (  # noqa: E402
     select_targets,
     validate_builder,
 )
-from engine.plugin import builder_of  # noqa: E402
+from engine.plugin import KIND_OUT_DIRS, builder_of  # noqa: E402
 from engine.text_coverage import check_coverage, scan_builder, scan_template  # noqa: E402
 
 REPO = HERE.parents[1]
@@ -97,6 +97,47 @@ def test_every_system_with_a_library_has_a_builder(targets) -> None:
     assert {f.system for f in result.files} == set(BUILT_SYSTEMS)
     assert {f.kind for f in result.files} == {"library", "patterns"}
     assert all(f.path.parent.name in ("components", "layouts") for f in result.files)
+
+
+def spec_svgs_without_a_template(spec: dict[str, Any], data: dict[str, Any]) -> list[str]:
+    """Variant ``svg`` paths a spec declares that no builder template renders.
+
+    Args:
+        spec: A parsed spec.yaml.
+        data: The system's builder data (``builder_of``).
+
+    Returns:
+        Declared ``components/`` or ``layouts/`` paths with no template,
+        in spec order.
+    """
+    produced = {f"{kd.get('out_dir', KIND_OUT_DIRS[kind])}/{item}.svg"
+                for kind, kd in data.items() for item in kd["items"]}
+    declared = [v["svg"] for c in (spec.get("components") or {}).values()
+                for v in (c.get("variants") or []) if v.get("svg")]
+    return [svg for svg in declared
+            if svg.split("/")[0] in KIND_OUT_DIRS.values() and svg not in produced]
+
+
+@pytest.mark.parametrize("system_id", BUILT_SYSTEMS)
+def test_every_spec_variant_svg_is_rendered_by_a_template(system_id: str) -> None:
+    """A spec may only point agents at SVGs the builder keeps in step with tokens.
+
+    Catches a variant whose template was removed (wireframe's
+    modal-confirmation) and a spec entry ported without its template (the
+    Sketch console wave).
+    """
+    spec = yaml.safe_load((REPO / "systems" / system_id / "spec.yaml").read_text())
+    data = builder_of(system_id, load_plugin(system_id))
+    assert spec_svgs_without_a_template(spec, data) == []
+
+
+def test_spec_template_parity_reports_an_untemplated_variant() -> None:
+    spec = {"components": {"modal": {"variants": [
+        {"id": "default", "svg": "layouts/modal-default.svg"},
+        {"id": "confirmation", "svg": "layouts/modal-confirmation.svg"},
+    ]}}}
+    data = {"patterns": {"items": {"modal-default": (1, 1, "")}}}
+    assert spec_svgs_without_a_template(spec, data) == ["layouts/modal-confirmation.svg"]
 
 
 # ─── shape validation ──────────────────────────────────────────────────

@@ -58,7 +58,7 @@ The v0.1 → v0.2 migration completed in Phase 1 item 4; every spec is now v0.3 
 | `swiss` | 0.3 | 1.0.0 | 71 | 12 | 14 |
 | `terminal` | 0.3 | 1.1.0 | 53 | 4 | 8 |
 | `editorial` | 0.3 | 1.2.0 | 73 | 5 | 9 |
-| `sketch` | 0.3 | 1.2.0 | 65 | 4 | 6 |
+| `sketch` | 0.3 | 1.2.0 | 91 | 4 | 6 |
 | `prism` | 0.3 | 1.2.0 | 56 | 4 | 6 |
 | `revolt` | 0.3 | 1.2.0 | 57 | 3 | 9 |
 | `riso` | 0.3 | 3.0.0 | 2 | 0 | 20 |

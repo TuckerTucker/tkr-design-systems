@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 28" width="120" height="28">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== CHIP-DEFAULT ==================== -->
+
+  <rect x="0" y="0" width="120" height="28" fill="#FAFAF8" stroke="#E5E3DE" stroke-width="1" rx="8" ry="8"/>
+  <text x="60" y="18" text-anchor="middle" class="text-secondary" font-size="11" font-weight="600" letter-spacing="-0.02em">meetings</text>
+
+</svg>

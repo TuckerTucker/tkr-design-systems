@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 96" width="640" height="96">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== COMPOSER-STREAMING ==================== -->
+
+  <rect x="0" y="0" width="640" height="56" fill="#FFFFFF" stroke="#8A8984" stroke-width="1" rx="14" ry="14"/>
+  <text x="20" y="35" class="text-muted" font-size="16" font-weight="600">+</text>
+  <text x="44" y="34" class="text-muted" font-size="14" letter-spacing="-0.02em">agent is replying…</text>
+  <rect x="556" y="12" width="64" height="32" fill="#FFFFFF" stroke="#B5524A" stroke-width="1" rx="8" ry="8"/>
+  <text x="588" y="33" text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="12" font-weight="600" fill="#B5524A">stop</text>
+  <rect x="0" y="72" width="640" height="4" fill="#F0EDE8"/>
+  <rect x="0" y="72" width="333" height="4" fill="#7C6E8B"/>
+  <text x="0" y="94" class="text-muted" font-size="10" letter-spacing="-0.02em">52% of context · compacts around 80%</text>
+
+</svg>

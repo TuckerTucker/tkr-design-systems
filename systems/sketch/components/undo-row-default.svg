@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 48" width="480" height="48">
+  <defs>
+    <style>
+      .text-primary { fill: #2C2C2C; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-secondary { fill: #555555; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-muted { fill: #6F6B66; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-accent { fill: #7C6E8B; font-family: 'IBM Plex Sans', sans-serif; }
+      .text-annotation { fill: #7C6E8B; font-family: 'Caveat', cursive; }
+    </style>
+  </defs>
+  <!-- ==================== UNDO-ROW-DEFAULT ==================== -->
+
+  <rect x="0" y="0" width="480" height="48" fill="#FAFAF8" stroke="#D5CFC8" stroke-width="1" stroke-dasharray="4 3" rx="10" ry="10"/>
+  <text x="16" y="29" class="text-secondary" font-size="12" letter-spacing="-0.02em">deleted — <tspan font-weight="600">Recipe ideas</tspan> is gone for good in 9s</text>
+  <text x="464" y="29" text-anchor="end" class="text-primary" font-size="13" font-weight="700" letter-spacing="-0.02em">undo</text>
+
+</svg>
