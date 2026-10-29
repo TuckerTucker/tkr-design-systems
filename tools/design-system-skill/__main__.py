@@ -195,5 +195,18 @@ def main(argv: list[str] | None = None) -> int:
     return 2
 
 
+def _log_to_stderr() -> None:
+    """Route structlog output to stderr.
+
+    stdout carries exactly one JSON document — the contract callers parse
+    (tkr-kit's agents and commands read it) — so a log line there would
+    corrupt it. structlog's default factory prints to stdout.
+    """
+    import structlog
+
+    structlog.configure(logger_factory=structlog.PrintLoggerFactory(file=sys.stderr))
+
+
 if __name__ == "__main__":
+    _log_to_stderr()
     raise SystemExit(main())
