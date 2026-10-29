@@ -31,11 +31,14 @@ which_component:
       Status and errors appear contextual to the action: mark the item that
       was acted on, in place.
   - job: Destructive action (delete, archive, remove)
-    use: [button.destructive, banner]
-    not: [modal.confirmation]
+    use: [button.destructive, undo_row, banner]
+    not: [modal]
     why: >-
-      NO "Are you sure?" dialogs: act immediately and offer undo (a banner
-      with an undo action), so responsibility is not shifted to the user.
+      NO "Are you sure?" dialogs: act immediately and offer undo (the
+      undo_row pattern holds the vacated row open with an Undo action until
+      it settles), so responsibility is not shifted to the user. The
+      ux-no-confirm-dialog-without-undo rulebook check reports a
+      confirmation dialog with no undo.
   - job: List or table under 100 items
     use: [list_item, data_table.default, search_bar]
     not: [pagination, data_table.with_pagination]

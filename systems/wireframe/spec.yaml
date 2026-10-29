@@ -868,10 +868,6 @@ components:
         svg: layouts/modal-default.svg
         rendering_notes: "Centered card (480px wide on desktop, full-width minus margins on mobile), 8px radius, with overlay #00000040 (semi-transparent black). Title at top (16px #212121 weight 600), body content middle, button row at bottom-right."
         states: [default]
-      - id: confirmation
-        svg: layouts/modal-confirmation.svg
-        rendering_notes: "Smaller (360px wide), focused on a single action confirmation. Title + 1-2 line message + Confirm/Cancel buttons."
-        states: [default]
       - id: form_modal
         svg: layouts/modal-form.svg
         rendering_notes: "Larger (560-640px wide), contains a form pattern. Submit/Cancel in footer."
@@ -893,6 +889,22 @@ components:
         reduced: fade
         derived: true
         note: "Leaves at exit_ms."
+
+  # The modal pattern has no `confirmation` variant by policy. An
+  # "Are you sure?" dialog is forbidden by claude.md § UX Philosophy
+  # ("Confirm destructive actions with undo, not dialogs") and reported by
+  # the ux-no-confirm-dialog-without-undo rulebook clause. The undo_row
+  # pattern below is the alternative the rule names; reach for it
+  # wherever a destructive confirmation would otherwise go.
+  undo_row:
+    tier: pattern
+    composed_of: [card, list_item, label]
+    anatomy: [container, deleted_item_summary, countdown, undo_action]
+    variants:
+      - id: default
+        svg: layouts/undo-row-default.svg
+        rendering_notes: "The destructive action runs immediately; the row it vacated becomes an undo row on the #F5F5F5 selected surface — deleted-item summary (13px #636363), a settle countdown (12px #707070), and a right-aligned Undo action (13px #212121 weight 600). Holds for the settle window, then collapses."
+        states: [default]
 
   drawer:
     tier: pattern

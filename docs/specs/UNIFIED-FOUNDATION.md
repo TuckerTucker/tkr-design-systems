@@ -83,7 +83,7 @@ For each of the six systems, a list_item (default + selected variants) and a ful
 
 ### Library spec
 
-`LIBRARY-SPEC.md` proposing a 3-tier (Primitives/Composites/Patterns) component library structure with <!-- generated:library-vocabulary-count -->42<!-- /generated:library-vocabulary-count --> components total.
+`LIBRARY-SPEC.md` proposing a 3-tier (Primitives/Composites/Patterns) component library structure with <!-- generated:library-vocabulary-count -->43<!-- /generated:library-vocabulary-count --> components total.
 
 ### Findings docs
 
@@ -97,7 +97,7 @@ The honest synthesis: the existing wireframe-skill has the **philosophy** right 
 
 ### Architectural Decision 1: One vocabulary, two rendering modes
 
-The unified system has ONE component vocabulary (the LIBRARY-SPEC's <!-- generated:library-vocabulary-count -->42<!-- /generated:library-vocabulary-count --> components) rendered in two modes:
+The unified system has ONE component vocabulary (the LIBRARY-SPEC's <!-- generated:library-vocabulary-count -->43<!-- /generated:library-vocabulary-count --> components) rendered in two modes:
 
 **Wireframe mode** — neutral, greyscale, system-agnostic. Uses the existing wireframe-skill's 7-token palette and 6-tier typography. This becomes the "default design system" — same schema, same composition rules, just a system whose grammar is "deliberately neutral."
 

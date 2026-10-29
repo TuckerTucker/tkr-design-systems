@@ -130,7 +130,7 @@ def test_unknown_component_id_fails(root: Path, capsys: pytest.CaptureFixture[st
 
 def test_component_refs_are_checked_against_library_spec() -> None:
     vocabulary = Sources(REPO_ROOT).library_vocabulary
-    assert parse_component_ref("modal.confirmation", vocabulary) == ("modal", "confirmation")
+    assert parse_component_ref("modal.form_modal", vocabulary) == ("modal", "form_modal")
     assert parse_component_ref("banner", vocabulary) == ("banner", None)
     with pytest.raises(SourceError, match="no variant 'pill'"):
         parse_component_ref("button.pill", vocabulary)
