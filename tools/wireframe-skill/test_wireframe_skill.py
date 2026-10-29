@@ -25,10 +25,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Make sibling packages importable.
+# Make the package importable; importing wireframe_skill puts
+# design_system_skill on sys.path in either layout (_design_system_path).
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(HERE.parent / "design-system-skill"))
 
 import yaml  # noqa: E402
 

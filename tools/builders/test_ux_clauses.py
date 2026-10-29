@@ -7,7 +7,7 @@ Rule of record: claude.md § UX Philosophy. Three of its clauses are encoded
 as mechanical checks; this file proves each one FAILS on an artifact that
 violates it. A clause with no failing fixture is not enforced, it is
 decorative — so every clause here is driven from both sides, by a violating
-fixture and its clean twin under tools/builders/fixtures/ux/.
+fixture and its clean twin under fixtures/ux/ beside rulebook_check.py.
 
 No mocks: every case reads a real SVG off disk through the real checker,
 the shipped populations are swept from systems/, and the CLI case shells
@@ -25,13 +25,19 @@ from pathlib import Path
 import pytest
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
+# Repository layout: this file sits beside rulebook_check.py in tools/builders/.
+# Skill-bundle layout (tkr-kit's vendored copy): it sits in <skill>/scripts/
+# and rulebook_check.py in <skill>/tooling/.
+TOOLING = HERE if (HERE / "rulebook_check.py").is_file() else HERE.parent / "tooling"
+sys.path.insert(0, str(TOOLING))
 
 import rulebook_check as rb  # noqa: E402
 
-RULEBOOK_CHECK = HERE / "rulebook_check.py"
-FIXTURES = HERE / "fixtures" / "ux"
-SYSTEMS = HERE.parents[1] / "systems"
+RULEBOOK_CHECK = TOOLING / "rulebook_check.py"
+FIXTURES = TOOLING / "fixtures" / "ux"
+WIREFRAME = rb.system_dir("wireframe")
+# systems/ (repository) or libraries/ (skill bundle): every system's directory.
+SYSTEMS = WIREFRAME.parent
 
 # 85 shipped layouts measured 2026-10-28 across every system; the floor keeps
 # a sweep over a moved or emptied directory from passing by examining nothing.
@@ -87,7 +93,7 @@ def test_inline_status_twin_passes() -> None:
 
 def test_toast_clause_does_not_run_on_a_component_fragment() -> None:
     """Authoring the primitive is not the violation; placing one in a screen is."""
-    fragment = SYSTEMS / "wireframe" / "components" / "toast-error.svg"
+    fragment = WIREFRAME / "components" / "toast-error.svg"
     assert fragment.exists()
     scope = rb.detect_scope(str(fragment))
     assert scope == "component"
@@ -127,7 +133,7 @@ def test_no_shipped_layout_confirms_with_a_dialog() -> None:
 
 
 def test_shipped_undo_row_layout_passes_on_a_real_inventory() -> None:
-    layouts = SYSTEMS / "wireframe" / "layouts"
+    layouts = WIREFRAME / "layouts"
     replacement = layouts / "undo-row-default.svg"
     assert replacement.exists()
     live = run_check(rb.check_ux_confirm_dialog_has_undo, replacement)
@@ -205,7 +211,7 @@ def test_deleting_the_catalog_marker_restores_the_finding() -> None:
 
 
 def test_shipped_contact_sheet_carries_the_marker() -> None:
-    sheet = SYSTEMS / "wireframe" / "contact-sheet.svg"
+    sheet = WIREFRAME / "contact-sheet.svg"
     assert sheet.exists()
     assert run_check(rb.check_ux_no_toast, sheet)["exempt"] == "catalog-sheet"
 

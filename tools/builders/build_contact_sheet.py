@@ -248,8 +248,12 @@ def build_contact_sheet(components_dir: Path, layouts_dir: Path = None) -> str:
 
 
 if __name__ == "__main__":
-    # Script lives in tools/builders/; the library lives at <repo>/systems/wireframe.
-    wireframe_dir = Path(__file__).resolve().parents[2] / "systems" / "wireframe"
+    # The library is <repo>/systems/wireframe (repository layout) or
+    # <skill>/libraries/wireframe-library (skill bundle); rulebook_check knows both.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from rulebook_check import system_dir
+
+    wireframe_dir = system_dir("wireframe")
     components_dir = wireframe_dir / "components"
     layouts_dir = wireframe_dir / "layouts"
     sheet = build_contact_sheet(components_dir, layouts_dir)

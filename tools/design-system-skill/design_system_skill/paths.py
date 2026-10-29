@@ -152,3 +152,87 @@ def registry_path() -> Path:
     if override is not None:
         return override
     return builtin_registry_path()
+
+
+def tooling_dir() -> Path:
+    """Return the directory holding ``rulebook_check.py`` and the builders.
+
+    Repository layout: ``tools/builders`` (a sibling of this skill).
+    Skill-bundle layout: ``<skill>/tooling``.
+
+    Returns:
+        The first candidate holding ``rulebook_check.py``, else the
+        bundle-layout path (whether or not it exists).
+    """
+    root = skill_root()
+    candidates = (root / "tooling", root.parent / "builders")
+    for candidate in candidates:
+        if (candidate / "rulebook_check.py").is_file():
+            return candidate
+    return candidates[0]
+
+
+def reference_doc_path(name: str) -> Path:
+    """Return the path of a schema/specification document by file name.
+
+    Repository layout: ``<repo>/docs/specs/<name>``.
+    Skill-bundle layout: ``<skill>/references/<name>``.
+
+    Args:
+        name: Document file name, e.g. ``SCHEMA-V0.3.md``.
+
+    Returns:
+        The first candidate that exists, else the bundle-layout path.
+    """
+    root = skill_root()
+    candidates = (root / "references" / name, root.parent.parent / "docs" / "specs" / name)
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return candidates[0]
+
+
+def builtin_library_dir(system_id: str) -> Path:
+    """Return a built-in system's library directory (spec, tokens, SVGs).
+
+    Read from the built-in registry only — never the user overlay or the
+    ``$DESIGN_SYSTEM_SKILL_REGISTRY`` override — so it names the files that
+    ship with this skill: ``systems/<id>`` in the repository layout,
+    ``libraries/<id>-library`` in the skill-bundle layout.
+
+    Args:
+        system_id: Built-in system id, e.g. ``swiss``.
+
+    Returns:
+        The absolute library directory.
+
+    Raises:
+        KeyError: If the built-in registry has no such id.
+    """
+    import yaml  # local: keeps this module importable without PyYAML
+
+    registry = builtin_registry_path()
+    data = yaml.safe_load(registry.read_text()) or {}
+    for entry in data.get("systems") or []:
+        if entry.get("id") == system_id:
+            root = entry.get("library_root") or system_id
+            return (registry.parent / root).resolve()
+    raise KeyError(f"{system_id!r} is not in the built-in registry {registry}")
+
+
+def is_library_of(system_id: str, spec_path: Path) -> bool:
+    """Whether a spec's directory is named for ``system_id``.
+
+    The directory is ``<id>`` in the repository layout and ``<id>-library``
+    in the skill bundle. Registry aliases (``neutral`` → the wireframe spec)
+    share another id's directory; the gates check a shared spec once, under
+    the id that owns the directory.
+
+    Args:
+        system_id: A registry id.
+        spec_path: The spec.yaml that id is registered with.
+
+    Returns:
+        True when the spec's directory belongs to that id.
+    """
+    return Path(spec_path).parent.name in (system_id, f"{system_id}-library")

@@ -19,7 +19,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 BRIDGE = HERE / "mcp_bridge.py"
-SYSTEMS = HERE.parents[1] / "systems"
+sys.path.insert(0, str(HERE))
+from design_system_skill.paths import builtin_library_dir  # noqa: E402
+
+# systems/swiss (repository layout) or libraries/swiss-library (skill bundle).
+SWISS = builtin_library_dir("swiss")
 
 # Hermetic: pin the user-registry overlay to a nonexistent sandbox path so a
 # developer's real ~/.claude/design-systems entries can't leak into asserts.
@@ -88,7 +92,7 @@ def test_rulebook() -> None:
 
 def test_compliance() -> None:
     section("compliance: checks a vendored artifact")
-    artifact = SYSTEMS / "swiss" / "layouts" / "dashboard.svg"
+    artifact = SWISS / "layouts" / "dashboard.svg"
     code, parsed, raw = run_bridge(
         "compliance",
         json.dumps({"system_id": "swiss", "artifact_path": str(artifact)}),
@@ -102,7 +106,7 @@ def test_compliance() -> None:
 
 def test_validate() -> None:
     section("validate: validates a vendored spec")
-    spec = SYSTEMS / "swiss" / "spec.yaml"
+    spec = SWISS / "spec.yaml"
     code, parsed, raw = run_bridge(
         "validate", json.dumps({"spec_path": str(spec)}),
     )

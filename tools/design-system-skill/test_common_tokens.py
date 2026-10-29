@@ -25,8 +25,11 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-REPO = HERE.parents[1]
-SYSTEMS = REPO / "systems"
+
+# A system's directory comes from the built-in registry, so these tests run
+# in the repository layout (systems/<id>) and the skill bundle
+# (libraries/<id>-library) alike.
+from design_system_skill.paths import builtin_library_dir as _lib  # noqa: E402
 
 from design_system_skill.common_tokens import (  # noqa: E402
     DerivationError,
@@ -228,7 +231,7 @@ def wireframe_copy(tmp_path: Path) -> Path:
     dst = tmp_path / "wireframe"
     dst.mkdir()
     for name in ("spec.yaml", "tokens.json"):
-        shutil.copy2(SYSTEMS / "wireframe" / name, dst / name)
+        shutil.copy2(_lib("wireframe") / name, dst / name)
     return dst
 
 
@@ -279,16 +282,16 @@ def test_underivable_token_file_fails(wireframe_copy: Path):
 def test_cli_check_and_write(wireframe_copy: Path):
     main = HERE / "__main__.py"
     ok = subprocess.run([sys.executable, str(main), "common-tokens", "--check"],
-                        capture_output=True, text=True, cwd=REPO)
+                        capture_output=True, text=True, cwd=HERE)
     assert ok.returncode == 0, ok.stdout[-2000:]
 
     spec = wireframe_copy / "spec.yaml"
     spec.write_text(spec.read_text().replace('ink: "#212121"', 'ink: "#000000"', 1))
     stale = subprocess.run([sys.executable, str(main), "common-tokens", "--spec", str(spec)],
-                           capture_output=True, text=True, cwd=REPO)
+                           capture_output=True, text=True, cwd=HERE)
     assert stale.returncode == 1
     fixed = subprocess.run([sys.executable, str(main), "common-tokens", "--write", "--spec", str(spec)],
-                           capture_output=True, text=True, cwd=REPO)
+                           capture_output=True, text=True, cwd=HERE)
     assert fixed.returncode == 0
     assert 'ink: "#212121"' in spec.read_text()
 
@@ -298,7 +301,7 @@ def test_cli_check_and_write(wireframe_copy: Path):
 @pytest.mark.parametrize("system_id", SYSTEM_IDS)
 def test_committed_block_validates_and_serves_raw_readers(system_id: str):
     """Raw-YAML readers (tkr-kit's layout solver and demo theme) get usable values."""
-    spec = yaml.safe_load((SYSTEMS / system_id / "spec.yaml").read_text())
+    spec = yaml.safe_load((_lib(system_id) / "spec.yaml").read_text())
     assert validate_common_tokens(spec) == []
     common = spec["tokens"]["common"]
     for step in ("xs", "sm", "md", "lg", "xl"):
@@ -309,7 +312,7 @@ def test_committed_block_validates_and_serves_raw_readers(system_id: str):
 
 
 def test_malformed_common_block_fails_validation(tmp_path: Path):
-    src = SYSTEMS / "swiss"
+    src = _lib("swiss")
     dst = tmp_path / "swiss"
     shutil.copytree(src, dst)
     spec = dst / "spec.yaml"
@@ -321,11 +324,11 @@ def test_malformed_common_block_fails_validation(tmp_path: Path):
 
 @pytest.mark.parametrize("system_id", ["wireframe", "sketch"])
 def test_dark_theme_is_a_checked_mode(system_id: str):
-    spec = yaml.safe_load((SYSTEMS / system_id / "spec.yaml").read_text())
+    spec = yaml.safe_load((_lib(system_id) / "spec.yaml").read_text())
     assert spec["themes"]["default"] == "light"
     assert spec["themes"]["light"]["common"] == spec["tokens"]["common"]["color"]
     assert spec["themes"]["dark"]["common"]["surface"] != spec["tokens"]["common"]["color"]["surface"]
-    report = check_color_gates_for_spec(SYSTEMS / system_id / "spec.yaml")
+    report = check_color_gates_for_spec(_lib(system_id) / "spec.yaml")
     assert report.ok, [e.message for e in report.errors]
     assert report.data["contrast"]["modes"] == 2
 
@@ -333,7 +336,7 @@ def test_dark_theme_is_a_checked_mode(system_id: str):
 def test_dark_theme_contrast_failure_is_caught(tmp_path: Path):
     """A dark value that misses its minimum fails the gate (the mode is really checked)."""
     dst = tmp_path / "sketch"
-    shutil.copytree(SYSTEMS / "sketch", dst, ignore=shutil.ignore_patterns("components", "layouts"))
+    shutil.copytree(_lib("sketch"), dst, ignore=shutil.ignore_patterns("components", "layouts"))
     tokens = dst / "tokens.json"
     doc = json.loads(tokens.read_text())
     original = copy.deepcopy(doc)

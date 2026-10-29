@@ -123,7 +123,41 @@ SWISS_GRID = {0, 1, 2, 8, 16, 24, 32, 40, 48, 64, 72, 80, 96, 104, 112, 120, 128
 # Note: 0/1/2 allowed as base values; 1192/1208 for right-edge alignment of accent dot
 # 0.5 offsets (e.g. y=95.5) for 1px crisp lines are a separate concern
 
-SWISS_TOKENS_PATH = Path(__file__).resolve().parents[2] / "systems" / "swiss" / "tokens.json"
+def system_dir(system_id: str, here: Optional[Path] = None) -> Path:
+    """Return the directory holding a built-in system's spec and token file.
+
+    This module ships in two layouts and reads the token files from
+    whichever one it sits in, so a token change reaches the rulebook in both:
+
+    - Repository layout: ``<repo>/tools/builders/rulebook_check.py`` with the
+      system at ``<repo>/systems/<id>/``.
+    - Skill-bundle layout: ``<skill>/tooling/rulebook_check.py`` with the
+      system at ``<skill>/libraries/<id>-library/`` (the layout tkr-kit
+      vendors, built by ``tools/bundle/build_bundle.py``).
+
+    Kept to the standard library: tkr-kit imports this file under
+    ``python3 -I`` with only its own directory on ``sys.path``.
+
+    Args:
+        system_id: Built-in system id, e.g. ``swiss``.
+        here: Directory to resolve from (default: this file's directory).
+
+    Returns:
+        The first candidate that exists, else the repository-layout path
+        (the token readers below then fall back as documented at each use).
+    """
+    base = (here or Path(__file__).resolve().parent)
+    candidates = (
+        base.parent.parent / "systems" / system_id,
+        base.parent / "libraries" / f"{system_id}-library",
+    )
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate
+    return candidates[0]
+
+
+SWISS_TOKENS_PATH = system_dir("swiss") / "tokens.json"
 
 
 def _load_tokens(path: Path) -> dict:
@@ -181,7 +215,7 @@ SWISS_METADATA_COLORS = (SWISS_GRAY_METADATA, SWISS_GRAY_TERTIARY, SWISS_RED, SW
 
 WIREFRAME_TYPE_SCALE = {11, 12, 13, 14, 16, 18, 24}
 
-WIREFRAME_TOKENS_PATH = SWISS_TOKENS_PATH.parents[1] / "wireframe" / "tokens.json"
+WIREFRAME_TOKENS_PATH = system_dir("wireframe") / "tokens.json"
 
 
 def _token_palette(tokens: dict, groups: tuple[str, ...]) -> set[str]:
@@ -640,7 +674,7 @@ def check_warning_not_red(svg_text: str) -> dict:
 # REVOLT CHECKS (spec rulebook revolt-pink-not-text / revolt-error-status)
 # ──────────────────────────────────────────────────────────────────────
 
-REVOLT_TOKENS_PATH = SWISS_TOKENS_PATH.parents[1] / "revolt" / "tokens.json"
+REVOLT_TOKENS_PATH = system_dir("revolt") / "tokens.json"
 _REVOLT_TOKENS = _load_tokens(REVOLT_TOKENS_PATH)
 REVOLT_PINK = _swiss_color(_REVOLT_TOKENS, "color.accent", "#FF3366")
 REVOLT_DANGER = _swiss_color(_REVOLT_TOKENS, "color.danger", "#FF3366")

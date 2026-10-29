@@ -54,7 +54,10 @@ from engine import (  # noqa: E402
 from engine.plugin import KIND_OUT_DIRS  # noqa: E402
 from engine.runner import PluginLoader, TokenLoader  # noqa: E402
 
-DEFAULT_REGISTRY = HERE.parents[1] / "systems" / "registry.yaml"
+from design_system_skill.paths import builtin_registry_path  # noqa: E402  (engine put it on sys.path)
+
+# systems/registry.yaml here; libraries/registry.yaml in the skill bundle.
+DEFAULT_REGISTRY = builtin_registry_path()
 DEFAULT_ALLOWLIST = HERE / "orphan-allowlist.yaml"
 
 

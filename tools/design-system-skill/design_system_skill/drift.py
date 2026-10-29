@@ -39,6 +39,7 @@ import yaml
 
 from .contract import normalize_color
 from .errors import Error, Result
+from .paths import is_library_of
 from .token_file import (
     LEGACY_PROJECTION,
     color_values,
@@ -314,7 +315,7 @@ def check_drift_all(
     seen: dict[Path, str] = {}
     # Check each spec once, under the id that owns its directory
     # (`wireframe`, not its registry alias `neutral`).
-    ordered = sorted(entries, key=lambda e: Path(e[1]).parent.name != e[0])
+    ordered = sorted(entries, key=lambda e: not is_library_of(e[0], Path(e[1])))
     for sys_id, spec_path in ordered:
         if spec_path in seen:
             systems[sys_id] = {"alias_of": seen[spec_path]}
