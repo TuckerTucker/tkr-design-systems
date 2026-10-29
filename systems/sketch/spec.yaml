@@ -208,6 +208,157 @@ components:
         reduced: keep
         note: "JSX selection doc row 'Transition 200ms ease'; the live preview applies it instantly."
 
+  # ─── Console wave — sourced from the tkr-agent Console UI, the live
+  #     product the Sketch system was lifted from (first authored in
+  #     tkr-kit). Rendered from tools/builders/engine/systems/sketch/library.py.
+
+  hand_annotation:
+    variants:
+      - id: section
+        svg: components/annotation-section.svg
+        rendering_notes: "Caveat 15px weight 700 in the accent, rotated -1.5deg, prefixed with ↓. Labels a section of content ('↓ your agent', '↓ earlier decisions')."
+      - id: status-working
+        svg: components/annotation-status-working.svg
+        rendering_notes: "Caveat accent mark 'working…' — liveness indicator for active/streaming states."
+      - id: status-quiet
+        svg: components/annotation-status-quiet.svg
+        rendering_notes: "Caveat in extras.color.accent_light, 'all quiet ~' — calm/idle liveness."
+      - id: aside
+        svg: components/annotation-aside.svg
+        rendering_notes: "Caveat 14px in extras.color.accent_light, rotated -2deg, trailing ~. Editorial aside next to dense content."
+    constraints:
+      - "Glyph vocabulary: ↓ heads a section, ~ trails an aside. No dingbats: the Console's ✎ and ✦ marks sit in the Dingbats block sketch-no-emoji-imagery forbids, so the words and the Caveat face carry the mark."
+      - "Always Caveat, always rotated -1..-3deg, always the accent or accent_light. Never used for structural text."
+
+  empty_state:
+    variants:
+      - id: default
+        svg: components/empty-state-default.svg
+        rendering_notes: "Centered Caveat mark ('fresh page ~') + one muted sub-line. Empty states are quiet invitations, never spinners or illustrations."
+
+  undo_row:
+    anatomy:
+      - { id: message,     position: left_main,  yields_to: [undo_action] }
+      - { id: undo_action, position: right,      fixed_width: 48 }
+    variants:
+      - id: default
+        svg: components/undo-row-default.svg
+        rendering_notes: "Dashed 1px border_strong on radius.default, secondary message ('deleted — {name} is gone for good in {n}s'), 'undo' text button right-aligned in ink weight 700."
+    constraints:
+      - "Destructive actions go through this deferred-commit row (~10s window), never a confirmation dialog — the ux-no-confirm-dialog-without-undo rulebook check reports one without undo."
+
+  message_bubble:
+    variants:
+      - id: user
+        svg: components/message-user.svg
+        rendering_notes: "Right-aligned, surface_inverse fill, extras.radius.message, text_inverse text 13px."
+      - id: agent
+        svg: components/message-agent.svg
+        rendering_notes: "Left-aligned, warm surface fill with 1px border, extras.radius.message, ink text 13px."
+      - id: agent-streaming
+        svg: components/message-agent-streaming.svg
+        rendering_notes: "Agent bubble plus a 7x13 accent block caret after the last character."
+      - id: interrupted
+        svg: components/message-interrupted.svg
+        rendering_notes: "Agent bubble followed by a danger-coloured Caveat mark 'stopped mid-thought ~' below the bubble."
+    constraints:
+      - "User on ink, agent on warm surface — never both on the same fill"
+      - "Streaming caret is a solid accent block, not an ellipsis or spinner"
+
+  composer:
+    anatomy:
+      - { id: attach,         position: left,  fixed_width: 24 }
+      - { id: input,          position: main,  yields_to: [primary_action] }
+      - { id: primary_action, position: right, fixed_width: 64 }
+      - { id: context_meter,  position: below, optional: true }
+    variants:
+      - id: default
+        svg: components/composer-default.svg
+        rendering_notes: "Elevated field on radius.chrome with a border_input stroke, + attach and the Caveat 'go →' send mark in the accent; context meter below: 4px accent fill on a warm-surface track, muted 10px label."
+      - id: streaming
+        svg: components/composer-streaming.svg
+        rendering_notes: "Input quiets to muted; the trailing control becomes a 'stop' button: danger text and danger stroke on the elevated fill, radius.input."
+    constraints:
+      - "The send affordance is the Caveat 'go →' mark, not a filled button"
+      - "The context meter is square-ended (no radius) per rounded-not-pilled"
+
+  tool_card:
+    anatomy:
+      - { id: name,    position: left_main, yields_to: [summary] }
+      - { id: summary, position: main,      yields_to: [meta] }
+      - { id: meta,    position: right,     fixed_width: 72 }
+      - { id: chevron, position: far_right, fixed_width: 16 }
+    variants:
+      - id: collapsed
+        svg: components/tool-card-collapsed.svg
+        rendering_notes: "One-line row on extras.color.surface_subtle, radius.default: mono tool name weight 600, muted summary, muted '0.4s · done' meta, Caveat ▾ chevron."
+      - id: running
+        svg: components/tool-card-running.svg
+        rendering_notes: "Same row; meta reads 'running…' in ink weight 600 (the accent on the subtle fill is under 4.5:1). In motion contexts the card pulses opacity — never a spinner."
+      - id: expanded
+        svg: components/tool-card-expanded.svg
+        rendering_notes: "Card grows below a hairline: INPUT and RESULT micro-labels (9px, 600) over elevated mono blocks (extras.radius.checkbox, 1px border)."
+    constraints:
+      - "Tool names and input/result content are always monospace"
+      - "Status lives in the meta slot — no status icons, no color-filled headers"
+
+  attachment_chip:
+    variants:
+      - id: default
+        svg: components/attachment-chip.svg
+        rendering_notes: "Warm-surface chip, radius.input: 16px elevated icon well (extras.radius.checkbox), filename 11px weight 600, × remove affordance. No emoji file-type glyphs."
+
+  compaction_marker:
+    variants:
+      - id: default
+        svg: components/compaction-marker.svg
+        rendering_notes: "Dashed border_strong chip, radius.default, centered: muted 'earlier turns were compacted — ' + ink weight-600 'load them anyway' text action."
+
+  code_block:
+    variants:
+      - id: default
+        svg: components/code-block-default.svg
+        rendering_notes: "Elevated block, radius.default, 1px border. Mono 11px; code in ink, comments in muted. No syntax rainbow — two ink tiers only."
+
+  progress_bar:
+    variants:
+      - id: default
+        svg: components/progress-bar-default.svg
+        rendering_notes: "6px warm-surface track, accent fill (3:1 against the track). Square-ended — no radius (rounded-not-pilled)."
+      - id: labeled
+        svg: components/progress-bar-labeled.svg
+        rendering_notes: "Bar plus muted 10px label below ('42% of context · compacts around 80%')."
+
+  chip:
+    variants:
+      - id: default
+        svg: components/chip-default.svg
+        rendering_notes: "Interactive filter/tag toggle: paper fill, 1px border, radius.input, secondary 11px weight 600 label."
+      - id: active
+        svg: components/chip-active.svg
+        rendering_notes: "Active = surface_selected fill + border_strong + ink weight 700. Same paper-tier selection signal as list_item — never an accent fill."
+
+  drawer:
+    variants:
+      - id: default
+        svg: components/drawer-default.svg
+        rendering_notes: "Edge-attached panel on paper fill over a 25% surface_inverse scrim. 1px border on the attached edge, square corners, no shadow. A Caveat section label heads the content."
+
+  dropdown_menu:
+    variants:
+      - id: default
+        svg: components/dropdown-menu-default.svg
+        rendering_notes: "Elevated panel, radius.chrome, 1px border — border-only elevation, no shadow. Caveat '↓' heading; rows are title (12px, 600) + muted meta with right-aligned text actions; hairline separators."
+
+  countdown_badge:
+    variants:
+      - id: default
+        svg: components/badge-countdown.svg
+        rendering_notes: "Paper chip, radius.input, secondary 10px weight 600 ('12m left')."
+      - id: urgent
+        svg: components/badge-countdown-urgent.svg
+        rendering_notes: "Danger tier: paper fill, danger stroke, danger text weight 700 ('90s left')."
+
 rulebook:
   # NEW IN v0.2: every rule annotates check_method (Change 9) and
   # check_scope (Change 12) so consumers know how and where to verify.

@@ -28,7 +28,7 @@ This document is a complete brief for picking up the work in a fresh session. Re
 | `docs/SCHEMA.md` | Schema v0.1 — original specification | ~600 |
 | `docs/SCHEMA-V0.2.md` | Schema v0.2 — current specification with 11 documented changes | ~600 |
 | `docs/V0.2-MIGRATIONS.md` | Per-system migration notes for v0.1 → v0.2 with effort estimates | ~250 |
-| `docs/LIBRARY-SPEC.md` | The 3-tier component vocabulary (Primitives/Composites/Patterns), <!-- generated:library-vocabulary-count -->42<!-- /generated:library-vocabulary-count --> components total | ~400 |
+| `docs/LIBRARY-SPEC.md` | The 3-tier component vocabulary (Primitives/Composites/Patterns), <!-- generated:library-vocabulary-count -->43<!-- /generated:library-vocabulary-count --> components total | ~400 |
 | `docs/WIREFRAME-CONSUMPTION.md` | How wireframe-skill consumes a system spec (7-step generation flow) | ~150 |
 | `docs/RISO-FINDINGS.md` | Schema gaps surfaced by Riso authoring (informed v0.2) | ~100 |
 | `docs/REMAINING-SYSTEMS-FINDINGS.md` | Schema gaps surfaced by the remaining 5 systems | ~150 |
@@ -58,7 +58,7 @@ The v0.1 → v0.2 migration completed in Phase 1 item 4; every spec is now v0.3 
 | `swiss` | 0.3 | 1.0.0 | 71 | 12 | 14 |
 | `terminal` | 0.3 | 1.1.0 | 53 | 4 | 8 |
 | `editorial` | 0.3 | 1.2.0 | 73 | 5 | 9 |
-| `sketch` | 0.3 | 1.3.0 | 65 | 4 | 6 |
+| `sketch` | 0.3 | 1.3.0 | 91 | 4 | 6 |
 | `prism` | 0.3 | 1.2.0 | 56 | 4 | 6 |
 | `revolt` | 0.3 | 1.2.0 | 57 | 3 | 9 |
 | `riso` | 0.3 | 3.0.0 | 2 | 0 | 20 |
@@ -169,7 +169,7 @@ wireframe-skill v3.0:
 **Key architectural decisions** (already made and documented):
 - The wireframe library IS a design system with `grammar_family: wireframe`. Same schema, same machinery.
 - wireframe-skill calls into design-system-skill, never the reverse.
-- Per-system libraries follow the same component vocabulary as the wireframe library (LIBRARY-SPEC's <!-- generated:library-vocabulary-count -->42<!-- /generated:library-vocabulary-count --> components).
+- Per-system libraries follow the same component vocabulary as the wireframe library (LIBRARY-SPEC's <!-- generated:library-vocabulary-count -->43<!-- /generated:library-vocabulary-count --> components).
 - Schema v0.2 is fully backwards-compatible with v0.1 — all v0.1 specs continue to work.
 
 ---

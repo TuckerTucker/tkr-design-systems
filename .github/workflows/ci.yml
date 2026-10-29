@@ -31,6 +31,7 @@ jobs:
           tools/mcp-server/test_mcp_server.py
           tools/e2e/test_check_systems.py
           tools/builders/test_build.py
+          tools/builders/test_ux_clauses.py
           tools/design-system-skill/test_jsx_drift.py
           tools/design-system-skill/test_tokens.py
           tools/design-system-skill/test_common_tokens.py

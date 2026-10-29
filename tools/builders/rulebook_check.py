@@ -28,6 +28,19 @@ Only the mechanical rules are checkable here; rules requiring judgment
 copy names what failed and stays free of icons and red, per
 swiss-error-typographic) are noted but not automatically verified.
 
+UX-philosophy clauses (every ruleset):
+    Three clauses of claude.md § UX Philosophy are appended to every
+    ruleset by ``_with_ux``: ``ux-no-toast-notifications`` and
+    ``ux-no-confirm-dialog-without-undo`` (artifact scope: placing the
+    primitive in a screen is the violation, authoring it is not) and
+    ``ux-required-fields-indicated`` (both scopes). They answer from the
+    artifact's component inventory — assembler group ids and builder
+    banners — and every result carries ``component_ids`` and
+    ``inventory_source`` so a vacuous pass is visibly vacuous. A catalog
+    sheet marked ``<!-- CATALOG-SHEET ... -->`` is exempt from the two
+    placement clauses and says so in ``exempt``. Violating and clean
+    fixtures live in tools/builders/fixtures/ux/.
+
 Rule exceptions (allow-list):
     A deliberate, defensible deviation from a rule is recorded as data in
     ``systems/<id>/rulebook-exceptions.yaml``, next to the system's
@@ -951,6 +964,294 @@ def check_no_emoji(svg_text):
     }
 
 
+# ──────────────────────────────────────────────────────────────────────
+# UX PHILOSOPHY CLAUSES
+# ──────────────────────────────────────────────────────────────────────
+# Rule of record: claude.md § UX Philosophy ("NO Toast notifications",
+# "NO 'Are you sure?' dialogs", "NO Required fields without indication").
+# Of that section's clauses, these three are decidable against the
+# artifacts this pipeline produces; the rest (gray-out-don't-hide,
+# pagination under 100 items, contrast against the painted ground) have no
+# subject in a flat SVG and stay review-time. Encoding a clause that cannot
+# fail would be an opinion with a green light.
+#
+# These checks are ported verbatim from tkr-kit, whose
+# core/design/rulebook/ux-clauses.ts re-implements them in TypeScript and
+# asserts field-for-field parity against these functions over every ux
+# fixture and shipped SVG. Change a result key here and that parity test
+# breaks: the function names and result dicts are a contract.
+#
+# IDENTITY IS THE WHOLE PROBLEM. A check function receives SVG text and
+# nothing else — not the filename — so "is there a toast on this screen" is
+# answerable only where the artifact NAMES its parts. Two naming conventions
+# exist in this pipeline and both are read:
+#
+#   assembled artifacts   <g id="{region}__{component-id}_{index}">
+#                         written by the wireframe skill's assembler
+#   authored fragments    <!-- ==== COMPONENT-NAME ==== --> banner comments,
+#                         which the builder engine writes into every
+#                         rendered SVG and the assembler copies verbatim
+#
+# An artifact that names nothing is NOT silently green: every check below
+# reports `component_ids` and `inventory_source`, so a vacuous pass is
+# visibly vacuous instead of indistinguishable from a real one.
+
+# Assembler group id: "{region}__{component-id}_{index}". The component id is
+# the middle capture; region ids and the trailing index are discarded.
+_ASSEMBLED_COMPONENT_ID = re.compile(
+    r'<g\b[^>]*\bid="[A-Za-z0-9_.-]+__([a-z0-9][a-z0-9.-]*)_\d+"'
+)
+
+# Banner comment. ALL-CAPS is required so ordinary prose comments
+# ("<!-- No title bar; just title + body + actions -->") are not read as
+# component names. The '=' padding is optional because hand-authored
+# fragments carry bare "<!-- LABEL-REQUIRED -->" banners while the builder
+# pads them.
+_BANNER_COMPONENT_ID = re.compile(
+    r'<!--\s*=*\s*([A-Z][A-Z0-9]*(?:[ _-][A-Z0-9]+)*)\s*=*\s*-->'
+)
+
+
+def _normalize_component_id(raw: str) -> str:
+    """Fold a banner name onto the component-id spelling.
+
+    Args:
+        raw: Banner text, e.g. ``"LABEL-REQUIRED"``.
+
+    Returns:
+        The component id, e.g. ``"label-required"``.
+    """
+    return raw.strip().lower().replace(" ", "-").replace("_", "-")
+
+
+def extract_component_inventory(svg_text: str) -> tuple[list[str], str]:
+    """Return every component the artifact names, and where the names came from.
+
+    Args:
+        svg_text: SVG source text.
+
+    Returns:
+        ``(component_ids, inventory_source)``. ``component_ids`` is
+        deduplicated and sorted. ``inventory_source`` is one of
+        ``'group-ids'``, ``'banners'``, ``'group-ids+banners'`` or
+        ``'none'`` — reported by every UX check so a reader can tell
+        "nothing violates" from "nothing was named".
+    """
+    assembled = [m.group(1).lower() for m in _ASSEMBLED_COMPONENT_ID.finditer(svg_text)]
+    banners = [_normalize_component_id(m.group(1)) for m in _BANNER_COMPONENT_ID.finditer(svg_text)]
+    if assembled and banners:
+        source = "group-ids+banners"
+    elif assembled:
+        source = "group-ids"
+    elif banners:
+        source = "banners"
+    else:
+        source = "none"
+    return sorted(set(assembled) | set(banners)), source
+
+
+def _component_blocks(svg_text: str) -> list[tuple[str, str]]:
+    """Split the artifact into the parts it names.
+
+    A per-component rule has to be judged against its own subtree, not the
+    whole screen — otherwise a single asterisk anywhere on a form would
+    satisfy the required-indicator rule for every field on it.
+
+    Assembled artifacts give exact subtrees (the balanced ``<g>`` the
+    assembler wrote). Authored fragments and layouts have no grouping, so
+    the text is split at banner boundaries: each banner owns everything up
+    to the next one. That is exact for a single-component fragment and an
+    approximation for a multi-banner layout.
+
+    Args:
+        svg_text: SVG source text.
+
+    Returns:
+        ``[(component_id, block_text)]`` in document order.
+    """
+    blocks = []
+    for m in _ASSEMBLED_COMPONENT_ID.finditer(svg_text):
+        comp_id = m.group(1).lower()
+        open_end = svg_text.find(">", m.start())
+        if open_end == -1:
+            continue
+        if svg_text[open_end - 1] == "/":          # self-closing <g ... /> holds nothing
+            blocks.append((comp_id, ""))
+            continue
+        depth = 1
+        pos = open_end + 1
+        body_start = pos
+        while depth > 0:
+            nxt = re.search(r"<(/?)g\b", svg_text[pos:])
+            if nxt is None:
+                blocks.append((comp_id, svg_text[body_start:]))
+                break
+            pos += nxt.end()
+            depth += -1 if nxt.group(1) else 1
+            if depth == 0:
+                blocks.append((comp_id, svg_text[body_start:pos - nxt.end() + nxt.start()]))
+    if blocks:
+        return blocks
+    marks = list(_BANNER_COMPONENT_ID.finditer(svg_text))
+    for i, m in enumerate(marks):
+        end = marks[i + 1].start() if i + 1 < len(marks) else len(svg_text)
+        blocks.append((_normalize_component_id(m.group(1)), svg_text[m.end():end]))
+    return blocks
+
+
+def _text_runs(svg_text: str) -> list[str]:
+    """Every ``<text>`` element's rendered string, with inner markup (tspan) stripped."""
+    runs = []
+    for m in re.finditer(r"<text\b[^>]*>(.*?)</text>", svg_text, re.DOTALL):
+        runs.append(re.sub(r"<[^>]+>", "", m.group(1)))
+    return runs
+
+
+# A catalog sheet renders every primitive a library authors, so a placement
+# clause ("no toast is PLACED in a screen") is unanswerable against one: the
+# toast is there because the catalog's job is to show it, and the only remedy
+# would be deleting a catalogued primitive. That is an exemption with a
+# recorded reason, not a standing red — and it is recorded where a reader can
+# see it, in the artifact itself, rather than in a filename allowlist the
+# checker cannot verify. Written by tools/builders/build_contact_sheet.py; the
+# two placement clauses report it as `exempt` so an exempted run never looks
+# like a clean one.
+_CATALOG_SHEET_MARKER = re.compile(r"<!--\s*CATALOG-SHEET\b")
+
+_TOAST_COMPONENT = re.compile(r"(^|-)(toast|snackbar)(-|$)")
+_CONFIRM_COMPONENT = re.compile(r"(^|-)(confirm|confirmation)(-|$)")
+_UNDO_COMPONENT = re.compile(r"(^|-)undo(-|$)")
+_UNDO_TEXT = re.compile(r"\bundo\b", re.IGNORECASE)
+_REQUIRED_COMPONENT = re.compile(r"(^|-)required(-|$)")
+_REQUIRED_INDICATOR = re.compile(r"\*|\brequired\b", re.IGNORECASE)
+
+
+def check_ux_no_toast(svg_text: str) -> dict:
+    """Rule: no toast/snackbar primitive is placed in a composed artifact.
+
+    claude.md § UX Philosophy: "NO Toast notifications — forces
+    context-switching to read status."
+
+    Runs at ARTIFACT scope only, and that narrowing is the clause's own:
+    authoring the primitive is not the violation, placing one in a screen
+    is. Several shipped systems author a toast component; firing on the
+    fragments themselves would put a red on library files whose only remedy
+    is deleting a catalogued primitive — an unclearable finding.
+
+    Args:
+        svg_text: SVG source text.
+
+    Returns:
+        Result dict: ``rule_id``, ``passed``, ``violations`` (offending
+        component ids), ``exempt`` (``"catalog-sheet"`` or None),
+        ``component_ids``, ``inventory_source``.
+    """
+    ids, source = extract_component_inventory(svg_text)
+    catalog = _CATALOG_SHEET_MARKER.search(svg_text) is not None
+    violations = [] if catalog else [c for c in ids if _TOAST_COMPONENT.search(c)]
+    return {
+        "rule_id": "ux-no-toast-notifications",
+        "passed": len(violations) == 0,
+        "violations": violations,
+        "exempt": "catalog-sheet" if catalog else None,
+        "component_ids": ids,
+        "inventory_source": source,
+    }
+
+
+def check_ux_confirm_dialog_has_undo(svg_text: str) -> dict:
+    """Rule: a confirmation dialog is not how an action is confirmed — undo is.
+
+    claude.md § UX Philosophy: "NO 'Are you sure?' dialogs — shifts
+    responsibility instead of providing undo", and "Confirm destructive
+    actions with undo, not dialogs".
+
+    The rule is not gated on the action being destructive: an SVG does not
+    mark an action destructive, and inferring it from button copy would
+    produce findings nobody can trust. The unconditional form is checked,
+    with the undo affordance the rule itself names as the escape hatch.
+
+    Args:
+        svg_text: SVG source text.
+
+    Returns:
+        Result dict: ``rule_id``, ``passed``, ``violations`` (confirmation
+        dialogs with no undo), ``undo_affordance``, ``exempt``,
+        ``component_ids``, ``inventory_source``.
+    """
+    ids, source = extract_component_inventory(svg_text)
+    catalog = _CATALOG_SHEET_MARKER.search(svg_text) is not None
+    dialogs = [] if catalog else [c for c in ids if _CONFIRM_COMPONENT.search(c)]
+    has_undo = (
+        any(_UNDO_COMPONENT.search(c) for c in ids)
+        or any(_UNDO_TEXT.search(run) for run in _text_runs(svg_text))
+    )
+    return {
+        "rule_id": "ux-no-confirm-dialog-without-undo",
+        "passed": len(dialogs) == 0 or has_undo,
+        "violations": [] if has_undo else dialogs,
+        "undo_affordance": has_undo,
+        "exempt": "catalog-sheet" if catalog else None,
+        "component_ids": ids,
+        "inventory_source": source,
+    }
+
+
+def check_ux_required_field_indicated(svg_text: str) -> dict:
+    """Rule: a part the artifact declares REQUIRED renders its indicator.
+
+    claude.md § UX Philosophy: "NO Required fields without indication —
+    errors discovered after the fact."
+
+    Narrowing, declared: requiredness is observable only where the artifact
+    NAMES it — a component id ending ``-required``. A field whose
+    requiredness lives in product data and never reaches the SVG is outside
+    anything this artifact can carry, and this check does not pretend to
+    see it. ``examined`` reports how many required-declaring parts were
+    found, so "0 violations over 0 examined" cannot be mistaken for a
+    screen that was actually checked.
+
+    The indicator is looked for inside the declaring part's own subtree,
+    not anywhere on the screen: a stray asterisk in a footnote must not
+    clear a required field three regions away.
+
+    Args:
+        svg_text: SVG source text.
+
+    Returns:
+        Result dict: ``rule_id``, ``passed``, ``violations``, ``examined``,
+        ``component_ids``, ``inventory_source``.
+    """
+    violations = []
+    examined = 0
+    for comp_id, block in _component_blocks(svg_text):
+        if not _REQUIRED_COMPONENT.search(comp_id):
+            continue
+        examined += 1
+        if not any(_REQUIRED_INDICATOR.search(run) for run in _text_runs(block)):
+            violations.append(comp_id)
+    ids, source = extract_component_inventory(svg_text)
+    return {
+        "rule_id": "ux-required-fields-indicated",
+        "passed": len(violations) == 0,
+        "violations": sorted(set(violations)),
+        "examined": examined,
+        "component_ids": ids,
+        "inventory_source": source,
+    }
+
+
+# The UX clauses are project policy, not per-system taste, so every ruleset
+# carries them — the same way no-emoji does. _with_ux() appends them at
+# registration; test_ux_clauses.py enumerates the live CHECKS_BY_RULESET so a
+# ruleset registered without them is reported rather than passing unexamined.
+UX_CHECKS = [
+    (check_ux_no_toast,                 "artifact"),
+    (check_ux_confirm_dialog_has_undo,  "artifact"),
+    (check_ux_required_field_indicated, "both"),
+]
+
+
 WIREFRAME_CHECKS = [
     (check_wireframe_palette,           "both"),
     (check_wireframe_type_scale,        "both"),
@@ -1065,6 +1366,9 @@ _VIOLATION_ITEM_KEYS = {
     "wireframe-no-double-hyphens-in-comments": ("violations", None),
     "wireframe-css-classes-not-inline-fills": ("samples", "inline_fill_count"),
     "no-emoji-imagery": ("actual_emoji", None),
+    "ux-no-toast-notifications": ("violations", None),
+    "ux-no-confirm-dialog-without-undo": ("violations", None),
+    "ux-required-fields-indicated": ("violations", None),
 }
 
 
@@ -1580,17 +1884,36 @@ ADVISORY_BY_RULESET = {
     "riso": set(),
 }
 
+def _with_ux(checks: list) -> list:
+    """Append the project-wide UX-philosophy clauses to a per-system ruleset.
+
+    Applied at registration rather than written into each CHECKS list by
+    hand: a ruleset cannot be registered without the UX clauses, so the
+    omission a hand-kept list would hide cannot happen. test_ux_clauses.py
+    still asserts it over the live CHECKS_BY_RULESET, because "cannot
+    happen" is a claim about this function, not about the dict a future
+    edit produces.
+
+    Args:
+        checks: A per-system list of ``(check_fn, scope)`` tuples.
+
+    Returns:
+        A new list: ``checks`` followed by ``UX_CHECKS``.
+    """
+    return list(checks) + list(UX_CHECKS)
+
+
 # Mapping from ruleset name to the list of (check_fn, scope) tuples.
-# Adding a new ruleset = registering its CHECKS list here.
+# Adding a new ruleset = registering its CHECKS list here, through _with_ux.
 CHECKS_BY_RULESET = {
-    "swiss": SWISS_CHECKS,
-    "wireframe": WIREFRAME_CHECKS,
-    "editorial": EDITORIAL_CHECKS,
-    "sketch": SKETCH_CHECKS,
-    "prism": PRISM_CHECKS,
-    "revolt": REVOLT_CHECKS,
-    "terminal": TERMINAL_CHECKS,
-    "riso": RISO_CHECKS,
+    "swiss": _with_ux(SWISS_CHECKS),
+    "wireframe": _with_ux(WIREFRAME_CHECKS),
+    "editorial": _with_ux(EDITORIAL_CHECKS),
+    "sketch": _with_ux(SKETCH_CHECKS),
+    "prism": _with_ux(PRISM_CHECKS),
+    "revolt": _with_ux(REVOLT_CHECKS),
+    "terminal": _with_ux(TERMINAL_CHECKS),
+    "riso": _with_ux(RISO_CHECKS),
 }
 
 

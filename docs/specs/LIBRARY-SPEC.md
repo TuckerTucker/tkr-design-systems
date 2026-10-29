@@ -184,7 +184,7 @@ Systems SHOULD define most. Gaps are warnings.
     - variants: `default`, `with_groups`, `with_search`
     - composed_of: [button (trigger), list_item (per action), divider]
 
-### Patterns (12)
+### Patterns (13)
 
 Systems MAY define. Highly variable; Patterns are where each system's grammar most strongly shows.
 
@@ -207,8 +207,12 @@ Systems MAY define. Highly variable; Patterns are where each system's grammar mo
     - composed_of: [table_header, table_row (multiple), pagination]
 
 35. **modal** — focused overlay dialog
-    - variants: `default`, `confirmation`, `form_modal`, `wide`
+    - variants: `default`, `form_modal`, `wide`
     - composed_of: [card (container), label (title), label (body), button_group (actions), button (close)]
+    - Note: no `confirmation` variant. An "Are you sure?" dialog is forbidden by
+      claude.md § UX Philosophy ("Confirm destructive actions with undo, not
+      dialogs") and reported by the `ux-no-confirm-dialog-without-undo` rulebook
+      clause. Use `undo_row` (43) where a destructive confirmation would otherwise go.
 
 36. **drawer** — side panel that slides in
     - variants: `right`, `left`, `bottom`
@@ -239,6 +243,14 @@ Systems MAY define. Highly variable; Patterns are where each system's grammar mo
 42. **auth** — sign-in / sign-up / reset flows
     - variants: `sign_in`, `sign_up`, `reset_password`, `verify_code`
     - composed_of: [card (container), label (title), form, button (primary), label (alternate action link)]
+
+43. **undo_row** — a destructive action already taken, held open by undo
+    - variants: `default`
+    - composed_of: [card (container), list_item (the surrounding list), label (summary, countdown, undo action)]
+    - The pattern claude.md § UX Philosophy prescribes in place of a confirmation
+      dialog: the action runs immediately, and the row it vacated carries the
+      deleted-item summary, a settle countdown, and a right-aligned Undo until the
+      window closes.
 
 ## Component Definition Format
 

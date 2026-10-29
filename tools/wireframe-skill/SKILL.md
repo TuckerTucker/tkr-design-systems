@@ -263,7 +263,7 @@ The user picks the system; the skill applies it. The table says what each regist
 | `swiss` Swiss | Grid + Grotesk + Single Saturated Accent (showcase: Grid-strict + Rams Heritage) | `contemporary_clean` | General-purpose product UI: dashboards, settings, forms, data tables, sign-in. Dense information where hierarchy comes from type and grid, with one accent. | 71 / 12 | 14 |
 | `terminal` Terminal | CLI + Phosphor Heritage | `character_grid` | Developer tools, logs, monitoring and command palettes; keyboard-first surfaces. Not long-form reading or consumer sign-in. | 53 / 4 | 8 |
 | `editorial` Editorial | Long-form Serif + Newsprint Masthead | `contemporary_clean` | Long-form reading: articles, briefings, newsletters, transcripts. The article pattern is its strength. | 73 / 5 | 9 |
-| `sketch` Sketch | Linear + Hand-Drawn | `contemporary_clean` | Early product UI that carries an annotation layer: design reviews, onboarding, explained flows. | 65 / 4 | 6 |
+| `sketch` Sketch | Linear + Hand-Drawn | `contemporary_clean` | Early product UI that carries an annotation layer: design reviews, onboarding, explained flows. | 91 / 4 | 6 |
 | `prism` Prism | Liquid Glass + Bento | `contemporary_clean` | Atmospheric, short compositions: dashboards, modals, drawers. Built for HTML/CSS; its SVG glass is an approximation for layout review only. | 56 / 4 | 6 |
 | `revolt` Revolt | Neobrutalist + Y2K | `contemporary_clean` | Expressive, loud moments: launches, campaigns, banners, playful sign-in. | 57 / 3 | 9 |
 | `riso` Riso | Duotone Print + Tweakable Press | `print_texture` | Content-heavy, print-flavoured surfaces: zines, features, articles, with parametric ink and paper presets. | 2 / 0 | 20 |
@@ -279,7 +279,7 @@ Pick by the job, not by habit. Component ids and variants are the LIBRARY-SPEC v
 |-----|-----|-----|-----|
 | Status that persists (sync failed, offline, plan expiring) | `banner` | `toast` | NO toast notifications: a toast forces a context switch and is gone before it is read. A banner stays in place until the condition clears. |
 | Result of one action (saved, sent, failed to send) | `badge` (`status`) | `toast`, `modal` | Status and errors appear contextual to the action: mark the item that was acted on, in place. |
-| Destructive action (delete, archive, remove) | `button` (`destructive`), `banner` | `modal` (`confirmation`) | NO "Are you sure?" dialogs: act immediately and offer undo (a banner with an undo action), so responsibility is not shifted to the user. |
+| Destructive action (delete, archive, remove) | `button` (`destructive`), `undo_row`, `banner` | `modal` | NO "Are you sure?" dialogs: act immediately and offer undo (the undo_row pattern holds the vacated row open with an Undo action until it settles), so responsibility is not shifted to the user. The ux-no-confirm-dialog-without-undo rulebook check reports a confirmation dialog with no undo. |
 | List or table under 100 items | `list_item`, `data_table` (`default`), `search_bar` | `pagination`, `data_table` (`with_pagination`) | NO pagination for small datasets: show every row; filter with search instead of making the user page. |
 | Required and optional form fields | `label` (`required`), `label` (`optional`) | `label` (`default`) | NO required fields without indication: an unmarked required field is an error discovered after the fact. |
 | Invalid input | `form_field` (`with_error`) | `modal`, `toast` | Validate inline as they type and show how to fix it, in place; constrain inputs so invalid states are impossible where you can. |
@@ -313,7 +313,7 @@ The violations that recur, each with the rule or decision behind it.
 | Status shown twice (a red border and a red badge on one card) | One status, one visual channel; doubling it adds noise, not meaning. | `wireframe-one-channel-per-message` |
 | Selection shown with a background fill in Terminal | Terminal selects by changing characters (' ' to '>') and colour, never by fill. | `terminal-selection-via-character` |
 | A third ink in Riso | Exactly two inks per artifact from one press preset; neutrals come from the paper. | `riso-two-inks-only`, `riso-paper-is-the-neutral` |
-| A toast for status, or an "Are you sure?" dialog before deleting | Use a banner or inline status, and undo. See the Which component table. | [claude.md](../../claude.md) |
+| A toast for status, an "Are you sure?" dialog before deleting, or a required field with no marker | Use a banner or inline status, and undo (the undo_row pattern). Mark every required field. The rulebook reports a placed toast, a confirmation dialog without undo, and an unmarked required label in every system. See the Which component table. | [claude.md](../../claude.md), `ux-no-toast-notifications`, `ux-no-confirm-dialog-without-undo`, `ux-required-fields-indicated` |
 <!-- /generated:rules-agents-get-wrong -->
 
 ### Rules per system
