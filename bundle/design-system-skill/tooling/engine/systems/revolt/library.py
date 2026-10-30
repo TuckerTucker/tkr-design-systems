@@ -341,7 +341,7 @@ COMPONENTS = {
   <line x1="0" y1="29" x2="100" y2="29" stroke="{color.border_strong}" stroke-width="{border_width.strong}"/>
 """),
 
-    # Breadcrumb trail — uppercase segments with /​/ separator (Space Mono //)
+    # Breadcrumb trail — uppercase segments with // separator (Space Mono //)
 
     "breadcrumb-default": (240, 18, """
   <text x="0" y="14" class="text-secondary" font-size="8" font-weight="700" letter-spacing="0.64">HOME</text>
