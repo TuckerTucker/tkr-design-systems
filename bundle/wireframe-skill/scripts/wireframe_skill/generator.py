@@ -30,6 +30,7 @@ from .compose import (  # noqa: E402
     apply_artifact_treatments,
     PLATFORM_DIMENSIONS,
 )
+from .accessible_name import add_accessible_title, first_name  # noqa: E402
 from .emit import emit_artifact  # noqa: E402
 from .placement import (  # noqa: E402
     select_layout_pattern,
@@ -359,6 +360,12 @@ def wireframe(
 
     # Step 5: artifact-level treatments (Riso grain etc. — no-op for most).
     svg_text = apply_artifact_treatments(svg_text, spec)
+
+    # Step 5b: accessible name — the brief, else the pattern id. Applied
+    # after the treatments so nothing lands ahead of the <title>.
+    svg_text = add_accessible_title(
+        svg_text, first_name(brief, selection.pattern_id),
+    )
 
     # Step 6: pre-emit rulebook check. We write the SVG to a temp scratch
     # path so the existing check_compliance file-based API works without

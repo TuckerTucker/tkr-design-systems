@@ -29,6 +29,22 @@ def _setup_path() -> None:
         sys.path.insert(0, str(here))
 
 
+def _stem_name(path: Path, suffix: str = "") -> str:
+    """Return a file's stem, minus ``suffix``, as a default screen name.
+
+    Args:
+        path: File path (e.g. ``health.blueprint.json``).
+        suffix: Trailing part of the stem to drop (e.g. ``.blueprint``).
+
+    Returns:
+        The name, e.g. ``health``.
+    """
+    stem = path.stem
+    if suffix and stem.endswith(suffix) and len(stem) > len(suffix):
+        stem = stem[: -len(suffix)]
+    return stem
+
+
 def _main_legacy(argv: list[str]) -> int:
     """Legacy flat-arg interface (wireframe --brief ... --system ...).
 
@@ -192,6 +208,10 @@ def _main_apply_substitutions(argv: list[str]) -> int:
     Returns:
         0 on success, 1 on failure.
     """
+    from wireframe_skill.accessible_name import (  # noqa: E402
+        add_accessible_title,
+        first_name,
+    )
     from wireframe_skill.substitution import (  # noqa: E402
         apply_substitutions,
         extract_text_nodes,
@@ -209,6 +229,9 @@ def _main_apply_substitutions(argv: list[str]) -> int:
     parser.add_argument("--out", required=True, help="Output SVG file path.")
     parser.add_argument("--system", default=None,
                         help="Design system id. If omitted, no grammar validation.")
+    parser.add_argument("--title", default=None,
+                        help="Accessible name (<title>) of the screen. Defaults to the "
+                             "pattern file's stem (its layout id).")
     args = parser.parse_args(argv)
 
     try:
@@ -242,6 +265,9 @@ def _main_apply_substitutions(argv: list[str]) -> int:
 
         # Apply substitutions.
         modified_svg, unapplied = apply_substitutions(svg_text, subs)
+        modified_svg = add_accessible_title(
+            modified_svg, first_name(args.title, _stem_name(pattern_path)),
+        )
 
         # Write output.
         out_path = Path(args.out)
@@ -339,6 +365,9 @@ def _main_apply_decomposition(argv: list[str]) -> int:
                         help="JSON file with blueprint (from Claude pass 1).")
     parser.add_argument("--system", required=True, help="Design system id.")
     parser.add_argument("--out", required=True, help="Output SVG file path.")
+    parser.add_argument("--title", default=None,
+                        help="Accessible name (<title>) of the screen. Defaults to the "
+                             "blueprint's 'title', else the blueprint file's stem.")
     args = parser.parse_args(argv)
 
     try:
@@ -367,7 +396,11 @@ def _main_apply_decomposition(argv: list[str]) -> int:
             return 1
 
         # Assemble SVG.
-        svg_text, warnings = assemble_blueprint(blueprint, spec)
+        svg_text, warnings = assemble_blueprint(
+            blueprint, spec,
+            title=args.title,
+            fallback_title=_stem_name(blueprint_path, ".blueprint"),
+        )
 
         # Write output.
         out_path = Path(args.out)

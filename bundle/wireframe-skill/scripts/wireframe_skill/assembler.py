@@ -16,27 +16,46 @@ from pathlib import Path
 
 import structlog
 
+from .accessible_name import add_accessible_title, first_name
 from .atoms import render_atom_region, AtomRenderError
 
 logger = structlog.get_logger(__name__)
 
 
-def assemble_blueprint(blueprint: dict, spec: dict) -> tuple[str, list[str]]:
+def assemble_blueprint(
+    blueprint: dict,
+    spec: dict,
+    *,
+    title: str | None = None,
+    fallback_title: str | None = None,
+) -> tuple[str, list[str]]:
     """Assemble a blueprint into a single composited SVG.
 
     Reads each component referenced in the blueprint, merges their
     <defs>, and positions them using <g transform="translate(x, y)">.
-    Applies system-level artifact treatments afterward.
+    Applies system-level artifact treatments afterward, then names the
+    result (``<title>`` first child, ``role="img"``, ``aria-labelledby``).
+
+    The accessible name is the first non-blank of: ``title``, the
+    blueprint's ``title`` field, ``fallback_title`` (the CLI passes the
+    blueprint file's stem), and ``"<system id> wireframe"``.
 
     Args:
         blueprint: Blueprint dict with regions, components, canvas size.
         spec: Loaded system spec dict (for library_root and artifact_treatments).
+        title: Explicit screen name; overrides the blueprint's ``title``.
+        fallback_title: Name used when neither ``title`` nor the blueprint
+            names the screen.
 
     Returns:
         Tuple of (svg_text, list_of_warnings). The SVG is string-based and
         valid XML.
     """
     warnings = []
+    system_id = spec.get("system", {}).get("id", "unknown")
+    screen_name = first_name(
+        title, blueprint.get("title"), fallback_title, f"{system_id} wireframe",
+    )
 
     # Extract canvas size from blueprint.
     canvas = blueprint.get("canvas", {})
@@ -51,7 +70,7 @@ def assemble_blueprint(blueprint: dict, spec: dict) -> tuple[str, list[str]]:
     library_root = spec.get("_meta", {}).get("library_root")
     if not library_root:
         warnings.append("No library_root in spec; cannot load components")
-        return _build_empty_svg(canvas_w, canvas_h), warnings
+        return add_accessible_title(_build_empty_svg(canvas_w, canvas_h), screen_name), warnings
 
     library_path = Path(library_root).resolve()
     components_dir = library_path / "components"
@@ -151,6 +170,9 @@ def assemble_blueprint(blueprint: dict, spec: dict) -> tuple[str, list[str]]:
     # Apply artifact treatments (e.g., Riso grain, page background).
     from .compose import apply_artifact_treatments
     result_svg = apply_artifact_treatments(result_svg, spec)
+
+    # Name the artifact last, so no treatment lands ahead of the <title>.
+    result_svg = add_accessible_title(result_svg, screen_name)
 
     return result_svg, warnings
 

@@ -125,6 +125,8 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/__main__.py apply-decomposition \
 
 The assembler reads each referenced component SVG, deduplicates `<defs>` ids across the composition (renaming collisions and updating `url(#id)` and `filter="..."` references in the affected component bodies), wraps each in `<g transform="translate(x,y)">`, and applies system-level `artifact_treatments` (so Riso decompositions still get grain + page background).
 
+Every SVG the skill writes is named for assistive technology and for tkr-kit's design validator (which refuses an untitled artifact as `missing_title`): the root's first child is a `<title id="wireframe-title">`, and the root carries `role="img"` and `aria-labelledby="wireframe-title"`. The name is, in order: `--title`; the blueprint's optional `title` field; the blueprint file's stem (`health.blueprint.json` → `health`). Pattern generation names the screen by its brief (else the layout id), and `apply-substitutions` by `--title` (else the pattern file's stem).
+
 Validation rejects: unknown component_ids, components placed outside their region, regions placed outside the canvas. The pre-authored pattern path remains the high-quality default; decomposition is for briefs that need novel composition.
 
 ### Choosing a path
