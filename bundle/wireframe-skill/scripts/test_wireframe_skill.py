@@ -1825,6 +1825,109 @@ def test_full_composition_e2e():
                 "SVG contains the chosen button component")
 
 
+# ─── Atom text fills are classes (tkr-kit work-B3IecMNi) ────────────
+#
+# fixtures/health.blueprint.json is a verbatim copy of tkr-kit's
+# _tkr_kit/wireframes/terminal-lens/health.blueprint.json, the blueprint the
+# defect was reported against: a portable atom blueprint with 40 text atoms
+# in $accent, $ink and $ink-muted.
+
+_HEALTH_BLUEPRINT = Path(__file__).resolve().parent / "fixtures" / "health.blueprint.json"
+_INLINE_FILL_RULE = "wireframe-css-classes-not-inline-fills"
+
+
+def test_apply_decomposition_text_fills_pass_wireframe_rulebook():
+    section("apply-decomposition: atom text passes wireframe-css-classes-not-inline-fills")
+    import subprocess
+    from design_system_skill import check_compliance
+    here = Path(__file__).resolve().parent
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "health.svg"
+        proc = subprocess.run(
+            [sys.executable, str(here), "apply-decomposition", "--blueprint",
+             str(_HEALTH_BLUEPRINT), "--system", "wireframe", "--out", str(out)],
+            capture_output=True, text=True,
+        )
+        assert_(proc.returncode == 0, "apply-decomposition exit 0", proc.stdout + proc.stderr)
+        if proc.returncode != 0:
+            return
+        result = check_compliance("wireframe", out, scope="artifact")
+        assert_(result.ok, "rulebook check ran", str(result.errors))
+        if not result.ok:
+            return
+        by_id = {r["rule_id"]: r for r in result.data["results"]}
+        rule = by_id.get(_INLINE_FILL_RULE)
+        assert_(rule is not None and rule["status"] == "pass",
+                f"{_INLINE_FILL_RULE} passes", str(rule))
+        assert_(result.data["failed"] == 0, "no wireframe rule fails",
+                str([r["rule_id"] for r in result.data["results"] if r["status"] == "fail"]))
+
+
+def test_atom_text_fill_maps_to_shared_text_classes():
+    section("atoms: text fill tokens become classes defined in the region's <style>")
+    import xml.etree.ElementTree as ET
+    from design_system_skill import resolve_token
+    from design_system_skill.loader import load_system
+    from wireframe_skill.atoms import render_atom_region
+
+    spec = load_system("wireframe").data
+    expected = {"$ink": "text-primary", "$ink-muted": "text-disabled",
+                "$danger": "text-danger", "$color.success": "text-success",
+                "$accent": "text-accent", "$accent-on": "text-accent-on"}
+    region = {"id": "r", "x": 0, "y": 0, "w": 400, "h": 400, "atoms": [
+        {"type": "text", "x": 0, "y": 20 * (i + 1), "value": ref, "style": "$type.body",
+         "fill": ref} for i, ref in enumerate(expected)
+    ] + [{"type": "text", "x": 0, "y": 200, "value": "default", "style": "$type.code"}]}
+    body, defs = render_atom_region(region, spec)
+    ns = "{http://www.w3.org/2000/svg}"
+    doc = ET.fromstring(f'<svg xmlns="http://www.w3.org/2000/svg"><defs>{defs}</defs>{body}</svg>')
+    texts = list(doc.iter(f"{ns}text"))
+    assert_(all(t.get("fill") is None for t in texts), "no <text> carries an inline fill")
+    got = {t.text: t.get("class") for t in texts}
+    for ref, cls in expected.items():
+        assert_(got.get(ref) == cls, f"{ref} -> class {cls}", f"got {got.get(ref)!r}")
+    assert_(got.get("default") == "text-primary", "unset fill defaults to text-primary ($ink)")
+
+    style = doc.find(f"{ns}defs/{ns}style")
+    rules = dict(re.findall(r"\.([\w-]+)\s*\{\s*fill:\s*([^;]+);", style.text if style is not None else ""))
+    for ref, cls in expected.items():
+        want = resolve_token(spec, ref)
+        assert_(rules.get(cls) == want, f".{cls} fill is {ref} ({want})", f"got {rules.get(cls)!r}")
+
+    code = next(t for t in texts if t.text == "default")
+    family = resolve_token(spec, "$type.code")["family"]
+    assert_(code.get("font-family") == family
+            and code.get("style") == f"font-family: {family}",
+            "text keeps its own family against a library class's font-family",
+            f"attr={code.get('font-family')!r} style={code.get('style')!r}")
+
+
+def test_atom_text_classes_in_a_mixed_blueprint_render_in_every_system():
+    section("assembler: atoms + components with class-driven text render as valid XML")
+    import xml.etree.ElementTree as ET
+    from wireframe_skill.assembler import assemble_blueprint
+    from design_system_skill.loader import load_system
+    blueprint = {"schema_version": "1.0", "canvas": {"width": 1280, "height": 800},
+                 "regions": [
+                     {"id": "main", "x": 0, "y": 0, "w": 1280, "h": 400,
+                      "components": [{"component_id": "card-default", "x": 0, "y": 0}]},
+                     {"id": "band", "x": 0, "y": 400, "w": 1280, "h": 400, "atoms": [
+                         {"type": "text", "x": 10, "y": 30, "value": "Hi",
+                          "style": "$type.body", "fill": "$ink-muted"}]},
+                 ]}
+    for system in ("wireframe", "swiss", "riso", "editorial"):
+        svg, _ = assemble_blueprint(blueprint, load_system(system).data)
+        try:
+            ET.fromstring(svg)
+            ok = True
+        except ET.ParseError as e:
+            ok = False
+            assert_(False, f"{system}: assembled SVG is valid XML", str(e))
+        if ok:
+            assert_('class="text-disabled"' in svg and ".text-disabled { fill:" in svg,
+                    f"{system}: atom text uses a defined text class")
+
+
 def main():
     """Run every test in this module in definition order (script mode)."""
     print("wireframe-skill end-to-end tests\n" + "=" * 50)

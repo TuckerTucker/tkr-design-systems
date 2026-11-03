@@ -17,6 +17,7 @@ from typing import Any
 import structlog
 
 from .decomposition import PLATFORM_DIMENSIONS
+from .text_classes import CLASS_TOKENS
 
 logger = structlog.get_logger(__name__)
 
@@ -264,19 +265,6 @@ _DEFAULT_CLASS_FILLS: dict[str, str] = {
     "info": "#1565C0",
 }
 
-# CSS class -> contract colour token.
-_CLASS_TOKENS: tuple[tuple[str, str], ...] = (
-    ("text-primary", "text_primary"),
-    ("text-secondary", "text_secondary"),
-    ("text-disabled", "text_muted"),
-    ("text-inverse", "text_inverse"),
-    ("text-danger", "danger"),
-    ("text-success", "success"),
-    ("text-warning", "warning"),
-    ("text-info", "info"),
-)
-
-
 def _build_css_class_block(font_stack: str, contract_colors: dict | None = None) -> str:
     """Build the CSS class block for text elements.
 
@@ -295,7 +283,7 @@ def _build_css_class_block(font_stack: str, contract_colors: dict | None = None)
     fills = {**_DEFAULT_CLASS_FILLS, **(contract_colors or {})}
     rows = "".join(
         f"  .{cls} {{ fill: {fills[token]}; font-family: {font}; }}\n"
-        for cls, token in _CLASS_TOKENS
+        for cls, token in CLASS_TOKENS
     )
     return "<style>\n" + rows + "</style>"
 

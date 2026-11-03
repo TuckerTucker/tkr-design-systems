@@ -1,0 +1,356 @@
+{
+ "schema_version": "1.0",
+ "canvas": {
+  "width": 1280,
+  "height": 652
+ },
+ "regions": [
+  {
+   "id": "pane",
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 652,
+   "atoms": [
+    {
+     "type": "rect",
+     "x": 0,
+     "y": 0,
+     "w": 1280,
+     "h": 652,
+     "fill": "$surface-inset"
+    },
+    {
+     "type": "rect",
+     "x": 32,
+     "y": 32,
+     "w": 1216,
+     "h": 540,
+     "fill": "$surface",
+     "stroke": "$outline-strong",
+     "stroke_w": 1
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 24,
+     "value": "Pane: tkr (opened by /tkr), Health tab",
+     "style": "$type.caption",
+     "fill": "$accent"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 594,
+     "value": "Frame, focus, hotkey rendering and every colour are the host's; grey stands for dimColor. Rows are this repository's real output, 2026-10-12.",
+     "style": "$type.caption",
+     "fill": "$accent"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 79,
+     "value": "Home (1)",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 126.0,
+     "y": 79,
+     "value": "Plan (2)",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 204.0,
+     "y": 79,
+     "value": "Backlog (3)",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 305.4,
+     "y": 79,
+     "value": "Library (4)",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 406.8,
+     "y": 79,
+     "value": "Health (5)",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 500.4,
+     "y": 79,
+     "value": "Search (6)",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 115,
+     "value": "Showing: Health",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 145,
+     "value": "Checks",
+     "style": "$type.title",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 169,
+     "value": "backlog audit: 0 finding(s) over 240 item(s) and 2734 path(s) \u00b7 17 narrowing note(s) declared",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 789.0,
+     "y": 169,
+     "value": "work.audit",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 187,
+     "value": "closure evidence: every closed item carries evidence",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 469.2,
+     "y": 187,
+     "value": "work.unevidenced",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 205,
+     "value": "import cycles: 2",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 188.4,
+     "y": 205,
+     "value": "context.issues",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 239,
+     "value": "Retention",
+     "style": "$type.title",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 263,
+     "value": "2 finding(s) over 67 store(s) examined \u00b7 7 narrowing note(s) declared",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 601.8,
+     "y": 263,
+     "value": "governance.retention_audit",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 281,
+     "value": "medium: accumulation point \"_tkr_kit/review-ledger.yaml\" has a declared, unfixed accumulation leak",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 828.0,
+     "y": 281,
+     "value": "governance.retention_audit",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 299,
+     "value": "medium: accumulation point \"_tkr_kit/wireframes\" has a declared, unfixed accumulation leak",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 765.6,
+     "y": 299,
+     "value": "governance.retention_audit",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 333,
+     "value": "Storage",
+     "style": "$type.title",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 357,
+     "value": "healthy \u00b7 49046 rows across 4 captured table(s)",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 430.2,
+     "y": 357,
+     "value": "observability.storage_health",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 375,
+     "value": "hook_events: 48255 rows",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 243.0,
+     "y": 375,
+     "value": "observability.storage_health",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 393,
+     "value": "sessions: 791 rows",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 204.0,
+     "y": 393,
+     "value": "observability.storage_health",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 411,
+     "value": "commits: 0 rows",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 180.6,
+     "y": 411,
+     "value": "observability.storage_health",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 429,
+     "value": "artifacts: 0 rows",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 196.2,
+     "y": 429,
+     "value": "observability.storage_health",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 463,
+     "value": "Vaults",
+     "style": "$type.title",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 487,
+     "value": "throwaway (project) \u00b7 locked",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 282.0,
+     "y": 487,
+     "value": "secrets.list_vaults",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 505,
+     "value": "router (project) \u00b7 locked",
+     "style": "$type.code",
+     "fill": "$ink"
+    },
+    {
+     "type": "text",
+     "x": 258.6,
+     "y": 505,
+     "value": "secrets.list_vaults",
+     "style": "$type.code",
+     "fill": "$ink-muted"
+    },
+    {
+     "type": "text",
+     "x": 48,
+     "y": 537,
+     "value": "Refresh (r)",
+     "style": "$type.code",
+     "fill": "$ink"
+    }
+   ]
+  }
+ ]
+}

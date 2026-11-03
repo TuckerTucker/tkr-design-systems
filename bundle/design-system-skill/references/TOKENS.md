@@ -382,7 +382,7 @@ colour and font literals out of the templates, and the engine reports any
 unknown token or malformed entry with the system, kind, item and key.
 
 - Text classes follow the wireframe-skill mapping
-  (`../wireframe-skill/scripts/wireframe_skill/tokens.py::_CLASS_TOKENS`): `.text-primary →
+  (`../wireframe-skill/scripts/wireframe_skill/text_classes.py::CLASS_TOKENS`): `.text-primary →
   color.text_primary`, `.text-secondary → color.text_secondary`,
   `.text-disabled → color.text_muted`, `.text-inverse → color.text_inverse`,
   `.text-danger/-success/-warning/-info → color.danger/…`, `.text-accent →

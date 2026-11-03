@@ -236,6 +236,8 @@ When the decomposition flow needs to express a component the system catalog does
         repeat: 5, gap: 16, direction: horizontal }
 ```
 
+**Text colour is class-driven.** A text atom's `fill` never lands as an inline `fill` attribute (rule `wireframe-css-classes-not-inline-fills`). The atom gets a class and the region's `<defs>` gets one `<style>` rule per class used, with the fill resolved from the token. Portable colours that the shared vocabulary (`wireframe_skill/text_classes.py`) covers take its class: `$ink` → `text-primary`, `$ink-muted` → `text-disabled`, `$danger`/`$success`/`$warning` → `text-danger`/`-success`/`-warning`. Any other colour takes `text-<token>`, e.g. `$accent` → `text-accent`. The atom's font family is written both as the `font-family` attribute and as an inline `style`, so a library component's class rule cannot override it in a mixed blueprint.
+
 **Rules enforced by `validate_blueprint`:**
 
 - Atom types must be in the whitelist.
