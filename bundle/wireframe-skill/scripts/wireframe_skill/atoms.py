@@ -21,10 +21,20 @@ Public API:
     render_atom_region(region, spec, scope="portable") -> (body_svg, defs_svg)
 
 The assembler calls this once per region whose dict contains `atoms`.
+
+Text colour is class-driven, never an inline `fill` (rule
+`wireframe-css-classes-not-inline-fills`): each text atom carries a class
+named for its colour token and the region's defs carry one `<style>` rule
+per class used. Portable colours that the shared vocabulary covers take its
+class (`$ink` -> `text-primary`, `$ink-muted` -> `text-disabled`,
+`$danger` -> `text-danger` ...; see `text_classes.py`); any other colour
+takes `text-<token>` (`$accent` -> `text-accent`, the name the system
+builders already use).
 """
 
 from __future__ import annotations
 
+import re
 from html import escape as _html_escape
 from typing import Any
 
@@ -34,6 +44,9 @@ from design_system_skill import (
     CrossSystemTokenError,
     MalformedTokenRefError,
 )
+from design_system_skill.common_tokens import COLOR_SOURCES
+
+from .text_classes import class_for_contract_color
 
 
 ATOM_TYPES = frozenset({
@@ -43,6 +56,10 @@ ATOM_TYPES = frozenset({
 
 class AtomRenderError(ValueError):
     """A required atom field is missing or has the wrong type."""
+
+
+TextClasses = dict[str, str]
+"""Text classes a region uses: class name -> resolved fill, in first-use order."""
 
 
 # ─── Token resolution ───────────────────────────────────────────────
@@ -106,7 +123,8 @@ def _resolve_text_style(value: Any, spec: dict, scope: str) -> dict:
 # ─── Per-atom-type renderers ────────────────────────────────────────
 
 
-def _render_rect(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> str:
+def _render_rect(atom: dict, spec: dict, scope: str, dx: float, dy: float,
+                 classes: TextClasses) -> str:
     x = _resolve_length(atom["x"], spec, scope) + dx
     y = _resolve_length(atom["y"], spec, scope) + dy
     w = _resolve_length(atom["w"], spec, scope)
@@ -127,12 +145,15 @@ def _render_rect(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> st
     return "".join(parts)
 
 
-def _render_text(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> str:
+def _render_text(atom: dict, spec: dict, scope: str, dx: float, dy: float,
+                 classes: TextClasses) -> str:
     x = _resolve_length(atom["x"], spec, scope) + dx
     y = _resolve_length(atom["y"], spec, scope) + dy
     value = str(atom.get("value", ""))
     style = _resolve_text_style(atom["style"], spec, scope)
-    fill = _resolve_color(atom.get("fill", "$ink"), spec, scope)
+    fill_ref = atom.get("fill", "$ink")
+    fill = _resolve_color(fill_ref, spec, scope)
+    text_class = _register_text_class(classes, _text_class_name(fill_ref), fill)
     family = str(style["family"])
     size = float(style["size"])
     weight = int(style["weight"])
@@ -149,15 +170,72 @@ def _render_text(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> st
     if tracking:
         extras = f' letter-spacing="{tracking}em"'
 
+    # The shared classes also carry a font-family in library <style> blocks,
+    # and a CSS rule outranks a presentation attribute; the inline style keeps
+    # this atom's own family when the blueprint mixes in library components.
+    # The attribute stays for readers that check fonts by attribute.
+    family_attr = _html_escape(family)
     return (
-        f'<text x="{_fmt(x)}" y="{_fmt(y)}" '
-        f'font-family="{_html_escape(family)}" font-size="{_fmt(size)}" '
-        f'font-weight="{weight}" fill="{fill}"{extras}>'
+        f'<text x="{_fmt(x)}" y="{_fmt(y)}" class="{text_class}" '
+        f'font-family="{family_attr}" style="font-family: {family_attr}" '
+        f'font-size="{_fmt(size)}" font-weight="{weight}"{extras}>'
         f'{_html_escape(value)}</text>'
     )
 
 
-def _render_line(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> str:
+def _text_class_name(fill_ref: Any) -> str:
+    """Name the text class for a fill reference.
+
+    Args:
+        fill_ref: The atom's ``fill`` as authored (``$ink``, ``$color.ink``,
+            ``swiss:palette.red`` or a literal colour).
+
+    Returns:
+        The shared class when the portable colour has one (``text-primary``
+        for ``$ink``), else ``text-<token>`` built from the reference.
+    """
+    ref = str(fill_ref)
+    if ref.startswith("$"):
+        name = ref[1:]
+        if name.startswith("color."):
+            name = name[len("color."):]
+        shared = class_for_contract_color(COLOR_SOURCES.get(name, ""))
+        if shared:
+            return shared
+        return "text-" + _class_slug(name)
+    return "text-" + _class_slug(ref)
+
+
+def _class_slug(text: str) -> str:
+    """Reduce a token reference or colour literal to a CSS class-name part."""
+    slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    return slug or "fill"
+
+
+def _register_text_class(classes: TextClasses, name: str, fill: str) -> str:
+    """Record that a region's text uses ``name`` painted ``fill``.
+
+    Raises:
+        AtomRenderError: If ``name`` is already registered with another fill
+            (two references reduced to one class name).
+    """
+    known = classes.setdefault(name, fill)
+    if known != fill:
+        raise AtomRenderError(
+            f"text class {name!r} would carry two fills ({known!r} and {fill!r})")
+    return name
+
+
+def _render_text_class_defs(classes: TextClasses) -> str:
+    """Render the ``<style>`` block defining every text class a region used."""
+    if not classes:
+        return ""
+    rules = "".join(f"  .{name} {{ fill: {fill}; }}\n" for name, fill in classes.items())
+    return "<style>\n" + rules + "</style>"
+
+
+def _render_line(atom: dict, spec: dict, scope: str, dx: float, dy: float,
+                 classes: TextClasses) -> str:
     x1 = _resolve_length(atom["x1"], spec, scope) + dx
     y1 = _resolve_length(atom["y1"], spec, scope) + dy
     x2 = _resolve_length(atom["x2"], spec, scope) + dx
@@ -170,7 +248,8 @@ def _render_line(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> st
     )
 
 
-def _render_circle(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> str:
+def _render_circle(atom: dict, spec: dict, scope: str, dx: float, dy: float,
+                   classes: TextClasses) -> str:
     cx = _resolve_length(atom["cx"], spec, scope) + dx
     cy = _resolve_length(atom["cy"], spec, scope) + dy
     r = _resolve_length(atom["r"], spec, scope)
@@ -184,7 +263,8 @@ def _render_circle(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> 
     return "".join(parts)
 
 
-def _render_image_placeholder(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> str:
+def _render_image_placeholder(atom: dict, spec: dict, scope: str, dx: float, dy: float,
+                              classes: TextClasses) -> str:
     """Image well: filled rect + diagonal cross (the convention for media placeholders)."""
     x = _resolve_length(atom["x"], spec, scope) + dx
     y = _resolve_length(atom["y"], spec, scope) + dy
@@ -205,7 +285,8 @@ def _render_image_placeholder(atom: dict, spec: dict, scope: str, dx: float, dy:
     )
 
 
-def _render_group(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> str:
+def _render_group(atom: dict, spec: dict, scope: str, dx: float, dy: float,
+                  classes: TextClasses) -> str:
     """Group: nested atoms with optional repeat + gap layout.
 
     repeat: n times along `direction` ('horizontal' or 'vertical'),
@@ -230,7 +311,7 @@ def _render_group(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> s
         gdx = stride if direction == "horizontal" else 0
         gdy = stride if direction == "vertical" else 0
         for child in inner:
-            out.append(_render_atom(child, spec, scope, base_x + gdx, base_y + gdy))
+            out.append(_render_atom(child, spec, scope, base_x + gdx, base_y + gdy, classes))
     return "\n".join(out)
 
 
@@ -244,7 +325,8 @@ _RENDERERS = {
 }
 
 
-def _render_atom(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> str:
+def _render_atom(atom: dict, spec: dict, scope: str, dx: float, dy: float,
+                 classes: TextClasses) -> str:
     """Dispatch to the correct per-type renderer."""
     if not isinstance(atom, dict):
         raise AtomRenderError(f"atom must be a dict, got {type(atom).__name__}")
@@ -254,7 +336,7 @@ def _render_atom(atom: dict, spec: dict, scope: str, dx: float, dy: float) -> st
             f"unknown atom type {atom_type!r}; "
             f"expected one of {sorted(ATOM_TYPES)}"
         )
-    return _RENDERERS[atom_type](atom, spec, scope, dx, dy)
+    return _RENDERERS[atom_type](atom, spec, scope, dx, dy, classes)
 
 
 # ─── Public API ─────────────────────────────────────────────────────
@@ -278,8 +360,8 @@ def render_atom_region(
         scope: 'portable' (default) or a system id.
 
     Returns:
-        (body_svg, defs_svg). defs_svg is currently always "" — v1 atoms
-        don't declare reusable defs. Reserved for future extensions.
+        (body_svg, defs_svg). defs_svg holds the ``<style>`` rules for the
+        text classes the region's text atoms use, or "" when it has no text.
     """
     region_x = float(region.get("x", 0))
     region_y = float(region.get("y", 0))
@@ -287,10 +369,11 @@ def render_atom_region(
     if not isinstance(atoms, list):
         raise AtomRenderError(f"region.atoms must be a list, got {type(atoms).__name__}")
 
-    parts = [_render_atom(a, spec, scope, region_x, region_y) for a in atoms]
+    classes: TextClasses = {}
+    parts = [_render_atom(a, spec, scope, region_x, region_y, classes) for a in atoms]
     region_id = region.get("id", "atom-region")
     body = f'<g class="atom-region" data-region="{_html_escape(region_id)}">\n' + "\n".join(parts) + "\n</g>"
-    return body, ""
+    return body, _render_text_class_defs(classes)
 
 
 # ─── Helpers ────────────────────────────────────────────────────────

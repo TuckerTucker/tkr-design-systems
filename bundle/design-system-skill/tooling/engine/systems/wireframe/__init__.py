@@ -1,7 +1,7 @@
 """Wireframe (also the ``neutral`` alias): grey, low-fidelity reference library.
 
 Text classes follow the shared class -> token mapping
-(``wireframe_skill/tokens.py::_CLASS_TOKENS``) so these SVGs, the
+(``wireframe_skill/text_classes.py::CLASS_TOKENS``) so these SVGs, the
 wireframe-skill output and ``wf_get_tokens`` agree.
 """
 
