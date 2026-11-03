@@ -1825,6 +1825,140 @@ def test_full_composition_e2e():
                 "SVG contains the chosen button component")
 
 
+# ─── Accessible name (tkr-kit work-8wvKHEta) ────────────────────────
+
+def _assert_named(svg_text: str, expected: str, where: str) -> None:
+    """Assert the root's first child is a non-blank <title> the root points at."""
+    import xml.etree.ElementTree as ET
+    ns = "{http://www.w3.org/2000/svg}"
+    root = ET.fromstring(svg_text)
+    children = list(root)
+    first = children[0] if children else None
+    assert_(first is not None and first.tag == f"{ns}title",
+            f"{where}: root's first child is <title>",
+            f"first child: {first.tag if first is not None else None}")
+    if first is None or first.tag != f"{ns}title":
+        return
+    assert_((first.text or "").strip() == expected,
+            f"{where}: title text is {expected!r}", f"got {first.text!r}")
+    assert_(root.get("role") == "img", f"{where}: root role=img",
+            f"got {root.get('role')!r}")
+    label_id = root.get("aria-labelledby")
+    assert_(bool(label_id) and first.get("id") == label_id,
+            f"{where}: aria-labelledby resolves to the title",
+            f"aria-labelledby={label_id!r}, title id={first.get('id')!r}")
+    ids = [el.get("id") for el in root.iter() if el.get("id") == label_id]
+    assert_(len(ids) == 1, f"{where}: title id is unique", f"{len(ids)} elements")
+
+
+def test_generated_wireframe_is_named():
+    section("generator: emitted SVG carries <title>, role=img, aria-labelledby")
+    with tempfile.TemporaryDirectory() as td:
+        result = wireframe(brief="dashboard for a chat app", system="swiss",
+                           platform="desktop", output_dir=td)
+        assert_(result.svg_path is not None, "svg emitted", "; ".join(result.errors))
+        if result.svg_path is None:
+            return
+        _assert_named(result.svg_path.read_text(), "dashboard for a chat app", "generator")
+
+
+def test_assembled_blueprint_is_named():
+    section("assembler: assembled SVG carries <title>, role=img, aria-labelledby")
+    from wireframe_skill.assembler import assemble_blueprint
+    from design_system_skill.loader import load_system
+
+    spec = load_system("wireframe").data
+    blueprint = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{"id": "main", "x": 0, "y": 0, "w": 1280, "h": 800,
+                     "components": [{"component_id": "card-default", "x": 0, "y": 0}]}],
+    }
+    svg_text, _ = assemble_blueprint(blueprint, spec)
+    _assert_named(svg_text, "wireframe wireframe", "assembler default")
+
+    svg_text, _ = assemble_blueprint(blueprint, spec, fallback_title="health")
+    _assert_named(svg_text, "health", "assembler fallback")
+
+    svg_text, _ = assemble_blueprint({**blueprint, "title": "Health tab"}, spec,
+                                     fallback_title="health")
+    _assert_named(svg_text, "Health tab", "assembler blueprint title")
+
+    svg_text, _ = assemble_blueprint({**blueprint, "title": "Health tab"}, spec,
+                                     title="Override & <more>")
+    _assert_named(svg_text, "Override & <more>", "assembler explicit title (escaped)")
+
+    riso = load_system("riso").data
+    svg_text, _ = assemble_blueprint(blueprint, riso, title="Riso board")
+    _assert_named(svg_text, "Riso board", "assembler riso treatments")
+
+
+def test_apply_decomposition_cli_names_by_blueprint_stem():
+    section("apply-decomposition CLI: names the SVG by the blueprint file stem")
+    import subprocess
+    here = Path(__file__).resolve().parent
+    blueprint = {
+        "schema_version": "1.0",
+        "canvas": {"width": 1280, "height": 800},
+        "regions": [{"id": "main", "x": 0, "y": 0, "w": 1280, "h": 800,
+                     "components": [{"component_id": "card-default", "x": 0, "y": 0}]}],
+    }
+    with tempfile.TemporaryDirectory() as td:
+        bp = Path(td) / "health.blueprint.json"
+        bp.write_text(json.dumps(blueprint))
+        out = Path(td) / "health.svg"
+        proc = subprocess.run(
+            [sys.executable, str(here), "apply-decomposition", "--blueprint", str(bp),
+             "--system", "wireframe", "--out", str(out)],
+            capture_output=True, text=True,
+        )
+        assert_(proc.returncode == 0, "apply-decomposition exit 0", proc.stdout + proc.stderr)
+        if proc.returncode == 0:
+            _assert_named(out.read_text(), "health", "apply-decomposition")
+
+
+def test_apply_substitutions_cli_names_by_pattern_stem():
+    section("apply-substitutions CLI: names the SVG by the pattern's layout id")
+    import subprocess
+    from design_system_skill.loader import load_system
+    here = Path(__file__).resolve().parent
+    layouts = Path(load_system("wireframe").data["_meta"]["library_root"]) / "layouts"
+    pattern = sorted(layouts.glob("*.svg"))[0]
+    with tempfile.TemporaryDirectory() as td:
+        subs = Path(td) / "subs.json"
+        subs.write_text(json.dumps({"substitutions": []}))
+        out = Path(td) / "out.svg"
+        proc = subprocess.run(
+            [sys.executable, str(here), "apply-substitutions", "--pattern", str(pattern),
+             "--substitutions", str(subs), "--out", str(out)],
+            capture_output=True, text=True,
+        )
+        assert_(proc.returncode == 0, "apply-substitutions exit 0", proc.stdout + proc.stderr)
+        if proc.returncode == 0:
+            _assert_named(out.read_text(), pattern.stem, "apply-substitutions")
+
+
+def test_add_accessible_title_is_idempotent():
+    section("accessible_name: naming twice keeps one <title>")
+    from wireframe_skill.accessible_name import add_accessible_title
+    once = add_accessible_title('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+                                '<rect id="wireframe-title" width="1" height="1"/></svg>', "A")
+    twice = add_accessible_title(once, "B")
+    assert_(twice.count("<title") == 1, "one <title> after naming twice", twice)
+    _assert_named(twice, "A", "idempotent (id collision avoided)")
+
+
+def test_validate_blueprint_rejects_blank_title():
+    section("validate_blueprint: a present title must be a non-blank string")
+    from wireframe_skill.decomposition import validate_blueprint
+    from design_system_skill.loader import load_system
+    spec = load_system("wireframe").data
+    base = {"schema_version": "1.0", "canvas": {"width": 1280, "height": 800}, "regions": []}
+    assert_(validate_blueprint({**base, "title": "Health"}, spec) == [], "string title accepted")
+    errors = validate_blueprint({**base, "title": "  "}, spec)
+    assert_(any("title" in e for e in errors), "blank title rejected", str(errors))
+
+
 def main():
     """Run every test in this module in definition order (script mode)."""
     print("wireframe-skill end-to-end tests\n" + "=" * 50)

@@ -117,6 +117,7 @@ def build_decomposition_request(
         "atom_vocabulary": _build_atom_vocabulary(spec),
         "response_format_example": {
             "schema_version": "1.0",
+            "title": "Kanban board",
             "canvas": {"width": canvas_w, "height": canvas_h},
             "regions": [
                 {
@@ -281,6 +282,8 @@ def validate_blueprint(blueprint: dict, spec: dict) -> list[str]:
       - Every component placement fits within its region.
       - Canvas dimensions match the platform.
       - (Advisory) No overlapping components in the same region.
+      - The optional ``title`` (the screen's accessible name) is a
+        non-blank string.
 
     Args:
         blueprint: Blueprint dict from Claude (with regions and components).
@@ -295,6 +298,12 @@ def validate_blueprint(blueprint: dict, spec: dict) -> list[str]:
     # Validate schema version.
     if blueprint.get("schema_version") != "1.0":
         errors.append(f"Unexpected schema_version: {blueprint.get('schema_version')}")
+
+    # The optional screen name becomes the SVG's <title>.
+    if "title" in blueprint and not (
+        isinstance(blueprint["title"], str) and blueprint["title"].strip()
+    ):
+        errors.append("Blueprint 'title' must be a non-blank string when present")
 
     # Build set of valid component IDs from spec.
     library_root = spec.get("_meta", {}).get("library_root")
